@@ -5246,15 +5246,16 @@
           showToast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
-        showSaving(true);
-        saveState();
         var dbRecord = null;
         try {
+          showSaving(true);
+          saveState();
           dbRecord = await saveInscripcion();
         } catch (e) {
           console.error(e);
+        } finally {
+          showSaving(false);
         }
-        showSaving(false);
         if (!dbRecord) {
           showToast("Error al guardar. Intent\u00e1 nuevamente.");
           return;
@@ -5271,6 +5272,8 @@
           pwr.appendChild(buildPlanillaBlock());
         }
         document.getElementById("sform").style.display = "none";
+        var regMsg = document.getElementById("ok-reg-message");
+        if (regMsg) regMsg.style.display = "block";
         document.getElementById("sok-regional").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -5329,15 +5332,29 @@
         return sbClient;
       }
 
+      function withTimeout(promise, ms, label) {
+        var timer;
+        var timeout = new Promise(function (_, reject) {
+          timer = setTimeout(function () {
+            reject(new Error(label + " timed out after " + ms + "ms"));
+          }, ms);
+        });
+        return Promise.race([promise, timeout]).finally(function () {
+          clearTimeout(timer);
+        });
+      }
+
       // Upload de archivo a Storage
       async function sbUpload(bucket, path, file) {
         var sb = getSb();
         if (!sb || !file) return null;
         var ext = file.name.split(".").pop();
         var fullPath = path + "." + ext;
-        var res = await sb.storage
-          .from(bucket)
-          .upload(fullPath, file, { upsert: true });
+        var res = await withTimeout(
+          sb.storage.from(bucket).upload(fullPath, file, { upsert: true }),
+          30000,
+          "Upload to " + bucket,
+        );
         if (res.error) {
           console.error("Upload err:", res.error);
           return null;
@@ -5421,11 +5438,11 @@
           musica_estado: musUrl ? "cargada" : "pendiente",
         };
 
-        var res = await sb
-          .from("inscripciones")
-          .insert(record)
-          .select()
-          .single();
+        var res = await withTimeout(
+          sb.from("inscripciones").insert(record).select().single(),
+          30000,
+          "Insert inscripcion",
+        );
         if (res.error) {
           console.error("Insert err:", res.error);
           return null;
@@ -5446,21 +5463,40 @@
             '<div style="color:#F8F5EE;font-size:15px;font-weight:600">Guardando inscripción...</div>';
           document.body.appendChild(el);
         }
+        el.style.display = visible ? "flex" : "none";
+      }
+
+      function showSuccess() {
         var oip = document.getElementById("ok-pago-info");
-        if (oip)
+        if (oip) {
+          var _tot = getTotal();
+          var _mopc = STATE.mop || MOpc;
+          var _sm = STATE.custom_monto || 0;
+          var _pag =
+            _mopc === "total"
+              ? _tot.v
+              : _mopc === "senia"
+                ? Math.round(_tot.v / 2)
+                : _sm;
+          var _sal = Math.max(0, _tot.v - _pag);
+          var _f = function (n) {
+            return _tot.m === "ARS"
+              ? "ARS $" + n.toLocaleString("es-AR")
+              : "U$S " + n;
+          };
           oip.innerHTML =
-            sal > 0
+            _sal > 0
               ? "Saldo pendiente de <strong>" +
-                f(sal) +
+                _f(_sal) +
                 "</strong> \u2014 vence 5 de septiembre"
               : "Pago completo registrado \u2014 pendiente de confirmaci\u00f3n";
+        }
         var pw = document.getElementById("ok-planilla");
         if (pw) {
           pw.innerHTML = "";
           pw.appendChild(buildPlanillaBlock());
         }
         document.getElementById("sform").style.display = "none";
-        // logos: national by default, international uses logo-int
         var okLogo = document.getElementById("ok-logo");
         var okLogoReg = document.getElementById("ok-logo-reg");
         var logoSrc = INST === "int" ? "./logo-int.png" : "./logo-nac.png";
@@ -5468,11 +5504,12 @@
         if (okLogoReg) okLogoReg.src = logoSrc;
         var nacWarn = document.getElementById("ok-nac-warning");
         if (nacWarn) nacWarn.style.display = INST === "nac" ? "block" : "none";
+        var nacMsg = document.getElementById("ok-nac-message");
+        if (nacMsg) nacMsg.style.display = INST === "nac" ? "block" : "none";
         var intMsg = document.getElementById("ok-intl-message");
         if (intMsg) intMsg.style.display = INST === "int" ? "block" : "none";
         document.getElementById("sok").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
-        el.style.display = visible ? "flex" : "none";
       }
 
       // CSS para el spinner
@@ -5485,27 +5522,21 @@
           showToast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
-        showSaving(true);
-        saveState();
         var dbRecord = null;
         try {
+          showSaving(true);
+          saveState();
           dbRecord = await saveInscripcion();
         } catch (e) {
           console.error(e);
+        } finally {
+          showSaving(false);
         }
-        showSaving(false);
         if (!dbRecord) {
           showToast("Error al guardar. Intent\u00e1 nuevamente.");
           return;
         }
-        var pw = document.getElementById("ok-planilla");
-        if (pw) {
-          pw.innerHTML = "";
-          pw.appendChild(buildPlanillaBlock());
-        }
-        document.getElementById("sform").style.display = "none";
-        document.getElementById("sok").style.display = "block";
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        showSuccess();
       }
 
       function resetF() {
