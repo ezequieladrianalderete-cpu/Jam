@@ -5243,7 +5243,7 @@
       async function confirmarReg() {
         var chkEl = document.getElementById("chk");
         if (chkEl && !chkEl.checked) {
-          showToast("Acept\u00e1 los t\u00e9rminos para continuar.");
+          toast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
         var dbRecord = null;
@@ -5256,8 +5256,12 @@
         } finally {
           showSaving(false);
         }
+        if (dbRecord === "DUPLICATE_EMAIL") {
+          toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
+          return;
+        }
         if (!dbRecord) {
-          showToast("Error al guardar. Intent\u00e1 nuevamente.");
+          toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
         var emailEl = document.getElementById("ok-reg-email");
@@ -5370,6 +5374,15 @@
           return null;
         }
 
+        // Verificar email duplicado antes de subir archivos
+        var email = sv("f-email") || "";
+        var emailCheck = await withTimeout(
+          sb.from("inscripciones").select("id").eq("email", email).eq("instancia", INST).maybeSingle(),
+          10000,
+          "Email check"
+        );
+        if (emailCheck.data) return "DUPLICATE_EMAIL";
+
         var np = parseInt(STATE.cant) || 1;
         var sedeData =
           INST === "reg" && STATE.sede_idx != null
@@ -5444,6 +5457,7 @@
           "Insert inscripcion",
         );
         if (res.error) {
+          if (res.error.code === "23505") return "DUPLICATE_EMAIL";
           console.error("Insert err:", res.error);
           return null;
         }
@@ -5519,7 +5533,7 @@
       async function confirmar() {
         var chkEl = document.getElementById("chk");
         if (chkEl && !chkEl.checked) {
-          showToast("Acept\u00e1 los t\u00e9rminos para continuar.");
+          toast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
         var dbRecord = null;
@@ -5532,8 +5546,12 @@
         } finally {
           showSaving(false);
         }
+        if (dbRecord === "DUPLICATE_EMAIL") {
+          toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
+          return;
+        }
         if (!dbRecord) {
-          showToast("Error al guardar. Intent\u00e1 nuevamente.");
+          toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
         showSuccess();
