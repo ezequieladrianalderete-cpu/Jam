@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" style="background: #080808">
+<html lang="es" style="background: #0a0a0a">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -15,7 +15,7 @@
     <style>
       html,
       body {
-        background: #080808 !important;
+        background: #0a0a0a !important;
         color: #f8f5ee;
         margin: 0;
         padding: 0;
@@ -38,7 +38,7 @@
         justify-content: space-between;
         position: sticky;
         top: 0;
-        background: rgba(8, 8, 8, 0.96);
+        background: rgba(8, 8, 8, 0.98);
         backdrop-filter: blur(20px);
         z-index: 100;
       }
@@ -1171,7 +1171,7 @@
 
       /* ── FONDOS POR INSTANCIA ──────────────────────── */
       body {
-        background-color: #080808;
+        background-color: #0a0a0a;
         background-image: none;
         background-size: cover;
         background-position: center top;
@@ -1297,7 +1297,18 @@
 
       <!-- SUCCESS NORMAL (QR) -->
       <div id="sok">
-        <span class="oico">&#127881;</span>
+        <img
+          id="ok-logo"
+          src="./logo-nac.png"
+          alt="logo"
+          style="
+            width: 250px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 15px;
+          "
+        />
         <div class="otit" id="ok-tit">&#161;Inscripci&#243;n confirmada!</div>
         <div class="osub" id="ok-sub"></div>
         <div id="ok-bdg" style="margin-bottom: 12px"></div>
@@ -1314,6 +1325,11 @@
             >
             &mdash; multa ARS $25.000
           </div>
+          <div class="oir" id="ok-nac-warning" style="display: none">
+            &#9888; Cierre definitivo
+            <strong>5 de septiembre, </strong>cualquier modificación o tardanza
+            tendrá una multa de $50 USD
+          </div>
           <div class="oir">
             &#128203; Formulario <strong>impreso y firmado</strong> el d&#237;a
             del evento
@@ -1321,6 +1337,112 @@
           <div class="oir">
             &#128205; Palais Rouge &middot; Jerónimo Salguero 1441, CABA
           </div>
+        </div>
+        <!-- INTERAMERICA / INTERNACIONAL confirmation (hidden by default) -->
+        <div
+          class="cgn"
+          id="ok-intl-message"
+          style="
+            display: none;
+            max-width: 940px;
+            margin: 12px auto;
+            text-align: left;
+            padding: 14px;
+          "
+        >
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #4caf7d;
+              margin-bottom: 8px;
+            "
+          >
+            Mensaje de confirmación
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: rgba(248, 245, 238, 0.95);
+              line-height: 1.5;
+              margin: 0 0 10px;
+            "
+          >
+            La organización <strong>INTER AMÉRICA</strong> deja constancia que
+            ha completado su proceso de registración a la
+            <strong>Gran Final INTERNACIONAL</strong>. Se informa que la
+            credencial oficial de ingreso al establecimiento deberá ser
+            presentada en puerta. El evento se llevará a cabo el sábado 3 de
+            octubre del 2026, donde vivirá una experiencia única e inolvidable.
+            <strong>ÉXITOS!!!</strong>
+          </p>
+          <hr style="border-color: rgba(255, 255, 255, 0.06); margin: 10px 0" />
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #4b96d8;
+              margin-bottom: 8px;
+            "
+          >
+            Confirmation message
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: rgba(248, 245, 238, 0.95);
+              line-height: 1.5;
+              margin: 0;
+            "
+          >
+            The <strong>INTER AMERICA</strong> organization states that it has
+            completed its registration process for the
+            <strong>INTERNATIONAL Grand Final</strong>. The official credential
+            for entry must be presented at the door. The event will take place
+            on Saturday, October 3, 2026 — an unique and unforgettable
+            experience. <strong>SUCCESSES!!!</strong>
+          </p>
+        </div>
+        <!-- NACIONAL confirmation (hidden by default) -->
+        <div
+          class="cgn"
+          id="ok-nac-message"
+          style="
+            display: none;
+            max-width: 940px;
+            margin: 12px auto;
+            text-align: left;
+            padding: 14px;
+          "
+        >
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #4caf7d;
+              margin-bottom: 8px;
+            "
+          >
+            Mensaje de confirmación
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: rgba(248, 245, 238, 0.95);
+              line-height: 1.5;
+              margin: 0;
+            "
+          >
+            La organización <strong>JAM</strong> deja constancia que ha
+            completado su proceso de registración a la
+            <strong>Gran Final Nacional</strong> de manera exitosa. Se informa
+            que la credencial oficial de ingreso al establecimiento deberá ser
+            presentada en puerta el día del evento, que se llevará a cabo el día
+            <strong>03 de octubre del 2026</strong>, en el marco de la
+            celebración de nuestro <strong>16° Aniversario</strong>, donde
+            vivirá una experiencia única e inolvidable. <br /><br />Gracias por
+            formar parte de <strong>Tu Competencia Nacional</strong>.
+          </p>
         </div>
         <button
           class="btn bo"
@@ -1334,7 +1456,18 @@
 
       <!-- SUCCESS REGIONAL (sin QR) -->
       <div id="sok-regional">
-        <span class="oico">&#127881;</span>
+        <img
+          id="ok-logo-reg"
+          src="./logo-nac.png"
+          alt="logo"
+          style="
+            width: 250px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 15px;
+          "
+        />
         <div class="otit" style="color: #4caf7d">&#161;Felicitaciones!</div>
         <div class="osub">Tu pre-registro fue realizado correctamente.</div>
         <div
@@ -1413,6 +1546,43 @@
             Final Nacional.
           </p>
         </div>
+        <!-- REGIONAL / SEDES confirmation (hidden by default) -->
+        <div
+          class="cgn"
+          id="ok-reg-message"
+          style="
+            display: none;
+            max-width: 460px;
+            margin: 12px auto 10px;
+            text-align: left;
+            padding: 14px;
+          "
+        >
+          <div
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #4caf7d;
+              margin-bottom: 8px;
+            "
+          >
+            Mensaje de confirmación
+          </div>
+          <p
+            style="
+              font-size: 13px;
+              color: rgba(248, 245, 238, 0.95);
+              line-height: 1.5;
+              margin: 0;
+            "
+          >
+            La organización <strong>JAM</strong> deja constancia que ha
+            completado el formulario de inscripción a la
+            <strong>CLASIFICATORIA POR SEDE</strong> de manera exitosa. Te
+            deseamos la mejor de las suertes. Gracias por formar parte de
+            <strong>Tu Competencia Nacional</strong>.
+          </p>
+        </div>
         <div class="oinfobox" style="max-width: 460px; margin: 0 auto 16px">
           <div class="oir">
             &#128231; Confirmaci&#243;n enviada a
@@ -1442,7 +1612,7 @@
         padding: 14px 20px;
         text-align: center;
         margin-top: 40px;
-        background: #080808;
+        background: #0a0a0a;
       "
     >
       <p
@@ -3813,7 +3983,7 @@
             })
             .join("");
           box.innerHTML =
-            '<div class="cb"><div style="font-size:12px;font-weight:700;color:#4B96D8;margin-bottom:9px">PRECIOS INTERAMERICA 2026 (USD)</div>' +
+            '<div class="cb"><div style="font-size:12px;font-weight:700;color:#4B96D8;margin-bottom:9px">PRECIOS INTER AMÉRICA 2026 (USD)</div>' +
             '<table style="width:100%;border-collapse:collapse">' +
             '<tr style="border-bottom:1px solid rgba(75,150,216,.2)">' +
             '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:left;font-weight:600">Período</th>' +
@@ -4360,11 +4530,11 @@
             var rc = document.getElementById("reg-chips");
             if (rc) {
               var regChips = [
-                ["todas", "Todas", true],
+                // ["todas", "Todas", true],
                 ["salsa", "Salsa", false],
                 ["bachata", "Bachata", false],
                 // ["grupo", "Grupos", false],
-                ["open", "Open Latin JAM", false],
+                ["open", "Latin JAM", false],
               ];
               regChips.forEach(function (chip) {
                 var btn = document.createElement("button");
@@ -4489,7 +4659,7 @@
               '<div class="card mb3">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar por nombre o n\u00famero..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
-              '<button class="chip on" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
+              // '<button class="chip on" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
               '<button class="chip" onclick="chipG(&apos;salsa&apos;,this)">Salsa</button>' +
               '<button class="chip" onclick="chipG(&apos;bachata&apos;,this)">Bachata</button>' +
               // '<button class="chip" onclick="chipN(&apos;profesional&apos;,this)">Profesional</button>' +
@@ -4548,7 +4718,7 @@
               '<button class="mopt" id="mo-s" onclick="selM(&apos;senia&apos;)"><div class="mol">Se\u00f1a 50%</div><div class="mod" id="mo-sv">' +
               fH +
               "</div></button>" +
-              '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
+              // '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
               "</div>" +
               '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
               '<label>Monto (<span id="mcur">ARS</span>)</label>' +
@@ -4650,7 +4820,7 @@
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">INTERAMERICA — Contacto</div>' +
+              '<div class="sh"><div class="st">INTER AMÉRICA — Contacto</div>' +
               '<div class="ss">Te enviaremos la confirmación y tu credencial a este email.</div></div>' +
               '<div class="card">' +
               '<div class="fld"><label>Email *</label><input type="email" id="f-email" placeholder="tu@email.com"></div>' +
@@ -4695,7 +4865,7 @@
               '<div class="card">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar por nombre o n\u00famero..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
-              '<button class="chip oi" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
+              // '<button class="chip oi" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
               '<button class="chip" onclick="chipG(&apos;salsa&apos;,this)">Salsa</button>' +
               '<button class="chip" onclick="chipG(&apos;bachata&apos;,this)">Bachata</button>' +
               "</div>" +
@@ -4739,7 +4909,7 @@
               '<button class="mopt" id="mo-s" onclick="selM(&apos;senia&apos;)"><div class="mol">Se\u00f1a 50%</div><div class="mod" id="mo-sv">' +
               fH +
               "</div></button>" +
-              '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
+              // '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
               "</div>" +
               '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
               '<label>Monto (<span id="mcur">USD</span>)</label>' +
@@ -4777,7 +4947,7 @@
             var sal = Math.max(0, tot.v - pag);
             var np = parseInt(STATE.cant || "1");
             var rows = [
-              ["Instancia", "INTERAMERICA"],
+              ["Instancia", "INTER AMÉRICA"],
               ["Grupo / competidor", grupo || "\u2014"],
               ["Responsable", nombre || "\u2014"],
               ["Pa\u00eds", pais],
@@ -4817,7 +4987,7 @@
                 : "") +
               "</div></div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
-              '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTERAMERICA.</span></label>' +
+              '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
               '<div class="sf mt2"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bd bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
             w.appendChild(d);
@@ -4876,7 +5046,7 @@
               '<div class="card mb3">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar categor\u00eda..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
-              '<button class="chip on" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
+              // '<button class="chip on" onclick="chipG(&apos;todas&apos;,this)">Todas</button>' +
               '<button class="chip" onclick="chipG(&apos;salsa&apos;,this)">Salsa</button>' +
               '<button class="chip" onclick="chipG(&apos;bachata&apos;,this)">Bachata</button>' +
               // '<button class="chip" onclick="chipN(&apos;profesional&apos;,this)">Profesional</button>' +
@@ -4963,7 +5133,7 @@
               '<button class="mopt" id="mo-s"><div class="mol">Se\u00f1a 50%</div><div class="mod">' +
               fH4 +
               "</div></button>" +
-              '<button class="mopt" id="mo-o"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
+              // '<button class="mopt" id="mo-o"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
               "</div>" +
               '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
               "<label>Monto a abonar (ARS)</label>" +
@@ -5085,6 +5255,8 @@
           pwr.appendChild(buildPlanillaBlock());
         }
         document.getElementById("sform").style.display = "none";
+        var regMsg = document.getElementById("ok-reg-message");
+        if (regMsg) regMsg.style.display = INST === "reg" ? "block" : "none";
         document.getElementById("sok-regional").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -5250,6 +5422,16 @@
           pw.appendChild(buildPlanillaBlock());
         }
         document.getElementById("sform").style.display = "none";
+        // logos: national by default, international uses logo-int
+        var okLogo = document.getElementById("ok-logo");
+        var okLogoReg = document.getElementById("ok-logo-reg");
+        var logoSrc = INST === "int" ? "./logo-int.png" : "./logo-nac.png";
+        if (okLogo) okLogo.src = logoSrc;
+        if (okLogoReg) okLogoReg.src = logoSrc;
+        var nacWarn = document.getElementById("ok-nac-warning");
+        if (nacWarn) nacWarn.style.display = INST === "nac" ? "block" : "none";
+        var intMsg = document.getElementById("ok-intl-message");
+        if (intMsg) intMsg.style.display = INST === "int" ? "block" : "none";
         document.getElementById("sok").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
