@@ -1133,7 +1133,8 @@
       /* El header y el contenido quedan sobre el fondo */
       header, .wrap, footer { position: relative; z-index: 1; }
     </style>
-  </head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
   <body>
     <header class="hdr">
       <div>
@@ -2466,7 +2467,7 @@
             markErr("cv");
             return;
           }
-          var uz = document.getElementById("uzone");
+          var uz = document.getElementById("uzone-file");
           if (uz && !uz.classList.contains("done")) {
             toast("Subí el comprobante de pago", "err");
             return;
@@ -3871,20 +3872,25 @@
       };
 
       // ── CONFIRMACIONES ────────────────────────────────────────────────
-      function confirmarReg() {
-        if (!document.getElementById("chk").checked) {
-          toast("Acept\u00e1 los t\u00e9rminos", "err");
-          return;
-        }
-        saveState();
-        document.getElementById("ok-reg-email").textContent = sv("f-email");
-        document.getElementById("ok-reg-sede").textContent = stateSede();
-        var catText = selC.size > 0 ? stateCatsText() : "\u2014";
-        document.getElementById("ok-reg-cat").textContent = catText;
-          var pwr=document.getElementById("ok-planilla-reg");if(pwr){pwr.innerHTML="";pwr.appendChild(buildPlanillaBlock());}
-      document.getElementById("sform").style.display = "none";
-        document.getElementById("sok-regional").style.display = "block";
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      async function confirmarReg() {
+        var chkEl = document.getElementById('chk');
+        if (chkEl && !chkEl.checked) { showToast('Acept\u00e1 los t\u00e9rminos para continuar.'); return; }
+        showSaving(true); saveState();
+        var dbRecord = null;
+        try { dbRecord = await saveInscripcion(); } catch(e) { console.error(e); }
+        showSaving(false);
+        if (!dbRecord) { showToast('Error al guardar. Intent\u00e1 nuevamente.'); return; }
+        var emailEl=document.getElementById('ok-reg-email');
+        var sedeEl=document.getElementById('ok-reg-sede');
+        var catEl=document.getElementById('ok-reg-cat');
+        if (emailEl) emailEl.textContent = sv('f-email')||'';
+        if (sedeEl)  sedeEl.textContent  = stateSede();
+        if (catEl)   catEl.textContent   = stateCatsText();
+        var pwr=document.getElementById('ok-planilla-reg');
+        if (pwr) { pwr.innerHTML=''; pwr.appendChild(buildPlanillaBlock()); }
+        document.getElementById('sform').style.display='none';
+        document.getElementById('sok-regional').style.display='block';
+        window.scrollTo({top:0,behavior:'smooth'});
       }
 
 
@@ -3905,124 +3911,123 @@
           +'<p class="planilla-hint">Este link también llega en el mail de confirmación.</p>';
         return div;
       }
-      function confirmar() {
-        if (
-          !document.getElementById("chk") ||
-          !document.getElementById("chk").checked
-        ) {
-          toast("Acept\u00e1 los t\u00e9rminos y condiciones", "err");
-          return;
+
+      // ══ SUPABASE — JAM 2026 ══════════════════════════════════
+      var SB_URL = 'https://paexpktmcytccjphoppu.supabase.co';
+      var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg';
+      var sbClient = null;
+      function getSb() {
+        if (!sbClient && window.supabase) {
+          sbClient = window.supabase.createClient(SB_URL, SB_ANON);
         }
-        saveState();
-        var nombre = sv("f-nombre") || "Participante";
-        var grupo = sv("f-grupo") || nombre;
-        var email = sv("f-email");
-        var sede = stateSede();
-        var pais = statePais();
+        return sbClient;
+      }
+
+      // Upload de archivo a Storage
+      async function sbUpload(bucket, path, file) {
+        var sb = getSb(); if (!sb || !file) return null;
+        var ext = file.name.split('.').pop();
+        var fullPath = path + '.' + ext;
+        var res = await sb.storage.from(bucket).upload(fullPath, file, {upsert:true});
+        if (res.error) { console.error('Upload err:', res.error); return null; }
+        return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
+      }
+
+      // Guardar inscripción en Supabase
+      async function saveInscripcion() {
+        var sb = getSb();
+        if (!sb) { console.error('Supabase no disponible'); return null; }
+
+        var np = parseInt(STATE.cant) || 1;
+        var sedeData = (INST==='reg' && STATE.sede_idx!=null) ? SEDES[STATE.sede_idx] : null;
+        var paisData = (INST==='int' && STATE.pais_idx!=null) ? PAISES[parseInt(STATE.pais_idx)] : null;
         var tot = getTotal();
-        // rep: getTotal() ya calcula 50000 * numPersonas()
-        var mopc = STATE.mop || MOpc;
-        var sm = STATE.custom_monto || 0;
-        var pag =
-          INST === "rep"
-            ? tot.v
-            : mopc === "total"
-              ? tot.v
-              : mopc === "senia"
-                ? Math.round(tot.v / 2)
-                : sm;
-        var sal = Math.max(0, tot.v - pag);
-        var f = function (n) {
-          return tot.m === "ARS"
-            ? "ARS $" + n.toLocaleString("es-AR")
-            : "U$S " + n;
-        };
-        var baseId = genId(INST);
-        var cant = parseInt(STATE.cant || "1");
-        var isGrupo = cant > 1 || (STATE.modalidad && STATE.modalidad !== "1");
-        // Nombres e emails desde STATE.ints o fallback
-        var names = [],
-          emails = [];
-        if (isGrupo && STATE.ints && STATE.ints.length > 0) {
-          STATE.ints.forEach(function (m) {
-            names.push(m.nombre || nombre);
-            emails.push(m.email || email);
+        var ts = Date.now();
+
+        // Categorías seleccionadas
+        var cats = Array.from(selC).map(function(id) {
+          var c = CATS.find(function(x) {
+            return INST==='int' ? x.c===id && x.inst==='int' : x.c===id && x.inst!=='int';
           });
-          while (names.length < cant) {
-            names.push("Integrante " + (names.length + 1));
-            emails.push(email);
-          }
-        } else {
-          names = [nombre || grupo];
-          emails = [email];
+          return c ? {c:c.c, n:c.n, g:c.g} : {c:id};
+        });
+
+        // Integrantes
+        var ints = (STATE.ints || []).map(function(i) {
+          return {nombre: i.nombre||'', dni: i.dni||''};
+        });
+
+        // Upload comprobante
+        var compUrl = null;
+        var compInput = document.getElementById('uzone-file') || document.querySelector('[id*="uzone"]');
+        if (compInput && compInput.files && compInput.files[0]) {
+          compUrl = await sbUpload('comprobantes', INST+'_'+ts, compInput.files[0]);
         }
-        // Credenciales individuales
-        var credsWrap = document.getElementById("ok-creds");
-        credsWrap.innerHTML = "";
-        for (var j = 0; j < names.length; j++) {
-          var membId = names.length > 1 ? genMemberId(baseId, j + 1) : baseId;
-          // País del integrante: solo para Internacional
-          var paisM =
-            INST === "int"
-              ? STATE.ints && STATE.ints[j] && STATE.ints[j].pais_idx != null
-                ? PAISES[STATE.ints[j].pais_idx]
-                : pais
-              : "Argentina";
-          var card = document.createElement("div");
-          card.className = "credcard";
-          card.innerHTML =
-            '<div class="clbl">Credencial JAM 2026' +
-            (names.length > 1
-              ? " \u2014 " + (j + 1) + " de " + names.length
-              : "") +
-            "</div>" +
-            '<div class="cid">' +
-            membId +
-            "</div>" +
-            (isGrupo ? '<div class="cgrupo">' + grupo + "</div>" : "") +
-            '<div class="cnom">' +
-            names[j] +
-            "</div>" +
-            '<div class="csede">' +
-            paisM +
-            "</div>" +
-            makeQR(j + 1) +
-            '<div class="chint">Mostr\u00e1 este QR al acreditarte</div>';
-          credsWrap.appendChild(card);
+
+        // Upload música (primera encontrada)
+        var musUrl = null;
+        var musInput = document.querySelector('.mslot-file-input');
+        if (musInput && musInput.files && musInput.files[0]) {
+          musUrl = await sbUpload('musica', INST+'_'+ts, musInput.files[0]);
         }
-        document.getElementById("ok-tit").textContent =
-          INST === "rep"
-            ? "\u00a1Repesca enviada!"
-            : "\u00a1Inscripci\u00f3n confirmada!";
-        document.getElementById("ok-sub").textContent =
-          names.length > 1
-            ? "Cada integrante recibir\u00e1 su credencial por email."
-            : "Confirmaci\u00f3n enviada a " + email;
-        var bdg = document.getElementById("ok-bdg");
-        if (INST === "rep") {
-          bdg.innerHTML =
-            '<span class="sbdg sbdg-pd">Inscripci\u00f3n en estado <strong>PENDIENTE DE APROBACI\u00d3N</strong></span>';
-        } else if (pag >= tot.v) {
-          bdg.innerHTML =
-            '<span class="sbdg sbdg-ok">\u2713 Pago completo \u2014 pendiente de confirmaci\u00f3n</span>';
-        } else {
-          bdg.innerHTML =
-            '<span class="sbdg sbdg-pd">Se\u00f1a registrada \u2014 saldo: ' +
-            f(sal) +
-            "</span>";
+
+        var record = {
+          instancia:      INST,
+          email:          sv('f-email') || '',
+          celular:        sv('f-cel') || '',
+          nombre:         sv('f-nombre') || '',
+          nombre_grupo:   sv('f-grupo') || '',
+          modalidad:      STATE.modalidad || 'individual',
+          cant_personas:  np,
+          integrantes:    ints,
+          sede_id:        sedeData ? sedeData.id   : null,
+          sede_nombre:    sedeData ? sedeData.n     : null,
+          sede_email_org: sedeData ? sedeData.email : null,
+          pais:           paisData ? paisData       : null,
+          categorias:     cats,
+          comprobante_url: compUrl,
+          monto_total:    tot.v,
+          moneda:         tot.m,
+          musica_url:     musUrl,
+          musica_estado:  musUrl ? 'cargada' : 'pendiente',
+        };
+
+        var res = await sb.from('inscripciones').insert(record).select().single();
+        if (res.error) { console.error('Insert err:', res.error); return null; }
+        return res.data;
+      }
+
+      // Mostrar/ocultar spinner de guardado
+      function showSaving(visible) {
+        var el = document.getElementById('saving-overlay');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'saving-overlay';
+          el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
+          el.innerHTML = '<div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#C9A84C;border-radius:50%;animation:spin 1s linear infinite"></div>'
+            + '<div style="color:#F8F5EE;font-size:15px;font-weight:600">Guardando inscripción...</div>';
+          document.body.appendChild(el);
         }
-        var oip = document.getElementById("ok-pago-info");
-        if (oip)
-          oip.innerHTML =
-            sal > 0
-              ? "Saldo pendiente de <strong>" +
-                f(sal) +
-                "</strong> \u2014 vence 5 de septiembre"
-              : "Pago completo registrado \u2014 pendiente de confirmaci\u00f3n";
-        var pw=document.getElementById("ok-planilla");if(pw){pw.innerHTML="";pw.appendChild(buildPlanillaBlock());}
-        document.getElementById("sform").style.display = "none";
-        document.getElementById("sok").style.display = "block";
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        el.style.display = visible ? 'flex' : 'none';
+      }
+
+      // CSS para el spinner
+      var spinStyle = document.createElement('style');
+      spinStyle.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(spinStyle);
+      async function confirmar() {
+        var chkEl = document.getElementById('chk');
+        if (chkEl && !chkEl.checked) { showToast('Acept\u00e1 los t\u00e9rminos para continuar.'); return; }
+        showSaving(true); saveState();
+        var dbRecord = null;
+        try { dbRecord = await saveInscripcion(); } catch(e) { console.error(e); }
+        showSaving(false);
+        if (!dbRecord) { showToast('Error al guardar. Intent\u00e1 nuevamente.'); return; }
+        var pw = document.getElementById('ok-planilla');
+        if (pw) { pw.innerHTML=''; pw.appendChild(buildPlanillaBlock()); }
+        document.getElementById('sform').style.display='none';
+        document.getElementById('sok').style.display='block';
+        window.scrollTo({top:0,behavior:'smooth'});
       }
 
       function resetF() {
