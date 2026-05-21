@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es" style="background:#080808">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>JAM 2026 — Carga de Música</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#080808;color:#F8F5EE;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:#111;border:1px solid rgba(201,168,76,.25);border-radius:16px;padding:32px;max-width:480px;width:100%}
+    .logo{text-align:center;margin-bottom:24px}
+    .logo-text{font-size:32px;font-weight:900;letter-spacing:6px;color:#C9A84C}
+    .logo-sub{font-size:11px;letter-spacing:3px;color:#666;margin-top:4px}
+    h2{font-size:18px;font-weight:700;color:#F8F5EE;margin-bottom:6px}
+    .subtitle{font-size:13px;color:#888;margin-bottom:24px}
+    .info-box{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:14px;margin-bottom:20px}
+    .info-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+    .info-label{color:#888}
+    .info-value{color:#F8F5EE;font-weight:600;text-align:right;max-width:60%}
+    .cats{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)}
+    .cat-item{font-size:12px;color:#aaa;padding:2px 0}
+    .drop-zone{border:2px dashed rgba(201,168,76,.4);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:#C9A84C;background:rgba(201,168,76,.05)}
+    .drop-icon{font-size:36px;margin-bottom:8px}
+    .drop-text{font-size:14px;color:#aaa;margin-bottom:4px}
+    .drop-hint{font-size:12px;color:#555}
+    #file-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .file-selected{background:rgba(75,150,216,.08);border:1px solid rgba(75,150,216,.3);border-radius:10px;padding:12px;margin-top:12px;display:none}
+    .file-name{font-size:14px;font-weight:600;color:#4B96D8}
+    .file-size{font-size:12px;color:#666;margin-top:2px}
+    .btn{width:100%;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px;transition:all .2s}
+    .btn-primary{background:#C9A84C;color:#0a0a0a}
+    .btn-primary:hover:not(:disabled){background:#e0bc5a}
+    .btn-primary:disabled{background:#444;color:#666;cursor:not-allowed}
+    .progress{height:6px;background:#222;border-radius:3px;margin-top:12px;overflow:hidden;display:none}
+    .progress-bar{height:100%;background:#C9A84C;width:0;transition:width .3s}
+    .alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:16px;display:none}
+    .alert-success{background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);color:#81c784}
+    .alert-error{background:rgba(244,67,54,.1);border:1px solid rgba(244,67,54,.3);color:#ef9a9a}
+    .state-block{display:none;text-align:center;padding:24px}
+    .state-icon{font-size:48px;margin-bottom:12px}
+    .spinner{width:40px;height:40px;border:3px solid rgba(201,168,76,.2);border-top-color:#C9A84C;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .note{font-size:12px;color:#555;margin-top:16px;line-height:1.6}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-text">JAM</div>
+    <div class="logo-sub">DANCE COMPETITION 2026</div>
+  </div>
+  <div id="s-loading" style="display:flex;text-align:center;padding:24px;flex-direction:column;align-items:center">
+    <div class="spinner"></div>
+    <div style="color:#888;font-size:14px">Verificando link...</div>
+  </div>
+  <div id="s-error" class="state-block">
+    <div class="state-icon">⛔</div>
+    <h2 style="margin-bottom:8px">Link inválido</h2>
+    <p style="color:#888;font-size:14px">Este link no existe o ya no es válido.<br>Revisá el mail que recibiste.</p>
+  </div>
+  <div id="s-used" class="state-block">
+    <div class="state-icon">✅</div>
+    <h2 style="margin-bottom:8px">Música ya cargada</h2>
+    <p id="used-name" style="color:#888;font-size:14px;margin-bottom:16px"></p>
+    <p style="color:#666;font-size:13px">Podés reemplazarla usando el botón de abajo.</p>
+    <button class="btn btn-primary" onclick="showForm()" style="margin-top:16px">Reemplazar música</button>
+  </div>
+  <div id="s-form" style="display:none">
+    <h2>Cargá tu música</h2>
+    <p class="subtitle">Link privado y único para tu inscripción.</p>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Nombre</span><span class="info-value" id="i-nombre">—</span></div>
+      <div class="info-row"><span class="info-label">Instancia</span><span class="info-value" id="i-inst">—</span></div>
+      <div class="cats" id="i-cats"></div>
+    </div>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".mp3,.wav,audio/mpeg,audio/wav"/>
+      <div class="drop-icon">🎵</div>
+      <div class="drop-text">Arrastrá tu archivo acá</div>
+      <div class="drop-hint">MP3 o WAV · máx. 25 MB</div>
+    </div>
+    <div class="file-selected" id="file-selected">
+      <div class="file-name" id="fname"></div>
+      <div class="file-size" id="fsize"></div>
+    </div>
+    <div class="progress" id="prog"><div class="progress-bar" id="prog-bar"></div></div>
+    <button class="btn btn-primary" id="btn-up" disabled onclick="upload()">Subir música</button>
+    <div class="alert alert-success" id="a-ok">✓ ¡Música cargada correctamente! Ya podés cerrar esta página.</div>
+    <div class="alert alert-error" id="a-err"></div>
+    <p class="note">⚠️ La música debe comenzar sin silencio y coincidir con las categorías inscriptas. Podés reemplazarla hasta el cierre de inscripciones.</p>
+  </div>
+</div>
+<script>
+const SB_URL='https://paexpktmcytccjphoppu.supabase.co';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg';
+const sb=supabase.createClient(SB_URL,SB_ANON);
+const LABELS={nac:'Final Nacional JAM 2026',int:'Inter América Dance Competition 2026',rep:'Repesca JAM 2026',reg:'Sedes JAM 2026'};
+let rec=null,file=null;
+function show(id){['s-loading','s-error','s-used','s-form'].forEach(s=>{document.getElementById(s).style.display=s===id?'block':'none';});}
+function showForm(){show('s-form');}
+async function init(){
+  const token=new URLSearchParams(location.search).get('token');
+  if(!token){show('s-error');return;}
+  const{data,error}=await sb.from('inscripciones').select('id,nombre,instancia,categorias,musica_url,musica_nombre,musica_estado,musica_token').eq('musica_token',token).single();
+  if(error||!data){show('s-error');return;}
+  rec=data;
+  document.getElementById('i-nombre').textContent=data.nombre;
+  document.getElementById('i-inst').textContent=LABELS[data.instancia]||data.instancia;
+  document.getElementById('i-cats').innerHTML=(data.categorias||[]).map(c=>'<div class="cat-item">▸ '+c.c+' — '+c.n+'</div>').join('');
+  if(data.musica_estado==='cargada'&&data.musica_url){
+    document.getElementById('used-name').textContent='Archivo actual: '+(data.musica_nombre||'música.mp3');
+    show('s-used');
+  }else{show('s-form');}
+}
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});
+document.getElementById('file-input').addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
+function setFile(f){
+  if(f.size>25*1024*1024){err('El archivo supera los 25 MB.');return;}
+  if(!f.type.includes('audio')&&!f.name.match(/\.(mp3|wav)$/i)){err('Solo MP3 o WAV.');return;}
+  file=f;
+  document.getElementById('fname').textContent=f.name;
+  document.getElementById('fsize').textContent=(f.size/1048576).toFixed(2)+' MB';
+  document.getElementById('file-selected').style.display='block';
+  document.getElementById('btn-up').disabled=false;
+  hide();
+}
+async function upload(){
+  if(!file||!rec)return;
+  const btn=document.getElementById('btn-up');
+  btn.disabled=true;btn.textContent='Subiendo...';
+  document.getElementById('prog').style.display='block';
+  prog(20);
+  try{
+    const ext=file.name.split('.').pop().toLowerCase();
+    const path=rec.instancia+'/'+rec.id+'.'+ext;
+    const{error:ue}=await sb.storage.from('musica').upload(path,file,{upsert:true});
+    if(ue)throw ue;
+    prog(70);
+    const musUrl=sb.storage.from('musica').getPublicUrl(path).data.publicUrl;
+    const{error:pe}=await sb.from('inscripciones').update({musica_url:musUrl,musica_nombre:file.name,musica_estado:'cargada'}).eq('musica_token',rec.musica_token);
+    if(pe)throw pe;
+    prog(100);
+    setTimeout(()=>{document.getElementById('prog').style.display='none';document.getElementById('a-ok').style.display='block';btn.textContent='✓ Subida exitosa';},400);
+  }catch(e){
+    prog(0);document.getElementById('prog').style.display='none';
+    err('Error: '+(e.message||'intentá de nuevo'));
+    btn.disabled=false;btn.textContent='Reintentar';
+  }
+}
+function prog(v){document.getElementById('prog-bar').style.width=v+'%';}
+function err(m){hide();const el=document.getElementById('a-err');el.textContent='⚠️ '+m;el.style.display='block';}
+function hide(){document.getElementById('a-ok').style.display='none';document.getElementById('a-err').style.display='none';}
+init();
+</script>
+</body>
+</html>
