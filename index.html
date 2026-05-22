@@ -5017,6 +5017,31 @@
       };
 
       // ── CONFIRMACIONES ────────────────────────────────────────────────
+      function sendNotify(id) {
+        if (!id) return;
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          console.log('Notify skipped in local dev (only runs on Vercel)');
+          return;
+        }
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id })
+        })
+          .then(function(r) {
+            return r.text().then(function(text) {
+              try {
+                var body = JSON.parse(text);
+                if (!r.ok) console.error('Notify HTTP ' + r.status, body);
+                else console.log('Notify ok', body);
+              } catch(e) {
+                console.error('Notify HTTP ' + r.status, text);
+              }
+            });
+          })
+          .catch(function(e) { console.error('Notify fetch err:', e); });
+      }
+
       async function confirmarReg() {
         var chkEl = document.getElementById("chk");
         if (chkEl && !chkEl.checked) {
@@ -5057,6 +5082,7 @@
         if (regMsg) regMsg.style.display = "block";
         document.getElementById("sok-regional").style.display = "block";
         window.scrollTo({ top: 0, behavior: "smooth" });
+        sendNotify(dbRecord.id);
       }
 
       // PLANILLAS PDF
@@ -5332,6 +5358,7 @@
           return;
         }
         showSuccess();
+        sendNotify(dbRecord.id);
       }
 
       function resetF() {
