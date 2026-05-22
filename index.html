@@ -3490,8 +3490,9 @@
         }
         // Validar comprobante de clasificación en Nacional
         if (n === 4 && INST === "nac") {
-          var comp = document.getElementById("comp-clasif");
-          if (comp && !comp.dataset.uploaded) {
+          var clasifEl = document.getElementById("clasif-file");
+          var clasifOk = STATE.clasif_file || (clasifEl && clasifEl.files && clasifEl.files[0]);
+          if (!clasifOk) {
             toast(
               "Debés adjuntar el comprobante de clasificación de la sede",
               "err",
@@ -3511,8 +3512,9 @@
             markErr("cv");
             return;
           }
-          var uz = document.getElementById("uzone-file");
-          if (uz && !uz.classList.contains("done")) {
+          var uzEl = document.getElementById("uzone-file");
+          var uzFile = STATE.comp_file || (uzEl && uzEl.files && uzEl.files[0]);
+          if (!uzFile) {
             toast("Subí el comprobante de pago", "err");
             return;
           }
@@ -4130,22 +4132,26 @@
           '</div><div style="color:#4CAF7D">✓</div></div>';
         el.onclick = null;
       }
-      function subirClasif(el) {
-        el.innerHTML =
-          '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">comprobante_clasificacion.jpg subido</div>';
+      function subirClasif(input) {
+        var el = document.getElementById("comp-clasif");
+        if (!el || !input || !input.files || !input.files[0]) return;
+        var file = input.files[0];
+        STATE.clasif_file = file;
         el.style.borderStyle = "solid";
         el.style.borderColor = "rgba(76,175,125,.35)";
         el.style.background = "#001a0a";
         el.dataset.uploaded = "1";
-        el.onclick = null;
+        el.onclick = function() { input.click(); };
+        el.innerHTML = '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' + file.name + '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
       }
-      function subirComp() {
+      function subirComp(input) {
         var z = document.getElementById("uzone");
-        if (!z) return;
+        if (!z || !input || !input.files || !input.files[0]) return;
+        var file = input.files[0];
+        STATE.comp_file = file;
         z.className = "uzone done";
-        z.innerHTML =
-          '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">comprobante_pago.jpg subido</div>';
-        z.onclick = null;
+        z.onclick = function() { input.click(); };
+        z.innerHTML = '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' + file.name + '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
       }
 
       // ── TÉRMINOS Y CONDICIONES NACIONAL ──────────────────────────────
@@ -4444,10 +4450,11 @@
               '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:10px">Comprobante de clasificaci\u00f3n de la sede ' +
               '<span style="font-size:11px;background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838;border-radius:100px;padding:2px 8px;margin-left:7px;font-weight:600">OBLIGATORIO</span></div>' +
               '<p style="font-size:12px;color:rgba(248,245,238,.5);margin-bottom:10px;line-height:1.5">Para inscribirse a la Final Nacional deb\u00e9s adjuntar el comprobante que acredita tu clasificaci\u00f3n desde una sede regional.</p>' +
-              '<div class="uzone req" id="comp-clasif" onclick="subirClasif(this)">' +
+              '<div class="uzone req" id="comp-clasif" onclick="document.getElementById(\'clasif-file\').click()">' +
               '<div style="font-size:24px;margin-bottom:6px">&#128196;</div>' +
               '<div style="font-size:13px;color:rgba(248,245,238,.45)">Subir comprobante de clasificaci\u00f3n</div>' +
-              '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:3px">JPG, PNG o PDF</div></div></div>' +
+              '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:3px">JPG, PNG o PDF</div></div>' +
+              '<input type="file" id="clasif-file" accept="image/*,.pdf" style="display:none" onchange="subirClasif(this)"></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bg" onclick="goTo(4)">Continuar \u2192</button></div>';
             w.appendChild(d);
@@ -4497,10 +4504,11 @@
               '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div>' +
               '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:6px">Saldo: vence el <strong style="color:#F8F5EE">5 de septiembre 2026</strong>.</div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante de pago</div>' +
-              '<div class="uzone" id="uzone" onclick="subirComp()">' +
+              '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
               '<div style="font-size:13px;color:rgba(248,245,238,.45)">Subir captura o PDF</div>' +
               '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
+              '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               '<div class="cg mt3"><p style="font-size:11px;color:rgba(248,245,238,.55)">El staff revisar\u00e1 el comprobante dentro de las 48hs h\u00e1biles.</p></div>' +
               "</div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
@@ -4687,9 +4695,10 @@
               '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
               '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante</div>' +
-              '<div class="uzone" id="uzone" onclick="subirComp()">' +
+              '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
               '<div style="font-size:13px;color:rgba(248,245,238,.45)">Subir captura o PDF del comprobante</div></div>' +
+              '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               "</div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bd" onclick="goTo(5)">Continuar \u2192</button></div>';
@@ -4913,9 +4922,10 @@
               '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="color:#4CAF7D;font-weight:600"></span></div>' +
               '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo</span><span class="dsal" id="d-s"></span></div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante de pago</div>' +
-              '<div class="uzone" id="uzone"><div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
+              '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()"><div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
               '<div style="font-size:13px;color:rgba(248,245,238,.45)">Subir captura o PDF</div>' +
               '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
+              '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               '<div class="cgn mt3"><p style="font-size:11px;color:rgba(248,245,238,.55)">Tu inscripci\u00f3n quedar\u00e1 <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong> hasta que el staff confirme tu pago.</p></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bam" onclick="goTo(5)">Continuar \u2192</button></div>';
@@ -4952,7 +4962,7 @@
               };
             // Evento uzone
             var uz = document.getElementById("uzone");
-            if (uz) uz.onclick = subirComp;
+            if (uz) uz.onclick = function() { var f = document.getElementById("uzone-file"); if (f) f.click(); };
             // Evento cv input
             var cvi = document.getElementById("cv");
             if (cvi) cvi.oninput = calcD;
@@ -5177,17 +5187,16 @@
           return { nombre: i.nombre || "", dni: i.dni || "" };
         });
 
-        // Upload comprobante
+        // Upload comprobante de clasificación (solo nac)
+        var clasifUrl = null;
+        if (STATE.clasif_file) {
+          clasifUrl = await sbUpload("comprobantes", "clasif_" + INST + "_" + ts, STATE.clasif_file);
+        }
+
+        // Upload comprobante de pago
         var compUrl = null;
-        var compInput =
-          document.getElementById("uzone-file") ||
-          document.querySelector('[id*="uzone"]');
-        if (compInput && compInput.files && compInput.files[0]) {
-          compUrl = await sbUpload(
-            "comprobantes",
-            INST + "_" + ts,
-            compInput.files[0],
-          );
+        if (STATE.comp_file) {
+          compUrl = await sbUpload("comprobantes", INST + "_" + ts, STATE.comp_file);
         }
 
         // Upload música (primera encontrada)
@@ -5217,6 +5226,7 @@
           musica_url: musUrl,
           musica_estado: musUrl ? "cargada" : "pendiente",
         };
+        if (clasifUrl) record.clasif_url = clasifUrl;
 
         var res = await withTimeout(
           sb.from("inscripciones").insert(record).select().single(),
