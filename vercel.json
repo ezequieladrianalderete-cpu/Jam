@@ -1,1 +1,5 @@
-{"rewrites":[{"source":"/musica","destination":"/musica.html"}]}
+{
+  "rewrites": [
+    { "source": "/musica", "destination": "/musica.html" }
+  ]
+}
