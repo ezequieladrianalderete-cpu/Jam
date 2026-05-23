@@ -1,1 +1,8 @@
-{"rewrites":[{"source":"/musica","destination":"/musica.html"}]}
+{
+  "buildCommand": "echo ok",
+  "outputDirectory": ".",
+  "installCommand": "echo ok",
+  "rewrites": [
+    { "source": "/musica", "destination": "/musica.html" }
+  ]
+}
