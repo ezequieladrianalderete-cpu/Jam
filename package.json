@@ -1,5 +1,6 @@
 {
   "name": "jam-inscripciones",
   "version": "1.0.0",
+  "scripts": { "build": "echo ok" },
   "engines": { "node": "18.x" }
 }
