@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JAM 2026 — Panel Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 20px; }
+  h1 { color: #d32f2f; margin-bottom: 20px; font-size: 28px; }
+  h2 { color: #ff5252; margin: 20px 0 10px; font-size: 18px; }
+  .login { max-width: 360px; margin: 100px auto; padding: 30px; background: #1a1a1a; border-radius: 12px; text-align: center; }
+  .login input { width: 100%; padding: 12px; margin: 10px 0; background: #0a0a0a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 16px; }
+  button { background: #d32f2f; color: #fff; border: 0; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+  button:hover { background: #b71c1c; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat { background: #1a1a1a; padding: 16px; border-radius: 10px; border-left: 4px solid #d32f2f; }
+  .stat .label { color: #888; font-size: 12px; text-transform: uppercase; }
+  .stat .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .stat.ok { border-left-color: #4caf50; }
+  .stat.warn { border-left-color: #ff9800; }
+  .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filters input, .filters select { padding: 8px 12px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 14px; }
+  .filters input[type=search] { min-width: 220px; }
+  table { width: 100%; border-collapse: collapse; background: #1a1a1a; border-radius: 10px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2a2a; font-size: 13px; }
+  th { background: #2a2a2a; color: #ff5252; font-weight: 600; text-transform: uppercase; font-size: 11px; cursor: pointer; user-select: none; }
+  th:hover { background: #333; }
+  tr:hover { background: #222; }
+  .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge.nac { background: #1976d2; }
+  .badge.int { background: #d32f2f; }
+  .badge.rep { background: #7b1fa2; }
+  .badge.reg { background: #455a64; }
+  .badge.pagado { background: #388e3c; }
+  .badge.pendiente { background: #f57c00; }
+  .badge.cargada { background: #388e3c; }
+  .badge.musica-pendiente { background: #455a64; }
+  .actions { margin-bottom: 20px; }
+  .actions button { margin-right: 8px; }
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal.open { display: flex; }
+  .modal-body { background: #1a1a1a; border-radius: 12px; padding: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-body h3 { color: #ff5252; margin-bottom: 16px; }
+  .modal-body pre { background: #0a0a0a; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+  .close { float: right; background: #444; padding: 6px 12px; }
+  .empty { text-align: center; padding: 40px; color: #666; }
+  .loading { text-align: center; padding: 40px; color: #888; }
+  @media (max-width: 700px) {
+    table { font-size: 11px; }
+    th, td { padding: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login">
+  <h1>JAM 2026 Admin</h1>
+  <p style="color:#888;margin-bottom:16px">Ingresá la clave</p>
+  <input type="password" id="pwd" placeholder="Clave" onkeydown="if(event.key==='Enter')doLogin()" />
+  <button onclick="doLogin()">Entrar</button>
+  <p id="loginErr" style="color:#f44;margin-top:10px;display:none">Clave incorrecta</p>
+</div>
+
+<div id="app" style="display:none">
+  <h1>JAM 2026 — Panel Admin</h1>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>Inscriptos</h2>
+  <div class="filters">
+    <input type="search" id="search" placeholder="Buscar por nombre, email o ID..." oninput="render()" />
+    <select id="filterInst" onchange="render()">
+      <option value="">Todas las instancias</option>
+      <option value="reg">REG - Sedes</option>
+      <option value="nac">NAC - Nacional</option>
+      <option value="int">INT - Internacional</option>
+      <option value="rep">REP - Repechaje</option>
+    </select>
+    <select id="filterPago" onchange="render()">
+      <option value="">Pago: todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="confirmado">Confirmado</option>
+    </select>
+    <select id="filterMusica" onchange="render()">
+      <option value="">Música: todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="cargada">Cargada</option>
+    </select>
+    <button onclick="exportCSV()">📥 Exportar CSV</button>
+    <button onclick="loadData()" style="background:#1976d2">🔄 Recargar</button>
+  </div>
+
+  <div id="tableWrap"><div class="loading">Cargando...</div></div>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-body">
+    <button class="close" onclick="closeModal()">Cerrar</button>
+    <h3 id="modalTitle">Detalle</h3>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PWD = 'jam2026admin';
+const SB_URL  = 'https://paexpktmcytccjphoppu.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg';
+
+let allData = [];
+let sortKey = 'created_at';
+let sortDir = 'desc';
+
+function doLogin() {
+  const pwd = document.getElementById('pwd').value;
+  if (pwd === ADMIN_PWD) {
+    sessionStorage.setItem('admin_ok', '1');
+    showApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadData();
+}
+
+if (sessionStorage.getItem('admin_ok') === '1') showApp();
+
+async function loadData() {
+  try {
+    document.getElementById('tableWrap').innerHTML = '<div class="loading">Cargando...</div>';
+    const resp = await fetch(SB_URL + '/rest/v1/inscripciones?select=*&order=created_at.desc', {
+      headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON }
+    });
+    allData = await resp.json();
+    renderStats();
+    render();
+  } catch (e) {
+    document.getElementById('tableWrap').innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
+}
+
+function renderStats() {
+  const total = allData.length;
+  const porInst = { reg: 0, nac: 0, int: 0, rep: 0 };
+  const pagado = allData.filter(x => x.pago_estado === 'confirmado').length;
+  const pendiente = total - pagado;
+  let recaudado = 0;
+  let aRecaudar = 0;
+  for (const x of allData) {
+    porInst[x.instancia] = (porInst[x.instancia] || 0) + 1;
+    if (x.pago_estado === 'confirmado') recaudado += +(x.monto_total || 0);
+    else aRecaudar += +(x.monto_total || 0);
+  }
+  const fmt = n => n.toLocaleString('es-AR');
+  document.getElementById('stats').innerHTML =
+    statCard('Total inscriptos', total, '') +
+    statCard('Pagos confirmados', pagado, 'ok') +
+    statCard('Pagos pendientes', pendiente, 'warn') +
+    statCard('Recaudado ARS', '$' + fmt(recaudado), 'ok') +
+    statCard('A recaudar ARS', '$' + fmt(aRecaudar), 'warn') +
+    statCard('Sedes (REG)', porInst.reg, '') +
+    statCard('Nacional (NAC)', porInst.nac, '') +
+    statCard('Internacional (INT)', porInst.int, '') +
+    statCard('Repechaje (REP)', porInst.rep, '');
+}
+
+function statCard(label, value, cls) {
+  return '<div class="stat ' + cls + '"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const fi = document.getElementById('filterInst').value;
+  const fp = document.getElementById('filterPago').value;
+  const fm = document.getElementById('filterMusica').value;
+
+  let rows = allData.filter(x => {
+    if (fi && x.instancia !== fi) return false;
+    if (fp && (x.pago_estado || 'pendiente') !== fp) return false;
+    if (fm && (x.musica_estado || 'pendiente') !== fm) return false;
+    if (q) {
+      const hay = ((x.nombre || '') + ' ' + (x.email || '') + ' ' + (x.id || '')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (va == null) va = '';
+    if (vb == null) vb = '';
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  if (rows.length === 0) {
+    document.getElementById('tableWrap').innerHTML = '<div class="empty">No hay inscriptos que coincidan</div>';
+    return;
+  }
+
+  let html = '<table><thead><tr>' +
+    th('Fecha', 'created_at') +
+    th('Nombre', 'nombre') +
+    th('Email', 'email') +
+    th('Celular', 'celular') +
+    th('Instancia', 'instancia') +
+    th('Modalidad', 'modalidad') +
+    th('Monto', 'monto_total') +
+    th('Pago', 'pago_estado') +
+    th('Música', 'musica_estado') +
+    '<th>Acción</th>' +
+    '</tr></thead><tbody>';
+  for (const r of rows) {
+    const fecha = r.created_at ? new Date(r.created_at).toLocaleDateString('es-AR') + ' ' + new Date(r.created_at).toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}) : '';
+    const pagoEst = r.pago_estado || 'pendiente';
+    const musEst = r.musica_estado || 'pendiente';
+    html += '<tr>' +
+      '<td>' + fecha + '</td>' +
+      '<td>' + esc(r.nombre) + '</td>' +
+      '<td>' + esc(r.email) + '</td>' +
+      '<td>' + esc(r.celular || '') + '</td>' +
+      '<td><span class="badge ' + r.instancia + '">' + (r.instancia || '').toUpperCase() + '</span></td>' +
+      '<td>' + esc(r.modalidad || '') + (r.cant_personas > 1 ? ' (' + r.cant_personas + ')' : '') + '</td>' +
+      '<td>' + (r.moneda || 'ARS') + ' ' + (r.monto_total || 0).toLocaleString('es-AR') + '</td>' +
+      '<td><span class="badge ' + pagoEst + '">' + pagoEst + '</span></td>' +
+      '<td><span class="badge ' + (musEst === 'cargada' ? 'cargada' : 'musica-pendiente') + '">' + musEst + '</span></td>' +
+      '<td><button onclick="showDetail(\'' + r.id + '\')">Ver</button> ' +
+      (pagoEst === 'pendiente' ? '<button onclick="togglePago(\'' + r.id + '\',true)" style="background:#388e3c">✓</button>' : '<button onclick="togglePago(\'' + r.id + '\',false)" style="background:#f57c00">↺</button>') +
+      '</td>' +
+      '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('tableWrap').innerHTML = html;
+}
+
+function th(label, key) {
+  const arrow = sortKey === key ? (sortDir === 'asc' ? '↑' : '↓') : '';
+  return '<th onclick="setSort(\'' + key + '\')">' + label + ' ' + arrow + '</th>';
+}
+
+function setSort(k) {
+  if (sortKey === k) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = k; sortDir = 'asc'; }
+  render();
+}
+
+function esc(s) {
+  return (s || '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+}
+
+async function togglePago(id, confirmar) {
+  const newEst = confirmar ? 'confirmado' : 'pendiente';
+  if (!confirm('Marcar pago como ' + newEst + '?')) return;
+  try {
+    await fetch(SB_URL + '/rest/v1/inscripciones?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pago_estado: newEst })
+    });
+    loadData();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function showDetail(id) {
+  const r = allData.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modalTitle').textContent = r.nombre + ' — ' + (r.instancia || '').toUpperCase();
+  let html = '<table style="background:transparent">';
+  for (const [k, v] of Object.entries(r)) {
+    let val = v;
+    if (typeof v === 'object' && v !== null) val = JSON.stringify(v, null, 2);
+    html += '<tr><th style="background:transparent;color:#ff5252">' + k + '</th><td><pre style="white-space:pre-wrap">' + esc(val) + '</pre></td></tr>';
+  }
+  html += '</table>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function exportCSV() {
+  if (!allData.length) return alert('Sin datos');
+  const cols = ['created_at','instancia','nombre','email','celular','modalidad','cant_personas','monto_total','moneda','pago_estado','musica_estado','id'];
+  const lines = [cols.join(',')];
+  for (const r of allData) {
+    lines.push(cols.map(c => {
+      let v = r[c];
+      if (v == null) return '';
+      v = String(v).replace(/"/g, '""');
+      return '"' + v + '"';
+    }).join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jam2026-inscriptos-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+</script>
+</body>
+  </html>
