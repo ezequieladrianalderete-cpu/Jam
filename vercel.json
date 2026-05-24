@@ -6,10 +6,7 @@
     { "src": "*.ico", "use": "@vercel/static" },
     { "src": "api/*.js", "use": "@vercel/node" }
   ],
-  "routes": [
-    { "src": "/musica", "dest": "/musica.html" },
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*\\.(png|ico|html))", "dest": "/$1" },
-    { "src": "/", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/musica", "destination": "/musica.html" }
   ]
 }
