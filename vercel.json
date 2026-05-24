@@ -8,6 +8,7 @@
   ],
   "rewrites": [
     { "source": "/musica", "destination": "/musica.html" },
+    { "source": "/admin", "destination": "/admin.html" },
     { "source": "/api/notify", "destination": "/api/notify.js" }
   ]
 }
