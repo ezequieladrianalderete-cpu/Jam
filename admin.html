@@ -3,52 +3,137 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0a0a" />
 <title>JAM 2026 — Panel Admin</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 20px; }
-  h1 { color: #d32f2f; margin-bottom: 20px; font-size: 28px; }
-  h2 { color: #ff5252; margin: 20px 0 10px; font-size: 18px; }
-  .login { max-width: 360px; margin: 100px auto; padding: 30px; background: #1a1a1a; border-radius: 12px; text-align: center; }
-  .login input { width: 100%; padding: 12px; margin: 10px 0; background: #0a0a0a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 16px; }
-  button { background: #d32f2f; color: #fff; border: 0; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 0; min-height: 100vh; }
+  h1 { color: #d32f2f; font-size: 24px; }
+  h2 { color: #ff5252; margin: 20px 0 12px; font-size: 18px; }
+  h3 { color: #fff; font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  button { background: #d32f2f; color: #fff; border: 0; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
   button:hover { background: #b71c1c; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .stat { background: #1a1a1a; padding: 16px; border-radius: 10px; border-left: 4px solid #d32f2f; }
-  .stat .label { color: #888; font-size: 12px; text-transform: uppercase; }
-  .stat .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: #333; }
+  button.secondary:hover { background: #444; }
+  button.success { background: #388e3c; }
+  button.success:hover { background: #2e7d32; }
+  button.warn { background: #f57c00; }
+  input, select { padding: 8px 12px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 14px; outline: none; }
+  input:focus, select:focus { border-color: #d32f2f; }
+
+  .login { max-width: 380px; margin: 80px auto; padding: 32px; background: #1a1a1a; border-radius: 12px; text-align: center; border: 1px solid #2a2a2a; }
+  .login h1 { margin-bottom: 8px; }
+  .login .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .login input { width: 100%; margin: 10px 0; font-size: 16px; }
+  .login button { width: 100%; padding: 12px; font-size: 16px; }
+  .login .err { color: #f44; margin-top: 10px; font-size: 13px; display: none; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #111; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 50; }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .conn-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4caf50; box-shadow: 0 0 8px #4caf50; }
+  .conn-dot.off { background: #f44336; box-shadow: 0 0 8px #f44336; }
+  .conn-label { font-size: 12px; color: #aaa; }
+
+  .tabs { display: flex; gap: 4px; padding: 0 20px; background: #111; border-bottom: 1px solid #222; overflow-x: auto; }
+  .tab-btn { background: transparent; color: #888; padding: 12px 18px; border-radius: 0; border-bottom: 2px solid transparent; font-weight: 500; }
+  .tab-btn:hover { background: #1a1a1a; color: #fff; }
+  .tab-btn.active { color: #d32f2f; border-bottom-color: #d32f2f; }
+
+  .panel { padding: 20px; }
+  .panel[hidden] { display: none; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .stat { background: #1a1a1a; padding: 14px; border-radius: 10px; border-left: 4px solid #d32f2f; }
+  .stat .label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
   .stat.ok { border-left-color: #4caf50; }
   .stat.warn { border-left-color: #ff9800; }
-  .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .filters input, .filters select { padding: 8px 12px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 14px; }
-  .filters input[type=search] { min-width: 220px; }
-  table { width: 100%; border-collapse: collapse; background: #1a1a1a; border-radius: 10px; overflow: hidden; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2a2a; font-size: 13px; }
-  th { background: #2a2a2a; color: #ff5252; font-weight: 600; text-transform: uppercase; font-size: 11px; cursor: pointer; user-select: none; }
+  .stat.info { border-left-color: #1976d2; }
+
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .filters input[type=search] { min-width: 240px; flex: 1; max-width: 400px; }
+
+  .table-wrap { background: #1a1a1a; border-radius: 10px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2a2a; font-size: 13px; vertical-align: middle; }
+  th { background: #2a2a2a; color: #ff5252; font-weight: 600; text-transform: uppercase; font-size: 11px; cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; }
   th:hover { background: #333; }
-  tr:hover { background: #222; }
-  .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  tr:hover td { background: #1f1f1f; }
+
+  .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
   .badge.nac { background: #1976d2; }
   .badge.int { background: #d32f2f; }
   .badge.rep { background: #7b1fa2; }
   .badge.reg { background: #455a64; }
-  .badge.pagado { background: #388e3c; }
+  .badge.confirmado { background: #388e3c; }
   .badge.pendiente { background: #f57c00; }
   .badge.cargada { background: #388e3c; }
-  .badge.musica-pendiente { background: #455a64; }
-  .actions { margin-bottom: 20px; }
-  .actions button { margin-right: 8px; }
+  .badge.musica-pend { background: #455a64; }
+  .badge.played { background: #1976d2; }
+
+  .audio-cell { min-width: 240px; }
+  .audio-cell audio { width: 220px; height: 32px; }
+  .audio-cell .nomus { color: #555; font-style: italic; font-size: 11px; }
+  .icon-btn { padding: 4px 8px; font-size: 12px; }
+
+  .row-actions { display: flex; gap: 4px; }
+  .row-actions button { padding: 4px 8px; font-size: 12px; }
+
+  /* DJ Mode */
+  .dj-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .dj-layout { grid-template-columns: 1fr; } }
+  .dj-playlist { background: #1a1a1a; border-radius: 10px; padding: 14px; }
+  .dj-track { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; margin-bottom: 6px; background: #111; cursor: pointer; border-left: 3px solid transparent; }
+  .dj-track:hover { background: #1f1f1f; }
+  .dj-track.current { background: #2a1a1a; border-left-color: #d32f2f; }
+  .dj-track.played { opacity: 0.5; }
+  .dj-track .num { width: 26px; color: #888; font-size: 12px; text-align: center; }
+  .dj-track .info { flex: 1; min-width: 0; }
+  .dj-track .name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dj-track .sub { color: #888; font-size: 11px; }
+  .dj-track .status { font-size: 10px; }
+  .dj-track .cached-dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; display: inline-block; margin-left: 4px; }
+
+  .dj-player { background: #1a1a1a; border-radius: 10px; padding: 20px; position: sticky; top: 110px; }
+  .now-playing { text-align: center; margin-bottom: 16px; min-height: 60px; }
+  .now-playing .np-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .now-playing .np-sub { color: #888; font-size: 12px; }
+  .now-playing.empty { color: #555; padding: 20px; }
+  .player-audio { width: 100%; margin-bottom: 14px; }
+  .player-ctrl { display: flex; gap: 8px; justify-content: center; }
+  .player-ctrl button { width: 50px; height: 50px; border-radius: 50%; padding: 0; font-size: 18px; }
+  .player-ctrl .play { background: #d32f2f; }
+  .dj-meta { margin-top: 14px; padding-top: 14px; border-top: 1px solid #2a2a2a; font-size: 12px; color: #888; }
+  .dj-meta strong { color: #fff; }
+
+  /* Sistema tab */
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .status-card { background: #1a1a1a; padding: 18px; border-radius: 10px; }
+  .status-card p { color: #aaa; font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
+  .progress { background: #0a0a0a; border-radius: 6px; height: 8px; overflow: hidden; margin: 8px 0; }
+  .progress-bar { background: #4caf50; height: 100%; transition: width 0.3s; }
+
+  /* Modal */
   .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .modal.open { display: flex; }
-  .modal-body { background: #1a1a1a; border-radius: 12px; padding: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-body { background: #1a1a1a; border-radius: 12px; padding: 24px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
   .modal-body h3 { color: #ff5252; margin-bottom: 16px; }
-  .modal-body pre { background: #0a0a0a; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
-  .close { float: right; background: #444; padding: 6px 12px; }
+  .modal-body pre { background: #0a0a0a; padding: 10px; border-radius: 6px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+  .modal table { background: transparent; min-width: 0; }
+  .modal table th { background: transparent; color: #ff5252; vertical-align: top; padding-right: 16px; }
+  .modal table td { word-break: break-all; }
+  .close { float: right; background: #444; padding: 6px 12px; font-size: 12px; }
+
   .empty { text-align: center; padding: 40px; color: #666; }
   .loading { text-align: center; padding: 40px; color: #888; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #d32f2f; z-index: 200; font-size: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+
   @media (max-width: 700px) {
-    table { font-size: 11px; }
-    th, td { padding: 6px; }
+    .topbar h1 { font-size: 16px; }
+    .panel { padding: 12px; }
+    th, td { padding: 6px; font-size: 11px; }
+    .audio-cell audio { width: 180px; }
   }
 </style>
 </head>
@@ -56,42 +141,123 @@
 
 <div id="loginScreen" class="login">
   <h1>JAM 2026 Admin</h1>
-  <p style="color:#888;margin-bottom:16px">Ingresá la clave</p>
-  <input type="password" id="pwd" placeholder="Clave" onkeydown="if(event.key==='Enter')doLogin()" />
+  <div class="subtitle">Ingresá la clave para acceder al panel</div>
+  <input type="password" id="pwd" placeholder="Clave" autocomplete="off" />
   <button onclick="doLogin()">Entrar</button>
-  <p id="loginErr" style="color:#f44;margin-top:10px;display:none">Clave incorrecta</p>
+  <div id="loginErr" class="err">Clave incorrecta</div>
 </div>
 
 <div id="app" style="display:none">
-  <h1>JAM 2026 — Panel Admin</h1>
-
-  <div class="stats" id="stats"></div>
-
-  <h2>Inscriptos</h2>
-  <div class="filters">
-    <input type="search" id="search" placeholder="Buscar por nombre, email o ID..." oninput="render()" />
-    <select id="filterInst" onchange="render()">
-      <option value="">Todas las instancias</option>
-      <option value="reg">REG - Sedes</option>
-      <option value="nac">NAC - Nacional</option>
-      <option value="int">INT - Internacional</option>
-      <option value="rep">REP - Repechaje</option>
-    </select>
-    <select id="filterPago" onchange="render()">
-      <option value="">Pago: todos</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="confirmado">Confirmado</option>
-    </select>
-    <select id="filterMusica" onchange="render()">
-      <option value="">Música: todos</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="cargada">Cargada</option>
-    </select>
-    <button onclick="exportCSV()">📥 Exportar CSV</button>
-    <button onclick="loadData()" style="background:#1976d2">🔄 Recargar</button>
+  <div class="topbar">
+    <h1>JAM 2026 — Panel</h1>
+    <div class="topbar-right">
+      <span id="connDot" class="conn-dot" title="Online"></span>
+      <span id="connLabel" class="conn-label">Online</span>
+      <button class="secondary icon-btn" onclick="loadData()" title="Recargar datos">↻</button>
+      <button class="secondary icon-btn" onclick="logout()" title="Cerrar sesión">⏻</button>
+    </div>
   </div>
 
-  <div id="tableWrap"><div class="loading">Cargando...</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="inscriptos" onclick="switchTab('inscriptos')">Inscriptos</button>
+    <button class="tab-btn" data-tab="dj" onclick="switchTab('dj')">🎵 DJ Mode</button>
+    <button class="tab-btn" data-tab="sistema" onclick="switchTab('sistema')">⚙ Sistema</button>
+  </div>
+
+  <section id="tab-inscriptos" class="panel">
+    <div class="stats" id="stats"></div>
+
+    <div class="filters">
+      <input type="search" id="search" placeholder="Buscar nombre, email, ID..." oninput="render()" />
+      <select id="filterInst" onchange="render()">
+        <option value="">Todas las instancias</option>
+        <option value="reg">REG - Sedes</option>
+        <option value="nac">NAC - Nacional</option>
+        <option value="int">INT - Internacional</option>
+        <option value="rep">REP - Repechaje</option>
+      </select>
+      <select id="filterPago" onchange="render()">
+        <option value="">Pago: todos</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmado">Confirmado</option>
+      </select>
+      <select id="filterMusica" onchange="render()">
+        <option value="">Música: todas</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="cargada">Cargada</option>
+      </select>
+      <button onclick="exportCSV()">📥 CSV</button>
+    </div>
+
+    <div id="tableWrap" class="table-wrap"><div class="loading">Cargando...</div></div>
+  </section>
+
+  <section id="tab-dj" class="panel" hidden>
+    <div class="dj-layout">
+      <div class="dj-playlist">
+        <h2 style="margin-top:0">Playlist <span style="color:#888;font-size:13px;font-weight:normal">(tracks cargadas)</span></h2>
+        <div class="filters" style="margin-bottom:10px">
+          <select id="djFilterInst" onchange="renderDJ()">
+            <option value="">Todas</option>
+            <option value="nac">NAC</option>
+            <option value="int">INT</option>
+            <option value="rep">REP</option>
+          </select>
+          <button class="secondary" onclick="resetPlayed()">Marcar todas no reproducidas</button>
+        </div>
+        <div id="djPlaylist"></div>
+      </div>
+
+      <div class="dj-player">
+        <h2 style="margin-top:0">Reproductor</h2>
+        <div id="nowPlaying" class="now-playing empty">Sin track seleccionada</div>
+        <audio id="djAudio" class="player-audio" controls></audio>
+        <div class="player-ctrl">
+          <button class="secondary" onclick="prevTrack()" title="Anterior">⏮</button>
+          <button class="play" id="playBtn" onclick="togglePlay()">▶</button>
+          <button class="secondary" onclick="nextTrack()" title="Siguiente">⏭</button>
+        </div>
+        <div class="dj-meta">
+          <div><strong id="djCount">0</strong> tracks en cola</div>
+          <div><strong id="djCached">0</strong> en cache offline</div>
+          <div id="djCurrentMeta" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-sistema" class="panel" hidden>
+    <div class="status-grid">
+      <div class="status-card">
+        <h3>Conexión</h3>
+        <p id="sysConn">Verificando...</p>
+        <p>Última sincronización: <strong id="sysLastSync">nunca</strong></p>
+      </div>
+      <div class="status-card">
+        <h3>Datos locales</h3>
+        <p>Inscripciones en cache: <strong id="sysCacheCount">0</strong></p>
+        <p>El panel funciona con estos datos si no hay internet.</p>
+      </div>
+      <div class="status-card">
+        <h3>Música offline</h3>
+        <p>Tracks descargadas: <strong id="sysAudioCount">0</strong></p>
+        <div class="progress"><div class="progress-bar" id="precacheProgress" style="width:0%"></div></div>
+        <button onclick="precacheAllAudio()" id="precacheBtn">Pre-cargar toda la música</button>
+        <button class="secondary" onclick="clearAudioCache()" style="margin-left:6px">Borrar cache</button>
+      </div>
+      <div class="status-card">
+        <h3>Backup</h3>
+        <p>Descargar todo en un solo archivo JSON.</p>
+        <button onclick="exportFullBackup()">📄 Backup completo</button>
+      </div>
+      <div class="status-card">
+        <h3>Acerca</h3>
+        <p>JAM 2026 — Panel Admin</p>
+        <p>2, 3 y 4 de Octubre · Palais Rouge, CABA</p>
+        <p style="color:#555;font-size:11px;margin-top:8px">Datos en tiempo real desde Supabase. Funciona offline una vez sincronizado.</p>
+      </div>
+    </div>
+  </section>
 </div>
 
 <div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
@@ -102,209 +268,475 @@
   </div>
 </div>
 
+<div id="toast" style="display:none" class="toast"></div>
 <script>
-const ADMIN_PWD = 'jam2026admin';
-const SB_URL  = 'https://paexpktmcytccjphoppu.supabase.co';
-const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg';
+// ============ CONFIG ============
+const ADMIN_PWD = "jam2026admin";
+const SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
+const MUSICA_BUCKET_BASE = SB_URL + "/storage/v1/object/public/musica/";
+const LS_DATA_KEY = "jam2026_data";
+const LS_PLAYED_KEY = "jam2026_played";
+const LS_LASTSYNC_KEY = "jam2026_lastsync";
 
+// ============ STATE ============
 let allData = [];
-let sortKey = 'created_at';
-let sortDir = 'desc';
+let sortKey = "created_at";
+let sortDir = "desc";
+let djTracks = [];
+let djIndex = -1;
+let djFilter = "";
+let playedSet = new Set(JSON.parse(localStorage.getItem(LS_PLAYED_KEY) || "[]"));
+let currentBlobUrl = null;
+let db = null;
 
+// ============ INDEXED DB (audio cache) ============
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("jam2026", 1);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains("audio")) d.createObjectStore("audio", { keyPath: "id" });
+    };
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = e => rej(e);
+  });
+}
+async function cacheAudio(id, url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error("HTTP " + resp.status);
+  const blob = await resp.blob();
+  if (!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("audio", "readwrite");
+    tx.objectStore("audio").put({ id, blob, url, size: blob.size, cachedAt: Date.now() });
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e);
+  });
+}
+async function getCachedAudio(id) {
+  if (!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("audio", "readonly");
+    const r = tx.objectStore("audio").get(id);
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = e => rej(e);
+  });
+}
+async function deleteCachedAudio(id) {
+  if (!db) db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction("audio", "readwrite");
+    tx.objectStore("audio").delete(id);
+    tx.oncomplete = () => res();
+  });
+}
+async function listCachedIds() {
+  if (!db) db = await openDB();
+  return new Promise((res) => {
+    const tx = db.transaction("audio", "readonly");
+    const r = tx.objectStore("audio").getAllKeys();
+    r.onsuccess = e => res(e.target.result || []);
+  });
+}
+async function clearAudioCache() {
+  if (!confirm("Borrar TODA la música descargada?")) return;
+  if (!db) db = await openDB();
+  await new Promise(res => {
+    const tx = db.transaction("audio", "readwrite");
+    tx.objectStore("audio").clear();
+    tx.oncomplete = res;
+  });
+  toast("Cache borrada");
+  updateSysCache();
+  renderDJ();
+  render();
+}
+
+// ============ AUDIO URL HELPER ============
+function getAudioUrl(r) {
+  if (!r) return null;
+  const u = r.musica_url;
+  if (!u) return null;
+  if (u.startsWith("http")) return u;
+  return MUSICA_BUCKET_BASE + u.replace(/^\/+/, "");
+}
+async function getPlayableSrc(r) {
+  const cached = await getCachedAudio(r.id);
+  if (cached) return URL.createObjectURL(cached.blob);
+  return getAudioUrl(r);
+}
+
+// ============ AUTH ============
 function doLogin() {
-  const pwd = document.getElementById('pwd').value;
-  if (pwd === ADMIN_PWD) {
-    sessionStorage.setItem('admin_ok', '1');
+  const v = document.getElementById("pwd").value;
+  if (v === ADMIN_PWD) {
+    sessionStorage.setItem("admin_ok", "1");
     showApp();
   } else {
-    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById("loginErr").style.display = "block";
   }
 }
-
+function logout() {
+  sessionStorage.removeItem("admin_ok");
+  location.reload();
+}
 function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  loadData();
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  init();
 }
 
-if (sessionStorage.getItem('admin_ok') === '1') showApp();
+// ============ TABS ============
+function switchTab(name) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".panel").forEach(p => p.hidden = p.id !== "tab-" + name);
+  if (name === "dj") renderDJ();
+  if (name === "sistema") updateSysAll();
+}
 
+// ============ ONLINE/OFFLINE ============
+function updateConn() {
+  const on = navigator.onLine;
+  const dot = document.getElementById("connDot");
+  const lbl = document.getElementById("connLabel");
+  if (dot) {
+    dot.classList.toggle("off", !on);
+    lbl.textContent = on ? "Online" : "Offline";
+  }
+  const sysConn = document.getElementById("sysConn");
+  if (sysConn) sysConn.textContent = on ? "🟢 Conectado a internet" : "🔴 Sin conexión — usando datos cacheados";
+}
+window.addEventListener("online", () => { updateConn(); if (sessionStorage.getItem("admin_ok") === "1") loadData(); });
+window.addEventListener("offline", updateConn);
+
+// ============ DATA LOADING ============
 async function loadData() {
+  if (!navigator.onLine) {
+    loadFromCache();
+    toast("Sin conexión — usando datos en cache");
+    return;
+  }
   try {
-    document.getElementById('tableWrap').innerHTML = '<div class="loading">Cargando...</div>';
-    const resp = await fetch(SB_URL + '/rest/v1/inscripciones?select=*&order=created_at.desc', {
-      headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON }
+    document.getElementById("tableWrap").innerHTML = '<div class="loading">Sincronizando...</div>';
+    const r = await fetch(SB_URL + "/rest/v1/inscripciones?select=*&order=created_at.desc", {
+      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
     });
-    allData = await resp.json();
-    renderStats();
-    render();
+    allData = await r.json();
+    localStorage.setItem(LS_DATA_KEY, JSON.stringify(allData));
+    localStorage.setItem(LS_LASTSYNC_KEY, new Date().toISOString());
+    renderAll();
+    updateSysAll();
   } catch (e) {
-    document.getElementById('tableWrap').innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+    toast("Error al cargar — usando cache");
+    loadFromCache();
   }
 }
+function loadFromCache() {
+  try {
+    allData = JSON.parse(localStorage.getItem(LS_DATA_KEY) || "[]");
+    renderAll();
+  } catch (e) {
+    allData = [];
+    document.getElementById("tableWrap").innerHTML = '<div class="empty">Sin datos en cache</div>';
+  }
+}
+function renderAll() {
+  renderStats();
+  render();
+  if (!document.getElementById("tab-dj").hidden) renderDJ();
+}
 
+// ============ STATS ============
 function renderStats() {
-  const total = allData.length;
+  const t = allData.length;
   const porInst = { reg: 0, nac: 0, int: 0, rep: 0 };
-  const pagado = allData.filter(x => x.pago_estado === 'confirmado').length;
-  const pendiente = total - pagado;
-  let recaudado = 0;
-  let aRecaudar = 0;
+  let pag = 0, rec = 0, aRec = 0;
   for (const x of allData) {
     porInst[x.instancia] = (porInst[x.instancia] || 0) + 1;
-    if (x.pago_estado === 'confirmado') recaudado += +(x.monto_total || 0);
-    else aRecaudar += +(x.monto_total || 0);
+    if (x.pago_estado === "confirmado") { pag++; rec += +(x.monto_total || 0); }
+    else aRec += +(x.monto_total || 0);
   }
-  const fmt = n => n.toLocaleString('es-AR');
-  document.getElementById('stats').innerHTML =
-    statCard('Total inscriptos', total, '') +
-    statCard('Pagos confirmados', pagado, 'ok') +
-    statCard('Pagos pendientes', pendiente, 'warn') +
-    statCard('Recaudado ARS', '$' + fmt(recaudado), 'ok') +
-    statCard('A recaudar ARS', '$' + fmt(aRecaudar), 'warn') +
-    statCard('Sedes (REG)', porInst.reg, '') +
-    statCard('Nacional (NAC)', porInst.nac, '') +
-    statCard('Internacional (INT)', porInst.int, '') +
-    statCard('Repechaje (REP)', porInst.rep, '');
+  const fmt = n => n.toLocaleString("es-AR");
+  const card = (l, v, c) => '<div class="stat ' + (c||'') + '"><div class="label">' + l + '</div><div class="value">' + v + '</div></div>';
+  document.getElementById("stats").innerHTML =
+    card("Total", t, "") +
+    card("Pagos OK", pag, "ok") +
+    card("Pago pendiente", t - pag, "warn") +
+    card("Recaudado", "$" + fmt(rec), "ok") +
+    card("A cobrar", "$" + fmt(aRec), "warn") +
+    card("REG", porInst.reg, "info") +
+    card("NAC", porInst.nac, "info") +
+    card("INT", porInst.int, "info") +
+    card("REP", porInst.rep, "info");
 }
 
-function statCard(label, value, cls) {
-  return '<div class="stat ' + cls + '"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
+function esc(s) {
+  return (s == null ? "" : String(s)).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 }
 
+// ============ TABLE RENDER ============
 function render() {
-  const q = document.getElementById('search').value.toLowerCase();
-  const fi = document.getElementById('filterInst').value;
-  const fp = document.getElementById('filterPago').value;
-  const fm = document.getElementById('filterMusica').value;
-
+  const q = (document.getElementById("search")?.value || "").toLowerCase();
+  const fi = document.getElementById("filterInst")?.value || "";
+  const fp = document.getElementById("filterPago")?.value || "";
+  const fm = document.getElementById("filterMusica")?.value || "";
   let rows = allData.filter(x => {
     if (fi && x.instancia !== fi) return false;
-    if (fp && (x.pago_estado || 'pendiente') !== fp) return false;
-    if (fm && (x.musica_estado || 'pendiente') !== fm) return false;
+    if (fp && (x.pago_estado || "pendiente") !== fp) return false;
+    if (fm && (x.musica_estado || "pendiente") !== fm) return false;
     if (q) {
-      const hay = ((x.nombre || '') + ' ' + (x.email || '') + ' ' + (x.id || '')).toLowerCase();
-      if (!hay.includes(q)) return false;
+      const h = ((x.nombre||"") + " " + (x.email||"") + " " + (x.id||"")).toLowerCase();
+      if (!h.includes(q)) return false;
     }
     return true;
   });
-
   rows.sort((a, b) => {
     let va = a[sortKey], vb = b[sortKey];
-    if (va == null) va = '';
-    if (vb == null) vb = '';
-    if (va < vb) return sortDir === 'asc' ? -1 : 1;
-    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    if (va == null) va = "";
+    if (vb == null) vb = "";
+    if (va < vb) return sortDir === "asc" ? -1 : 1;
+    if (va > vb) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
-
-  if (rows.length === 0) {
-    document.getElementById('tableWrap').innerHTML = '<div class="empty">No hay inscriptos que coincidan</div>';
+  if (!rows.length) {
+    document.getElementById("tableWrap").innerHTML = '<div class="empty">Sin resultados</div>';
     return;
   }
-
+  const th = (l, k) => {
+    const a = sortKey === k ? (sortDir === "asc" ? "↑" : "↓") : "";
+    return '<th onclick="setSort(\'' + k + '\')">' + l + " " + a + "</th>";
+  };
   let html = '<table><thead><tr>' +
-    th('Fecha', 'created_at') +
-    th('Nombre', 'nombre') +
-    th('Email', 'email') +
-    th('Celular', 'celular') +
-    th('Instancia', 'instancia') +
-    th('Modalidad', 'modalidad') +
-    th('Monto', 'monto_total') +
-    th('Pago', 'pago_estado') +
-    th('Música', 'musica_estado') +
-    '<th>Acción</th>' +
+    th("Fecha", "created_at") +
+    th("Nombre", "nombre") +
+    th("Email", "email") +
+    th("Inst", "instancia") +
+    th("Modalidad", "modalidad") +
+    th("Monto", "monto_total") +
+    th("Pago", "pago_estado") +
+    th("Música", "musica_estado") +
+    '<th>Audio</th><th>Acciones</th>' +
     '</tr></thead><tbody>';
   for (const r of rows) {
-    const fecha = r.created_at ? new Date(r.created_at).toLocaleDateString('es-AR') + ' ' + new Date(r.created_at).toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}) : '';
-    const pagoEst = r.pago_estado || 'pendiente';
-    const musEst = r.musica_estado || 'pendiente';
+    const dt = r.created_at ? new Date(r.created_at) : null;
+    const fecha = dt ? dt.toLocaleDateString("es-AR") + " " + dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}) : "";
+    const pe = r.pago_estado || "pendiente";
+    const me = r.musica_estado || "pendiente";
+    const audioUrl = getAudioUrl(r);
+    let audioCell = '<span class="nomus">—</span>';
+    if (audioUrl) {
+      audioCell = '<audio controls preload="none" src="' + audioUrl + '"></audio> ' +
+                  '<a href="' + audioUrl + '" download="track-' + r.id + '.mp3" title="Descargar"><button class="secondary icon-btn">⬇</button></a>';
+    }
     html += '<tr>' +
       '<td>' + fecha + '</td>' +
       '<td>' + esc(r.nombre) + '</td>' +
       '<td>' + esc(r.email) + '</td>' +
-      '<td>' + esc(r.celular || '') + '</td>' +
-      '<td><span class="badge ' + r.instancia + '">' + (r.instancia || '').toUpperCase() + '</span></td>' +
-      '<td>' + esc(r.modalidad || '') + (r.cant_personas > 1 ? ' (' + r.cant_personas + ')' : '') + '</td>' +
-      '<td>' + (r.moneda || 'ARS') + ' ' + (r.monto_total || 0).toLocaleString('es-AR') + '</td>' +
-      '<td><span class="badge ' + pagoEst + '">' + pagoEst + '</span></td>' +
-      '<td><span class="badge ' + (musEst === 'cargada' ? 'cargada' : 'musica-pendiente') + '">' + musEst + '</span></td>' +
-      '<td><button onclick="showDetail(\'' + r.id + '\')">Ver</button> ' +
-      (pagoEst === 'pendiente' ? '<button onclick="togglePago(\'' + r.id + '\',true)" style="background:#388e3c">✓</button>' : '<button onclick="togglePago(\'' + r.id + '\',false)" style="background:#f57c00">↺</button>') +
-      '</td>' +
-      '</tr>';
+      '<td><span class="badge ' + r.instancia + '">' + (r.instancia||"").toUpperCase() + '</span></td>' +
+      '<td>' + esc(r.modalidad || "") + (r.cant_personas > 1 ? " (" + r.cant_personas + ")" : "") + '</td>' +
+      '<td>' + (r.moneda || "ARS") + " " + (+(r.monto_total||0)).toLocaleString("es-AR") + '</td>' +
+      '<td><span class="badge ' + pe + '">' + pe + '</span></td>' +
+      '<td><span class="badge ' + (me === "cargada" ? "cargada" : "musica-pend") + '">' + me + '</span></td>' +
+      '<td class="audio-cell">' + audioCell + '</td>' +
+      '<td><div class="row-actions">' +
+        '<button class="secondary" onclick="showDetail(\'' + r.id + '\')">Ver</button>' +
+        (pe === "pendiente" ? '<button class="success" onclick="togglePago(\'' + r.id + '\',true)">✓</button>' : '<button class="warn" onclick="togglePago(\'' + r.id + '\',false)">↺</button>') +
+      '</div></td>' +
+    '</tr>';
   }
   html += '</tbody></table>';
-  document.getElementById('tableWrap').innerHTML = html;
+  document.getElementById("tableWrap").innerHTML = html;
 }
+function setSort(k) { if (sortKey === k) sortDir = sortDir === "asc" ? "desc" : "asc"; else { sortKey = k; sortDir = "asc"; } render(); }
 
-function th(label, key) {
-  const arrow = sortKey === key ? (sortDir === 'asc' ? '↑' : '↓') : '';
-  return '<th onclick="setSort(\'' + key + '\')">' + label + ' ' + arrow + '</th>';
-}
-
-function setSort(k) {
-  if (sortKey === k) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-  else { sortKey = k; sortDir = 'asc'; }
-  render();
-}
-
-function esc(s) {
-  return (s || '').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-}
-
-async function togglePago(id, confirmar) {
-  const newEst = confirmar ? 'confirmado' : 'pendiente';
-  if (!confirm('Marcar pago como ' + newEst + '?')) return;
+async function togglePago(id, conf) {
+  const ne = conf ? "confirmado" : "pendiente";
+  if (!confirm("Marcar pago como " + ne + "?")) return;
+  if (!navigator.onLine) { toast("Sin internet — no se puede modificar"); return; }
   try {
-    await fetch(SB_URL + '/rest/v1/inscripciones?id=eq.' + id, {
-      method: 'PATCH',
-      headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pago_estado: newEst })
+    await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
+      method: "PATCH",
+      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ pago_estado: ne })
     });
-    loadData();
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
+    const r = allData.find(x => x.id === id);
+    if (r) r.pago_estado = ne;
+    localStorage.setItem(LS_DATA_KEY, JSON.stringify(allData));
+    renderAll();
+    toast("Pago actualizado");
+  } catch (e) { toast("Error: " + e.message); }
 }
 
 function showDetail(id) {
   const r = allData.find(x => x.id === id);
   if (!r) return;
-  document.getElementById('modalTitle').textContent = r.nombre + ' — ' + (r.instancia || '').toUpperCase();
-  let html = '<table style="background:transparent">';
+  document.getElementById("modalTitle").textContent = (r.nombre || "Detalle") + " — " + (r.instancia||"").toUpperCase();
+  let html = '<table>';
   for (const [k, v] of Object.entries(r)) {
     let val = v;
-    if (typeof v === 'object' && v !== null) val = JSON.stringify(v, null, 2);
-    html += '<tr><th style="background:transparent;color:#ff5252">' + k + '</th><td><pre style="white-space:pre-wrap">' + esc(val) + '</pre></td></tr>';
+    if (typeof v === "object" && v !== null) val = JSON.stringify(v, null, 2);
+    html += '<tr><th>' + k + '</th><td>' + esc(val) + '</td></tr>';
   }
   html += '</table>';
-  document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('modal').classList.add('open');
+  const au = getAudioUrl(r);
+  if (au) html += '<h3 style="margin-top:16px">Música</h3><audio controls src="' + au + '" style="width:100%"></audio>';
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modal").classList.add("open");
 }
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
+function closeModal() { document.getElementById("modal").classList.remove("open"); }
 
 function exportCSV() {
-  if (!allData.length) return alert('Sin datos');
-  const cols = ['created_at','instancia','nombre','email','celular','modalidad','cant_personas','monto_total','moneda','pago_estado','musica_estado','id'];
-  const lines = [cols.join(',')];
-  for (const r of allData) {
-    lines.push(cols.map(c => {
-      let v = r[c];
-      if (v == null) return '';
-      v = String(v).replace(/"/g, '""');
-      return '"' + v + '"';
-    }).join(','));
-  }
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'jam2026-inscriptos-' + new Date().toISOString().split('T')[0] + '.csv';
+  if (!allData.length) return toast("Sin datos");
+  const cols = ["created_at","instancia","nombre","email","celular","modalidad","cant_personas","monto_total","moneda","pago_estado","musica_estado","musica_url","id"];
+  const lines = [cols.join(",")];
+  for (const r of allData) lines.push(cols.map(c => { let v = r[c]; if (v == null) return ""; return '"' + String(v).replace(/"/g,'""') + '"'; }).join(","));
+  download("jam2026-inscriptos-" + new Date().toISOString().split("T")[0] + ".csv", lines.join("\n"), "text/csv;charset=utf-8");
+}
+function exportFullBackup() {
+  const backup = { exportedAt: new Date().toISOString(), count: allData.length, inscripciones: allData };
+  download("jam2026-backup-" + new Date().toISOString().split("T")[0] + ".json", JSON.stringify(backup, null, 2), "application/json");
+}
+function download(name, data, type) {
+  const b = new Blob([data], { type });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b);
+  a.download = name;
   a.click();
 }
+
+// ============ DJ MODE ============
+function renderDJ() {
+  djFilter = document.getElementById("djFilterInst")?.value || "";
+  djTracks = allData.filter(x => {
+    if ((x.musica_estado || "") !== "cargada") return false;
+    if (!getAudioUrl(x)) return false;
+    if (djFilter && x.instancia !== djFilter) return false;
+    return true;
+  });
+  djTracks.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  document.getElementById("djCount").textContent = djTracks.length;
+  listCachedIds().then(ids => {
+    const cached = new Set(ids);
+    const cachedHere = djTracks.filter(t => cached.has(t.id)).length;
+    document.getElementById("djCached").textContent = cachedHere;
+    let html = "";
+    if (!djTracks.length) html = '<div class="empty">Sin tracks cargadas todavía</div>';
+    else {
+      djTracks.forEach((t, i) => {
+        const isCur = i === djIndex;
+        const played = playedSet.has(t.id);
+        const dot = cached.has(t.id) ? '<span class="cached-dot" title="En cache offline"></span>' : "";
+        html += '<div class="dj-track ' + (isCur ? "current " : "") + (played ? "played" : "") + '" onclick="playTrackIdx(' + i + ')">' +
+          '<div class="num">' + (i+1) + '</div>' +
+          '<div class="info">' +
+            '<div class="name">' + esc(t.nombre) + dot + '</div>' +
+            '<div class="sub">' + (t.instancia||"").toUpperCase() + ' · ' + esc(t.email) + '</div>' +
+          '</div>' +
+          '<div class="status">' + (played ? '<span class="badge played">OK</span>' : "") + '</div>' +
+        '</div>';
+      });
+    }
+    document.getElementById("djPlaylist").innerHTML = html;
+  });
+}
+async function playTrackIdx(i) {
+  if (i < 0 || i >= djTracks.length) return;
+  djIndex = i;
+  const t = djTracks[i];
+  const audio = document.getElementById("djAudio");
+  const np = document.getElementById("nowPlaying");
+  np.className = "now-playing";
+  np.innerHTML = '<div class="np-name">' + esc(t.nombre) + '</div><div class="np-sub">' + (t.instancia||"").toUpperCase() + ' · ' + esc(t.email) + '</div>';
+  document.getElementById("djCurrentMeta").innerHTML = 'ID: <code style="font-size:10px">' + t.id.substring(0,8) + '</code>';
+  if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+  try {
+    const src = await getPlayableSrc(t);
+    if (src.startsWith("blob:")) currentBlobUrl = src;
+    audio.src = src;
+    audio.play().catch(() => {});
+    markPlayed(t.id);
+  } catch (e) { toast("Error cargando audio: " + e.message); }
+  renderDJ();
+}
+function prevTrack() { if (djIndex > 0) playTrackIdx(djIndex - 1); }
+function nextTrack() { if (djIndex < djTracks.length - 1) playTrackIdx(djIndex + 1); }
+function togglePlay() {
+  const a = document.getElementById("djAudio");
+  if (!a.src) { if (djTracks.length) playTrackIdx(0); return; }
+  if (a.paused) a.play(); else a.pause();
+}
+function markPlayed(id) {
+  playedSet.add(id);
+  localStorage.setItem(LS_PLAYED_KEY, JSON.stringify([...playedSet]));
+}
+function resetPlayed() {
+  if (!confirm("Marcar todas como no reproducidas?")) return;
+  playedSet.clear();
+  localStorage.removeItem(LS_PLAYED_KEY);
+  renderDJ();
+}
+
+// ============ AUDIO CACHE ============
+async function precacheAllAudio() {
+  const btn = document.getElementById("precacheBtn");
+  const bar = document.getElementById("precacheProgress");
+  const targets = allData.filter(x => (x.musica_estado === "cargada") && getAudioUrl(x));
+  if (!targets.length) return toast("No hay tracks para cachear");
+  btn.disabled = true;
+  let done = 0, fail = 0;
+  for (const r of targets) {
+    try {
+      const existing = await getCachedAudio(r.id);
+      if (existing) { done++; continue; }
+      await cacheAudio(r.id, getAudioUrl(r));
+      done++;
+    } catch (e) { fail++; }
+    bar.style.width = ((done + fail) / targets.length * 100) + "%";
+    btn.textContent = "Descargando " + (done + fail) + "/" + targets.length;
+  }
+  btn.disabled = false;
+  btn.textContent = "Pre-cargar toda la música";
+  toast("Cache: " + done + " OK, " + fail + " errores");
+  updateSysCache();
+  renderDJ();
+}
+async function updateSysCache() {
+  const ids = await listCachedIds();
+  const el = document.getElementById("sysAudioCount");
+  if (el) el.textContent = ids.length;
+}
+function updateSysAll() {
+  const ls = localStorage.getItem(LS_LASTSYNC_KEY);
+  document.getElementById("sysLastSync").textContent = ls ? new Date(ls).toLocaleString("es-AR") : "nunca";
+  document.getElementById("sysCacheCount").textContent = allData.length;
+  updateSysCache();
+  updateConn();
+}
+
+// ============ TOAST ============
+let toastT;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.style.display = "none", 2800);
+}
+
+// ============ INIT ============
+async function init() {
+  updateConn();
+  try { db = await openDB(); } catch(e) {}
+  loadFromCache();
+  if (navigator.onLine) loadData();
+  // Auto-next al terminar
+  document.getElementById("djAudio").addEventListener("ended", nextTrack);
+}
+
+document.getElementById("pwd").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+if (sessionStorage.getItem("admin_ok") === "1") showApp();
+updateConn();
 </script>
 </body>
-  </html>
+       </html>
