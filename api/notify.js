@@ -1,6 +1,6 @@
 // Vercel Serverless Function - JAM 2026
 // POST /api/notify { id: "uuid" }
-// v5: arregla bug quoted-printable + envia tambien al responsable de sede (sede_email_org)
+// v6: mails al participante y al responsable de sede son INDEPENDIENTES - el fallo de uno no impide el otro
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,9 +19,8 @@ module.exports = async function handler(req, res) {
     const SB_KEY = process.env.SUPABASE_SERVICE_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
     const SITE_URL = process.env.SITE_URL || 'https://jam-inscripciones.vercel.app';
-
     if (!SB_URL || !SB_KEY || !RESEND_KEY) {
-      return res.status(500).json({ error: 'Missing env vars', has: { SB_URL: !!SB_URL, SB_KEY: !!SB_KEY, RESEND_KEY: !!RESEND_KEY } });
+      return res.status(500).json({ error: 'Missing env vars' });
     }
 
     const sbResp = await fetch(`${SB_URL}/rest/v1/inscripciones?id=eq.${id}&select=*`, {
@@ -29,15 +28,13 @@ module.exports = async function handler(req, res) {
     });
     if (!sbResp.ok) {
       const err = await sbResp.text();
-      return res.status(500).json({ error: 'Supabase fetch failed', status: sbResp.status, detail: err.substring(0, 200) });
+      return res.status(500).json({ error: 'Supabase fetch failed', detail: err.substring(0,200) });
     }
     const rows = await sbResp.json();
     const ins = rows && rows[0];
     if (!ins) return res.status(404).json({ error: 'Inscripcion not found', id });
 
-    // Helper para escapar '=' como entidad HTML (fix Resend quoted-printable bug)
     const escEq = u => u.replace(/=/g, '&#x3D;');
-
     const qrUrlRaw = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=JAM2026-' + ins.id;
     const qrUrl = escEq(qrUrlRaw);
     const musicaUrlRaw = ins.musica_token ? (SITE_URL + '/musica?token=' + ins.musica_token) : null;
@@ -51,7 +48,23 @@ module.exports = async function handler(req, res) {
     const monto = (ins.moneda || 'ARS') + ' ' + (ins.monto_total || 0);
     const sedeNombre = ins.sede_nombre || '';
 
-    // ===== MAIL #1: al participante =====
+    // Helper para enviar un email via Resend con manejo de error aislado
+    async function sendMail(to, subject, html) {
+      try {
+        const r = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: 'JAM 2026 <onboarding@resend.dev>', to: [to], subject, html })
+        });
+        const d = await r.json();
+        if (r.ok) return { ok: true, id: d.id, to };
+        return { ok: false, to, status: r.status, error: d };
+      } catch (e) {
+        return { ok: false, to, error: e.message };
+      }
+    }
+
+    // MAIL #1: al participante
     const htmlParticipante = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#222">
 <h1 style="color:#d32f2f;margin-bottom:8px">JAM 2026</h1>
 <p style="color:#888;margin-bottom:20px">Inscripcion confirmada</p>
@@ -67,26 +80,12 @@ module.exports = async function handler(req, res) {
 ${musicaLink}
 <hr style="margin:30px 0;border:0;border-top:1px solid #eee" />
 <p style="color:#888;font-size:13px">Evento: 2, 3 y 4 de Octubre 2026 - Palais Rouge, CABA</p>
-<p style="color:#aaa;font-size:11px;margin-top:10px">JAM Dance Competition 2026</p>
 </div>`;
 
-    const resendResp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: 'JAM 2026 <onboarding@resend.dev>',
-        to: [ins.email],
-        subject: 'Inscripcion JAM 2026 confirmada - ' + instancia,
-        html: htmlParticipante
-      })
-    });
-    const resendData = await resendResp.json();
-    if (!resendResp.ok) {
-      return res.status(500).json({ error: 'Resend failed (participant)', status: resendResp.status, detail: resendData });
-    }
+    const mailPart = await sendMail(ins.email, 'Inscripcion JAM 2026 confirmada - ' + instancia, htmlParticipante);
 
-    // ===== MAIL #2: al responsable de sede (si existe sede_email_org) =====
-    let sedeMailId = null;
+    // MAIL #2: al responsable de sede (independiente del primero)
+    let mailSede = null;
     const sedeEmail = (ins.sede_email_org || '').trim();
     const isValidEmail = sedeEmail && sedeEmail.indexOf('@') > 0 && sedeEmail.indexOf('.') > 0;
     if (isValidEmail && ins.instancia === 'reg') {
@@ -102,36 +101,20 @@ ${musicaLink}
 <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666">Monto</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${monto}</strong></td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#666">ID</td><td style="padding:8px;border-bottom:1px solid #eee;font-family:monospace;font-size:11px">${ins.id}</td></tr>
 </table>
-<p style="color:#888;font-size:13px;margin-top:20px">Este mail es informativo - el participante ya recibio su confirmacion personal.</p>
-<hr style="margin:30px 0;border:0;border-top:1px solid #eee" />
-<p style="color:#aaa;font-size:11px">JAM Dance Competition 2026</p>
+<p style="color:#888;font-size:13px;margin-top:20px">Mail informativo - el participante ya recibio su confirmacion.</p>
 </div>`;
-      const sedeResp = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'JAM 2026 <onboarding@resend.dev>',
-          to: [sedeEmail],
-          subject: 'Nueva inscripcion en tu sede: ' + nombre,
-          html: htmlSede
-        })
-      });
-      if (sedeResp.ok) {
-        const sedeData = await sedeResp.json();
-        sedeMailId = sedeData.id;
-      }
+      mailSede = await sendMail(sedeEmail, 'Nueva inscripcion en tu sede: ' + nombre, htmlSede);
     }
 
     return res.status(200).json({
       ok: true,
       id,
-      email: ins.email,
-      resend_id: resendData.id,
-      sede_email_sent_to: isValidEmail && ins.instancia === 'reg' ? sedeEmail : null,
-      sede_resend_id: sedeMailId
+      mail_participante: mailPart,
+      mail_sede: mailSede,
+      sede_skipped_reason: !isValidEmail ? 'no valid sede_email_org' : (ins.instancia !== 'reg' ? 'not REG instance' : null)
     });
 
   } catch (e) {
-    return res.status(500).json({ error: 'Exception', message: e.message, stack: (e.stack || '').substring(0, 500) });
+    return res.status(500).json({ error: 'Exception', message: e.message });
   }
 };
