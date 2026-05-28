@@ -156,7 +156,7 @@ module.exports = async function handler(req, res) {
         const r = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from: 'JAM 2026 <onboarding@resend.dev>', to: [to], subject, html })
+          body: JSON.stringify({ from: 'JAM Inter América <info@jamcompetencia.com>', to: [to], subject, html })
         });
         const d = await r.json();
         if (r.ok) return { ok: true, id: d.id, to };
