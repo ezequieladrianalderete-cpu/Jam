@@ -1,742 +1,582 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="background:#080808">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#0a0a0a" />
-<title>JAM 2026 — Panel Admin</title>
+<meta name="theme-color" content="#080808" />
+<title>Admin — JAM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0a; color: #f5f5f5; padding: 0; min-height: 100vh; }
-  h1 { color: #d32f2f; font-size: 24px; }
-  h2 { color: #ff5252; margin: 20px 0 12px; font-size: 18px; }
-  h3 { color: #fff; font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-  button { background: #d32f2f; color: #fff; border: 0; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
-  button:hover { background: #b71c1c; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.secondary { background: #333; }
-  button.secondary:hover { background: #444; }
-  button.success { background: #388e3c; }
-  button.success:hover { background: #2e7d32; }
-  button.warn { background: #f57c00; }
-  input, select { padding: 8px 12px; background: #1a1a1a; color: #fff; border: 1px solid #333; border-radius: 6px; font-size: 14px; outline: none; }
-  input:focus, select:focus { border-color: #d32f2f; }
+html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+.topbar{background:#0a0a0a;border-bottom:1px solid rgba(201,168,76,.2);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.brand{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;letter-spacing:4px;color:#C9A84C}
+.brand small{font-size:10px;color:rgba(248,245,238,.4);letter-spacing:1px;margin-left:6px;text-transform:uppercase;font-family:'Outfit',sans-serif;font-weight:500}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.btn-mini{background:rgba(255,255,255,.05);color:rgba(248,245,238,.7);border:1px solid rgba(255,255,255,.1);padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500}
+.btn-mini:hover{background:rgba(201,168,76,.1);color:#C9A84C;border-color:rgba(201,168,76,.3)}
+.tabs{display:flex;gap:0;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,.08);padding:0 22px;position:sticky;top:53px;z-index:9}
+.tab{padding:13px 18px;font-size:13px;font-weight:600;color:rgba(248,245,238,.5);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.5px}
+.tab:hover{color:rgba(248,245,238,.85)}
+.tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
+.tab .count{background:rgba(201,168,76,.15);color:#C9A84C;border-radius:100px;padding:1px 7px;font-size:10px;margin-left:6px;font-weight:700}
+.container{max-width:1400px;margin:0 auto;padding:18px 22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px}
+.stat-label{font-size:10px;color:rgba(248,245,238,.45);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:28px;color:#F8F5EE;font-weight:600;line-height:1}
+.stat.gold .stat-value{color:#C9A84C}
+.stat.green .stat-value{color:#4CAF7D}
+.stat.amber .stat-value{color:#E8A838}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-box{flex:1;min-width:220px;background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#F8F5EE;font-size:13px;font-family:'Outfit',sans-serif}
+.search-box:focus{outline:none;border-color:rgba(201,168,76,.4)}
+.filter-select{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#F8F5EE;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
+.filter-select:focus{outline:none;border-color:rgba(201,168,76,.4)}
+.btn-primary{background:#C9A84C;color:#0A0A0A;border:none;padding:10px 18px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;text-transform:uppercase;letter-spacing:.5px}
+.btn-primary:hover{background:#E8A838}
+.list{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.ins-row{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:background .15s}
+.ins-row:last-child{border-bottom:none}
+.ins-row:hover{background:rgba(201,168,76,.03)}
+.ins-row.expanded{background:rgba(201,168,76,.05);border-left:3px solid #C9A84C}
+.ins-code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#C9A84C;background:#2a2000;padding:5px 10px;border-radius:8px;font-weight:600;letter-spacing:1px;flex-shrink:0;white-space:nowrap;min-width:140px;text-align:center}
+.ins-info{flex:1;min-width:200px}
+.ins-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#F8F5EE;margin-bottom:2px}
+.ins-meta{font-size:11px;color:rgba(248,245,238,.5)}
+.ins-badges{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.bdg{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.bdg-gold{background:#2a2000;color:#C9A84C;border:1px solid rgba(201,168,76,.3)}
+.bdg-green{background:#001a0a;color:#4CAF7D;border:1px solid rgba(76,175,125,.3)}
+.bdg-amber{background:#1a1000;color:#E8A838;border:1px solid rgba(232,168,56,.3)}
+.bdg-red{background:#1a0000;color:#E05252;border:1px solid rgba(224,82,82,.3)}
+.bdg-gray{background:#1a1a1a;color:rgba(248,245,238,.5);border:1px solid rgba(255,255,255,.1)}
+.ins-amount{font-family:'JetBrains Mono',monospace;font-size:13px;color:#C9A84C;font-weight:600;flex-shrink:0;min-width:90px;text-align:right}
+.ins-actions{display:flex;gap:6px;flex-shrink:0}
+.btn-icon{background:rgba(255,255,255,.05);color:rgba(248,245,238,.7);border:1px solid rgba(255,255,255,.1);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap}
+.btn-icon:hover{background:rgba(201,168,76,.1);color:#C9A84C;border-color:rgba(201,168,76,.3)}
+.btn-icon.btn-green:hover{background:rgba(76,175,125,.1);color:#4CAF7D;border-color:rgba(76,175,125,.3)}
+.detail{padding:18px;background:#0d0d0d;border-top:1px solid rgba(255,255,255,.06);display:none}
+.detail.show{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
+.det-block{background:#141414;border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,.05)}
+.det-title{font-size:10px;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.det-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);gap:8px}
+.det-row:last-child{border:0}
+.det-row .k{color:rgba(248,245,238,.45)}
+.det-row .v{color:#F8F5EE;font-weight:500;text-align:right;word-break:break-word}
+.cat-tag{display:inline-block;background:#1a1600;border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:11px}
+.cat-tag .num{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-weight:600;margin-right:4px}
+.cat-tag .nom{color:#F8F5EE;font-family:'Cormorant Garamond',serif;font-size:13px}
+.empty{padding:60px 20px;text-align:center;color:rgba(248,245,238,.4);font-style:italic;font-size:13px}
+.loading{text-align:center;padding:80px 20px;color:rgba(248,245,238,.5)}
+.spinner{display:inline-block;width:48px;height:48px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .login { max-width: 380px; margin: 80px auto; padding: 32px; background: #1a1a1a; border-radius: 12px; text-align: center; border: 1px solid #2a2a2a; }
-  .login h1 { margin-bottom: 8px; }
-  .login .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
-  .login input { width: 100%; margin: 10px 0; font-size: 16px; }
-  .login button { width: 100%; padding: 12px; font-size: 16px; }
-  .login .err { color: #f44; margin-top: 10px; font-size: 13px; display: none; }
+.login{max-width:400px;margin:120px auto;padding:32px;background:#141414;border:1px solid rgba(201,168,76,.2);border-radius:18px}
+.login h1{font-family:'Cormorant Garamond',serif;color:#C9A84C;font-size:32px;text-align:center;letter-spacing:4px;margin-bottom:8px}
+.login p{text-align:center;color:rgba(248,245,238,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px}
+.login input{width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#F8F5EE;font-family:'JetBrains Mono',monospace;font-size:14px;margin-bottom:14px}
+.login input:focus{outline:none;border-color:#C9A84C}
+.login button{width:100%;background:#C9A84C;color:#0A0A0A;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;text-transform:uppercase;letter-spacing:1px}
 
-  .topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #111; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 50; }
-  .topbar-right { display: flex; gap: 10px; align-items: center; }
-  .conn-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4caf50; box-shadow: 0 0 8px #4caf50; }
-  .conn-dot.off { background: #f44336; box-shadow: 0 0 8px #f44336; }
-  .conn-label { font-size: 12px; color: #aaa; }
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 
-  .tabs { display: flex; gap: 4px; padding: 0 20px; background: #111; border-bottom: 1px solid #222; overflow-x: auto; }
-  .tab-btn { background: transparent; color: #888; padding: 12px 18px; border-radius: 0; border-bottom: 2px solid transparent; font-weight: 500; }
-  .tab-btn:hover { background: #1a1a1a; color: #fff; }
-  .tab-btn.active { color: #d32f2f; border-bottom-color: #d32f2f; }
+.dj-grid{display:grid;grid-template-columns:300px 1fr;gap:14px;height:calc(100vh - 200px)}
+.dj-list{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow-y:auto}
+.dj-item{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px}
+.dj-item:hover{background:rgba(201,168,76,.05)}
+.dj-item.active{background:rgba(201,168,76,.15);border-left:3px solid #C9A84C}
+.dj-item-code{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:11px;font-weight:600;margin-bottom:2px}
+.dj-item-name{color:#F8F5EE;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600}
+.dj-item-cat{color:rgba(248,245,238,.5);font-size:10px;margin-top:2px}
+.dj-player{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dj-player-empty{color:rgba(248,245,238,.4);font-style:italic;text-align:center}
+.dj-player-info{text-align:center;margin-bottom:20px}
+.dj-player-code{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:14px;margin-bottom:8px}
+.dj-player-name{font-family:'Cormorant Garamond',serif;font-size:32px;color:#F8F5EE;font-weight:600;margin-bottom:6px}
+.dj-player-meta{color:rgba(248,245,238,.5);font-size:13px}
+.dj-player audio{width:100%;max-width:600px;margin-top:20px}
 
-  .panel { padding: 20px; }
-  .panel[hidden] { display: none; }
+.toast{position:fixed;bottom:24px;right:24px;background:#141414;border:1px solid #C9A84C;border-radius:10px;padding:14px 18px;color:#F8F5EE;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;gap:10px;max-width:380px}
+.toast.ok{border-color:#4CAF7D}
+.toast.err{border-color:#E05252}
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 24px; }
-  .stat { background: #1a1a1a; padding: 14px; border-radius: 10px; border-left: 4px solid #d32f2f; }
-  .stat .label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
-  .stat.ok { border-left-color: #4caf50; }
-  .stat.warn { border-left-color: #ff9800; }
-  .stat.info { border-left-color: #1976d2; }
-
-  .filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
-  .filters input[type=search] { min-width: 240px; flex: 1; max-width: 400px; }
-
-  .table-wrap { background: #1a1a1a; border-radius: 10px; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2a2a2a; font-size: 13px; vertical-align: middle; }
-  th { background: #2a2a2a; color: #ff5252; font-weight: 600; text-transform: uppercase; font-size: 11px; cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; }
-  th:hover { background: #333; }
-  tr:hover td { background: #1f1f1f; }
-
-  .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
-  .badge.nac { background: #1976d2; }
-  .badge.int { background: #d32f2f; }
-  .badge.rep { background: #7b1fa2; }
-  .badge.reg { background: #455a64; }
-  .badge.confirmado { background: #388e3c; }
-  .badge.pendiente { background: #f57c00; }
-  .badge.cargada { background: #388e3c; }
-  .badge.musica-pend { background: #455a64; }
-  .badge.played { background: #1976d2; }
-
-  .audio-cell { min-width: 240px; }
-  .audio-cell audio { width: 220px; height: 32px; }
-  .audio-cell .nomus { color: #555; font-style: italic; font-size: 11px; }
-  .icon-btn { padding: 4px 8px; font-size: 12px; }
-
-  .row-actions { display: flex; gap: 4px; }
-  .row-actions button { padding: 4px 8px; font-size: 12px; }
-
-  /* DJ Mode */
-  .dj-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
-  @media (max-width: 900px) { .dj-layout { grid-template-columns: 1fr; } }
-  .dj-playlist { background: #1a1a1a; border-radius: 10px; padding: 14px; }
-  .dj-track { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 6px; margin-bottom: 6px; background: #111; cursor: pointer; border-left: 3px solid transparent; }
-  .dj-track:hover { background: #1f1f1f; }
-  .dj-track.current { background: #2a1a1a; border-left-color: #d32f2f; }
-  .dj-track.played { opacity: 0.5; }
-  .dj-track .num { width: 26px; color: #888; font-size: 12px; text-align: center; }
-  .dj-track .info { flex: 1; min-width: 0; }
-  .dj-track .name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .dj-track .sub { color: #888; font-size: 11px; }
-  .dj-track .status { font-size: 10px; }
-  .dj-track .cached-dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; display: inline-block; margin-left: 4px; }
-
-  .dj-player { background: #1a1a1a; border-radius: 10px; padding: 20px; position: sticky; top: 110px; }
-  .now-playing { text-align: center; margin-bottom: 16px; min-height: 60px; }
-  .now-playing .np-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-  .now-playing .np-sub { color: #888; font-size: 12px; }
-  .now-playing.empty { color: #555; padding: 20px; }
-  .player-audio { width: 100%; margin-bottom: 14px; }
-  .player-ctrl { display: flex; gap: 8px; justify-content: center; }
-  .player-ctrl button { width: 50px; height: 50px; border-radius: 50%; padding: 0; font-size: 18px; }
-  .player-ctrl .play { background: #d32f2f; }
-  .dj-meta { margin-top: 14px; padding-top: 14px; border-top: 1px solid #2a2a2a; font-size: 12px; color: #888; }
-  .dj-meta strong { color: #fff; }
-
-  /* Sistema tab */
-  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-  .status-card { background: #1a1a1a; padding: 18px; border-radius: 10px; }
-  .status-card p { color: #aaa; font-size: 13px; line-height: 1.6; margin-bottom: 10px; }
-  .progress { background: #0a0a0a; border-radius: 6px; height: 8px; overflow: hidden; margin: 8px 0; }
-  .progress-bar { background: #4caf50; height: 100%; transition: width 0.3s; }
-
-  /* Modal */
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-  .modal.open { display: flex; }
-  .modal-body { background: #1a1a1a; border-radius: 12px; padding: 24px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
-  .modal-body h3 { color: #ff5252; margin-bottom: 16px; }
-  .modal-body pre { background: #0a0a0a; padding: 10px; border-radius: 6px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
-  .modal table { background: transparent; min-width: 0; }
-  .modal table th { background: transparent; color: #ff5252; vertical-align: top; padding-right: 16px; }
-  .modal table td { word-break: break-all; }
-  .close { float: right; background: #444; padding: 6px 12px; font-size: 12px; }
-
-  .empty { text-align: center; padding: 40px; color: #666; }
-  .loading { text-align: center; padding: 40px; color: #888; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #d32f2f; z-index: 200; font-size: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-
-  @media (max-width: 700px) {
-    .topbar h1 { font-size: 16px; }
-    .panel { padding: 12px; }
-    th, td { padding: 6px; font-size: 11px; }
-    .audio-cell audio { width: 180px; }
-  }
+@media(max-width:780px){
+  .ins-row{gap:8px}
+  .ins-info{min-width:100%}
+  .ins-amount{min-width:auto}
+  .dj-grid{grid-template-columns:1fr;height:auto}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
 
-<div id="loginScreen" class="login">
-  <h1>JAM 2026 Admin</h1>
-  <div class="subtitle">Ingresá la clave para acceder al panel</div>
-  <input type="password" id="pwd" placeholder="Clave" autocomplete="off" />
-  <button onclick="doLogin()">Entrar</button>
-  <div id="loginErr" class="err">Clave incorrecta</div>
-</div>
-
-<div id="app" style="display:none">
-  <div class="topbar">
-    <h1>JAM 2026 — Panel</h1>
-    <div class="topbar-right">
-      <span id="connDot" class="conn-dot" title="Online"></span>
-      <span id="connLabel" class="conn-label">Online</span>
-      <button class="secondary icon-btn" onclick="loadData()" title="Recargar datos">↻</button>
-      <button class="secondary icon-btn" onclick="logout()" title="Cerrar sesión">⏻</button>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="inscriptos" onclick="switchTab('inscriptos')">Inscriptos</button>
-    <button class="tab-btn" data-tab="dj" onclick="switchTab('dj')">🎵 DJ Mode</button>
-    <button class="tab-btn" data-tab="sistema" onclick="switchTab('sistema')">⚙ Sistema</button>
-  </div>
-
-  <section id="tab-inscriptos" class="panel">
-    <div class="stats" id="stats"></div>
-
-    <div class="filters">
-      <input type="search" id="search" placeholder="Buscar nombre, email, ID..." oninput="render()" />
-      <select id="filterInst" onchange="render()">
-        <option value="">Todas las instancias</option>
-        <option value="reg">REG - Sedes</option>
-        <option value="nac">NAC - Nacional</option>
-        <option value="int">INT - Internacional</option>
-        <option value="rep">REP - Repechaje</option>
-      </select>
-      <select id="filterPago" onchange="render()">
-        <option value="">Pago: todos</option>
-        <option value="pendiente">Pendiente</option>
-        <option value="confirmado">Confirmado</option>
-      </select>
-      <select id="filterMusica" onchange="render()">
-        <option value="">Música: todas</option>
-        <option value="pendiente">Pendiente</option>
-        <option value="cargada">Cargada</option>
-      </select>
-      <button onclick="exportCSV()">📥 CSV</button>
-    </div>
-
-    <div id="tableWrap" class="table-wrap"><div class="loading">Cargando...</div></div>
-  </section>
-
-  <section id="tab-dj" class="panel" hidden>
-    <div class="dj-layout">
-      <div class="dj-playlist">
-        <h2 style="margin-top:0">Playlist <span style="color:#888;font-size:13px;font-weight:normal">(tracks cargadas)</span></h2>
-        <div class="filters" style="margin-bottom:10px">
-          <select id="djFilterInst" onchange="renderDJ()">
-            <option value="">Todas</option>
-            <option value="nac">NAC</option>
-            <option value="int">INT</option>
-            <option value="rep">REP</option>
-          </select>
-          <button class="secondary" onclick="resetPlayed()">Marcar todas no reproducidas</button>
-        </div>
-        <div id="djPlaylist"></div>
-      </div>
-
-      <div class="dj-player">
-        <h2 style="margin-top:0">Reproductor</h2>
-        <div id="nowPlaying" class="now-playing empty">Sin track seleccionada</div>
-        <audio id="djAudio" class="player-audio" controls></audio>
-        <div class="player-ctrl">
-          <button class="secondary" onclick="prevTrack()" title="Anterior">⏮</button>
-          <button class="play" id="playBtn" onclick="togglePlay()">▶</button>
-          <button class="secondary" onclick="nextTrack()" title="Siguiente">⏭</button>
-        </div>
-        <div class="dj-meta">
-          <div><strong id="djCount">0</strong> tracks en cola</div>
-          <div><strong id="djCached">0</strong> en cache offline</div>
-          <div id="djCurrentMeta" style="margin-top:6px"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="tab-sistema" class="panel" hidden>
-    <div class="status-grid">
-      <div class="status-card">
-        <h3>Conexión</h3>
-        <p id="sysConn">Verificando...</p>
-        <p>Última sincronización: <strong id="sysLastSync">nunca</strong></p>
-      </div>
-      <div class="status-card">
-        <h3>Datos locales</h3>
-        <p>Inscripciones en cache: <strong id="sysCacheCount">0</strong></p>
-        <p>El panel funciona con estos datos si no hay internet.</p>
-      </div>
-      <div class="status-card">
-        <h3>Música offline</h3>
-        <p>Tracks descargadas: <strong id="sysAudioCount">0</strong></p>
-        <div class="progress"><div class="progress-bar" id="precacheProgress" style="width:0%"></div></div>
-        <button onclick="precacheAllAudio()" id="precacheBtn">Pre-cargar toda la música</button>
-        <button class="secondary" onclick="clearAudioCache()" style="margin-left:6px">Borrar cache</button>
-      </div>
-      <div class="status-card">
-        <h3>Backup</h3>
-        <p>Descargar todo en un solo archivo JSON.</p>
-        <button onclick="exportFullBackup()">📄 Backup completo</button>
-      </div>
-      <div class="status-card">
-        <h3>Acerca</h3>
-        <p>JAM 2026 — Panel Admin</p>
-        <p>2, 3 y 4 de Octubre · Palais Rouge, CABA</p>
-        <p style="color:#555;font-size:11px;margin-top:8px">Datos en tiempo real desde Supabase. Funciona offline una vez sincronizado.</p>
-      </div>
-    </div>
-  </section>
-</div>
-
-<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-body">
-    <button class="close" onclick="closeModal()">Cerrar</button>
-    <h3 id="modalTitle">Detalle</h3>
-    <div id="modalContent"></div>
+<div id="root">
+  <div class="login">
+    <h1>JAM</h1>
+    <p>Panel administrador</p>
+    <input type="password" id="loginPwd" placeholder="Clave" autocomplete="off" />
+    <button onclick="tryLogin()">Ingresar</button>
   </div>
 </div>
 
-<div id="toast" style="display:none" class="toast"></div>
+<div id="toast" style="display:none"></div>
+
 <script>
-// ============ CONFIG ============
-const ADMIN_PWD = "jam2026admin";
 const SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-const MUSICA_BUCKET_BASE = SB_URL + "/storage/v1/object/public/musica/";
-const LS_DATA_KEY = "jam2026_data";
-const LS_PLAYED_KEY = "jam2026_played";
-const LS_LASTSYNC_KEY = "jam2026_lastsync";
+const PWD = "jam2026admin";
+const INSTANCIA_CFG = {
+  reg:{prefix:"REG",offset:1,pad:4,label:"Sedes"},
+  rep:{prefix:"REP",offset:10,pad:4,label:"Repechaje"},
+  nac:{prefix:"NAC",offset:200,pad:4,label:"Final Nacional"},
+  int:{prefix:"INTER",offset:1000,pad:4,label:"Final Inter América"}
+};
 
-// ============ STATE ============
-let allData = [];
-let sortKey = "created_at";
-let sortDir = "desc";
-let djTracks = [];
-let djIndex = -1;
-let djFilter = "";
-let playedSet = new Set(JSON.parse(localStorage.getItem(LS_PLAYED_KEY) || "[]"));
-let currentBlobUrl = null;
-let db = null;
+let allInscriptos = [];
+let codigosMap = {};
+let currentTab = "inscriptos";
+let filterInst = "";
+let filterPago = "";
+let searchTerm = "";
+let expandedId = null;
+let djCurrentId = null;
 
-// ============ INDEXED DB (audio cache) ============
-function openDB() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open("jam2026", 1);
-    r.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains("audio")) d.createObjectStore("audio", { keyPath: "id" });
-    };
-    r.onsuccess = e => res(e.target.result);
-    r.onerror = e => rej(e);
-  });
-}
-async function cacheAudio(id, url) {
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error("HTTP " + resp.status);
-  const blob = await resp.blob();
-  if (!db) db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction("audio", "readwrite");
-    tx.objectStore("audio").put({ id, blob, url, size: blob.size, cachedAt: Date.now() });
-    tx.oncomplete = () => res();
-    tx.onerror = e => rej(e);
-  });
-}
-async function getCachedAudio(id) {
-  if (!db) db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction("audio", "readonly");
-    const r = tx.objectStore("audio").get(id);
-    r.onsuccess = e => res(e.target.result);
-    r.onerror = e => rej(e);
-  });
-}
-async function deleteCachedAudio(id) {
-  if (!db) db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction("audio", "readwrite");
-    tx.objectStore("audio").delete(id);
-    tx.oncomplete = () => res();
-  });
-}
-async function listCachedIds() {
-  if (!db) db = await openDB();
-  return new Promise((res) => {
-    const tx = db.transaction("audio", "readonly");
-    const r = tx.objectStore("audio").getAllKeys();
-    r.onsuccess = e => res(e.target.result || []);
-  });
-}
-async function clearAudioCache() {
-  if (!confirm("Borrar TODA la música descargada?")) return;
-  if (!db) db = await openDB();
-  await new Promise(res => {
-    const tx = db.transaction("audio", "readwrite");
-    tx.objectStore("audio").clear();
-    tx.oncomplete = res;
-  });
-  toast("Cache borrada");
-  updateSysCache();
-  renderDJ();
-  render();
-}
+function esc(s){return (s==null?"":String(s)).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));}
+function $(id){return document.getElementById(id);}
+function fmtMoney(n){return (+n||0).toLocaleString("es-AR");}
 
-// ============ AUDIO URL HELPER ============
-function getAudioUrl(r) {
-  if (!r) return null;
-  const u = r.musica_url;
-  if (!u) return null;
-  if (u.startsWith("http")) return u;
-  return MUSICA_BUCKET_BASE + u.replace(/^\/+/, "");
-}
-async function getPlayableSrc(r) {
-  const cached = await getCachedAudio(r.id);
-  if (cached) return URL.createObjectURL(cached.blob);
-  return getAudioUrl(r);
-}
-
-// ============ AUTH ============
-function doLogin() {
-  const v = document.getElementById("pwd").value;
-  if (v === ADMIN_PWD) {
-    sessionStorage.setItem("admin_ok", "1");
-    showApp();
+function tryLogin(){
+  if($("loginPwd").value === PWD){
+    sessionStorage.setItem("jam_admin","1");
+    boot();
   } else {
-    document.getElementById("loginErr").style.display = "block";
+    $("loginPwd").value="";
+    $("loginPwd").style.borderColor="#E05252";
+    setTimeout(()=>$("loginPwd").style.borderColor="",1200);
   }
 }
-function logout() {
-  sessionStorage.removeItem("admin_ok");
+
+$("loginPwd").addEventListener("keypress", e=>{ if(e.key==="Enter") tryLogin(); });
+if(sessionStorage.getItem("jam_admin")==="1") boot();
+
+async function boot(){
+  $("root").innerHTML = renderShell();
+  await loadAll();
+  bindShell();
+  switchTab("inscriptos");
+}
+
+function renderShell(){
+  return `
+    <div class="topbar">
+      <div class="brand">JAM <small>Admin · 2026</small></div>
+      <div class="topbar-actions">
+        <button class="btn-mini" onclick="loadAll().then(renderActiveTab)">↻ Recargar</button>
+        <button class="btn-mini" onclick="logout()">Salir</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="inscriptos">Inscriptos <span class="count" id="cnt-ins">0</span></div>
+      <div class="tab" data-tab="djmode">DJ Mode</div>
+      <div class="tab" data-tab="sistema">Sistema</div>
+    </div>
+    <div class="container">
+      <div id="pane-inscriptos" class="tab-pane active"></div>
+      <div id="pane-djmode" class="tab-pane"></div>
+      <div id="pane-sistema" class="tab-pane"></div>
+    </div>
+  `;
+}
+
+function bindShell(){
+  document.querySelectorAll(".tab").forEach(t => {
+    t.addEventListener("click", () => switchTab(t.dataset.tab));
+  });
+}
+
+function switchTab(t){
+  currentTab = t;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active", x.dataset.tab===t));
+  document.querySelectorAll(".tab-pane").forEach(p=>p.classList.remove("active"));
+  $("pane-"+t).classList.add("active");
+  renderActiveTab();
+}
+
+function renderActiveTab(){
+  if(currentTab==="inscriptos") renderInscriptos();
+  else if(currentTab==="djmode") renderDjMode();
+  else if(currentTab==="sistema") renderSistema();
+}
+
+async function loadAll(){
+  try {
+    const r = await fetch(SB_URL+"/rest/v1/inscripciones?select=*&order=created_at.desc", {
+      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON }
+    });
+    allInscriptos = await r.json();
+    computeAllCodes();
+    $("cnt-ins") && ($("cnt-ins").textContent = allInscriptos.length);
+  } catch(e){
+    toast("err","Error cargando: "+e.message);
+  }
+}
+
+function computeAllCodes(){
+  const byInst = {};
+  [...allInscriptos].sort((a,b)=>(a.created_at||"").localeCompare(b.created_at||"")).forEach(ins => {
+    const i = (ins.instancia||"").toLowerCase();
+    byInst[i] = byInst[i] || [];
+    byInst[i].push(ins.id);
+  });
+  codigosMap = {};
+  Object.entries(byInst).forEach(([inst, ids]) => {
+    const cfg = INSTANCIA_CFG[inst] || {prefix:inst.toUpperCase(),offset:1,pad:4};
+    ids.forEach((id, idx) => {
+      codigosMap[id] = "JAM-"+cfg.prefix+"-"+String(cfg.offset+idx).padStart(cfg.pad,"0");
+    });
+  });
+}
+
+function getCodigo(ins){ return codigosMap[ins.id] || "JAM-???"; }
+
+function parseIntegrantes(raw){
+  if(!raw) return [];
+  try {
+    if(typeof raw==="string"){ const t=raw.trim(); if(t.startsWith("[")) return JSON.parse(t); return t.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).map(n=>({nombre:n})); }
+    if(Array.isArray(raw)) return raw;
+    if(typeof raw==="object") return [raw];
+  } catch(e){}
+  return [];
+}
+
+function parseCategorias(raw){
+  try {
+    const c = typeof raw==="string" ? JSON.parse(raw) : (raw||[]);
+    return Array.isArray(c) ? c : [];
+  } catch(e){ return []; }
+}
+
+// ============ TAB INSCRIPTOS ============
+function renderInscriptos(){
+  const stats = computeStats();
+  const filtered = filterInscriptos();
+
+  const html = `
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Inscriptos</div><div class="stat-value">${allInscriptos.length}</div></div>
+      <div class="stat gold"><div class="stat-label">A recaudar</div><div class="stat-value">$ ${fmtMoney(stats.totalEsperado)}</div></div>
+      <div class="stat green"><div class="stat-label">Confirmados</div><div class="stat-value">${stats.confirmados}</div></div>
+      <div class="stat amber"><div class="stat-label">Pendientes</div><div class="stat-value">${stats.pendientes}</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" class="search-box" placeholder="Buscar por nombre, email, código, sede..." id="srchBox" value="${esc(searchTerm)}" />
+      <select class="filter-select" id="filterInstSel">
+        <option value="">Todas las instancias</option>
+        <option value="reg"${filterInst==="reg"?" selected":""}>REG · Sedes</option>
+        <option value="rep"${filterInst==="rep"?" selected":""}>REP · Repechaje</option>
+        <option value="nac"${filterInst==="nac"?" selected":""}>NAC · Final Nacional</option>
+        <option value="int"${filterInst==="int"?" selected":""}>INTER · Final Inter</option>
+      </select>
+      <select class="filter-select" id="filterPagoSel">
+        <option value="">Todos los pagos</option>
+        <option value="pendiente"${filterPago==="pendiente"?" selected":""}>Pendientes</option>
+        <option value="confirmado"${filterPago==="confirmado"?" selected":""}>Confirmados</option>
+      </select>
+      <button class="btn-primary" onclick="exportCsv()">⬇ Exportar CSV</button>
+    </div>
+
+    <div class="list">
+      ${filtered.length === 0 ? '<div class="empty">No hay inscripciones que coincidan con los filtros</div>' : filtered.map(renderRow).join('')}
+    </div>
+  `;
+  $("pane-inscriptos").innerHTML = html;
+
+  $("srchBox").addEventListener("input", e => { searchTerm = e.target.value; renderInscriptos(); });
+  $("filterInstSel").addEventListener("change", e => { filterInst = e.target.value; renderInscriptos(); });
+  $("filterPagoSel").addEventListener("change", e => { filterPago = e.target.value; renderInscriptos(); });
+}
+
+function computeStats(){
+  return allInscriptos.reduce((acc, ins) => {
+    acc.totalEsperado += (+ins.monto_total||0);
+    if (ins.pago_estado === "confirmado") acc.confirmados++;
+    else acc.pendientes++;
+    return acc;
+  }, {totalEsperado:0, confirmados:0, pendientes:0});
+}
+
+function filterInscriptos(){
+  return allInscriptos.filter(ins => {
+    if (filterInst && (ins.instancia||"").toLowerCase() !== filterInst) return false;
+    if (filterPago && (ins.pago_estado||"pendiente") !== filterPago) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      const hay = [ins.nombre, ins.email, ins.nombre_grupo, ins.sede_nombre, getCodigo(ins)].some(v => (v||"").toLowerCase().includes(q));
+      if (!hay) return false;
+    }
+    return true;
+  });
+}
+
+function renderRow(ins){
+  const codigo = getCodigo(ins);
+  const inst = (ins.instancia||"").toLowerCase();
+  const cfg = INSTANCIA_CFG[inst] || {label:inst};
+  const grupo = ins.nombre_grupo || ins.nombre || "—";
+  const pe = ins.pago_estado || "pendiente";
+  const me = ins.musica_estado || "pendiente";
+  const peBdg = pe==="confirmado"?"green":pe==="parcial"?"amber":"red";
+  const meBdg = me==="cargada"?"green":"gray";
+  const isExp = expandedId === ins.id;
+
+  let html = `
+    <div class="ins-row ${isExp?'expanded':''}" onclick="toggleRow('${ins.id}', event)">
+      <div class="ins-code">${esc(codigo)}</div>
+      <div class="ins-info">
+        <div class="ins-name">${esc(grupo)}</div>
+        <div class="ins-meta">${esc(cfg.label)}${ins.sede_nombre?' · '+esc(ins.sede_nombre):''} · ${esc(ins.modalidad||'—')}${ins.cant_personas>1?' ('+ins.cant_personas+'p)':''}</div>
+      </div>
+      <div class="ins-badges">
+        <span class="bdg bdg-${peBdg}">${esc(pe)}</span>
+        <span class="bdg bdg-${meBdg}">♪ ${esc(me)}</span>
+      </div>
+      <div class="ins-amount">${esc(ins.moneda||"ARS")} ${fmtMoney(ins.monto_total)}</div>
+      <div class="ins-actions" onclick="event.stopPropagation()">
+        ${pe !== "confirmado" ? '<button class="btn-icon btn-green" onclick="confirmarPago(\''+ins.id+'\')">✓ Pago</button>' : ''}
+        <button class="btn-icon" onclick="reenviarMail(\''+ins.id+'\')">✉ Mail</button>
+        <button class="btn-icon" onclick="window.open('/check?id='+'${ins.id}', '_blank')">↗ Ver</button>
+      </div>
+    </div>
+  `;
+
+  if (isExp) html += renderDetail(ins);
+  return html;
+}
+
+function renderDetail(ins){
+  const integrantes = parseIntegrantes(ins.integrantes);
+  const categorias = parseCategorias(ins.categorias);
+  const codigo = getCodigo(ins);
+
+  return `<div class="detail show">
+    <div class="detail-grid">
+      <div class="det-block">
+        <div class="det-title">Contacto</div>
+        <div class="det-row"><div class="k">Responsable</div><div class="v">${esc(ins.nombre||"—")}</div></div>
+        <div class="det-row"><div class="k">Email</div><div class="v" style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(ins.email||"—")}</div></div>
+        <div class="det-row"><div class="k">Celular</div><div class="v" style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(ins.celular||"—")}</div></div>
+        <div class="det-row"><div class="k">País</div><div class="v">${esc(ins.pais||"—")}</div></div>
+      </div>
+      <div class="det-block">
+        <div class="det-title">Inscripción</div>
+        <div class="det-row"><div class="k">Código</div><div class="v" style="font-family:'JetBrains Mono',monospace;color:#C9A84C">${esc(codigo)}</div></div>
+        <div class="det-row"><div class="k">Grupo</div><div class="v">${esc(ins.nombre_grupo||"—")}</div></div>
+        <div class="det-row"><div class="k">Modalidad</div><div class="v">${esc(ins.modalidad||"—")}</div></div>
+        <div class="det-row"><div class="k">Fecha</div><div class="v">${ins.created_at ? new Date(ins.created_at).toLocaleString("es-AR") : "—"}</div></div>
+      </div>
+      ${integrantes.length ? `<div class="det-block">
+        <div class="det-title">Integrantes (${integrantes.length})</div>
+        ${integrantes.map((it,i)=> `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">
+          <span style="font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:10px">${codigo}-${i+1}</span>
+          <div style="font-family:'Cormorant Garamond',serif;color:#F8F5EE;font-size:14px">${esc(it.nombre||it.name||"Integrante "+(i+1))}</div>
+        </div>`).join("")}
+      </div>` : ''}
+      ${ins.musica_url ? `<div class="det-block">
+        <div class="det-title">Música</div>
+        <div class="det-row"><div class="k">Archivo</div><div class="v" style="font-size:11px;font-family:'JetBrains Mono',monospace">${esc(ins.musica_nombre||"—")}</div></div>
+        <audio controls style="width:100%;margin-top:8px;height:36px" src="${esc(ins.musica_url)}"></audio>
+      </div>` : ''}
+    </div>
+    ${categorias.length ? `<div class="det-block" style="background:#1a1600">
+      <div class="det-title" style="color:#C9A84C">Categorías inscriptas (${categorias.length})</div>
+      <div style="margin-top:6px">${categorias.map(c=>`<span class="cat-tag"><span class="num">N° ${esc(c.c||"—")}</span> <span style="color:#888;font-size:10px;text-transform:uppercase">${esc(c.g||"")}</span><div class="nom">${esc(c.n||"")}</div></span>`).join("")}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+window.toggleRow = function(id, ev){
+  if(ev && ev.target.closest('.ins-actions')) return;
+  expandedId = expandedId === id ? null : id;
+  renderInscriptos();
+};
+
+window.confirmarPago = async function(id){
+  if(!confirm("¿Confirmar el pago de esta inscripción? Esto marca la inscripción como pagada.")) return;
+  try {
+    const r = await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id, {
+      method:"PATCH",
+      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json" },
+      body: JSON.stringify({ pago_estado:"confirmado" })
+    });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const ins = allInscriptos.find(x => x.id === id);
+    if (ins) ins.pago_estado = "confirmado";
+    toast("ok","Pago confirmado ✓");
+    renderActiveTab();
+  } catch(e){
+    toast("err","Error: "+e.message);
+  }
+};
+
+window.reenviarMail = async function(id){
+  if(!confirm("¿Reenviar el mail de confirmación a esta inscripción?")) return;
+  try {
+    const r = await fetch("/api/notify", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ id })
+    });
+    const data = await r.json();
+    if(data.ok && data.mail_participante?.ok) toast("ok","Mail reenviado a "+data.mail_participante.to);
+    else toast("err","No se pudo reenviar: "+JSON.stringify(data.mail_participante?.error||data.error||"err").substring(0,100));
+  } catch(e){
+    toast("err","Error: "+e.message);
+  }
+};
+
+window.exportCsv = function(){
+  const rows = [["Código","Instancia","Responsable","Grupo","Email","Celular","País","Sede","Modalidad","Personas","Categorías","Monto","Moneda","Pago","Música","Fecha"]];
+  filterInscriptos().forEach(ins => {
+    const cats = parseCategorias(ins.categorias).map(c => "N°"+c.c+" "+c.n).join("; ");
+    rows.push([
+      getCodigo(ins),
+      (ins.instancia||"").toUpperCase(),
+      ins.nombre||"",
+      ins.nombre_grupo||"",
+      ins.email||"",
+      ins.celular||"",
+      ins.pais||"",
+      ins.sede_nombre||"",
+      ins.modalidad||"",
+      ins.cant_personas||1,
+      cats,
+      ins.monto_total||0,
+      ins.moneda||"ARS",
+      ins.pago_estado||"pendiente",
+      ins.musica_estado||"pendiente",
+      ins.created_at ? new Date(ins.created_at).toLocaleString("es-AR") : ""
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const blob = new Blob(["\ufeff"+csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "jam2026-inscripciones-"+new Date().toISOString().substring(0,10)+".csv";
+  a.click();
+  toast("ok","CSV exportado con "+filterInscriptos().length+" inscripciones");
+};
+
+// ============ TAB DJ MODE ============
+function renderDjMode(){
+  const conMusica = allInscriptos.filter(x => x.musica_url);
+  const html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:rgba(248,245,238,.6)"><strong style="color:#C9A84C">${conMusica.length}</strong> participantes con música cargada</div>
+      <select class="filter-select" id="djFilterInst" onchange="renderDjMode()">
+        <option value="">Todas las instancias</option>
+        <option value="reg"${filterInst==="reg"?" selected":""}>REG</option>
+        <option value="rep"${filterInst==="rep"?" selected":""}>REP</option>
+        <option value="nac"${filterInst==="nac"?" selected":""}>NAC</option>
+        <option value="int"${filterInst==="int"?" selected":""}>INTER</option>
+      </select>
+    </div>
+    <div class="dj-grid">
+      <div class="dj-list">
+        ${conMusica.filter(x=>!filterInst||x.instancia===filterInst).map(ins => `
+          <div class="dj-item ${djCurrentId===ins.id?'active':''}" onclick="playDj('${ins.id}')">
+            <div class="dj-item-code">${esc(getCodigo(ins))}</div>
+            <div class="dj-item-name">${esc(ins.nombre_grupo||ins.nombre||"—")}</div>
+            <div class="dj-item-cat">${esc(ins.modalidad||"")} · ${parseCategorias(ins.categorias).length} cat.</div>
+          </div>
+        `).join("") || '<div class="empty">No hay música cargada</div>'}
+      </div>
+      <div class="dj-player" id="djPlayer">
+        <div class="dj-player-empty">Seleccioná un participante de la lista<br><br>Click para reproducir su música</div>
+      </div>
+    </div>
+  `;
+  $("pane-djmode").innerHTML = html;
+  if (djCurrentId) playDj(djCurrentId);
+}
+
+window.playDj = function(id){
+  djCurrentId = id;
+  const ins = allInscriptos.find(x => x.id === id);
+  if (!ins || !ins.musica_url) return;
+  document.querySelectorAll(".dj-item").forEach(el => el.classList.remove("active"));
+  $("djPlayer").innerHTML = `
+    <div class="dj-player-info">
+      <div class="dj-player-code">${esc(getCodigo(ins))}</div>
+      <div class="dj-player-name">${esc(ins.nombre_grupo||ins.nombre||"—")}</div>
+      <div class="dj-player-meta">${esc(ins.modalidad||"")} · ${esc((INSTANCIA_CFG[(ins.instancia||"").toLowerCase()]||{}).label||"")}</div>
+    </div>
+    <audio controls autoplay src="${esc(ins.musica_url)}"></audio>
+    <div style="margin-top:14px;font-size:11px;color:rgba(248,245,238,.4);font-family:'JetBrains Mono',monospace">${esc(ins.musica_nombre||"")}</div>
+  `;
+  document.querySelectorAll(".dj-item").forEach(el => {
+    if (el.textContent.includes(getCodigo(ins))) el.classList.add("active");
+  });
+};
+
+// ============ TAB SISTEMA ============
+function renderSistema(){
+  const cnt = allInscriptos.length;
+  const conMusica = allInscriptos.filter(x => x.musica_url).length;
+  const pagados = allInscriptos.filter(x => x.pago_estado === "confirmado").length;
+  const totalEsp = allInscriptos.reduce((s,x)=>s+(+x.monto_total||0), 0);
+  const totalCobr = allInscriptos.filter(x=>x.pago_estado==="confirmado").reduce((s,x)=>s+(+x.monto_total||0), 0);
+
+  const byInst = {};
+  allInscriptos.forEach(x => {
+    const i = (x.instancia||"").toLowerCase();
+    byInst[i] = (byInst[i]||0) + 1;
+  });
+
+  $("pane-sistema").innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Inscriptos totales</div><div class="stat-value">${cnt}</div></div>
+      <div class="stat green"><div class="stat-label">Pagos confirmados</div><div class="stat-value">${pagados}</div></div>
+      <div class="stat gold"><div class="stat-label">Música cargada</div><div class="stat-value">${conMusica}</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat gold"><div class="stat-label">A recaudar</div><div class="stat-value">$ ${fmtMoney(totalEsp)}</div></div>
+      <div class="stat green"><div class="stat-label">Cobrado</div><div class="stat-value">$ ${fmtMoney(totalCobr)}</div></div>
+      <div class="stat amber"><div class="stat-label">Pendiente</div><div class="stat-value">$ ${fmtMoney(totalEsp-totalCobr)}</div></div>
+    </div>
+    <div class="list" style="margin-top:14px">
+      ${Object.entries(byInst).map(([inst, count])=>{
+        const cfg = INSTANCIA_CFG[inst] || {prefix:inst.toUpperCase(),label:inst};
+        return `<div class="ins-row"><div class="ins-code">${cfg.prefix}</div><div class="ins-info"><div class="ins-name">${cfg.label||cfg.prefix}</div></div><div class="ins-amount">${count} insc.</div></div>`;
+      }).join("")}
+    </div>
+    <div class="det-block" style="margin-top:14px">
+      <div class="det-title">URLs del sistema</div>
+      <div class="det-row"><div class="k">Portal inscripción</div><div class="v"><a href="/" target="_blank" style="color:#C9A84C">jam-inscripciones.vercel.app</a></div></div>
+      <div class="det-row"><div class="k">Subir música</div><div class="v"><a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a></div></div>
+      <div class="det-row"><div class="k">Verificación QR</div><div class="v"><a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a></div></div>
+      <div class="det-row"><div class="k">Sender mails</div><div class="v" style="font-family:'JetBrains Mono',monospace;color:#4CAF7D">info@jamcompetencia.com ✓</div></div>
+    </div>
+  `;
+}
+
+function logout(){
+  sessionStorage.removeItem("jam_admin");
   location.reload();
 }
-function showApp() {
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  init();
-}
 
-// ============ TABS ============
-function switchTab(name) {
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
-  document.querySelectorAll(".panel").forEach(p => p.hidden = p.id !== "tab-" + name);
-  if (name === "dj") renderDJ();
-  if (name === "sistema") updateSysAll();
+function toast(type, msg){
+  const t = $("toast");
+  t.className = "toast "+type;
+  t.style.display="flex";
+  t.textContent = msg;
+  setTimeout(()=>{ t.style.display="none"; }, 4000);
 }
-
-// ============ ONLINE/OFFLINE ============
-function updateConn() {
-  const on = navigator.onLine;
-  const dot = document.getElementById("connDot");
-  const lbl = document.getElementById("connLabel");
-  if (dot) {
-    dot.classList.toggle("off", !on);
-    lbl.textContent = on ? "Online" : "Offline";
-  }
-  const sysConn = document.getElementById("sysConn");
-  if (sysConn) sysConn.textContent = on ? "🟢 Conectado a internet" : "🔴 Sin conexión — usando datos cacheados";
-}
-window.addEventListener("online", () => { updateConn(); if (sessionStorage.getItem("admin_ok") === "1") loadData(); });
-window.addEventListener("offline", updateConn);
-
-// ============ DATA LOADING ============
-async function loadData() {
-  if (!navigator.onLine) {
-    loadFromCache();
-    toast("Sin conexión — usando datos en cache");
-    return;
-  }
-  try {
-    document.getElementById("tableWrap").innerHTML = '<div class="loading">Sincronizando...</div>';
-    const r = await fetch(SB_URL + "/rest/v1/inscripciones?select=*&order=created_at.desc", {
-      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
-    });
-    allData = await r.json();
-    localStorage.setItem(LS_DATA_KEY, JSON.stringify(allData));
-    localStorage.setItem(LS_LASTSYNC_KEY, new Date().toISOString());
-    renderAll();
-    updateSysAll();
-  } catch (e) {
-    toast("Error al cargar — usando cache");
-    loadFromCache();
-  }
-}
-function loadFromCache() {
-  try {
-    allData = JSON.parse(localStorage.getItem(LS_DATA_KEY) || "[]");
-    renderAll();
-  } catch (e) {
-    allData = [];
-    document.getElementById("tableWrap").innerHTML = '<div class="empty">Sin datos en cache</div>';
-  }
-}
-function renderAll() {
-  renderStats();
-  render();
-  if (!document.getElementById("tab-dj").hidden) renderDJ();
-}
-
-// ============ STATS ============
-function renderStats() {
-  const t = allData.length;
-  const porInst = { reg: 0, nac: 0, int: 0, rep: 0 };
-  let pag = 0, rec = 0, aRec = 0;
-  for (const x of allData) {
-    porInst[x.instancia] = (porInst[x.instancia] || 0) + 1;
-    if (x.pago_estado === "confirmado") { pag++; rec += +(x.monto_total || 0); }
-    else aRec += +(x.monto_total || 0);
-  }
-  const fmt = n => n.toLocaleString("es-AR");
-  const card = (l, v, c) => '<div class="stat ' + (c||'') + '"><div class="label">' + l + '</div><div class="value">' + v + '</div></div>';
-  document.getElementById("stats").innerHTML =
-    card("Total", t, "") +
-    card("Pagos OK", pag, "ok") +
-    card("Pago pendiente", t - pag, "warn") +
-    card("Recaudado", "$" + fmt(rec), "ok") +
-    card("A cobrar", "$" + fmt(aRec), "warn") +
-    card("REG", porInst.reg, "info") +
-    card("NAC", porInst.nac, "info") +
-    card("INT", porInst.int, "info") +
-    card("REP", porInst.rep, "info");
-}
-
-function esc(s) {
-  return (s == null ? "" : String(s)).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-}
-
-// ============ TABLE RENDER ============
-function render() {
-  const q = (document.getElementById("search")?.value || "").toLowerCase();
-  const fi = document.getElementById("filterInst")?.value || "";
-  const fp = document.getElementById("filterPago")?.value || "";
-  const fm = document.getElementById("filterMusica")?.value || "";
-  let rows = allData.filter(x => {
-    if (fi && x.instancia !== fi) return false;
-    if (fp && (x.pago_estado || "pendiente") !== fp) return false;
-    if (fm && (x.musica_estado || "pendiente") !== fm) return false;
-    if (q) {
-      const h = ((x.nombre||"") + " " + (x.email||"") + " " + (x.id||"")).toLowerCase();
-      if (!h.includes(q)) return false;
-    }
-    return true;
-  });
-  rows.sort((a, b) => {
-    let va = a[sortKey], vb = b[sortKey];
-    if (va == null) va = "";
-    if (vb == null) vb = "";
-    if (va < vb) return sortDir === "asc" ? -1 : 1;
-    if (va > vb) return sortDir === "asc" ? 1 : -1;
-    return 0;
-  });
-  if (!rows.length) {
-    document.getElementById("tableWrap").innerHTML = '<div class="empty">Sin resultados</div>';
-    return;
-  }
-  const th = (l, k) => {
-    const a = sortKey === k ? (sortDir === "asc" ? "↑" : "↓") : "";
-    return '<th onclick="setSort(\'' + k + '\')">' + l + " " + a + "</th>";
-  };
-  let html = '<table><thead><tr>' +
-    th("Fecha", "created_at") +
-    th("Nombre", "nombre") +
-    th("Email", "email") +
-    th("Inst", "instancia") +
-    th("Modalidad", "modalidad") +
-    th("Monto", "monto_total") +
-    th("Pago", "pago_estado") +
-    th("Música", "musica_estado") +
-    '<th>Audio</th><th>Acciones</th>' +
-    '</tr></thead><tbody>';
-  for (const r of rows) {
-    const dt = r.created_at ? new Date(r.created_at) : null;
-    const fecha = dt ? dt.toLocaleDateString("es-AR") + " " + dt.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}) : "";
-    const pe = r.pago_estado || "pendiente";
-    const me = r.musica_estado || "pendiente";
-    const audioUrl = getAudioUrl(r);
-    let audioCell = '<span class="nomus">—</span>';
-    if (audioUrl) {
-      audioCell = '<audio controls preload="none" src="' + audioUrl + '"></audio> ' +
-                  '<a href="' + audioUrl + '" download="track-' + r.id + '.mp3" title="Descargar"><button class="secondary icon-btn">⬇</button></a>';
-    }
-    html += '<tr>' +
-      '<td>' + fecha + '</td>' +
-      '<td>' + esc(r.nombre) + '</td>' +
-      '<td>' + esc(r.email) + '</td>' +
-      '<td><span class="badge ' + r.instancia + '">' + (r.instancia||"").toUpperCase() + '</span></td>' +
-      '<td>' + esc(r.modalidad || "") + (r.cant_personas > 1 ? " (" + r.cant_personas + ")" : "") + '</td>' +
-      '<td>' + (r.moneda || "ARS") + " " + (+(r.monto_total||0)).toLocaleString("es-AR") + '</td>' +
-      '<td><span class="badge ' + pe + '">' + pe + '</span></td>' +
-      '<td><span class="badge ' + (me === "cargada" ? "cargada" : "musica-pend") + '">' + me + '</span></td>' +
-      '<td class="audio-cell">' + audioCell + '</td>' +
-      '<td><div class="row-actions">' +
-        '<button class="secondary" onclick="showDetail(\'' + r.id + '\')">Ver</button>' +
-        (pe === "pendiente" ? '<button class="success" onclick="togglePago(\'' + r.id + '\',true)">✓</button>' : '<button class="warn" onclick="togglePago(\'' + r.id + '\',false)">↺</button>') +
-      '</div></td>' +
-    '</tr>';
-  }
-  html += '</tbody></table>';
-  document.getElementById("tableWrap").innerHTML = html;
-}
-function setSort(k) { if (sortKey === k) sortDir = sortDir === "asc" ? "desc" : "asc"; else { sortKey = k; sortDir = "asc"; } render(); }
-
-async function togglePago(id, conf) {
-  const ne = conf ? "confirmado" : "pendiente";
-  if (!confirm("Marcar pago como " + ne + "?")) return;
-  if (!navigator.onLine) { toast("Sin internet — no se puede modificar"); return; }
-  try {
-    await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
-      method: "PATCH",
-      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" },
-      body: JSON.stringify({ pago_estado: ne })
-    });
-    const r = allData.find(x => x.id === id);
-    if (r) r.pago_estado = ne;
-    localStorage.setItem(LS_DATA_KEY, JSON.stringify(allData));
-    renderAll();
-    toast("Pago actualizado");
-  } catch (e) { toast("Error: " + e.message); }
-}
-
-function showDetail(id) {
-  const r = allData.find(x => x.id === id);
-  if (!r) return;
-  document.getElementById("modalTitle").textContent = (r.nombre || "Detalle") + " — " + (r.instancia||"").toUpperCase();
-  let html = '<table>';
-  for (const [k, v] of Object.entries(r)) {
-    let val = v;
-    if (typeof v === "object" && v !== null) val = JSON.stringify(v, null, 2);
-    html += '<tr><th>' + k + '</th><td>' + esc(val) + '</td></tr>';
-  }
-  html += '</table>';
-  const au = getAudioUrl(r);
-  if (au) html += '<h3 style="margin-top:16px">Música</h3><audio controls src="' + au + '" style="width:100%"></audio>';
-  document.getElementById("modalContent").innerHTML = html;
-  document.getElementById("modal").classList.add("open");
-}
-function closeModal() { document.getElementById("modal").classList.remove("open"); }
-
-function exportCSV() {
-  if (!allData.length) return toast("Sin datos");
-  const cols = ["created_at","instancia","nombre","email","celular","modalidad","cant_personas","monto_total","moneda","pago_estado","musica_estado","musica_url","id"];
-  const lines = [cols.join(",")];
-  for (const r of allData) lines.push(cols.map(c => { let v = r[c]; if (v == null) return ""; return '"' + String(v).replace(/"/g,'""') + '"'; }).join(","));
-  download("jam2026-inscriptos-" + new Date().toISOString().split("T")[0] + ".csv", lines.join("\n"), "text/csv;charset=utf-8");
-}
-function exportFullBackup() {
-  const backup = { exportedAt: new Date().toISOString(), count: allData.length, inscripciones: allData };
-  download("jam2026-backup-" + new Date().toISOString().split("T")[0] + ".json", JSON.stringify(backup, null, 2), "application/json");
-}
-function download(name, data, type) {
-  const b = new Blob([data], { type });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(b);
-  a.download = name;
-  a.click();
-}
-
-// ============ DJ MODE ============
-function renderDJ() {
-  djFilter = document.getElementById("djFilterInst")?.value || "";
-  djTracks = allData.filter(x => {
-    if ((x.musica_estado || "") !== "cargada") return false;
-    if (!getAudioUrl(x)) return false;
-    if (djFilter && x.instancia !== djFilter) return false;
-    return true;
-  });
-  djTracks.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  document.getElementById("djCount").textContent = djTracks.length;
-  listCachedIds().then(ids => {
-    const cached = new Set(ids);
-    const cachedHere = djTracks.filter(t => cached.has(t.id)).length;
-    document.getElementById("djCached").textContent = cachedHere;
-    let html = "";
-    if (!djTracks.length) html = '<div class="empty">Sin tracks cargadas todavía</div>';
-    else {
-      djTracks.forEach((t, i) => {
-        const isCur = i === djIndex;
-        const played = playedSet.has(t.id);
-        const dot = cached.has(t.id) ? '<span class="cached-dot" title="En cache offline"></span>' : "";
-        html += '<div class="dj-track ' + (isCur ? "current " : "") + (played ? "played" : "") + '" onclick="playTrackIdx(' + i + ')">' +
-          '<div class="num">' + (i+1) + '</div>' +
-          '<div class="info">' +
-            '<div class="name">' + esc(t.nombre) + dot + '</div>' +
-            '<div class="sub">' + (t.instancia||"").toUpperCase() + ' · ' + esc(t.email) + '</div>' +
-          '</div>' +
-          '<div class="status">' + (played ? '<span class="badge played">OK</span>' : "") + '</div>' +
-        '</div>';
-      });
-    }
-    document.getElementById("djPlaylist").innerHTML = html;
-  });
-}
-async function playTrackIdx(i) {
-  if (i < 0 || i >= djTracks.length) return;
-  djIndex = i;
-  const t = djTracks[i];
-  const audio = document.getElementById("djAudio");
-  const np = document.getElementById("nowPlaying");
-  np.className = "now-playing";
-  np.innerHTML = '<div class="np-name">' + esc(t.nombre) + '</div><div class="np-sub">' + (t.instancia||"").toUpperCase() + ' · ' + esc(t.email) + '</div>';
-  document.getElementById("djCurrentMeta").innerHTML = 'ID: <code style="font-size:10px">' + t.id.substring(0,8) + '</code>';
-  if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
-  try {
-    const src = await getPlayableSrc(t);
-    if (src.startsWith("blob:")) currentBlobUrl = src;
-    audio.src = src;
-    audio.play().catch(() => {});
-    markPlayed(t.id);
-  } catch (e) { toast("Error cargando audio: " + e.message); }
-  renderDJ();
-}
-function prevTrack() { if (djIndex > 0) playTrackIdx(djIndex - 1); }
-function nextTrack() { if (djIndex < djTracks.length - 1) playTrackIdx(djIndex + 1); }
-function togglePlay() {
-  const a = document.getElementById("djAudio");
-  if (!a.src) { if (djTracks.length) playTrackIdx(0); return; }
-  if (a.paused) a.play(); else a.pause();
-}
-function markPlayed(id) {
-  playedSet.add(id);
-  localStorage.setItem(LS_PLAYED_KEY, JSON.stringify([...playedSet]));
-}
-function resetPlayed() {
-  if (!confirm("Marcar todas como no reproducidas?")) return;
-  playedSet.clear();
-  localStorage.removeItem(LS_PLAYED_KEY);
-  renderDJ();
-}
-
-// ============ AUDIO CACHE ============
-async function precacheAllAudio() {
-  const btn = document.getElementById("precacheBtn");
-  const bar = document.getElementById("precacheProgress");
-  const targets = allData.filter(x => (x.musica_estado === "cargada") && getAudioUrl(x));
-  if (!targets.length) return toast("No hay tracks para cachear");
-  btn.disabled = true;
-  let done = 0, fail = 0;
-  for (const r of targets) {
-    try {
-      const existing = await getCachedAudio(r.id);
-      if (existing) { done++; continue; }
-      await cacheAudio(r.id, getAudioUrl(r));
-      done++;
-    } catch (e) { fail++; }
-    bar.style.width = ((done + fail) / targets.length * 100) + "%";
-    btn.textContent = "Descargando " + (done + fail) + "/" + targets.length;
-  }
-  btn.disabled = false;
-  btn.textContent = "Pre-cargar toda la música";
-  toast("Cache: " + done + " OK, " + fail + " errores");
-  updateSysCache();
-  renderDJ();
-}
-async function updateSysCache() {
-  const ids = await listCachedIds();
-  const el = document.getElementById("sysAudioCount");
-  if (el) el.textContent = ids.length;
-}
-function updateSysAll() {
-  const ls = localStorage.getItem(LS_LASTSYNC_KEY);
-  document.getElementById("sysLastSync").textContent = ls ? new Date(ls).toLocaleString("es-AR") : "nunca";
-  document.getElementById("sysCacheCount").textContent = allData.length;
-  updateSysCache();
-  updateConn();
-}
-
-// ============ TOAST ============
-let toastT;
-function toast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.style.display = "block";
-  clearTimeout(toastT);
-  toastT = setTimeout(() => el.style.display = "none", 2800);
-}
-
-// ============ INIT ============
-async function init() {
-  updateConn();
-  try { db = await openDB(); } catch(e) {}
-  loadFromCache();
-  if (navigator.onLine) loadData();
-  // Auto-next al terminar
-  document.getElementById("djAudio").addEventListener("ended", nextTrack);
-}
-
-document.getElementById("pwd").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
-if (sessionStorage.getItem("admin_ok") === "1") showApp();
-updateConn();
 </script>
 </body>
-       </html>
+</html>
