@@ -1820,177 +1820,1143 @@
 
       var CATS = [
         // ─── SALSA — 100-184 ───
-        { c: 100, n: "Solista Masculino Profesional", g: "salsa", niv: "profesional", t: "sol" },
-        { c: 101, n: "Solista Masculino Semipro", g: "salsa", niv: "semipro", t: "sol" },
-        { c: 102, n: "Solista Masculino Amateur", g: "salsa", niv: "amateur", t: "sol" },
-        { c: 103, n: "Solista Masculino Junior (13-17 años)", g: "salsa", niv: "junior", t: "sol" },
-        { c: 104, n: "Solista Masculino Infantil (hasta 12 años)", g: "salsa", niv: "kids", t: "sol" },
-        { c: 105, n: "Solista Masculino Impro Batalla Open", g: "salsa", niv: "open", t: "sol" },
-        { c: 106, n: "Solista Masculino Impro Batalla Amateur", g: "salsa", niv: "amateur", t: "sol" },
-        { c: 107, n: "Solista Masculino Impro Junior Batalla (13-17 años)", g: "salsa", niv: "junior", t: "sol" },
-        { c: 108, n: "Solista Masculino Open Over +40", g: "salsa", niv: "master", t: "sol" },
-        { c: 109, n: "Solista Masculino Impro Open Over +40", g: "salsa", niv: "master", t: "sol" },
-        { c: 110, n: "Solista Masculino Open Over +60", g: "salsa", niv: "master", t: "sol" },
-        { c: 111, n: "Solista Femenino Profesional", g: "salsa", niv: "profesional", t: "sol" },
-        { c: 112, n: "Solista Femenino Semipro", g: "salsa", niv: "semipro", t: "sol" },
-        { c: 113, n: "Solista Femenino Amateur", g: "salsa", niv: "amateur", t: "sol" },
-        { c: 114, n: "Solista Femenino Junior (13-17 años)", g: "salsa", niv: "junior", t: "sol" },
-        { c: 115, n: "Solista Femenino Infantil (hasta 12 años)", g: "salsa", niv: "kids", t: "sol" },
-        { c: 116, n: "Solista Femenino Impro Batalla Open", g: "salsa", niv: "open", t: "sol" },
-        { c: 117, n: "Solista Femenino Impro Batalla Amateur", g: "salsa", niv: "amateur", t: "sol" },
-        { c: 118, n: "Solista Femenino Impro Junior Batalla (13-17 años)", g: "salsa", niv: "junior", t: "sol" },
-        { c: 119, n: "Solista Femenino Open Over +40", g: "salsa", niv: "master", t: "sol" },
-        { c: 120, n: "Solista Femenino Open Impro Over +40", g: "salsa", niv: "master", t: "sol" },
-        { c: 121, n: "Solista Femenino Open Over +60", g: "salsa", niv: "master", t: "sol" },
-        { c: 122, n: "Pareja Profesional con Truco", g: "salsa", niv: "profesional", t: "par" },
-        { c: 123, n: "Pareja Profesional Solo Piso", g: "salsa", niv: "profesional", t: "par" },
-        { c: 124, n: "Pareja Semipro con Truco", g: "salsa", niv: "semipro", t: "par" },
-        { c: 125, n: "Pareja Semipro Solo Piso", g: "salsa", niv: "semipro", t: "par" },
-        { c: 126, n: "Pareja ProAm con Truco", g: "salsa", niv: "proam", t: "par" },
-        { c: 127, n: "Pareja ProAm Solo Piso", g: "salsa", niv: "proam", t: "par" },
-        { c: 128, n: "Pareja Amateur con Truco", g: "salsa", niv: "amateur", t: "par" },
-        { c: 129, n: "Pareja Amateur Solo Piso", g: "salsa", niv: "amateur", t: "par" },
-        { c: 130, n: "Pareja Junior (13-17 años)", g: "salsa", niv: "junior", t: "par" },
-        { c: 131, n: "Pareja Infantil (8-12 años) Solo Piso", g: "salsa", niv: "kids", t: "par" },
+        {
+          c: 100,
+          n: "Solista Masculino Profesional",
+          g: "salsa",
+          niv: "profesional",
+          t: "sol",
+        },
+        {
+          c: 101,
+          n: "Solista Masculino Semipro",
+          g: "salsa",
+          niv: "semipro",
+          t: "sol",
+        },
+        {
+          c: 102,
+          n: "Solista Masculino Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 103,
+          n: "Solista Masculino Junior (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 104,
+          n: "Solista Masculino Infantil (hasta 12 años)",
+          g: "salsa",
+          niv: "kids",
+          t: "sol",
+        },
+        {
+          c: 105,
+          n: "Solista Masculino Impro Batalla Open",
+          g: "salsa",
+          niv: "open",
+          t: "sol",
+        },
+        {
+          c: 106,
+          n: "Solista Masculino Impro Batalla Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 107,
+          n: "Solista Masculino Impro Junior Batalla (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 108,
+          n: "Solista Masculino Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 109,
+          n: "Solista Masculino Impro Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 110,
+          n: "Solista Masculino Open Over +60",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 111,
+          n: "Solista Femenino Profesional",
+          g: "salsa",
+          niv: "profesional",
+          t: "sol",
+        },
+        {
+          c: 112,
+          n: "Solista Femenino Semipro",
+          g: "salsa",
+          niv: "semipro",
+          t: "sol",
+        },
+        {
+          c: 113,
+          n: "Solista Femenino Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 114,
+          n: "Solista Femenino Junior (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 115,
+          n: "Solista Femenino Infantil (hasta 12 años)",
+          g: "salsa",
+          niv: "kids",
+          t: "sol",
+        },
+        {
+          c: 116,
+          n: "Solista Femenino Impro Batalla Open",
+          g: "salsa",
+          niv: "open",
+          t: "sol",
+        },
+        {
+          c: 117,
+          n: "Solista Femenino Impro Batalla Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 118,
+          n: "Solista Femenino Impro Junior Batalla (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 119,
+          n: "Solista Femenino Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 120,
+          n: "Solista Femenino Open Impro Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 121,
+          n: "Solista Femenino Open Over +60",
+          g: "salsa",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 122,
+          n: "Pareja Profesional con Truco",
+          g: "salsa",
+          niv: "profesional",
+          t: "par",
+        },
+        {
+          c: 123,
+          n: "Pareja Profesional Solo Piso",
+          g: "salsa",
+          niv: "profesional",
+          t: "par",
+        },
+        {
+          c: 124,
+          n: "Pareja Semipro con Truco",
+          g: "salsa",
+          niv: "semipro",
+          t: "par",
+        },
+        {
+          c: 125,
+          n: "Pareja Semipro Solo Piso",
+          g: "salsa",
+          niv: "semipro",
+          t: "par",
+        },
+        {
+          c: 126,
+          n: "Pareja ProAm con Truco",
+          g: "salsa",
+          niv: "proam",
+          t: "par",
+        },
+        {
+          c: 127,
+          n: "Pareja ProAm Solo Piso",
+          g: "salsa",
+          niv: "proam",
+          t: "par",
+        },
+        {
+          c: 128,
+          n: "Pareja Amateur con Truco",
+          g: "salsa",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 129,
+          n: "Pareja Amateur Solo Piso",
+          g: "salsa",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 130,
+          n: "Pareja Junior (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "par",
+        },
+        {
+          c: 131,
+          n: "Pareja Infantil (8-12 años) Solo Piso",
+          g: "salsa",
+          niv: "kids",
+          t: "par",
+        },
         { c: 132, n: "Pareja Impro Open", g: "salsa", niv: "open", t: "par" },
-        { c: 133, n: "Pareja Impro Amateur", g: "salsa", niv: "amateur", t: "par" },
-        { c: 134, n: "Pareja Impro Junior (13-17 años)", g: "salsa", niv: "junior", t: "par" },
-        { c: 135, n: "Pareja Open Over +40", g: "salsa", niv: "master", t: "par" },
-        { c: 136, n: "Pareja Impro Open Over +40", g: "salsa", niv: "master", t: "par" },
+        {
+          c: 133,
+          n: "Pareja Impro Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 134,
+          n: "Pareja Impro Junior (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "par",
+        },
+        {
+          c: 135,
+          n: "Pareja Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "par",
+        },
+        {
+          c: 136,
+          n: "Pareja Impro Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "par",
+        },
         { c: 137, n: "Pareja Over +60", g: "salsa", niv: "master", t: "par" },
         { c: 138, n: "Dúo Masculino Open", g: "salsa", niv: "open", t: "duo" },
-        { c: 139, n: "Dúo Masculino Amateur", g: "salsa", niv: "amateur", t: "duo" },
-        { c: 140, n: "Dúo Masculino Junior Open (13-17 años)", g: "salsa", niv: "junior", t: "duo" },
-        { c: 141, n: "Dúo Masculino Open Over +40", g: "salsa", niv: "master", t: "duo" },
-        { c: 142, n: "Dúo Masculino Amateur Over +40", g: "salsa", niv: "master", t: "duo" },
-        { c: 143, n: "Dúo Masculino Over +60", g: "salsa", niv: "master", t: "duo" },
+        {
+          c: 139,
+          n: "Dúo Masculino Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "duo",
+        },
+        {
+          c: 140,
+          n: "Dúo Masculino Junior Open (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "duo",
+        },
+        {
+          c: 141,
+          n: "Dúo Masculino Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 142,
+          n: "Dúo Masculino Amateur Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 143,
+          n: "Dúo Masculino Over +60",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
         { c: 144, n: "Dúo Femenino Open", g: "salsa", niv: "open", t: "duo" },
-        { c: 145, n: "Dúo Femenino Amateur", g: "salsa", niv: "amateur", t: "duo" },
-        { c: 146, n: "Dúo Femenino Junior Open (13-17 años)", g: "salsa", niv: "junior", t: "duo" },
-        { c: 147, n: "Dúo Femenino Open Over +40", g: "salsa", niv: "master", t: "duo" },
-        { c: 148, n: "Dúo Femenino Amateur Over +40", g: "salsa", niv: "master", t: "duo" },
-        { c: 149, n: "Dúo Femenino Over +60", g: "salsa", niv: "master", t: "duo" },
-        { c: 150, n: "Grupo Shines Small Mixto Open (3-5 integrantes)", g: "salsa", niv: "open", t: "gr" },
-        { c: 151, n: "Grupo Shines Classic Mixto Open (6-8 integrantes)", g: "salsa", niv: "open", t: "gr" },
-        { c: 152, n: "Grupo Shines XL Mixto Open (9+ integrantes)", g: "salsa", niv: "open", t: "gr" },
-        { c: 153, n: "Grupo Shines Small Masculino Pro (3-5 integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 154, n: "Grupo Shines Classic Masculino Pro (6-8 integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 155, n: "Grupo Shines XL Masculino Pro (9+ integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 156, n: "Grupo Shines Small Masculino ProAm (3-5 integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 157, n: "Grupo Shines Classic Masculino ProAm (6-8 integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 158, n: "Grupo Shines XL Masculino ProAm (9+ integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 159, n: "Grupo Shines Small Masculino Amateur (3-5 integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 160, n: "Grupo Shines Classic Masculino Amateur (6-8 integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 161, n: "Grupo Shines XL Masculino Amateur (9+ integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 162, n: "Grupo Shines Small Femenino Pro (3-5 integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 163, n: "Grupo Shines Classic Femenino Pro (6-8 integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 164, n: "Grupo Shines XL Femenino Pro (9+ integrantes)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 165, n: "Grupo Shines Small Femenino ProAm (3-5 integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 166, n: "Grupo Shines Classic Femenino ProAm (6-8 integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 167, n: "Grupo Shines XL Femenino ProAm (9+ integrantes)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 168, n: "Grupo Shines Small Femenino Amateur (3-5 integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 169, n: "Grupo Shines Classic Femenino Amateur (6-8 integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 170, n: "Grupo Shines XL Femenino Amateur (9+ integrantes)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 171, n: "Grupo Parejas Small Profesional (3-5 Parejas)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 172, n: "Grupo Parejas Classic Profesional (6-8 Parejas)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 173, n: "Grupo Parejas XL Profesional (9+ Parejas)", g: "salsa", niv: "profesional", t: "gr" },
-        { c: 174, n: "Grupo Parejas Small ProAm (3-5 Parejas)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 175, n: "Grupo Parejas Classic ProAm (6-8 Parejas)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 176, n: "Grupo Parejas XL ProAm (9+ Parejas)", g: "salsa", niv: "proam", t: "gr" },
-        { c: 177, n: "Grupo Parejas Small Amateur (3-5 Parejas)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 178, n: "Grupo Parejas Classic Amateur (6-8 Parejas)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 179, n: "Grupo Parejas XL Amateur (9+ Parejas)", g: "salsa", niv: "amateur", t: "gr" },
-        { c: 180, n: "Grupo Academia Hombres", g: "salsa", niv: "grupo", t: "gr" },
-        { c: 181, n: "Grupo Academia Mixto", g: "salsa", niv: "grupo", t: "gr" },
-        { c: 182, n: "Grupo Academia Femenino", g: "salsa", niv: "grupo", t: "gr" },
+        {
+          c: 145,
+          n: "Dúo Femenino Amateur",
+          g: "salsa",
+          niv: "amateur",
+          t: "duo",
+        },
+        {
+          c: 146,
+          n: "Dúo Femenino Junior Open (13-17 años)",
+          g: "salsa",
+          niv: "junior",
+          t: "duo",
+        },
+        {
+          c: 147,
+          n: "Dúo Femenino Open Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 148,
+          n: "Dúo Femenino Amateur Over +40",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 149,
+          n: "Dúo Femenino Over +60",
+          g: "salsa",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 150,
+          n: "Grupo Shines Small Mixto Open (3-5 integrantes)",
+          g: "salsa",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 151,
+          n: "Grupo Shines Classic Mixto Open (6-8 integrantes)",
+          g: "salsa",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 152,
+          n: "Grupo Shines XL Mixto Open (9+ integrantes)",
+          g: "salsa",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 153,
+          n: "Grupo Shines Small Masculino Pro (3-5 integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 154,
+          n: "Grupo Shines Classic Masculino Pro (6-8 integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 155,
+          n: "Grupo Shines XL Masculino Pro (9+ integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 156,
+          n: "Grupo Shines Small Masculino ProAm (3-5 integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 157,
+          n: "Grupo Shines Classic Masculino ProAm (6-8 integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 158,
+          n: "Grupo Shines XL Masculino ProAm (9+ integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 159,
+          n: "Grupo Shines Small Masculino Amateur (3-5 integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 160,
+          n: "Grupo Shines Classic Masculino Amateur (6-8 integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 161,
+          n: "Grupo Shines XL Masculino Amateur (9+ integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 162,
+          n: "Grupo Shines Small Femenino Pro (3-5 integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 163,
+          n: "Grupo Shines Classic Femenino Pro (6-8 integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 164,
+          n: "Grupo Shines XL Femenino Pro (9+ integrantes)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 165,
+          n: "Grupo Shines Small Femenino ProAm (3-5 integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 166,
+          n: "Grupo Shines Classic Femenino ProAm (6-8 integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 167,
+          n: "Grupo Shines XL Femenino ProAm (9+ integrantes)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 168,
+          n: "Grupo Shines Small Femenino Amateur (3-5 integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 169,
+          n: "Grupo Shines Classic Femenino Amateur (6-8 integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 170,
+          n: "Grupo Shines XL Femenino Amateur (9+ integrantes)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 171,
+          n: "Grupo Parejas Small Profesional (3-5 Parejas)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 172,
+          n: "Grupo Parejas Classic Profesional (6-8 Parejas)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 173,
+          n: "Grupo Parejas XL Profesional (9+ Parejas)",
+          g: "salsa",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 174,
+          n: "Grupo Parejas Small ProAm (3-5 Parejas)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 175,
+          n: "Grupo Parejas Classic ProAm (6-8 Parejas)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 176,
+          n: "Grupo Parejas XL ProAm (9+ Parejas)",
+          g: "salsa",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 177,
+          n: "Grupo Parejas Small Amateur (3-5 Parejas)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 178,
+          n: "Grupo Parejas Classic Amateur (6-8 Parejas)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 179,
+          n: "Grupo Parejas XL Amateur (9+ Parejas)",
+          g: "salsa",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 180,
+          n: "Grupo Academia Hombres",
+          g: "salsa",
+          niv: "grupo",
+          t: "gr",
+        },
+        {
+          c: 181,
+          n: "Grupo Academia Mixto",
+          g: "salsa",
+          niv: "grupo",
+          t: "gr",
+        },
+        {
+          c: 182,
+          n: "Grupo Academia Femenino",
+          g: "salsa",
+          niv: "grupo",
+          t: "gr",
+        },
         { c: 183, n: "Grupos Cabaret", g: "salsa", niv: "especial", t: "gr" },
-        { c: 184, n: "Capacidades Diferentes Salsa", g: "salsa", niv: "especial", t: "esp" },
+        {
+          c: 184,
+          n: "Capacidades Diferentes Salsa",
+          g: "salsa",
+          niv: "especial",
+          t: "esp",
+        },
         // ─── BACHATA — 200-284 ───
-        { c: 200, n: "Solista Masculino Profesional", g: "bachata", niv: "profesional", t: "sol" },
-        { c: 201, n: "Solista Masculino Semipro", g: "bachata", niv: "semipro", t: "sol" },
-        { c: 202, n: "Solista Masculino Amateur", g: "bachata", niv: "amateur", t: "sol" },
-        { c: 203, n: "Solista Masculino Junior (13-17 años)", g: "bachata", niv: "junior", t: "sol" },
-        { c: 204, n: "Solista Masculino Infantil (hasta 12 años)", g: "bachata", niv: "kids", t: "sol" },
-        { c: 205, n: "Solista Masculino Impro Batalla Open", g: "bachata", niv: "open", t: "sol" },
-        { c: 206, n: "Solista Masculino Impro Batalla Amateur", g: "bachata", niv: "amateur", t: "sol" },
-        { c: 207, n: "Solista Masculino Impro Junior Batalla (13-17 años)", g: "bachata", niv: "junior", t: "sol" },
-        { c: 208, n: "Solista Masculino Open Over +40", g: "bachata", niv: "master", t: "sol" },
-        { c: 209, n: "Solista Masculino Impro Open Over +40", g: "bachata", niv: "master", t: "sol" },
-        { c: 210, n: "Solista Masculino Open Over +60", g: "bachata", niv: "master", t: "sol" },
-        { c: 211, n: "Solista Femenino Profesional", g: "bachata", niv: "profesional", t: "sol" },
-        { c: 212, n: "Solista Femenino Semipro", g: "bachata", niv: "semipro", t: "sol" },
-        { c: 213, n: "Solista Femenino Amateur", g: "bachata", niv: "amateur", t: "sol" },
-        { c: 214, n: "Solista Femenino Junior (13-17 años)", g: "bachata", niv: "junior", t: "sol" },
-        { c: 215, n: "Solista Femenino Infantil (hasta 12 años)", g: "bachata", niv: "kids", t: "sol" },
-        { c: 216, n: "Solista Femenino Impro Batalla Open", g: "bachata", niv: "open", t: "sol" },
-        { c: 217, n: "Solista Femenino Impro Batalla Amateur", g: "bachata", niv: "amateur", t: "sol" },
-        { c: 218, n: "Solista Femenino Impro Junior Batalla (13-17 años)", g: "bachata", niv: "junior", t: "sol" },
-        { c: 219, n: "Solista Femenino Open Over +40", g: "bachata", niv: "master", t: "sol" },
-        { c: 220, n: "Solista Femenino Open Impro Over +40", g: "bachata", niv: "master", t: "sol" },
-        { c: 221, n: "Solista Femenino Open Over +60", g: "bachata", niv: "master", t: "sol" },
-        { c: 222, n: "Pareja Profesional con Truco", g: "bachata", niv: "profesional", t: "par" },
-        { c: 223, n: "Pareja Profesional Solo Piso", g: "bachata", niv: "profesional", t: "par" },
-        { c: 224, n: "Pareja Semipro con Truco", g: "bachata", niv: "semipro", t: "par" },
-        { c: 225, n: "Pareja Semipro Solo Piso", g: "bachata", niv: "semipro", t: "par" },
-        { c: 226, n: "Pareja ProAm con Truco", g: "bachata", niv: "proam", t: "par" },
-        { c: 227, n: "Pareja ProAm Solo Piso", g: "bachata", niv: "proam", t: "par" },
-        { c: 228, n: "Pareja Amateur con Truco", g: "bachata", niv: "amateur", t: "par" },
-        { c: 229, n: "Pareja Amateur Solo Piso", g: "bachata", niv: "amateur", t: "par" },
-        { c: 230, n: "Pareja Junior (13-17 años)", g: "bachata", niv: "junior", t: "par" },
-        { c: 231, n: "Pareja Infantil (8-12 años) Solo Piso", g: "bachata", niv: "kids", t: "par" },
+        {
+          c: 200,
+          n: "Solista Masculino Profesional",
+          g: "bachata",
+          niv: "profesional",
+          t: "sol",
+        },
+        {
+          c: 201,
+          n: "Solista Masculino Semipro",
+          g: "bachata",
+          niv: "semipro",
+          t: "sol",
+        },
+        {
+          c: 202,
+          n: "Solista Masculino Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 203,
+          n: "Solista Masculino Junior (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 204,
+          n: "Solista Masculino Infantil (hasta 12 años)",
+          g: "bachata",
+          niv: "kids",
+          t: "sol",
+        },
+        {
+          c: 205,
+          n: "Solista Masculino Impro Batalla Open",
+          g: "bachata",
+          niv: "open",
+          t: "sol",
+        },
+        {
+          c: 206,
+          n: "Solista Masculino Impro Batalla Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 207,
+          n: "Solista Masculino Impro Junior Batalla (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 208,
+          n: "Solista Masculino Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 209,
+          n: "Solista Masculino Impro Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 210,
+          n: "Solista Masculino Open Over +60",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 211,
+          n: "Solista Femenino Profesional",
+          g: "bachata",
+          niv: "profesional",
+          t: "sol",
+        },
+        {
+          c: 212,
+          n: "Solista Femenino Semipro",
+          g: "bachata",
+          niv: "semipro",
+          t: "sol",
+        },
+        {
+          c: 213,
+          n: "Solista Femenino Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 214,
+          n: "Solista Femenino Junior (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 215,
+          n: "Solista Femenino Infantil (hasta 12 años)",
+          g: "bachata",
+          niv: "kids",
+          t: "sol",
+        },
+        {
+          c: 216,
+          n: "Solista Femenino Impro Batalla Open",
+          g: "bachata",
+          niv: "open",
+          t: "sol",
+        },
+        {
+          c: 217,
+          n: "Solista Femenino Impro Batalla Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "sol",
+        },
+        {
+          c: 218,
+          n: "Solista Femenino Impro Junior Batalla (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "sol",
+        },
+        {
+          c: 219,
+          n: "Solista Femenino Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 220,
+          n: "Solista Femenino Open Impro Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 221,
+          n: "Solista Femenino Open Over +60",
+          g: "bachata",
+          niv: "master",
+          t: "sol",
+        },
+        {
+          c: 222,
+          n: "Pareja Profesional con Truco",
+          g: "bachata",
+          niv: "profesional",
+          t: "par",
+        },
+        {
+          c: 223,
+          n: "Pareja Profesional Solo Piso",
+          g: "bachata",
+          niv: "profesional",
+          t: "par",
+        },
+        {
+          c: 224,
+          n: "Pareja Semipro con Truco",
+          g: "bachata",
+          niv: "semipro",
+          t: "par",
+        },
+        {
+          c: 225,
+          n: "Pareja Semipro Solo Piso",
+          g: "bachata",
+          niv: "semipro",
+          t: "par",
+        },
+        {
+          c: 226,
+          n: "Pareja ProAm con Truco",
+          g: "bachata",
+          niv: "proam",
+          t: "par",
+        },
+        {
+          c: 227,
+          n: "Pareja ProAm Solo Piso",
+          g: "bachata",
+          niv: "proam",
+          t: "par",
+        },
+        {
+          c: 228,
+          n: "Pareja Amateur con Truco",
+          g: "bachata",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 229,
+          n: "Pareja Amateur Solo Piso",
+          g: "bachata",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 230,
+          n: "Pareja Junior (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "par",
+        },
+        {
+          c: 231,
+          n: "Pareja Infantil (8-12 años) Solo Piso",
+          g: "bachata",
+          niv: "kids",
+          t: "par",
+        },
         { c: 232, n: "Pareja Impro Open", g: "bachata", niv: "open", t: "par" },
-        { c: 233, n: "Pareja Impro Amateur", g: "bachata", niv: "amateur", t: "par" },
-        { c: 234, n: "Pareja Impro Junior (13-17 años)", g: "bachata", niv: "junior", t: "par" },
-        { c: 235, n: "Pareja Open Over +40", g: "bachata", niv: "master", t: "par" },
-        { c: 236, n: "Pareja Impro Open Over +40", g: "bachata", niv: "master", t: "par" },
+        {
+          c: 233,
+          n: "Pareja Impro Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "par",
+        },
+        {
+          c: 234,
+          n: "Pareja Impro Junior (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "par",
+        },
+        {
+          c: 235,
+          n: "Pareja Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "par",
+        },
+        {
+          c: 236,
+          n: "Pareja Impro Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "par",
+        },
         { c: 237, n: "Pareja Over +60", g: "bachata", niv: "master", t: "par" },
-        { c: 238, n: "Dúo Masculino Open", g: "bachata", niv: "open", t: "duo" },
-        { c: 239, n: "Dúo Masculino Amateur", g: "bachata", niv: "amateur", t: "duo" },
-        { c: 240, n: "Dúo Masculino Junior Open (13-17 años)", g: "bachata", niv: "junior", t: "duo" },
-        { c: 241, n: "Dúo Masculino Open Over +40", g: "bachata", niv: "master", t: "duo" },
-        { c: 242, n: "Dúo Masculino Amateur Over +40", g: "bachata", niv: "master", t: "duo" },
-        { c: 243, n: "Dúo Masculino Over +60", g: "bachata", niv: "master", t: "duo" },
+        {
+          c: 238,
+          n: "Dúo Masculino Open",
+          g: "bachata",
+          niv: "open",
+          t: "duo",
+        },
+        {
+          c: 239,
+          n: "Dúo Masculino Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "duo",
+        },
+        {
+          c: 240,
+          n: "Dúo Masculino Junior Open (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "duo",
+        },
+        {
+          c: 241,
+          n: "Dúo Masculino Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 242,
+          n: "Dúo Masculino Amateur Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 243,
+          n: "Dúo Masculino Over +60",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
         { c: 244, n: "Dúo Femenino Open", g: "bachata", niv: "open", t: "duo" },
-        { c: 245, n: "Dúo Femenino Amateur", g: "bachata", niv: "amateur", t: "duo" },
-        { c: 246, n: "Dúo Femenino Junior Open (13-17 años)", g: "bachata", niv: "junior", t: "duo" },
-        { c: 247, n: "Dúo Femenino Open Over +40", g: "bachata", niv: "master", t: "duo" },
-        { c: 248, n: "Dúo Femenino Amateur Over +40", g: "bachata", niv: "master", t: "duo" },
-        { c: 249, n: "Dúo Femenino Over +60", g: "bachata", niv: "master", t: "duo" },
-        { c: 250, n: "Grupo Shines Small Mixto Open (3-5 integrantes)", g: "bachata", niv: "open", t: "gr" },
-        { c: 251, n: "Grupo Shines Classic Mixto Open (6-8 integrantes)", g: "bachata", niv: "open", t: "gr" },
-        { c: 252, n: "Grupo Shines XL Mixto Open (9+ integrantes)", g: "bachata", niv: "open", t: "gr" },
-        { c: 253, n: "Grupo Shines Small Masculino Pro (3-5 integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 254, n: "Grupo Shines Classic Masculino Pro (6-8 integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 255, n: "Grupo Shines XL Masculino Pro (9+ integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 256, n: "Grupo Shines Small Masculino ProAm (3-5 integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 257, n: "Grupo Shines Classic Masculino ProAm (6-8 integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 258, n: "Grupo Shines XL Masculino ProAm (9+ integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 259, n: "Grupo Shines Small Masculino Amateur (3-5 integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 260, n: "Grupo Shines Classic Masculino Amateur (6-8 integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 261, n: "Grupo Shines XL Masculino Amateur (9+ integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 262, n: "Grupo Shines Small Femenino Pro (3-5 integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 263, n: "Grupo Shines Classic Femenino Pro (6-8 integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 264, n: "Grupo Shines XL Femenino Pro (9+ integrantes)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 265, n: "Grupo Shines Small Femenino ProAm (3-5 integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 266, n: "Grupo Shines Classic Femenino ProAm (6-8 integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 267, n: "Grupo Shines XL Femenino ProAm (9+ integrantes)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 268, n: "Grupo Shines Small Femenino Amateur (3-5 integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 269, n: "Grupo Shines Classic Femenino Amateur (6-8 integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 270, n: "Grupo Shines XL Femenino Amateur (9+ integrantes)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 271, n: "Grupo Parejas Small Profesional (3-5 Parejas)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 272, n: "Grupo Parejas Classic Profesional (6-8 Parejas)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 273, n: "Grupo Parejas XL Profesional (9+ Parejas)", g: "bachata", niv: "profesional", t: "gr" },
-        { c: 274, n: "Grupo Parejas Small ProAm (3-5 Parejas)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 275, n: "Grupo Parejas Classic ProAm (6-8 Parejas)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 276, n: "Grupo Parejas XL ProAm (9+ Parejas)", g: "bachata", niv: "proam", t: "gr" },
-        { c: 277, n: "Grupo Parejas Small Amateur (3-5 Parejas)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 278, n: "Grupo Parejas Classic Amateur (6-8 Parejas)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 279, n: "Grupo Parejas XL Amateur (9+ Parejas)", g: "bachata", niv: "amateur", t: "gr" },
-        { c: 280, n: "Grupo Academia Hombres", g: "bachata", niv: "grupo", t: "gr" },
-        { c: 281, n: "Grupo Academia Mixto", g: "bachata", niv: "grupo", t: "gr" },
-        { c: 282, n: "Grupo Academia Femenino", g: "bachata", niv: "grupo", t: "gr" },
+        {
+          c: 245,
+          n: "Dúo Femenino Amateur",
+          g: "bachata",
+          niv: "amateur",
+          t: "duo",
+        },
+        {
+          c: 246,
+          n: "Dúo Femenino Junior Open (13-17 años)",
+          g: "bachata",
+          niv: "junior",
+          t: "duo",
+        },
+        {
+          c: 247,
+          n: "Dúo Femenino Open Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 248,
+          n: "Dúo Femenino Amateur Over +40",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 249,
+          n: "Dúo Femenino Over +60",
+          g: "bachata",
+          niv: "master",
+          t: "duo",
+        },
+        {
+          c: 250,
+          n: "Grupo Shines Small Mixto Open (3-5 integrantes)",
+          g: "bachata",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 251,
+          n: "Grupo Shines Classic Mixto Open (6-8 integrantes)",
+          g: "bachata",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 252,
+          n: "Grupo Shines XL Mixto Open (9+ integrantes)",
+          g: "bachata",
+          niv: "open",
+          t: "gr",
+        },
+        {
+          c: 253,
+          n: "Grupo Shines Small Masculino Pro (3-5 integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 254,
+          n: "Grupo Shines Classic Masculino Pro (6-8 integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 255,
+          n: "Grupo Shines XL Masculino Pro (9+ integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 256,
+          n: "Grupo Shines Small Masculino ProAm (3-5 integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 257,
+          n: "Grupo Shines Classic Masculino ProAm (6-8 integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 258,
+          n: "Grupo Shines XL Masculino ProAm (9+ integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 259,
+          n: "Grupo Shines Small Masculino Amateur (3-5 integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 260,
+          n: "Grupo Shines Classic Masculino Amateur (6-8 integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 261,
+          n: "Grupo Shines XL Masculino Amateur (9+ integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 262,
+          n: "Grupo Shines Small Femenino Pro (3-5 integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 263,
+          n: "Grupo Shines Classic Femenino Pro (6-8 integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 264,
+          n: "Grupo Shines XL Femenino Pro (9+ integrantes)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 265,
+          n: "Grupo Shines Small Femenino ProAm (3-5 integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 266,
+          n: "Grupo Shines Classic Femenino ProAm (6-8 integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 267,
+          n: "Grupo Shines XL Femenino ProAm (9+ integrantes)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 268,
+          n: "Grupo Shines Small Femenino Amateur (3-5 integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 269,
+          n: "Grupo Shines Classic Femenino Amateur (6-8 integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 270,
+          n: "Grupo Shines XL Femenino Amateur (9+ integrantes)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 271,
+          n: "Grupo Parejas Small Profesional (3-5 Parejas)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 272,
+          n: "Grupo Parejas Classic Profesional (6-8 Parejas)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 273,
+          n: "Grupo Parejas XL Profesional (9+ Parejas)",
+          g: "bachata",
+          niv: "profesional",
+          t: "gr",
+        },
+        {
+          c: 274,
+          n: "Grupo Parejas Small ProAm (3-5 Parejas)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 275,
+          n: "Grupo Parejas Classic ProAm (6-8 Parejas)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 276,
+          n: "Grupo Parejas XL ProAm (9+ Parejas)",
+          g: "bachata",
+          niv: "proam",
+          t: "gr",
+        },
+        {
+          c: 277,
+          n: "Grupo Parejas Small Amateur (3-5 Parejas)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 278,
+          n: "Grupo Parejas Classic Amateur (6-8 Parejas)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 279,
+          n: "Grupo Parejas XL Amateur (9+ Parejas)",
+          g: "bachata",
+          niv: "amateur",
+          t: "gr",
+        },
+        {
+          c: 280,
+          n: "Grupo Academia Hombres",
+          g: "bachata",
+          niv: "grupo",
+          t: "gr",
+        },
+        {
+          c: 281,
+          n: "Grupo Academia Mixto",
+          g: "bachata",
+          niv: "grupo",
+          t: "gr",
+        },
+        {
+          c: 282,
+          n: "Grupo Academia Femenino",
+          g: "bachata",
+          niv: "grupo",
+          t: "gr",
+        },
         { c: 283, n: "Grupos Cabaret", g: "bachata", niv: "especial", t: "gr" },
-        { c: 284, n: "Capacidades Diferentes Bachata", g: "bachata", niv: "especial", t: "esp" },
+        {
+          c: 284,
+          n: "Capacidades Diferentes Bachata",
+          g: "bachata",
+          niv: "especial",
+          t: "esp",
+        },
         // ─── OPEN — 300 ───
         { c: 300, n: "Open Latin JAM", g: "open", niv: "open", t: "esp" },
         // ─── INTERAMERICA — Categorías Oficiales 2026 (126 cats) ───
@@ -3491,7 +4457,9 @@
         // Validar comprobante de clasificación en Nacional
         if (n === 4 && INST === "nac") {
           var clasifEl = document.getElementById("clasif-file");
-          var clasifOk = STATE.clasif_file || (clasifEl && clasifEl.files && clasifEl.files[0]);
+          var clasifOk =
+            STATE.clasif_file ||
+            (clasifEl && clasifEl.files && clasifEl.files[0]);
           if (!clasifOk) {
             toast(
               "Debés adjuntar el comprobante de clasificación de la sede",
@@ -4141,8 +5109,13 @@
         el.style.borderColor = "rgba(76,175,125,.35)";
         el.style.background = "#001a0a";
         el.dataset.uploaded = "1";
-        el.onclick = function() { input.click(); };
-        el.innerHTML = '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' + file.name + '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
+        el.onclick = function () {
+          input.click();
+        };
+        el.innerHTML =
+          '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' +
+          file.name +
+          '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
       }
       function subirComp(input) {
         var z = document.getElementById("uzone");
@@ -4150,8 +5123,13 @@
         var file = input.files[0];
         STATE.comp_file = file;
         z.className = "uzone done";
-        z.onclick = function() { input.click(); };
-        z.innerHTML = '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' + file.name + '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
+        z.onclick = function () {
+          input.click();
+        };
+        z.innerHTML =
+          '<div style="font-size:22px;margin-bottom:5px">&#9989;</div><div style="font-size:13px;color:#4CAF7D">' +
+          file.name +
+          '</div><div style="font-size:11px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
       }
 
       // ── TÉRMINOS Y CONDICIONES NACIONAL ──────────────────────────────
@@ -4364,7 +5342,7 @@
               '<span class="rv" style="font-size:12px">' +
               cat +
               "</span></div></div>" +
-              '<div class="card mb3" style="max-height:270px;overflow-y:auto">' +
+              '<div class="card mb3" style="text-align:center">' +
               tcNac() +
               "</div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
@@ -4578,7 +5556,7 @@
                   "</span></div>"
                 : "") +
               "</div></div>" +
-              '<div class="card mb3" style="max-height:270px;overflow-y:auto">' +
+              '<div class="card mb3" style="text-align:center">' +
               tcNac() +
               "</div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
@@ -4767,6 +5745,11 @@
               '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
               '<div class="sf mt2"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bd bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
+            var tcCard = document.createElement("div");
+            tcCard.className = "card mb3";
+            tcCard.style.textAlign = "center";
+            tcCard.innerHTML = tcNac();
+            d.insertBefore(tcCard, d.querySelector(".cklbl"));
             w.appendChild(d);
           },
         },
@@ -4962,7 +5945,11 @@
               };
             // Evento uzone
             var uz = document.getElementById("uzone");
-            if (uz) uz.onclick = function() { var f = document.getElementById("uzone-file"); if (f) f.click(); };
+            if (uz)
+              uz.onclick = function () {
+                var f = document.getElementById("uzone-file");
+                if (f) f.click();
+              };
             // Evento cv input
             var cvi = document.getElementById("cv");
             if (cvi) cvi.oninput = calcD;
@@ -5004,7 +5991,7 @@
               "</span></div>" +
               '<div class="rsald"><span class="rsaldl">Estado</span><span class="rsaldv" style="color:#E8A838">Pendiente de aprobaci\u00f3n</span></div>' +
               "</div>" +
-              '<div class="card mb3" style="max-height:270px;overflow-y:auto">' +
+              '<div class="card mb3" style="text-align:center">' +
               tcNac() +
               "</div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
@@ -5019,27 +6006,32 @@
       // ── CONFIRMACIONES ────────────────────────────────────────────────
       function sendNotify(id) {
         if (!id) return;
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-          console.log('Notify skipped in local dev (only runs on Vercel)');
+        if (
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1"
+        ) {
+          console.log("Notify skipped in local dev (only runs on Vercel)");
           return;
         }
-        fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: id })
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: id }),
         })
-          .then(function(r) {
-            return r.text().then(function(text) {
+          .then(function (r) {
+            return r.text().then(function (text) {
               try {
                 var body = JSON.parse(text);
-                if (!r.ok) console.error('Notify HTTP ' + r.status, body);
-                else console.log('Notify ok', body);
-              } catch(e) {
-                console.error('Notify HTTP ' + r.status, text);
+                if (!r.ok) console.error("Notify HTTP " + r.status, body);
+                else console.log("Notify ok", body);
+              } catch (e) {
+                console.error("Notify HTTP " + r.status, text);
               }
             });
           })
-          .catch(function(e) { console.error('Notify fetch err:', e); });
+          .catch(function (e) {
+            console.error("Notify fetch err:", e);
+          });
       }
 
       async function confirmarReg() {
@@ -5180,9 +6172,14 @@
         // Verificar email duplicado antes de subir archivos
         var email = sv("f-email") || "";
         var emailCheck = await withTimeout(
-          sb.from("inscripciones").select("id").eq("email", email).eq("instancia", INST).maybeSingle(),
+          sb
+            .from("inscripciones")
+            .select("id")
+            .eq("email", email)
+            .eq("instancia", INST)
+            .maybeSingle(),
           10000,
-          "Email check"
+          "Email check",
         );
         if (emailCheck.data) return "DUPLICATE_EMAIL";
 
@@ -5216,13 +6213,21 @@
         // Upload comprobante de clasificación (solo nac)
         var clasifUrl = null;
         if (STATE.clasif_file) {
-          clasifUrl = await sbUpload("comprobantes", "clasif_" + INST + "_" + ts, STATE.clasif_file);
+          clasifUrl = await sbUpload(
+            "comprobantes",
+            "clasif_" + INST + "_" + ts,
+            STATE.clasif_file,
+          );
         }
 
         // Upload comprobante de pago
         var compUrl = null;
         if (STATE.comp_file) {
-          compUrl = await sbUpload("comprobantes", INST + "_" + ts, STATE.comp_file);
+          compUrl = await sbUpload(
+            "comprobantes",
+            INST + "_" + ts,
+            STATE.comp_file,
+          );
         }
 
         // Upload música (primera encontrada)
@@ -5316,7 +6321,10 @@
         document.getElementById("sform").style.display = "none";
         var okLogo = document.getElementById("ok-logo");
         var okLogoReg = document.getElementById("ok-logo-reg");
-        var logoSrc = INST === "int" ? "./logo-int.png" : "./logo-nac.png";
+        var logoSrc =
+          INST === "int"
+            ? "./public/imgs/logo-int.png"
+            : "./public/imgs/logo-nac.png";
         if (okLogo) okLogo.src = logoSrc;
         if (okLogoReg) okLogoReg.src = logoSrc;
         var nacWarn = document.getElementById("ok-nac-warning");
@@ -5359,6 +6367,32 @@
         }
         showSuccess();
         sendNotify(dbRecord.id);
+      }
+
+      function tcNac() {
+        var pdf =
+          INST === "int"
+            ? "./public/docs/TERMINOS Y CONDICIONES INTER AMERICA 2026.pdf"
+            : "./public/docs/TERMINOS Y CONDICIONES JAM 2026.pdf";
+        var titulo =
+          INST === "int"
+            ? "Términos y Condiciones — INTER AMÉRICA 2026"
+            : INST === "reg"
+              ? "Términos y Condiciones — REGIONAL 2026"
+              : "Términos y Condiciones — NACIONAL 2026";
+        return (
+          '<p style="font-size:12px;color:rgba(248,245,238,.55);margin:0 0 16px;line-height:1.6">' +
+          "Descargá el documento, leélo, completá con tu nombre, DNI y firma, y presentálo el día del evento." +
+          "</p>" +
+          '<a href="' +
+          pdf +
+          '" download style="display:inline-flex;align-items:center;gap:10px;' +
+          "background:#1a1600;border:1px solid rgba(201,168,76,.4);color:#C9A84C;" +
+          'padding:13px 22px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">' +
+          '<span style="font-size:20px">&#128196;</span><span>' +
+          titulo +
+          "</span></a>"
+        );
       }
 
       function resetF() {
@@ -5433,153 +6467,240 @@
         align-items: center;
       "
     ></div>
-  
-<!-- ===================================================================== -->
-<!-- EXTENSION JAM 2026 - Cableado de slots de musica + boton post-inscripcion -->
-<!-- Este bloque NO modifica ninguna linea del codigo de Lorenzo. -->
-<!-- Solo agrega comportamiento adicional via monkey-patch y MutationObserver. -->
-<!-- Para removerlo: borrar este bloque entero. -->
-<!-- ===================================================================== -->
-<script>
-(function(){
-  "use strict";
-  var SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
-  var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-  var BUCKET  = "musica";
-  var pickedFile = null, pickedUrl = null, patchDone = false, btnInjected = false;
-  function $audioInput(){
-    var i = document.getElementById("__jam_audio_in");
-    if (!i) {
-      i = document.createElement("input");
-      i.type = "file"; i.accept = "audio/*"; i.id = "__jam_audio_in";
-      i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
-      document.body.appendChild(i);
-      i.addEventListener("change", onPicked);
-    }
-    return i;
-  }
-  function findActiveSlot(){
-    var slots = [document.getElementById("reg-mslot")];
-    var mslotsList = document.querySelectorAll('[id="mslots"]');
-    for (var j=0;j<mslotsList.length;j++) slots.push(mslotsList[j]);
-    for (var k=0;k<slots.length;k++) {
-      if (slots[k] && slots[k].offsetParent !== null) return slots[k];
-    }
-    return slots.find(function(s){return s;});
-  }
-  function setSlotLabel(t){
-    var s = findActiveSlot(); if (!s) return;
-    var l = s.querySelector("div"); if (!l) return;
-    if (!l.dataset._orig) l.dataset._orig = l.innerText;
-    l.innerText = t;
-  }
-  function restoreSlotLabel(){
-    var s = findActiveSlot(); if (!s) return;
-    var l = s.querySelector("div");
-    if (l && l.dataset._orig) l.innerText = l.dataset._orig;
-  }
-  async function uploadAudio(file){
-    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0,80);
-    var path = "preinsert-" + Date.now() + "-" + safeName;
-    var url  = SB_URL + "/storage/v1/object/" + BUCKET + "/" + path;
-    var pub  = SB_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
-    var r = await fetch(url, { method: "POST", headers: { "Authorization": "Bearer " + SB_ANON, "apikey": SB_ANON, "x-upsert": "true", "Content-Type": file.type || "audio/mpeg" }, body: file });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return pub;
-  }
-  async function onPicked(ev){
-    var f = ev.target.files && ev.target.files[0];
-    if (!f) return;
-    if (!f.type.startsWith("audio/")) { alert("El archivo debe ser audio (MP3, WAV, M4A, OGG)."); ev.target.value = ""; return; }
-    if (f.size > 50*1024*1024) { alert("Maximo 50 MB."); ev.target.value = ""; return; }
-    pickedFile = f;
-    setSlotLabel("Subiendo: " + f.name);
-    try {
-      pickedUrl = await uploadAudio(f);
-      setSlotLabel("OK - " + f.name);
-    } catch(e){
-      pickedFile = null; pickedUrl = null;
-      restoreSlotLabel();
-      alert("Error subiendo la musica: " + e.message);
-    }
-  }
-  function wireAllSlots(){
-    var mslotsList = document.querySelectorAll('[id="mslots"]');
-    for (var j=0;j<mslotsList.length;j++){
-      var slot = mslotsList[j];
-      if (slot.dataset._jamWired) continue;
-      slot.dataset._jamWired = "1";
-      slot.style.cursor = "pointer";
-      slot.addEventListener("click", function(){ $audioInput().click(); });
-    }
-  }
-  function patchRegSubir(){
-    if (window._regSubirMusicaPatched) return;
-    if (typeof window.regSubirMusica !== "function") { setTimeout(patchRegSubir, 400); return; }
-    window._regSubirMusicaPatched = true;
-    var original = window.regSubirMusica;
-    window.regSubirMusica = function(el){
-      try { original.call(this, el); } catch(e){}
-      $audioInput().click();
-    };
-  }
-  async function updateInscripcionMusica(email){
-    if (!email || !pickedUrl || !pickedFile) return;
-    var q = SB_URL + "/rest/v1/inscripciones?email=eq." + encodeURIComponent(email) + "&select=id&order=created_at.desc&limit=1";
-    var r = await fetch(q, { headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }});
-    var rows = await r.json();
-    if (!rows || !rows.length) return;
-    var ins = rows[0];
-    await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + ins.id, { method: "PATCH", headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" }, body: JSON.stringify({ musica_url: pickedUrl, musica_estado: "cargada", musica_nombre: pickedFile.name }) });
-  }
-  async function injectMusicaButton(email){
-    if (btnInjected) return;
-    var anchor = document.getElementById("ok-musica-fecha");
-    if (!anchor || !email) return;
-    var q = SB_URL + "/rest/v1/inscripciones?email=eq." + encodeURIComponent(email) + "&select=id,musica_token,musica_estado&order=created_at.desc&limit=1";
-    var row;
-    try { var r = await fetch(q, { headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }}); var rows = await r.json(); row = rows && rows[0]; } catch(e){ return; }
-    if (!row || !row.musica_token) return;
-    btnInjected = true;
-    var alreadyUp = row.musica_estado === "cargada";
-    var link = "/musica?token=" + row.musica_token;
-    var wrap = document.createElement("div");
-    wrap.id = "__jam_musica_btn";
-    wrap.style.cssText = "margin:20px auto;padding:16px;background:rgba(211,47,47,0.08);border:1px solid rgba(211,47,47,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
-    if (alreadyUp) {
-      wrap.innerHTML = '<div style="font-size:14px;color:#4caf50;margin-bottom:8px">OK Tu musica ya fue cargada</div><a href="' + link + '" target="_blank" style="color:#d32f2f;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
-    } else {
-      wrap.innerHTML = '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">Cargar tu musica ahora?</div><a href="' + link + '" target="_blank" style="background:#d32f2f;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subi tu cancion</a><div style="font-size:11px;color:#888;margin-top:10px">Tambien te enviamos el link por mail.</div>';
-    }
-    anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
-  }
-  function findEnteredEmail(){
-    var ins = document.querySelectorAll("input[type=email], input[name*=mail], input[id*=mail]");
-    for (var i=0;i<ins.length;i++){
-      var v = (ins[i].value || "").trim();
-      if (v && v.indexOf("@") > 0) return v.toLowerCase();
-    }
-    return null;
-  }
-  function setupObserver(){
-    var obs = new MutationObserver(async function(){
-      wireAllSlots();
-      var ok = document.getElementById("ok-musica-fecha");
-      if (!ok || ok.offsetParent === null) return;
-      var email = findEnteredEmail();
-      if (!email) return;
-      if (!btnInjected) injectMusicaButton(email);
-      if (pickedFile && pickedUrl && !patchDone) {
-        patchDone = true;
-        try { await updateInscripcionMusica(email); } catch(e){ console.error(e); }
-      }
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-  }
-  function init(){ $audioInput(); patchRegSubir(); wireAllSlots(); setupObserver(); }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
-})();
-</script>
-</body>
+
+    <!-- ===================================================================== -->
+    <!-- EXTENSION JAM 2026 - Cableado de slots de musica + boton post-inscripcion -->
+    <!-- Este bloque NO modifica ninguna linea del codigo de Lorenzo. -->
+    <!-- Solo agrega comportamiento adicional via monkey-patch y MutationObserver. -->
+    <!-- Para removerlo: borrar este bloque entero. -->
+    <!-- ===================================================================== -->
+    <script>
+      (function () {
+        "use strict";
+        var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
+        var SB_ANON =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
+        var BUCKET = "musica";
+        var pickedFile = null,
+          pickedUrl = null,
+          patchDone = false,
+          btnInjected = false;
+        function $audioInput() {
+          var i = document.getElementById("__jam_audio_in");
+          if (!i) {
+            i = document.createElement("input");
+            i.type = "file";
+            i.accept = "audio/*";
+            i.id = "__jam_audio_in";
+            i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
+            document.body.appendChild(i);
+            i.addEventListener("change", onPicked);
+          }
+          return i;
+        }
+        function findActiveSlot() {
+          var slots = [document.getElementById("reg-mslot")];
+          var mslotsList = document.querySelectorAll('[id="mslots"]');
+          for (var j = 0; j < mslotsList.length; j++) slots.push(mslotsList[j]);
+          for (var k = 0; k < slots.length; k++) {
+            if (slots[k] && slots[k].offsetParent !== null) return slots[k];
+          }
+          return slots.find(function (s) {
+            return s;
+          });
+        }
+        function setSlotLabel(t) {
+          var s = findActiveSlot();
+          if (!s) return;
+          var l = s.querySelector("div");
+          if (!l) return;
+          if (!l.dataset._orig) l.dataset._orig = l.innerText;
+          l.innerText = t;
+        }
+        function restoreSlotLabel() {
+          var s = findActiveSlot();
+          if (!s) return;
+          var l = s.querySelector("div");
+          if (l && l.dataset._orig) l.innerText = l.dataset._orig;
+        }
+        async function uploadAudio(file) {
+          var safeName = file.name
+            .replace(/[^a-zA-Z0-9._-]/g, "_")
+            .substring(0, 80);
+          var path = "preinsert-" + Date.now() + "-" + safeName;
+          var url = SB_URL + "/storage/v1/object/" + BUCKET + "/" + path;
+          var pub = SB_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
+          var r = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + SB_ANON,
+              apikey: SB_ANON,
+              "x-upsert": "true",
+              "Content-Type": file.type || "audio/mpeg",
+            },
+            body: file,
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return pub;
+        }
+        async function onPicked(ev) {
+          var f = ev.target.files && ev.target.files[0];
+          if (!f) return;
+          if (!f.type.startsWith("audio/")) {
+            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
+            ev.target.value = "";
+            return;
+          }
+          if (f.size > 50 * 1024 * 1024) {
+            alert("Maximo 50 MB.");
+            ev.target.value = "";
+            return;
+          }
+          pickedFile = f;
+          setSlotLabel("Subiendo: " + f.name);
+          try {
+            pickedUrl = await uploadAudio(f);
+            setSlotLabel("OK - " + f.name);
+          } catch (e) {
+            pickedFile = null;
+            pickedUrl = null;
+            restoreSlotLabel();
+            alert("Error subiendo la musica: " + e.message);
+          }
+        }
+        function wireAllSlots() {
+          var mslotsList = document.querySelectorAll('[id="mslots"]');
+          for (var j = 0; j < mslotsList.length; j++) {
+            var slot = mslotsList[j];
+            if (slot.dataset._jamWired) continue;
+            slot.dataset._jamWired = "1";
+            slot.style.cursor = "pointer";
+            slot.addEventListener("click", function () {
+              $audioInput().click();
+            });
+          }
+        }
+        function patchRegSubir() {
+          if (window._regSubirMusicaPatched) return;
+          if (typeof window.regSubirMusica !== "function") {
+            setTimeout(patchRegSubir, 400);
+            return;
+          }
+          window._regSubirMusicaPatched = true;
+          var original = window.regSubirMusica;
+          window.regSubirMusica = function (el) {
+            try {
+              original.call(this, el);
+            } catch (e) {}
+            $audioInput().click();
+          };
+        }
+        async function updateInscripcionMusica(email) {
+          if (!email || !pickedUrl || !pickedFile) return;
+          var q =
+            SB_URL +
+            "/rest/v1/inscripciones?email=eq." +
+            encodeURIComponent(email) +
+            "&select=id&order=created_at.desc&limit=1";
+          var r = await fetch(q, {
+            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+          });
+          var rows = await r.json();
+          if (!rows || !rows.length) return;
+          var ins = rows[0];
+          await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + ins.id, {
+            method: "PATCH",
+            headers: {
+              apikey: SB_ANON,
+              Authorization: "Bearer " + SB_ANON,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              musica_url: pickedUrl,
+              musica_estado: "cargada",
+              musica_nombre: pickedFile.name,
+            }),
+          });
+        }
+        async function injectMusicaButton(email) {
+          if (btnInjected) return;
+          var anchor = document.getElementById("ok-musica-fecha");
+          if (!anchor || !email) return;
+          var q =
+            SB_URL +
+            "/rest/v1/inscripciones?email=eq." +
+            encodeURIComponent(email) +
+            "&select=id,musica_token,musica_estado&order=created_at.desc&limit=1";
+          var row;
+          try {
+            var r = await fetch(q, {
+              headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+            });
+            var rows = await r.json();
+            row = rows && rows[0];
+          } catch (e) {
+            return;
+          }
+          if (!row || !row.musica_token) return;
+          btnInjected = true;
+          var alreadyUp = row.musica_estado === "cargada";
+          var link = "/musica?token=" + row.musica_token;
+          var wrap = document.createElement("div");
+          wrap.id = "__jam_musica_btn";
+          wrap.style.cssText =
+            "margin:20px auto;padding:16px;background:rgba(211,47,47,0.08);border:1px solid rgba(211,47,47,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
+          if (alreadyUp) {
+            wrap.innerHTML =
+              '<div style="font-size:14px;color:#4caf50;margin-bottom:8px">OK Tu musica ya fue cargada</div><a href="' +
+              link +
+              '" target="_blank" style="color:#d32f2f;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
+          } else {
+            wrap.innerHTML =
+              '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">Cargar tu musica ahora?</div><a href="' +
+              link +
+              '" target="_blank" style="background:#d32f2f;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subi tu cancion</a><div style="font-size:11px;color:#888;margin-top:10px">Tambien te enviamos el link por mail.</div>';
+          }
+          anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
+        }
+        function findEnteredEmail() {
+          var ins = document.querySelectorAll(
+            "input[type=email], input[name*=mail], input[id*=mail]",
+          );
+          for (var i = 0; i < ins.length; i++) {
+            var v = (ins[i].value || "").trim();
+            if (v && v.indexOf("@") > 0) return v.toLowerCase();
+          }
+          return null;
+        }
+        function setupObserver() {
+          var obs = new MutationObserver(async function () {
+            wireAllSlots();
+            var ok = document.getElementById("ok-musica-fecha");
+            if (!ok || ok.offsetParent === null) return;
+            var email = findEnteredEmail();
+            if (!email) return;
+            if (!btnInjected) injectMusicaButton(email);
+            if (pickedFile && pickedUrl && !patchDone) {
+              patchDone = true;
+              try {
+                await updateInscripcionMusica(email);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          });
+          obs.observe(document.body, { childList: true, subtree: true });
+        }
+        function init() {
+          $audioInput();
+          patchRegSubir();
+          wireAllSlots();
+          setupObserver();
+        }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", init);
+        else init();
+      })();
+    </script>
+  </body>
 </html>
