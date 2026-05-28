@@ -4310,7 +4310,7 @@
           });
           return { v: vi, m: "USD" };
         }
-        var v = 0;
+        var vals = [];
         selC.forEach(function (id) {
           var c = CATS.find(function (x) {
             return x.c === id && x.inst !== "int";
@@ -4322,9 +4322,23 @@
           if (!c) return;
           var pr = getPrecioBase(c);
           if (pr.m === "GRATIS") return;
-          v += c.t === "gr" || c.t === "par" ? pr.v * np : pr.v;
+          vals.push(c.t === "gr" || c.t === "par" ? pr.v * np : pr.v);
         });
 
+        if (INST === "nac") {
+          var nt = 0;
+          vals.forEach(function (val, idx) {
+            if (idx === 0) nt += val;
+            else if (idx === 1) nt += Math.round(val * 0.9);
+            else nt += Math.round(val * 0.8);
+          });
+          return { v: nt, m: "ARS" };
+        }
+
+        var v = 0;
+        vals.forEach(function (val) {
+          v += val;
+        });
         return { v: v, m: "ARS" };
       }
 
@@ -4499,15 +4513,21 @@
           (n === 4 && (INST === "rep" || INST === "reg")) ||
           (n === 5 && (INST === "nac" || INST === "int"))
         ) {
-          // Consider uploaded if any slot element has class 'upl', the reg-mslot has 'upl', or the extension set window.jamMusicPicked
-          var mslots = document.querySelectorAll("#mslots .mslot.upl");
+          var totalSlots = document.querySelectorAll("#mslots .mslot").length;
+          var uploadedSlots =
+            document.querySelectorAll("#mslots .mslot.upl").length;
           var regSlot = document.getElementById("reg-mslot");
           var regUploaded = regSlot && regSlot.classList.contains("upl");
-          var anyUploaded =
-            (mslots && mslots.length > 0) ||
-            regUploaded ||
-            !!window.jamMusicPicked;
-          if (!anyUploaded) {
+
+          if (totalSlots > 0) {
+            if (uploadedSlots < totalSlots) {
+              toast(
+                "Subí la pista musical para cada categoría antes de continuar",
+                "err",
+              );
+              return;
+            }
+          } else if (!regUploaded) {
             toast("Subí la pista musical antes de continuar", "err");
             return;
           }
@@ -4665,6 +4685,40 @@
               : tot.m === "ARS"
                 ? "ARS $" + tot.v.toLocaleString("es-AR")
                 : "U$S " + tot.v;
+          if (INST === "nac" && selC.size > 1 && tot.m === "ARS") {
+            var np2 = numPersonas();
+            var vals = [];
+            selC.forEach(function (id) {
+              var c = CATS.find(function (x) {
+                return x.c === id && x.inst !== "int";
+              });
+              if (!c)
+                c = CATS.find(function (x) {
+                  return x.c === id;
+                });
+              if (!c) return;
+              var pr = getPrecioBase(c);
+              if (pr.m === "GRATIS") return;
+              vals.push(c.t === "gr" || c.t === "par" ? pr.v * np2 : pr.v);
+            });
+            if (vals.length > 1) {
+              var parts = vals.map(function (val, idx) {
+                var adj =
+                  idx === 0
+                    ? val
+                    : idx === 1
+                      ? Math.round(val * 0.9)
+                      : Math.round(val * 0.8);
+                return "ARS $" + adj.toLocaleString("es-AR");
+              });
+              tv.textContent =
+                "ARS $" +
+                tot.v.toLocaleString("es-AR") +
+                " (" +
+                parts.join(" + ") +
+                ")";
+            }
+          }
         }
         var tcnt = document.getElementById("tcnt");
         if (tcnt) {
@@ -5496,6 +5550,7 @@
               // '<button class="chip" onclick="chipN(&apos;grupo&apos;,this)">Grupos</button>' +
               '<button class="chip" onclick="chipG(&apos;open&apos;,this)">Latin JAM</button>' +
               "</div>" +
+              '<div style="font-size:12px;color:rgba(248,245,238,.6);margin:8px 0 2px">Final Nacional: 2da coreografia 10% OFF, 3ra o mas 20% OFF.</div>' +
               '<div class="clist" id="clist"></div>' +
               '<div class="tbox" id="tbox" style="display:none">' +
               '<div><div class="tlbl">Total</div><div class="tcnt" id="tcnt"></div></div>' +
@@ -5597,7 +5652,6 @@
               ["Sede de origen", sede || "\u2014"],
               ["Integrantes", np + (np === 1 ? " persona" : " personas")],
               ["Categor\u00edas", stateCatsText()],
-              ["M\u00fasica", "Subir hasta 15 d\u00edas antes"],
               [
                 "Estado de pago",
                 pag >= tot.v
@@ -5779,7 +5833,6 @@
               ["Pa\u00eds", pais],
               ["Integrantes", np + (np === 1 ? " persona" : " personas")],
               ["Categor\u00edas", stateCatsText()],
-              ["M\u00fasica", "Subir hasta 15 d\u00edas antes"],
               [
                 "Estado de pago",
                 pag >= tot.v
