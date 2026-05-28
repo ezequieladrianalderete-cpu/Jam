@@ -710,6 +710,17 @@
         padding: 2px 7px;
         margin-left: 7px;
       }
+      .req-bdg {
+        display: inline-block;
+        background: #1a0800;
+        border: 1px solid rgba(232, 100, 56, 0.4);
+        color: #e86438;
+        border-radius: 100px;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 7px;
+        margin-left: 7px;
+      }
       /* Transferencia */
       .trbox {
         background: #1a1600;
@@ -1320,11 +1331,11 @@
           </div>
           <div class="oir" id="ok-pago-info"></div>
           <div class="oir">
-            &#127925; M&#250;sica antes de
+            &#127925; M&#250;sica
             <strong id="ok-musica-fecha"
               >15 d&#237;as antes de la competencia</strong
             >
-            &mdash; multa ARS $25.000
+            &mdash; multa ARS $25.000. Modificar pista: ARS$25.000
           </div>
           <div class="oir" id="ok-nac-warning" style="display: none">
             &#9888; Cierre definitivo
@@ -1534,6 +1545,20 @@
             &#9200; Recordá que, en caso de clasificar a la Final Nacional,
             tendrás <strong>48 horas</strong> para realizar tu inscripción.
             Pasado ese plazo se aplicará una multa económica.
+          </p>
+          <p
+            style="
+              font-size: 12px;
+              color: rgba(248, 245, 238, 0.55);
+              margin-top: 8px;
+              line-height: 1.5;
+            "
+          >
+            &#127925; Música: La música debe entregarse
+            <strong>15 días antes</strong>. Multa:
+            <strong style="color: #e8a838">ARS $25.000 por pista</strong>.
+            Modificar pista ya enviada:
+            <strong style="color: #e8a838">ARS $25.000</strong>.
           </p>
           <p
             style="
@@ -4299,6 +4324,7 @@
           if (pr.m === "GRATIS") return;
           v += c.t === "gr" || c.t === "par" ? pr.v * np : pr.v;
         });
+
         return { v: v, m: "ARS" };
       }
 
@@ -4465,6 +4491,24 @@
               "Debés adjuntar el comprobante de clasificación de la sede",
               "err",
             );
+            return;
+          }
+        }
+        // Validar música obligatoria: reg/rep (paso 3→4) y nac/int (paso 4→5)
+        if (
+          (n === 4 && (INST === "rep" || INST === "reg")) ||
+          (n === 5 && (INST === "nac" || INST === "int"))
+        ) {
+          // Consider uploaded if any slot element has class 'upl', the reg-mslot has 'upl', or the extension set window.jamMusicPicked
+          var mslots = document.querySelectorAll("#mslots .mslot.upl");
+          var regSlot = document.getElementById("reg-mslot");
+          var regUploaded = regSlot && regSlot.classList.contains("upl");
+          var anyUploaded =
+            (mslots && mslots.length > 0) ||
+            regUploaded ||
+            !!window.jamMusicPicked;
+          if (!anyUploaded) {
+            toast("Subí la pista musical antes de continuar", "err");
             return;
           }
         }
@@ -5017,7 +5061,14 @@
             cat.n +
             "</div>" +
             '<div class="mf" style="font-size:13px;color:rgba(248,245,238,.25);margin-top:1px">Tocar para subir MP3</div>' +
-            '<div class="ms" style="font-size:11px;color:rgba(248,245,238,.25);margin-top:1px">Opcional \u2014 pod\u00e9s subirla despu\u00e9s</div>' +
+            '<div class="ms" style="font-size:11px;color:rgba(248,245,238,.25);margin-top:1px">' +
+            (INST === "nac" ||
+            INST === "int" ||
+            INST === "rep" ||
+            INST === "reg"
+              ? "Obligatorio \u2014 sub\u00ed el MP3 ahora"
+              : "Opcional \u2014 pod\u00e9s subirla despu\u00e9s") +
+            "</div>" +
             '</div><div class="mx" style="font-size:16px;color:rgba(248,245,238,.25)">+</div></div>';
           s.onclick = function () {
             s.classList.remove("click");
@@ -5033,6 +5084,34 @@
           };
           c.appendChild(s);
         });
+        // Nota de límites de duración por instancia
+        if (INST === "int") {
+          var note = document.createElement("div");
+          note.className = "card";
+          note.style.marginTop = "12px";
+          note.innerHTML =
+            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(248,245,238,.95)">' +
+            "<li>Solistas: hasta 2:00 minutos</li>" +
+            "<li>Parejas / Dúos: hasta 2:30 minutos</li>" +
+            "<li>Grupos: hasta 3:00 minutos</li>" +
+            "</ul>" +
+            '<div style="font-size:13px;color:rgba(248,245,238,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
+          c.appendChild(note);
+        } else if (INST === "reg" || INST === "nac" || INST === "rep") {
+          var note2 = document.createElement("div");
+          note2.className = "card";
+          note2.style.marginTop = "12px";
+          note2.innerHTML =
+            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(248,245,238,.95)">' +
+            "<li>Se permiten mezclas y efectos especiales en todas las categorías.</li>" +
+            "<li>Solistas: hasta 2:00 minutos</li>" +
+            "<li>Parejas / Dúos: hasta 2:30 minutos</li>" +
+            "<li>Grupos: hasta 3:00 minutos</li>" +
+            "<li>Improvisaciones y duelos: 2:00</li>" +
+            "</ul>" +
+            '<div style="font-size:13px;color:rgba(248,245,238,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
+          c.appendChild(note2);
+        }
       }
 
       // ── MONTO ────────────────────────────────────────────────────────
@@ -5138,7 +5217,7 @@
           '<div style="font-size:13px;font-weight:700;color:#F8F5EE;margin-bottom:12px">T\u00c9RMINOS Y CONDICIONES \u2014 FINAL NACIONAL</div>' +
           '<div class="tc-s"><h3>1. Participaci\u00f3n</h3><ul><li>La inscripci\u00f3n es personal e intransferible.</li><li>Datos deben coincidir con DNI.</li></ul></div>' +
           '<div class="tc-s"><h3>2. Categor\u00edas y niveles</h3><ul><li>La organizaci\u00f3n puede reubicar participantes en la categor\u00eda correcta.</li></ul></div>' +
-          '<div class="tc-s"><h3>3. Inscripci\u00f3n y pagos</h3><ul><li>V\u00e1lida solo con pago completo. Sin reembolsos.</li><li>Modificar integrantes: $25.000 por participante.</li><li>Modificar pista ya enviada: U$10.</li></ul></div>' +
+          '<div class="tc-s"><h3>3. Inscripci\u00f3n y pagos</h3><ul><li>V\u00e1lida solo con pago completo. Sin reembolsos.</li><li>Modificar integrantes: $25.000 por participante.</li><li>Modificar pista ya enviada: ARS $25.000.</li></ul></div>' +
           '<div class="tc-s"><h3>4. M\u00fasica</h3><ul><li>MP3 obligatorio. Debe enviarse <strong>15 d\u00edas antes</strong> de la competencia.</li><li>Entrega fuera de plazo: multa ARS $25.000 por pista.</li></ul></div>' +
           '<div class="tc-s"><h3>5. Puntualidad</h3><ul><li>Presentarse 2hs antes. Ausencia = descalificaci\u00f3n.</li></ul></div>' +
           '<div class="tc-s"><h3>6. Conducta</h3><ul><li>Comportamiento respetuoso. Sin discriminaci\u00f3n ni violencia.</li></ul></div>' +
@@ -5271,9 +5350,6 @@
               '<div style="font-size:17px">&#127925;</div>' +
               '<div style="flex:1"><div style="font-size:13px;color:rgba(248,245,238,.25)">Tocar para subir MP3 (opcional)</div></div>' +
               '<div style="font-size:16px;color:rgba(248,245,238,.25)">+</div></div></div>' +
-              '<div class="cw mt2"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:12px;font-weight:700;color:#E8A838;margin-bottom:2px">MULTA POR ENTREGA TARDÍA</div>' +
-              '<p style="font-size:12px;color:rgba(248,245,238,.55);line-height:1.5">La música debe entregarse <strong style="color:#F8F5EE">15 días antes</strong>. Multa: <strong style="color:#E8A838">ARS $25.000</strong>.</p>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">← Atrás</button>' +
               '<button class="btn bgn" onclick="goTo(4)">Continuar →</button></div>';
@@ -5446,15 +5522,12 @@
             d.className = "step show";
             d.innerHTML =
               '<div class="sh"><div class="st">M\u00fasica y pago</div>' +
-              '<div class="ss">La m\u00fasica es opcional. El pago es solo por transferencia bancaria.</div></div>' +
+              '<div class="ss">La m\u00fasica es obligatoria. El pago es solo por transferencia bancaria.</div></div>' +
               '<div class="card mb3">' +
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:7px">' +
-              '<div style="font-size:14px;font-weight:600;color:#F8F5EE">&#127925; Pistas musicales <span class="opt-bdg">OPCIONAL</span></div>' +
+              '<div style="font-size:14px;font-weight:600;color:#F8F5EE">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
               '<div style="font-size:11px;color:rgba(248,245,238,.45)">Solo <strong style="color:#C9A84C">MP3</strong></div></div>' +
               '<div id="mslots"></div>' +
-              '<div class="cw mt2"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:12px;font-weight:700;color:#E8A838;margin-bottom:2px">MULTA POR ENTREGA TARD\u00cdA</div>' +
-              '<p style="font-size:12px;color:rgba(248,245,238,.55);line-height:1.5">La m\u00fasica debe enviarse <strong style="color:#F8F5EE">15 d\u00edas antes</strong>. Fuera de plazo: multa <strong style="color:#E8A838">ARS $25.000 por pista</strong>. Modificar pista ya enviada: <strong style="color:#E8A838">U$10</strong>.</p>' +
               "</div></div></div></div>" +
               '<div class="card">' +
               '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
@@ -5473,6 +5546,7 @@
               "</div></button>" +
               // '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
               "</div>" +
+              '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
               '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
               '<label>Monto (<span id="mcur">ARS</span>)</label>' +
               '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
@@ -5642,11 +5716,8 @@
             d.innerHTML =
               '<div class="sh"><div class="st">M\u00fasica y pago</div><div class="ss">La m\u00fasica es opcional.</div></div>' +
               '<div class="card mb3">' +
-              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pistas musicales <span class="opt-bdg">OPCIONAL</span></div>' +
+              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
               '<div id="mslots"></div>' +
-              '<div class="cw mt2"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:12px;font-weight:700;color:#E8A838;margin-bottom:2px">MULTA POR ENTREGA TARD\u00cdA</div>' +
-              '<p style="font-size:12px;color:rgba(248,245,238,.55);line-height:1.5">M\u00fasica <strong style="color:#F8F5EE">15 d\u00edas antes</strong>. Multa: <strong style="color:#E8A838">ARS $25.000</strong>. Modificar pista ya enviada: <strong style="color:#E8A838">U$10</strong>.</p>' +
               "</div></div></div></div>" +
               '<div class="card">' +
               '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
@@ -5819,11 +5890,8 @@
               '<div id="rep-precio-desc" style="font-size:10px;color:#E8A838;margin-top:3px;display:none"></div></div>' +
               '<div class="tval" id="tval">ARS $50.000</div></div></div>' +
               '<div class="card">' +
-              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">OPCIONAL</span></div>' +
+              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="req-bdg">OBLIGATORIO</span></div>' +
               '<div id="mslots"></div>' +
-              '<div class="cw mt2"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:12px;font-weight:700;color:#E8A838;margin-bottom:2px">MULTA POR ENTREGA TARD\u00cdA</div>' +
-              '<p style="font-size:12px;color:rgba(248,245,238,.55);line-height:1.5">M\u00fasica <strong style="color:#F8F5EE">15 d\u00edas antes</strong>. Multa: <strong style="color:#E8A838">ARS $25.000</strong>.</p>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bam" onclick="goTo(4)">Continuar \u2192</button></div>';
@@ -5895,6 +5963,7 @@
               "</div></button>" +
               // '<button class="mopt" id="mo-o"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
               "</div>" +
+              '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
               '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
               "<label>Monto a abonar (ARS)</label>" +
               '<input type="number" id="cv" placeholder="0" min="0"></div></div>' +
@@ -6379,7 +6448,9 @@
             ? "Términos y Condiciones — INTER AMÉRICA 2026"
             : INST === "reg"
               ? "Términos y Condiciones — REGIONAL 2026"
-              : "Términos y Condiciones — NACIONAL 2026";
+              : INST === "rep"
+                ? "Términos y Condiciones — REPESCA 2026"
+                : "Términos y Condiciones — NACIONAL 2026";
         return (
           '<p style="font-size:12px;color:rgba(248,245,238,.55);margin:0 0 16px;line-height:1.6">' +
           "Descargá el documento, leélo, completá con tu nombre, DNI y firma, y presentálo el día del evento." +
@@ -6401,6 +6472,7 @@
         GF = "todas";
         NF = "";
         STATE = {};
+        window.jamMusicPicked = null;
         document.getElementById("sform").style.display = "block";
         document.getElementById("sok").style.display = "none";
         document.getElementById("sok-regional").style.display = "none";
@@ -6557,6 +6629,7 @@
             return;
           }
           pickedFile = f;
+          window.jamMusicPicked = f;
           setSlotLabel("Subiendo: " + f.name);
           try {
             pickedUrl = await uploadAudio(f);
@@ -6564,6 +6637,7 @@
           } catch (e) {
             pickedFile = null;
             pickedUrl = null;
+            window.jamMusicPicked = null;
             restoreSlotLabel();
             alert("Error subiendo la musica: " + e.message);
           }
