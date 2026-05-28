@@ -6595,8 +6595,9 @@
 
     <!-- ===================================================================== -->
 <!-- ===================================================================== -->
-<!-- EXTENSION JAM 2026 v2 - Cableado de slots de musica con fix del verde  -->
-<!-- Verde SOLO cuando upload completa (no al hacer click)                  -->
+<!-- ===================================================================== -->
+<!-- EXTENSION JAM 2026 v3 - Slots de musica con fix verde + botón Terminos -->
+<!-- Verde SOLO cuando upload completa + Botón PDF Terminos según instancia -->
 <!-- ===================================================================== -->
 <script>
 (function(){
@@ -6706,6 +6707,49 @@
     };
   }
 
+  // ===== Botón Términos y Condiciones PDF (nuevo en v3) ===================
+  // Detecta la instancia mirando el contexto cercano al checkbox y enlaza
+  // al PDF correcto: terminos-internacional.pdf para INT, terminos-nacional.pdf para REG/NAC/REP
+
+  function detectInstancia(chkEl){
+    // Subir N padres y buscar texto/clase que indique la instancia
+    var node = chkEl;
+    for (var depth=0; depth<10 && node; depth++){
+      var t = (node.textContent || "").toLowerCase();
+      var cls = (node.className || "") + " " + (node.id || "");
+      // Patterns Inter
+      if (/inter\s*am[ée]rica|internacional|\$\s*45\b|\busd\b/i.test(t.substring(0, 1500))) return "int";
+      if (/\bint\b/.test(cls)) return "int";
+      // Patterns Nacional
+      if (/final nacional/i.test(t.substring(0, 1500))) return "nac";
+      if (/\brep[eé]cha?j?e?|\brepe?scha?/i.test(t.substring(0, 1500))) return "rep";
+      if (/\bsede\b/i.test(t.substring(0, 1500))) return "reg";
+      node = node.parentElement;
+    }
+    return "nac"; // default seguro
+  }
+
+  function injectTerminosButton(){
+    var chk = document.getElementById("chk");
+    if (!chk) return;
+    if (chk.offsetParent === null) return;
+    if (document.getElementById("__jam_terms_btn")) return;
+    var label = chk.closest("label");
+    var anchor = label || chk.parentElement;
+    if (!anchor) return;
+    var instancia = detectInstancia(anchor);
+    var isInter = instancia === "int";
+    var pdfFile = isInter ? "/terminos-internacional.pdf" : "/terminos-nacional.pdf";
+    var instLabel = isInter ? "Inter América" : (instancia==="nac" ? "Final Nacional" : (instancia==="rep" ? "Repechaje" : "Sedes"));
+    var wrap = document.createElement("div");
+    wrap.id = "__jam_terms_btn";
+    wrap.style.cssText = "margin:16px auto 12px;text-align:center";
+    wrap.innerHTML = '<a href="' + pdfFile + '" download target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:rgba(201,168,76,0.12);color:#C9A84C;border:1.5px solid rgba(201,168,76,0.45);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:.3px;transition:all .2s"><span style="font-size:18px">📄</span>Descargar Términos y Condiciones (PDF · ' + instLabel + ')</a><div style="margin-top:6px;font-size:11px;color:rgba(248,245,238,.45)">Es obligatorio presentar este documento firmado el día del evento.</div>';
+    anchor.parentElement.insertBefore(wrap, anchor);
+  }
+
+  // ===== Existing: botón "Subi tu música" post-confirmación =================
+
   async function updateInscripcionMusica(email){
     if (!email || !pickedUrl || !pickedFile) return;
     var q = SB_URL + "/rest/v1/inscripciones?email=eq." + encodeURIComponent(email) + "&select=id&order=created_at.desc&limit=1";
@@ -6731,9 +6775,9 @@
     wrap.id = "__jam_musica_btn";
     wrap.style.cssText = "margin:20px auto;padding:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
     if (alreadyUp) {
-      wrap.innerHTML = '<div style="font-size:14px;color:#4CAF7D;margin-bottom:8px">Tu musica ya fue cargada</div><a href="' + link + '" target="_blank" style="color:#C9A84C;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
+      wrap.innerHTML = '<div style="font-size:14px;color:#4CAF7D;margin-bottom:8px">Tu música ya fue cargada</div><a href="' + link + '" target="_blank" style="color:#C9A84C;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
     } else {
-      wrap.innerHTML = '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">Cargar tu musica ahora?</div><a href="' + link + '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subi tu cancion</a><div style="font-size:11px;color:#888;margin-top:10px">Tambien te enviamos el link por mail.</div>';
+      wrap.innerHTML = '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' + link + '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subí tu canción</a><div style="font-size:11px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
     }
     anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
   }
@@ -6750,6 +6794,7 @@
   function setupObserver(){
     var obs = new MutationObserver(async function(){
       wireAllSlots();
+      injectTerminosButton();
       var ok = document.getElementById("ok-musica-fecha");
       if (!ok || ok.offsetParent === null) return;
       var email = findEnteredEmail();
@@ -6763,7 +6808,7 @@
     obs.observe(document.body, { childList: true, subtree: true });
   }
 
-  function init(){ $audioInput(); patchRegSubir(); wireAllSlots(); setupObserver(); }
+  function init(){ $audioInput(); patchRegSubir(); wireAllSlots(); injectTerminosButton(); setupObserver(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
