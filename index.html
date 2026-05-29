@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
     />
     <title>Inscripciones — JAM 2026</title>
+    <link rel="icon" type="image/png" href="./public/imgs/logo-int.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -6594,224 +6595,332 @@
     ></div>
 
     <!-- ===================================================================== -->
-<!-- ===================================================================== -->
-<!-- ===================================================================== -->
-<!-- EXTENSION JAM 2026 v3 - Slots de musica con fix verde + botón Terminos -->
-<!-- Verde SOLO cuando upload completa + Botón PDF Terminos según instancia -->
-<!-- ===================================================================== -->
-<script>
-(function(){
-  "use strict";
-  var SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
-  var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-  var BUCKET  = "musica";
-  var pickedFile = null, pickedUrl = null, patchDone = false, btnInjected = false;
-  var pendingSlotEl = null;
+    <!-- ===================================================================== -->
+    <!-- ===================================================================== -->
+    <!-- EXTENSION JAM 2026 v3 - Slots de musica con fix verde + botón Terminos -->
+    <!-- Verde SOLO cuando upload completa + Botón PDF Terminos según instancia -->
+    <!-- ===================================================================== -->
+    <script>
+      (function () {
+        "use strict";
+        var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
+        var SB_ANON =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
+        var BUCKET = "musica";
+        var pickedFile = null,
+          pickedUrl = null,
+          patchDone = false,
+          btnInjected = false;
+        var pendingSlotEl = null;
 
-  function $audioInput(){
-    var i = document.getElementById("__jam_audio_in");
-    if (!i) {
-      i = document.createElement("input");
-      i.type = "file"; i.accept = "audio/*"; i.id = "__jam_audio_in";
-      i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
-      document.body.appendChild(i);
-      i.addEventListener("change", onPicked);
-    }
-    return i;
-  }
+        function $audioInput() {
+          var i = document.getElementById("__jam_audio_in");
+          if (!i) {
+            i = document.createElement("input");
+            i.type = "file";
+            i.accept = "audio/*";
+            i.id = "__jam_audio_in";
+            i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
+            document.body.appendChild(i);
+            i.addEventListener("change", onPicked);
+          }
+          return i;
+        }
 
-  function findActiveSlot(){
-    if (pendingSlotEl && pendingSlotEl.offsetParent !== null) return pendingSlotEl;
-    var slots = [document.getElementById("reg-mslot")];
-    var mslotsList = document.querySelectorAll('[id="mslots"]');
-    for (var j=0;j<mslotsList.length;j++) slots.push(mslotsList[j]);
-    for (var k=0;k<slots.length;k++) {
-      if (slots[k] && slots[k].offsetParent !== null) return slots[k];
-    }
-    return slots.find(function(s){return s;});
-  }
+        function findActiveSlot() {
+          if (pendingSlotEl && pendingSlotEl.offsetParent !== null)
+            return pendingSlotEl;
+          var slots = [document.getElementById("reg-mslot")];
+          var mslotsList = document.querySelectorAll('[id="mslots"]');
+          for (var j = 0; j < mslotsList.length; j++) slots.push(mslotsList[j]);
+          for (var k = 0; k < slots.length; k++) {
+            if (slots[k] && slots[k].offsetParent !== null) return slots[k];
+          }
+          return slots.find(function (s) {
+            return s;
+          });
+        }
 
-  function setSlotLabel(t){
-    var s = findActiveSlot(); if (!s) return;
-    var l = s.querySelector("div"); if (!l) return;
-    if (!l.dataset._orig) l.dataset._orig = l.innerText;
-    l.innerText = t;
-  }
+        function setSlotLabel(t) {
+          var s = findActiveSlot();
+          if (!s) return;
+          var l = s.querySelector("div");
+          if (!l) return;
+          if (!l.dataset._orig) l.dataset._orig = l.innerText;
+          l.innerText = t;
+        }
 
-  function restoreSlotLabel(){
-    var s = findActiveSlot(); if (!s) return;
-    var l = s.querySelector("div");
-    if (l && l.dataset._orig) l.innerText = l.dataset._orig;
-  }
+        function restoreSlotLabel() {
+          var s = findActiveSlot();
+          if (!s) return;
+          var l = s.querySelector("div");
+          if (l && l.dataset._orig) l.innerText = l.dataset._orig;
+        }
 
-  async function uploadAudio(file){
-    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0,80);
-    var path = "preinsert-" + Date.now() + "-" + safeName;
-    var url  = SB_URL + "/storage/v1/object/" + BUCKET + "/" + path;
-    var pub  = SB_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
-    var r = await fetch(url, { method: "POST", headers: { "Authorization": "Bearer " + SB_ANON, "apikey": SB_ANON, "x-upsert": "true", "Content-Type": file.type || "audio/mpeg" }, body: file });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return pub;
-  }
+        async function uploadAudio(file) {
+          var safeName = file.name
+            .replace(/[^a-zA-Z0-9._-]/g, "_")
+            .substring(0, 80);
+          var path = "preinsert-" + Date.now() + "-" + safeName;
+          var url = SB_URL + "/storage/v1/object/" + BUCKET + "/" + path;
+          var pub = SB_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
+          var r = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + SB_ANON,
+              apikey: SB_ANON,
+              "x-upsert": "true",
+              "Content-Type": file.type || "audio/mpeg",
+            },
+            body: file,
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return pub;
+        }
 
-  async function onPicked(ev){
-    var f = ev.target.files && ev.target.files[0];
-    if (!f) {
-      pendingSlotEl = null;
-      ev.target.value = "";
-      return;
-    }
-    if (!f.type.startsWith("audio/")) { alert("El archivo debe ser audio (MP3, WAV, M4A, OGG)."); ev.target.value = ""; pendingSlotEl = null; return; }
-    if (f.size > 50*1024*1024) { alert("Maximo 50 MB."); ev.target.value = ""; pendingSlotEl = null; return; }
-    pickedFile = f;
-    setSlotLabel("Subiendo: " + f.name);
-    try {
-      pickedUrl = await uploadAudio(f);
-      if (pendingSlotEl && window.__originalRegSubirMusica) {
-        try { window.__originalRegSubirMusica.call(window, pendingSlotEl); } catch(e){}
-      }
-      setSlotLabel("OK - " + f.name);
-      pendingSlotEl = null;
-      ev.target.value = "";
-    } catch(e){
-      pickedFile = null; pickedUrl = null;
-      restoreSlotLabel();
-      pendingSlotEl = null;
-      ev.target.value = "";
-      alert("Error subiendo la musica: " + e.message);
-    }
-  }
+        async function onPicked(ev) {
+          var f = ev.target.files && ev.target.files[0];
+          if (!f) {
+            pendingSlotEl = null;
+            ev.target.value = "";
+            return;
+          }
+          if (!f.type.startsWith("audio/")) {
+            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
+            ev.target.value = "";
+            pendingSlotEl = null;
+            return;
+          }
+          if (f.size > 50 * 1024 * 1024) {
+            alert("Maximo 50 MB.");
+            ev.target.value = "";
+            pendingSlotEl = null;
+            return;
+          }
+          pickedFile = f;
+          setSlotLabel("Subiendo: " + f.name);
+          try {
+            pickedUrl = await uploadAudio(f);
+            if (pendingSlotEl && window.__originalRegSubirMusica) {
+              try {
+                window.__originalRegSubirMusica.call(window, pendingSlotEl);
+              } catch (e) {}
+            }
+            setSlotLabel("OK - " + f.name);
+            pendingSlotEl = null;
+            ev.target.value = "";
+          } catch (e) {
+            pickedFile = null;
+            pickedUrl = null;
+            restoreSlotLabel();
+            pendingSlotEl = null;
+            ev.target.value = "";
+            alert("Error subiendo la musica: " + e.message);
+          }
+        }
 
-  function wireAllSlots(){
-    var mslotsList = document.querySelectorAll('[id="mslots"]');
-    for (var j=0;j<mslotsList.length;j++){
-      var slot = mslotsList[j];
-      if (slot.dataset._jamWired) continue;
-      slot.dataset._jamWired = "1";
-      slot.style.cursor = "pointer";
-      slot.addEventListener("click", function(e){
-        pendingSlotEl = e.currentTarget;
-        $audioInput().click();
-      });
-    }
-  }
+        function wireAllSlots() {
+          var mslotsList = document.querySelectorAll('[id="mslots"]');
+          for (var j = 0; j < mslotsList.length; j++) {
+            var slot = mslotsList[j];
+            if (slot.dataset._jamWired) continue;
+            slot.dataset._jamWired = "1";
+            slot.style.cursor = "pointer";
+            slot.addEventListener("click", function (e) {
+              pendingSlotEl = e.currentTarget;
+              $audioInput().click();
+            });
+          }
+        }
 
-  function patchRegSubir(){
-    if (window._regSubirMusicaPatched) return;
-    if (typeof window.regSubirMusica !== "function") { setTimeout(patchRegSubir, 400); return; }
-    window._regSubirMusicaPatched = true;
-    window.__originalRegSubirMusica = window.regSubirMusica;
-    window.regSubirMusica = function(el){
-      pendingSlotEl = el;
-      $audioInput().click();
-    };
-  }
+        function patchRegSubir() {
+          if (window._regSubirMusicaPatched) return;
+          if (typeof window.regSubirMusica !== "function") {
+            setTimeout(patchRegSubir, 400);
+            return;
+          }
+          window._regSubirMusicaPatched = true;
+          window.__originalRegSubirMusica = window.regSubirMusica;
+          window.regSubirMusica = function (el) {
+            pendingSlotEl = el;
+            $audioInput().click();
+          };
+        }
 
-  // ===== Botón Términos y Condiciones PDF (nuevo en v3) ===================
-  // Detecta la instancia mirando el contexto cercano al checkbox y enlaza
-  // al PDF correcto: terminos-internacional.pdf para INT, terminos-nacional.pdf para REG/NAC/REP
+        // ===== Botón Términos y Condiciones PDF (nuevo en v3) ===================
+        // Detecta la instancia mirando el contexto cercano al checkbox y enlaza
+        // al PDF correcto: terminos-internacional.pdf para INT, terminos-nacional.pdf para REG/NAC/REP
 
-  function detectInstancia(chkEl){
-    // Subir N padres y buscar texto/clase que indique la instancia
-    var node = chkEl;
-    for (var depth=0; depth<10 && node; depth++){
-      var t = (node.textContent || "").toLowerCase();
-      var cls = (node.className || "") + " " + (node.id || "");
-      // Patterns Inter
-      if (/inter\s*am[ée]rica|internacional|\$\s*45\b|\busd\b/i.test(t.substring(0, 1500))) return "int";
-      if (/\bint\b/.test(cls)) return "int";
-      // Patterns Nacional
-      if (/final nacional/i.test(t.substring(0, 1500))) return "nac";
-      if (/\brep[eé]cha?j?e?|\brepe?scha?/i.test(t.substring(0, 1500))) return "rep";
-      if (/\bsede\b/i.test(t.substring(0, 1500))) return "reg";
-      node = node.parentElement;
-    }
-    return "nac"; // default seguro
-  }
+        function detectInstancia(chkEl) {
+          // Subir N padres y buscar texto/clase que indique la instancia
+          var node = chkEl;
+          for (var depth = 0; depth < 10 && node; depth++) {
+            var t = (node.textContent || "").toLowerCase();
+            var cls = (node.className || "") + " " + (node.id || "");
+            // Patterns Inter
+            if (
+              /inter\s*am[ée]rica|internacional|\$\s*45\b|\busd\b/i.test(
+                t.substring(0, 1500),
+              )
+            )
+              return "int";
+            if (/\bint\b/.test(cls)) return "int";
+            // Patterns Nacional
+            if (/final nacional/i.test(t.substring(0, 1500))) return "nac";
+            if (/\brep[eé]cha?j?e?|\brepe?scha?/i.test(t.substring(0, 1500)))
+              return "rep";
+            if (/\bsede\b/i.test(t.substring(0, 1500))) return "reg";
+            node = node.parentElement;
+          }
+          return "nac"; // default seguro
+        }
 
-  function injectTerminosButton(){
-    var chk = document.getElementById("chk");
-    if (!chk) return;
-    if (chk.offsetParent === null) return;
-    if (document.getElementById("__jam_terms_btn")) return;
-    var label = chk.closest("label");
-    var anchor = label || chk.parentElement;
-    if (!anchor) return;
-    var instancia = detectInstancia(anchor);
-    var isInter = instancia === "int";
-    var pdfFile = isInter ? "/terminos-internacional.pdf" : "/terminos-nacional.pdf";
-    var instLabel = isInter ? "Inter América" : (instancia==="nac" ? "Final Nacional" : (instancia==="rep" ? "Repechaje" : "Sedes"));
-    var wrap = document.createElement("div");
-    wrap.id = "__jam_terms_btn";
-    wrap.style.cssText = "margin:16px auto 12px;text-align:center";
-    wrap.innerHTML = '<a href="' + pdfFile + '" download target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:rgba(201,168,76,0.12);color:#C9A84C;border:1.5px solid rgba(201,168,76,0.45);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:.3px;transition:all .2s"><span style="font-size:18px">📄</span>Descargar Términos y Condiciones (PDF · ' + instLabel + ')</a><div style="margin-top:6px;font-size:11px;color:rgba(248,245,238,.45)">Es obligatorio presentar este documento firmado el día del evento.</div>';
-    anchor.parentElement.insertBefore(wrap, anchor);
-  }
+        function injectTerminosButton() {
+          var chk = document.getElementById("chk");
+          if (!chk) return;
+          if (chk.offsetParent === null) return;
+          if (document.getElementById("__jam_terms_btn")) return;
+          var label = chk.closest("label");
+          var anchor = label || chk.parentElement;
+          if (!anchor) return;
+          var instancia = detectInstancia(anchor);
+          var isInter = instancia === "int";
+          var pdfFile = isInter
+            ? "/terminos-internacional.pdf"
+            : "/terminos-nacional.pdf";
+          var instLabel = isInter
+            ? "Inter América"
+            : instancia === "nac"
+              ? "Final Nacional"
+              : instancia === "rep"
+                ? "Repechaje"
+                : "Sedes";
+          var wrap = document.createElement("div");
+          wrap.id = "__jam_terms_btn";
+          wrap.style.cssText = "margin:16px auto 12px;text-align:center";
+          wrap.innerHTML =
+            '<a href="' +
+            pdfFile +
+            '" download target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:rgba(201,168,76,0.12);color:#C9A84C;border:1.5px solid rgba(201,168,76,0.45);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;letter-spacing:.3px;transition:all .2s"><span style="font-size:18px">📄</span>Descargar Términos y Condiciones (PDF · ' +
+            instLabel +
+            ')</a><div style="margin-top:6px;font-size:11px;color:rgba(248,245,238,.45)">Es obligatorio presentar este documento firmado el día del evento.</div>';
+          anchor.parentElement.insertBefore(wrap, anchor);
+        }
 
-  // ===== Existing: botón "Subi tu música" post-confirmación =================
+        // ===== Existing: botón "Subi tu música" post-confirmación =================
 
-  async function updateInscripcionMusica(email){
-    if (!email || !pickedUrl || !pickedFile) return;
-    var q = SB_URL + "/rest/v1/inscripciones?email=eq." + encodeURIComponent(email) + "&select=id&order=created_at.desc&limit=1";
-    var r = await fetch(q, { headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }});
-    var rows = await r.json();
-    if (!rows || !rows.length) return;
-    var ins = rows[0];
-    await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + ins.id, { method: "PATCH", headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" }, body: JSON.stringify({ musica_url: pickedUrl, musica_estado: "cargada", musica_nombre: pickedFile.name }) });
-  }
+        async function updateInscripcionMusica(email) {
+          if (!email || !pickedUrl || !pickedFile) return;
+          var q =
+            SB_URL +
+            "/rest/v1/inscripciones?email=eq." +
+            encodeURIComponent(email) +
+            "&select=id&order=created_at.desc&limit=1";
+          var r = await fetch(q, {
+            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+          });
+          var rows = await r.json();
+          if (!rows || !rows.length) return;
+          var ins = rows[0];
+          await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + ins.id, {
+            method: "PATCH",
+            headers: {
+              apikey: SB_ANON,
+              Authorization: "Bearer " + SB_ANON,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              musica_url: pickedUrl,
+              musica_estado: "cargada",
+              musica_nombre: pickedFile.name,
+            }),
+          });
+        }
 
-  async function injectMusicaButton(email){
-    if (btnInjected) return;
-    var anchor = document.getElementById("ok-musica-fecha");
-    if (!anchor || !email) return;
-    var q = SB_URL + "/rest/v1/inscripciones?email=eq." + encodeURIComponent(email) + "&select=id,musica_token,musica_estado&order=created_at.desc&limit=1";
-    var row;
-    try { var r = await fetch(q, { headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }}); var rows = await r.json(); row = rows && rows[0]; } catch(e){ return; }
-    if (!row || !row.musica_token) return;
-    btnInjected = true;
-    var alreadyUp = row.musica_estado === "cargada";
-    var link = "/musica?token=" + row.musica_token;
-    var wrap = document.createElement("div");
-    wrap.id = "__jam_musica_btn";
-    wrap.style.cssText = "margin:20px auto;padding:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
-    if (alreadyUp) {
-      wrap.innerHTML = '<div style="font-size:14px;color:#4CAF7D;margin-bottom:8px">Tu música ya fue cargada</div><a href="' + link + '" target="_blank" style="color:#C9A84C;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
-    } else {
-      wrap.innerHTML = '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' + link + '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subí tu canción</a><div style="font-size:11px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
-    }
-    anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
-  }
+        async function injectMusicaButton(email) {
+          if (btnInjected) return;
+          var anchor = document.getElementById("ok-musica-fecha");
+          if (!anchor || !email) return;
+          var q =
+            SB_URL +
+            "/rest/v1/inscripciones?email=eq." +
+            encodeURIComponent(email) +
+            "&select=id,musica_token,musica_estado&order=created_at.desc&limit=1";
+          var row;
+          try {
+            var r = await fetch(q, {
+              headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+            });
+            var rows = await r.json();
+            row = rows && rows[0];
+          } catch (e) {
+            return;
+          }
+          if (!row || !row.musica_token) return;
+          btnInjected = true;
+          var alreadyUp = row.musica_estado === "cargada";
+          var link = "/musica?token=" + row.musica_token;
+          var wrap = document.createElement("div");
+          wrap.id = "__jam_musica_btn";
+          wrap.style.cssText =
+            "margin:20px auto;padding:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
+          if (alreadyUp) {
+            wrap.innerHTML =
+              '<div style="font-size:14px;color:#4CAF7D;margin-bottom:8px">Tu música ya fue cargada</div><a href="' +
+              link +
+              '" target="_blank" style="color:#C9A84C;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
+          } else {
+            wrap.innerHTML =
+              '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' +
+              link +
+              '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subí tu canción</a><div style="font-size:11px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
+          }
+          anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
+        }
 
-  function findEnteredEmail(){
-    var ins = document.querySelectorAll("input[type=email], input[name*=mail], input[id*=mail]");
-    for (var i=0;i<ins.length;i++){
-      var v = (ins[i].value || "").trim();
-      if (v && v.indexOf("@") > 0) return v.toLowerCase();
-    }
-    return null;
-  }
+        function findEnteredEmail() {
+          var ins = document.querySelectorAll(
+            "input[type=email], input[name*=mail], input[id*=mail]",
+          );
+          for (var i = 0; i < ins.length; i++) {
+            var v = (ins[i].value || "").trim();
+            if (v && v.indexOf("@") > 0) return v.toLowerCase();
+          }
+          return null;
+        }
 
-  function setupObserver(){
-    var obs = new MutationObserver(async function(){
-      wireAllSlots();
-      injectTerminosButton();
-      var ok = document.getElementById("ok-musica-fecha");
-      if (!ok || ok.offsetParent === null) return;
-      var email = findEnteredEmail();
-      if (!email) return;
-      if (!btnInjected) injectMusicaButton(email);
-      if (pickedFile && pickedUrl && !patchDone) {
-        patchDone = true;
-        try { await updateInscripcionMusica(email); } catch(e){ console.error(e); }
-      }
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-  }
+        function setupObserver() {
+          var obs = new MutationObserver(async function () {
+            wireAllSlots();
+            injectTerminosButton();
+            var ok = document.getElementById("ok-musica-fecha");
+            if (!ok || ok.offsetParent === null) return;
+            var email = findEnteredEmail();
+            if (!email) return;
+            if (!btnInjected) injectMusicaButton(email);
+            if (pickedFile && pickedUrl && !patchDone) {
+              patchDone = true;
+              try {
+                await updateInscripcionMusica(email);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          });
+          obs.observe(document.body, { childList: true, subtree: true });
+        }
 
-  function init(){ $audioInput(); patchRegSubir(); wireAllSlots(); injectTerminosButton(); setupObserver(); }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
-})();
-</script>
+        function init() {
+          $audioInput();
+          patchRegSubir();
+          wireAllSlots();
+          injectTerminosButton();
+          setupObserver();
+        }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", init);
+        else init();
+      })();
+    </script>
   </body>
 </html>
