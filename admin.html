@@ -354,6 +354,7 @@ function renderRow(ins){
         ${pe !== "confirmado" ? '<button class="btn-icon btn-green" onclick="confirmarPago(\''+ins.id+'\')">✓ Pago</button>' : ''}
         <button class="btn-icon" onclick="reenviarMail(\''+ins.id+'\')">✉ Mail</button>
         <button class="btn-icon" onclick="window.open('/check?id='+'${ins.id}', '_blank')">↗ Ver</button>
+        <button class="btn-icon" style="color:#E0524C;border-color:rgba(224,82,82,.3)" onclick="eliminarInscripcion(\'${ins.id}\',\'${getCodigo(ins).replace(/\x27/g,\'\')}\')">🗑 Borrar</button>
       </div>
     </div>
   `;
@@ -564,6 +565,7 @@ function renderSistema(){
       <div class="det-row"><div class="k">Subir música</div><div class="v"><a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a></div></div>
       <div class="det-row"><div class="k">Verificación QR</div><div class="v"><a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a></div></div>
       <div class="det-row"><div class="k">Sender mails</div><div class="v" style="font-family:'JetBrains Mono',monospace;color:#4CAF7D">info@jamcompetencia.com ✓</div></div>
+    <div class="det-block" style="margin-top:14px;border:1px solid rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones del sistema y limpiar el storage. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>
     </div>
   `;
 }
@@ -690,6 +692,49 @@ window.savePrecios = async function(){
   }
 };
 
+
+
+window.eliminarInscripcion = async function(id, codigo){
+  const conf = prompt("Para eliminar la inscripción "+codigo+" escribí: BORRAR");
+  if (conf !== "BORRAR") { toast("err","Cancelado"); return; }
+  try {
+    const r = await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    allInscriptos = allInscriptos.filter(x=>x.id!==id);
+    computeAllCodes();
+    toast("ok","Inscripción "+codigo+" eliminada ✓");
+    renderActiveTab();
+  } catch(e){
+    toast("err","Error: "+e.message);
+  }
+};
+
+window.resetAll = async function(){
+  const conf1 = prompt("⚠️ Esta acción elimina TODAS las inscripciones y archivos del sistema. Para confirmar escribí: BORRAR TODO");
+  if (conf1 !== "BORRAR TODO") { toast("err","Cancelado"); return; }
+  if (!confirm("ÚLTIMA CONFIRMACIÓN: ¿Borrar TODAS las inscripciones y archivos? Esto NO se puede deshacer.")) return;
+  try {
+    window.__BACKUP_PRE_RESET__ = [...allInscriptos];
+    const r = await fetch(SB_URL+"/rest/v1/inscripciones?created_at=lt.2099-01-01",{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,Prefer:"return=representation"}});
+    const deleted = await r.json();
+    const count = Array.isArray(deleted) ? deleted.length : 0;
+    async function cleanBucket(b){
+      const rl = await fetch(SB_URL+"/storage/v1/object/list/"+b,{method:"POST",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({limit:200,offset:0,prefix:"",sortBy:{column:"name",order:"asc"}})});
+      const files = await rl.json();
+      if (!Array.isArray(files) || !files.length) return 0;
+      const rd = await fetch(SB_URL+"/storage/v1/object/"+b,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({prefixes:files.map(f=>f.name)})});
+      return rd.ok ? files.length : 0;
+    }
+    const m = await cleanBucket("musica");
+    const c = await cleanBucket("comprobantes");
+    allInscriptos = [];
+    computeAllCodes();
+    toast("ok","Reset OK: "+count+" inscripciones + "+m+" músicas + "+c+" comprobantes borrados");
+    renderActiveTab();
+  } catch(e){
+    toast("err","Error: "+e.message);
+  }
+};
 </script>
 </body>
 </html>
