@@ -131,11 +131,11 @@ module.exports = async function handler(req, res) {
           </div>
           <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
             <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Cuenta / Alias Prex</div>
-            <div style="font-family:'Courier New',monospace;font-size:14px;color:#E8A838">A confirmar con la organización</div>
+            <div style="font-family:'Courier New',monospace;font-size:14px;color:#E8A838">35722990</div>
           </div>
           <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px">
             <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Titular responsable</div>
-            <div style="font-family:Georgia,serif;font-size:15px;color:#E8A838">A confirmar con la organización</div>
+            <div style="font-family:Georgia,serif;font-size:15px;color:#E8A838">Nelson Gastón Vidarte</div>
           </div>
           <div style="font-size:12px;color:rgba(248,245,238,.6);text-align:center;margin-top:14px;line-height:1.5">La instancia Inter América se abona <strong style="color:#C9A84C">exclusivamente</strong> vía Prex. Contactá a la organización para recibir los datos.</div>
         </div>`;
