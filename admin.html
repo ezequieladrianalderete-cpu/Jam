@@ -1,740 +1,259 @@
 <!DOCTYPE html>
-<html lang="es" style="background:#080808">
+<html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#080808" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Admin — JAM 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-.topbar{background:#0a0a0a;border-bottom:1px solid rgba(201,168,76,.2);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.brand{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;letter-spacing:4px;color:#C9A84C}
-.brand small{font-size:10px;color:rgba(248,245,238,.4);letter-spacing:1px;margin-left:6px;text-transform:uppercase;font-family:'Outfit',sans-serif;font-weight:500}
-.topbar-actions{display:flex;gap:8px;align-items:center}
-.btn-mini{background:rgba(255,255,255,.05);color:rgba(248,245,238,.7);border:1px solid rgba(255,255,255,.1);padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500}
-.btn-mini:hover{background:rgba(201,168,76,.1);color:#C9A84C;border-color:rgba(201,168,76,.3)}
-.tabs{display:flex;gap:0;background:#0a0a0a;border-bottom:1px solid rgba(255,255,255,.08);padding:0 22px;position:sticky;top:53px;z-index:9}
-.tab{padding:13px 18px;font-size:13px;font-weight:600;color:rgba(248,245,238,.5);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.5px}
-.tab:hover{color:rgba(248,245,238,.85)}
-.tab.active{color:#C9A84C;border-bottom-color:#C9A84C}
-.tab .count{background:rgba(201,168,76,.15);color:#C9A84C;border-radius:100px;padding:1px 7px;font-size:10px;margin-left:6px;font-weight:700}
-.container{max-width:1400px;margin:0 auto;padding:18px 22px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
-.stat{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px}
-.stat-label{font-size:10px;color:rgba(248,245,238,.45);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
-.stat-value{font-family:'Cormorant Garamond',serif;font-size:28px;color:#F8F5EE;font-weight:600;line-height:1}
-.stat.gold .stat-value{color:#C9A84C}
-.stat.green .stat-value{color:#4CAF7D}
-.stat.amber .stat-value{color:#E8A838}
-.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.search-box{flex:1;min-width:220px;background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#F8F5EE;font-size:13px;font-family:'Outfit',sans-serif}
-.search-box:focus{outline:none;border-color:rgba(201,168,76,.4)}
-.filter-select{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#F8F5EE;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
-.filter-select:focus{outline:none;border-color:rgba(201,168,76,.4)}
-.btn-primary{background:#C9A84C;color:#0A0A0A;border:none;padding:10px 18px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;text-transform:uppercase;letter-spacing:.5px}
-.btn-primary:hover{background:#E8A838}
-.list{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
-.ins-row{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:background .15s}
-.ins-row:last-child{border-bottom:none}
-.ins-row:hover{background:rgba(201,168,76,.03)}
-.ins-row.expanded{background:rgba(201,168,76,.05);border-left:3px solid #C9A84C}
-.ins-code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#C9A84C;background:#2a2000;padding:5px 10px;border-radius:8px;font-weight:600;letter-spacing:1px;flex-shrink:0;white-space:nowrap;min-width:140px;text-align:center}
-.ins-info{flex:1;min-width:200px}
-.ins-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#F8F5EE;margin-bottom:2px}
-.ins-meta{font-size:11px;color:rgba(248,245,238,.5)}
-.ins-badges{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
-.bdg{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.bdg-gold{background:#2a2000;color:#C9A84C;border:1px solid rgba(201,168,76,.3)}
-.bdg-green{background:#001a0a;color:#4CAF7D;border:1px solid rgba(76,175,125,.3)}
-.bdg-amber{background:#1a1000;color:#E8A838;border:1px solid rgba(232,168,56,.3)}
-.bdg-red{background:#1a0000;color:#E05252;border:1px solid rgba(224,82,82,.3)}
-.bdg-gray{background:#1a1a1a;color:rgba(248,245,238,.5);border:1px solid rgba(255,255,255,.1)}
-.ins-amount{font-family:'JetBrains Mono',monospace;font-size:13px;color:#C9A84C;font-weight:600;flex-shrink:0;min-width:90px;text-align:right}
-.ins-actions{display:flex;gap:6px;flex-shrink:0}
-.btn-icon{background:rgba(255,255,255,.05);color:rgba(248,245,238,.7);border:1px solid rgba(255,255,255,.1);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap}
-.btn-icon:hover{background:rgba(201,168,76,.1);color:#C9A84C;border-color:rgba(201,168,76,.3)}
-.btn-icon.btn-green:hover{background:rgba(76,175,125,.1);color:#4CAF7D;border-color:rgba(76,175,125,.3)}
-.detail{padding:18px;background:#0d0d0d;border-top:1px solid rgba(255,255,255,.06);display:none}
-.detail.show{display:block}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:14px}
-.det-block{background:#141414;border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,.05)}
-.det-title{font-size:10px;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
-.det-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);gap:8px}
-.det-row:last-child{border:0}
-.det-row .k{color:rgba(248,245,238,.45)}
-.det-row .v{color:#F8F5EE;font-weight:500;text-align:right;word-break:break-word}
-.cat-tag{display:inline-block;background:#1a1600;border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:11px}
-.cat-tag .num{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-weight:600;margin-right:4px}
-.cat-tag .nom{color:#F8F5EE;font-family:'Cormorant Garamond',serif;font-size:13px}
-.empty{padding:60px 20px;text-align:center;color:rgba(248,245,238,.4);font-style:italic;font-size:13px}
-.loading{text-align:center;padding:80px 20px;color:rgba(248,245,238,.5)}
-.spinner{display:inline-block;width:48px;height:48px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.login{max-width:400px;margin:120px auto;padding:32px;background:#141414;border:1px solid rgba(201,168,76,.2);border-radius:18px}
-.login h1{font-family:'Cormorant Garamond',serif;color:#C9A84C;font-size:32px;text-align:center;letter-spacing:4px;margin-bottom:8px}
-.login p{text-align:center;color:rgba(248,245,238,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px}
-.login input{width:100%;background:#0a0a0a;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#F8F5EE;font-family:'JetBrains Mono',monospace;font-size:14px;margin-bottom:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:#080808;color:#F8F5EE;min-height:100vh}
+.login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.login h1{font-family:'Cormorant Garamond',serif;font-size:64px;color:#C9A84C;letter-spacing:8px;font-weight:700}
+.login p{color:rgba(248,245,238,.6);font-size:13px;text-transform:uppercase;letter-spacing:2px;margin:8px 0 28px}
+.login input{background:#141414;border:1px solid #2a2a2a;color:#F8F5EE;padding:14px 18px;border-radius:10px;width:280px;font-size:15px;margin-bottom:14px;text-align:center;font-family:inherit}
 .login input:focus{outline:none;border-color:#C9A84C}
-.login button{width:100%;background:#C9A84C;color:#0A0A0A;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;text-transform:uppercase;letter-spacing:1px}
-
+.login button{background:#C9A84C;color:#0A0A0A;border:none;padding:13px 38px;border-radius:10px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase}
+.app{display:none;max-width:1400px;margin:0 auto;padding:20px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #2a2a2a;margin-bottom:20px}
+.topbar h1{font-family:'Cormorant Garamond',serif;font-size:34px;color:#C9A84C;letter-spacing:4px;font-weight:700}
+.subtitle{font-size:11px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:2px}
+.logout{background:transparent;border:1px solid rgba(248,245,238,.2);color:rgba(248,245,238,.7);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:18px}
+.stat.gold{border-left:3px solid #C9A84C}
+.stat.green{border-left:3px solid #4CAF7D}
+.stat.amber{border-left:3px solid #E8A838}
+.stat-label{font-size:11px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:28px;color:#F8F5EE;font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid #2a2a2a;flex-wrap:wrap}
+.tab{padding:11px 18px;cursor:pointer;color:rgba(248,245,238,.6);font-size:13px;border-bottom:2px solid transparent}
+.tab.active{color:#C9A84C;border-color:#C9A84C}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
-
-.dj-grid{display:grid;grid-template-columns:300px 1fr;gap:14px;height:calc(100vh - 200px)}
-.dj-list{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow-y:auto}
-.dj-item{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:12px}
-.dj-item:hover{background:rgba(201,168,76,.05)}
-.dj-item.active{background:rgba(201,168,76,.15);border-left:3px solid #C9A84C}
-.dj-item-code{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:11px;font-weight:600;margin-bottom:2px}
-.dj-item-name{color:#F8F5EE;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600}
-.dj-item-cat{color:rgba(248,245,238,.5);font-size:10px;margin-top:2px}
-.dj-player{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.dj-player-empty{color:rgba(248,245,238,.4);font-style:italic;text-align:center}
-.dj-player-info{text-align:center;margin-bottom:20px}
-.dj-player-code{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:14px;margin-bottom:8px}
-.dj-player-name{font-family:'Cormorant Garamond',serif;font-size:32px;color:#F8F5EE;font-weight:600;margin-bottom:6px}
-.dj-player-meta{color:rgba(248,245,238,.5);font-size:13px}
-.dj-player audio{width:100%;max-width:600px;margin-top:20px}
-
-.toast{position:fixed;bottom:24px;right:24px;background:#141414;border:1px solid #C9A84C;border-radius:10px;padding:14px 18px;color:#F8F5EE;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;gap:10px;max-width:380px}
-.toast.ok{border-color:#4CAF7D}
-.toast.err{border-color:#E05252}
-
-@media(max-width:780px){
-  .ins-row{gap:8px}
-  .ins-info{min-width:100%}
-  .ins-amount{min-width:auto}
-  .dj-grid{grid-template-columns:1fr;height:auto}
-  .stats{grid-template-columns:repeat(2,1fr)}
-}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.search-box{background:#141414;border:1px solid #2a2a2a;color:#F8F5EE;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;flex:1;min-width:200px}
+.search-box:focus{outline:none;border-color:#C9A84C}
+.btn-primary{background:#C9A84C;color:#0A0A0A;border:none;padding:10px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.btn-secondary{background:transparent;border:1px solid rgba(248,245,238,.2);color:rgba(248,245,238,.8);padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px}
+.ins-row{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center}
+.ins-row:hover{border-color:#C9A84C}
+.ins-codigo{font-family:'JetBrains Mono',monospace;color:#C9A84C;font-weight:600;font-size:13px}
+.ins-nombre{font-family:'Cormorant Garamond',serif;font-size:18px;color:#F8F5EE;font-weight:600}
+.ins-meta{font-size:11px;color:rgba(248,245,238,.5);margin-top:3px}
+.ins-monto{font-family:'JetBrains Mono',monospace;color:#F8F5EE;font-weight:600;font-size:14px}
+.ins-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn-icon{background:transparent;border:1px solid rgba(201,168,76,.3);color:#C9A84C;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px}
+.btn-icon:hover{background:rgba(201,168,76,.1)}
+.btn-icon.danger{color:#E0524C;border-color:rgba(224,82,82,.3)}
+.badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:6px}
+.badge.pendiente{background:rgba(232,168,56,.15);color:#E8A838}
+.badge.confirmado{background:rgba(76,175,125,.15);color:#4CAF7D}
+.empty{text-align:center;padding:40px;color:rgba(248,245,238,.4);font-size:14px}
+.det-block{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:18px;margin-bottom:14px}
+.det-title{font-size:11px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+#toast{position:fixed;top:20px;right:20px;background:#141414;border-left:3px solid #C9A84C;padding:14px 22px;border-radius:8px;font-size:13px;z-index:9999;display:none;max-width:380px}
+#toast.err{border-color:#E0524C}
+#toast.ok{border-color:#4CAF7D}
+input[type=number]{background:#141414;border:1px solid #2a2a2a;color:#F8F5EE;padding:9px 12px;border-radius:7px;font-family:inherit;font-size:13px;width:100%}
+input[type=number]:focus{outline:none;border-color:#C9A84C}
 </style>
 </head>
 <body>
-
 <div id="root">
   <div class="login">
     <h1>JAM</h1>
     <p>Panel administrador</p>
-    <input type="password" id="loginPwd" placeholder="Clave" autocomplete="off" />
+    <input type="password" id="loginPwd" placeholder="Clave" autocomplete="off">
     <button onclick="tryLogin()">Ingresar</button>
   </div>
 </div>
-
-<div id="toast" style="display:none"></div>
-
+<div id="toast"></div>
 <script>
-const SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
+const SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-const PWD = "jam2026admin";
-const INSTANCIA_CFG = {
-  reg:{prefix:"REG",offset:1,pad:4,label:"Sedes"},
-  rep:{prefix:"REP",offset:10,pad:4,label:"Repechaje"},
-  nac:{prefix:"NAC",offset:200,pad:4,label:"Final Nacional"},
-  int:{prefix:"INTER",offset:1000,pad:4,label:"Final Inter América"}
+const ADMIN_PWD = "jam2026admin";
+const INSTANCIAS = {
+  reg: { label: "Sedes", code: "JAM-REG", offset: 1 },
+  rep: { label: "Repechaje", code: "JAM-REP", offset: 10 },
+  nac: { label: "Nacional", code: "JAM-NAC", offset: 200 },
+  int: { label: "Inter América", code: "JAM-INTER", offset: 1000 }
 };
-
-let allInscriptos = [];
-let codigosMap = {};
-let currentTab = "inscriptos";
-let filterInst = "";
-let filterPago = "";
-let searchTerm = "";
-let expandedId = null;
-let djCurrentId = null;
-
-function esc(s){return (s==null?"":String(s)).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));}
-function $(id){return document.getElementById(id);}
-function fmtMoney(n){return (+n||0).toLocaleString("es-AR");}
-
-function tryLogin(){
-  if($("loginPwd").value === PWD){
-    sessionStorage.setItem("jam_admin","1");
-    boot();
-  } else {
-    $("loginPwd").value="";
-    $("loginPwd").style.borderColor="#E05252";
-    setTimeout(()=>$("loginPwd").style.borderColor="",1200);
-  }
-}
-
-$("loginPwd").addEventListener("keypress", e=>{ if(e.key==="Enter") tryLogin(); });
-if(sessionStorage.getItem("jam_admin")==="1") boot();
-
-async function boot(){
-  $("root").innerHTML = renderShell();
-  await loadAll();
-  bindShell();
-  switchTab("inscriptos");
-}
-
-function renderShell(){
-  return `
-    <div class="topbar">
-      <div class="brand">JAM <small>Admin · 2026</small></div>
-      <div class="topbar-actions">
-        <button class="btn-mini" onclick="loadAll().then(renderActiveTab)">↻ Recargar</button>
-        <button class="btn-mini" onclick="logout()">Salir</button>
-      </div>
-    </div>
-    <div class="tabs">
-      <div class="tab active" data-tab="inscriptos">Inscriptos <span class="count" id="cnt-ins">0</span></div>
-      <div class="tab" data-tab="djmode">DJ Mode</div>
-      <div class="tab" data-tab="sistema">Sistema</div>
-      <div class="tab" data-tab="precios">💰 Precios</div>
-    </div>
-    <div class="container">
-      <div id="pane-inscriptos" class="tab-pane active"></div>
-      <div id="pane-djmode" class="tab-pane"></div>
-      <div id="pane-sistema" class="tab-pane"></div>
-      <div id="pane-precios" class="tab-pane"></div>
-    </div>
-  `;
-}
-
-function bindShell(){
-  document.querySelectorAll(".tab").forEach(t => {
-    t.addEventListener("click", () => switchTab(t.dataset.tab));
-  });
-}
-
-function switchTab(t){
-  currentTab = t;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active", x.dataset.tab===t));
-  document.querySelectorAll(".tab-pane").forEach(p=>p.classList.remove("active"));
-  $("pane-"+t).classList.add("active");
+let allInscriptos = [], codesById = {}, currentTab = "inscriptos", preciosConfig = null;
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function toast(t,m){const x=$("toast");x.className=t;x.textContent=m;x.style.display="block";setTimeout(()=>x.style.display="none",3500)}
+function tryLogin(){if($("loginPwd").value===ADMIN_PWD)initApp();else toast("err","Clave incorrecta")}
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&document.activeElement===$("loginPwd"))tryLogin()});
+async function initApp(){
+  $("root").innerHTML = '<div class="app" style="display:block"><div class="topbar"><div><h1>JAM</h1><div class="subtitle">Panel director · 2026</div></div><button class="logout" onclick="logout()">Cerrar sesión</button></div><div class="stats" id="stats"></div><div class="tabs"><div class="tab active" onclick="switchTab(\'inscriptos\')">Inscriptos <span id="cnt-ins">0</span></div><div class="tab" onclick="switchTab(\'dj\')">DJ Mode</div><div class="tab" onclick="switchTab(\'sistema\')">Sistema</div><div class="tab" onclick="switchTab(\'precios\')">💰 Precios</div></div><div id="pane-inscriptos" class="tab-pane active"></div><div id="pane-dj" class="tab-pane"></div><div id="pane-sistema" class="tab-pane"></div><div id="pane-precios" class="tab-pane"></div></div>';
+  await loadInscriptos();
   renderActiveTab();
 }
-
-function renderActiveTab(){
-  if(currentTab==="inscriptos") renderInscriptos();
-  else if(currentTab==="djmode") renderDjMode();
-  else if(currentTab==="sistema") renderSistema();
-  else if(currentTab==="precios") renderPrecios();
-}
-
-async function loadAll(){
-  try {
-    const r = await fetch(SB_URL+"/rest/v1/inscripciones?select=*&order=created_at.desc", {
-      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON }
-    });
+function logout(){location.reload()}
+async function loadInscriptos(){
+  try{
+    const r = await fetch(SB_URL+"/rest/v1/inscripciones?select=*&order=created_at.asc",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
     allInscriptos = await r.json();
     computeAllCodes();
-    $("cnt-ins") && ($("cnt-ins").textContent = allInscriptos.length);
-  } catch(e){
-    toast("err","Error cargando: "+e.message);
-  }
+    updateStats();
+  }catch(e){toast("err","Error cargando: "+e.message)}
 }
-
 function computeAllCodes(){
-  const byInst = {};
-  [...allInscriptos].sort((a,b)=>(a.created_at||"").localeCompare(b.created_at||"")).forEach(ins => {
-    const i = (ins.instancia||"").toLowerCase();
-    byInst[i] = byInst[i] || [];
-    byInst[i].push(ins.id);
-  });
-  codigosMap = {};
-  Object.entries(byInst).forEach(([inst, ids]) => {
-    const cfg = INSTANCIA_CFG[inst] || {prefix:inst.toUpperCase(),offset:1,pad:4};
-    ids.forEach((id, idx) => {
-      codigosMap[id] = "JAM-"+cfg.prefix+"-"+String(cfg.offset+idx).padStart(cfg.pad,"0");
+  codesById = {};
+  const groups = {reg:[],rep:[],nac:[],int:[]};
+  allInscriptos.forEach(ins=>{if(groups[ins.instancia])groups[ins.instancia].push(ins)});
+  Object.keys(groups).forEach(k=>{
+    const cfg = INSTANCIAS[k];
+    groups[k].forEach((ins,idx)=>{
+      const num = String(cfg.offset+idx).padStart(4,"0");
+      codesById[ins.id] = cfg.code+"-"+num;
     });
   });
 }
-
-function getCodigo(ins){ return codigosMap[ins.id] || "JAM-???"; }
-
-function parseIntegrantes(raw){
-  if(!raw) return [];
-  try {
-    if(typeof raw==="string"){ const t=raw.trim(); if(t.startsWith("[")) return JSON.parse(t); return t.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).map(n=>({nombre:n})); }
-    if(Array.isArray(raw)) return raw;
-    if(typeof raw==="object") return [raw];
-  } catch(e){}
-  return [];
+function getCodigo(ins){return codesById[ins.id]||"JAM-???"}
+function updateStats(){
+  const total = allInscriptos.length;
+  const conf = allInscriptos.filter(i=>i.pago_estado==="confirmado").length;
+  const pend = total-conf;
+  let ars=0,usd=0;
+  allInscriptos.forEach(i=>{if(i.moneda==="ARS")ars+=Number(i.monto_total||0);else if(i.moneda==="USD")usd+=Number(i.monto_total||0)});
+  $("cnt-ins").textContent = total;
+  $("stats").innerHTML = '<div class="stat gold"><div class="stat-label">Inscriptos</div><div class="stat-value">'+total+'</div></div><div class="stat green"><div class="stat-label">A recaudar ARS</div><div class="stat-value">$ '+ars.toLocaleString("es-AR")+'</div></div><div class="stat green"><div class="stat-label">A recaudar USD</div><div class="stat-value">$ '+usd.toLocaleString("en-US")+'</div></div><div class="stat amber"><div class="stat-label">Pendientes / Confirmados</div><div class="stat-value">'+pend+' / '+conf+'</div></div>';
 }
-
-function parseCategorias(raw){
-  try {
-    const c = typeof raw==="string" ? JSON.parse(raw) : (raw||[]);
-    return Array.isArray(c) ? c : [];
-  } catch(e){ return []; }
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab-pane").forEach(t=>t.classList.remove("active"));
+  const idx=["inscriptos","dj","sistema","precios"].indexOf(tab);
+  document.querySelectorAll(".tab")[idx].classList.add("active");
+  $("pane-"+tab).classList.add("active");
+  renderActiveTab();
 }
-
-// ============ TAB INSCRIPTOS ============
+function renderActiveTab(){
+  if(currentTab==="inscriptos")renderInscriptos();
+  else if(currentTab==="dj")renderDJ();
+  else if(currentTab==="sistema")renderSistema();
+  else if(currentTab==="precios")renderPrecios();
+}
 function renderInscriptos(){
-  const stats = computeStats();
-  const filtered = filterInscriptos();
-
-  const html = `
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Inscriptos</div><div class="stat-value">${allInscriptos.length}</div></div>
-      <div class="stat gold"><div class="stat-label">A recaudar</div><div class="stat-value">$ ${fmtMoney(stats.totalEsperado)}</div></div>
-      <div class="stat green"><div class="stat-label">Confirmados</div><div class="stat-value">${stats.confirmados}</div></div>
-      <div class="stat amber"><div class="stat-label">Pendientes</div><div class="stat-value">${stats.pendientes}</div></div>
-    </div>
-
-    <div class="toolbar">
-      <input type="text" class="search-box" placeholder="Buscar por nombre, email, código, sede..." id="srchBox" value="${esc(searchTerm)}" />
-      <select class="filter-select" id="filterInstSel">
-        <option value="">Todas las instancias</option>
-        <option value="reg"${filterInst==="reg"?" selected":""}>REG · Sedes</option>
-        <option value="rep"${filterInst==="rep"?" selected":""}>REP · Repechaje</option>
-        <option value="nac"${filterInst==="nac"?" selected":""}>NAC · Final Nacional</option>
-        <option value="int"${filterInst==="int"?" selected":""}>INTER · Final Inter</option>
-      </select>
-      <select class="filter-select" id="filterPagoSel">
-        <option value="">Todos los pagos</option>
-        <option value="pendiente"${filterPago==="pendiente"?" selected":""}>Pendientes</option>
-        <option value="confirmado"${filterPago==="confirmado"?" selected":""}>Confirmados</option>
-      </select>
-      <button class="btn-primary" onclick="exportCsv()">⬇ Exportar CSV</button>
-    </div>
-
-    <div class="list">
-      ${filtered.length === 0 ? '<div class="empty">No hay inscripciones que coincidan con los filtros</div>' : filtered.map(renderRow).join('')}
-    </div>
-  `;
-  $("pane-inscriptos").innerHTML = html;
-
-  $("srchBox").addEventListener("input", e => { searchTerm = e.target.value; renderInscriptos(); });
-  $("filterInstSel").addEventListener("change", e => { filterInst = e.target.value; renderInscriptos(); });
-  $("filterPagoSel").addEventListener("change", e => { filterPago = e.target.value; renderInscriptos(); });
+  if(!allInscriptos.length){$("pane-inscriptos").innerHTML='<div class="empty">No hay inscripciones todavía.</div>';return}
+  const list = allInscriptos.map(ins=>{
+    const cod = getCodigo(ins);
+    const inst = INSTANCIAS[ins.instancia]?.label || ins.instancia;
+    const monto = (ins.moneda||"ARS")+" "+Number(ins.monto_total||0).toLocaleString("es-AR");
+    const pago = ins.pago_estado==="confirmado"?'<span class="badge confirmado">Pago OK</span>':'<span class="badge pendiente">Pendiente</span>';
+    return '<div class="ins-row"><div><div class="ins-codigo">'+esc(cod)+'</div>'+pago+'</div><div><div class="ins-nombre">'+esc(ins.nombre_grupo||ins.nombre)+'</div><div class="ins-meta">'+esc(inst)+' · '+esc(ins.email)+' · '+esc(ins.celular||"")+(ins.pais?' · '+esc(ins.pais):"")+'</div></div><div class="ins-monto">'+esc(monto)+'</div><div class="ins-actions"><button class="btn-icon" onclick="verIns(\''+ins.id+'\')">↗ Ver</button><button class="btn-icon" onclick="confirmarPago(\''+ins.id+'\')">✓ Pago</button><button class="btn-icon" onclick="reenviarMail(\''+ins.id+'\')">✉ Mail</button><button class="btn-icon danger" onclick="eliminarInscripcion(\''+ins.id+'\',\''+cod+'\')">🗑 Borrar</button></div></div>';
+  }).join("");
+  $("pane-inscriptos").innerHTML = '<div class="toolbar"><input class="search-box" id="searchBox" placeholder="Buscar..." oninput="filterInscriptos()"><button class="btn-primary" onclick="exportCsv()">Exportar CSV</button><button class="btn-secondary" onclick="loadInscriptos().then(renderActiveTab)">↻ Refrescar</button></div><div id="ins-list">'+list+'</div>';
 }
-
-function computeStats(){
-  return allInscriptos.reduce((acc, ins) => {
-    acc.totalEsperado += (+ins.monto_total||0);
-    if (ins.pago_estado === "confirmado") acc.confirmados++;
-    else acc.pendientes++;
-    return acc;
-  }, {totalEsperado:0, confirmados:0, pendientes:0});
-}
-
+function verIns(id){window.open("/check?id="+id,"_blank")}
 function filterInscriptos(){
-  return allInscriptos.filter(ins => {
-    if (filterInst && (ins.instancia||"").toLowerCase() !== filterInst) return false;
-    if (filterPago && (ins.pago_estado||"pendiente") !== filterPago) return false;
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      const hay = [ins.nombre, ins.email, ins.nombre_grupo, ins.sede_nombre, getCodigo(ins)].some(v => (v||"").toLowerCase().includes(q));
-      if (!hay) return false;
-    }
-    return true;
-  });
+  const q=($("searchBox").value||"").toLowerCase().trim();
+  document.querySelectorAll(".ins-row").forEach(row=>{row.style.display=!q||row.textContent.toLowerCase().includes(q)?"":"none"});
 }
-
-function renderRow(ins){
-  const codigo = getCodigo(ins);
-  const inst = (ins.instancia||"").toLowerCase();
-  const cfg = INSTANCIA_CFG[inst] || {label:inst};
-  const grupo = ins.nombre_grupo || ins.nombre || "—";
-  const pe = ins.pago_estado || "pendiente";
-  const me = ins.musica_estado || "pendiente";
-  const peBdg = pe==="confirmado"?"green":pe==="parcial"?"amber":"red";
-  const meBdg = me==="cargada"?"green":"gray";
-  const isExp = expandedId === ins.id;
-
-  let html = `
-    <div class="ins-row ${isExp?'expanded':''}" onclick="toggleRow('${ins.id}', event)">
-      <div class="ins-code">${esc(codigo)}</div>
-      <div class="ins-info">
-        <div class="ins-name">${esc(grupo)}</div>
-        <div class="ins-meta">${esc(cfg.label)}${ins.sede_nombre?' · '+esc(ins.sede_nombre):''} · ${esc(ins.modalidad||'—')}${ins.cant_personas>1?' ('+ins.cant_personas+'p)':''}</div>
-      </div>
-      <div class="ins-badges">
-        <span class="bdg bdg-${peBdg}">${esc(pe)}</span>
-        <span class="bdg bdg-${meBdg}">♪ ${esc(me)}</span>
-      </div>
-      <div class="ins-amount">${esc(ins.moneda||"ARS")} ${fmtMoney(ins.monto_total)}</div>
-      <div class="ins-actions" onclick="event.stopPropagation()">
-        ${pe !== "confirmado" ? '<button class="btn-icon btn-green" onclick="confirmarPago(\''+ins.id+'\')">✓ Pago</button>' : ''}
-        <button class="btn-icon" onclick="reenviarMail(\''+ins.id+'\')">✉ Mail</button>
-        <button class="btn-icon" onclick="window.open('/check?id='+'${ins.id}', '_blank')">↗ Ver</button>
-        <button class="btn-icon" style="color:#E0524C;border-color:rgba(224,82,82,.3)" onclick="eliminarInscripcion(\'${ins.id}\',\'${getCodigo(ins).replace(/\x27/g,\'\')}\')">🗑 Borrar</button>
-      </div>
-    </div>
-  `;
-
-  if (isExp) html += renderDetail(ins);
-  return html;
+async function confirmarPago(id){
+  if(!confirm("¿Confirmar pago?"))return;
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id,{method:"PATCH",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({pago_estado:"confirmado"})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const i=allInscriptos.find(x=>x.id===id);if(i)i.pago_estado="confirmado";
+    updateStats();renderActiveTab();toast("ok","Pago confirmado ✓");
+  }catch(e){toast("err","Error: "+e.message)}
 }
-
-function renderDetail(ins){
-  const integrantes = parseIntegrantes(ins.integrantes);
-  const categorias = parseCategorias(ins.categorias);
-  const codigo = getCodigo(ins);
-
-  return `<div class="detail show">
-    <div class="detail-grid">
-      <div class="det-block">
-        <div class="det-title">Contacto</div>
-        <div class="det-row"><div class="k">Responsable</div><div class="v">${esc(ins.nombre||"—")}</div></div>
-        <div class="det-row"><div class="k">Email</div><div class="v" style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(ins.email||"—")}</div></div>
-        <div class="det-row"><div class="k">Celular</div><div class="v" style="font-family:'JetBrains Mono',monospace;font-size:11px">${esc(ins.celular||"—")}</div></div>
-        <div class="det-row"><div class="k">País</div><div class="v">${esc(ins.pais||"—")}</div></div>
-      </div>
-      <div class="det-block">
-        <div class="det-title">Inscripción</div>
-        <div class="det-row"><div class="k">Código</div><div class="v" style="font-family:'JetBrains Mono',monospace;color:#C9A84C">${esc(codigo)}</div></div>
-        <div class="det-row"><div class="k">Grupo</div><div class="v">${esc(ins.nombre_grupo||"—")}</div></div>
-        <div class="det-row"><div class="k">Modalidad</div><div class="v">${esc(ins.modalidad||"—")}</div></div>
-        <div class="det-row"><div class="k">Fecha</div><div class="v">${ins.created_at ? new Date(ins.created_at).toLocaleString("es-AR") : "—"}</div></div>
-      </div>
-      ${integrantes.length ? `<div class="det-block">
-        <div class="det-title">Integrantes (${integrantes.length})</div>
-        ${integrantes.map((it,i)=> `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px">
-          <span style="font-family:'JetBrains Mono',monospace;color:#C9A84C;font-size:10px">${codigo}-${i+1}</span>
-          <div style="font-family:'Cormorant Garamond',serif;color:#F8F5EE;font-size:14px">${esc(it.nombre||it.name||"Integrante "+(i+1))}</div>
-        </div>`).join("")}
-      </div>` : ''}
-      ${ins.musica_url ? `<div class="det-block">
-        <div class="det-title">Música</div>
-        <div class="det-row"><div class="k">Archivo</div><div class="v" style="font-size:11px;font-family:'JetBrains Mono',monospace">${esc(ins.musica_nombre||"—")}</div></div>
-        <audio controls style="width:100%;margin-top:8px;height:36px" src="${esc(ins.musica_url)}"></audio>
-      </div>` : ''}
-    </div>
-    ${categorias.length ? `<div class="det-block" style="background:#1a1600">
-      <div class="det-title" style="color:#C9A84C">Categorías inscriptas (${categorias.length})</div>
-      <div style="margin-top:6px">${categorias.map(c=>`<span class="cat-tag"><span class="num">N° ${esc(c.c||"—")}</span> <span style="color:#888;font-size:10px;text-transform:uppercase">${esc(c.g||"")}</span><div class="nom">${esc(c.n||"")}</div></span>`).join("")}</div>
-    </div>` : ''}
-  </div>`;
+async function reenviarMail(id){
+  if(!confirm("¿Reenviar mail?"))return;
+  try{
+    const r=await fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})});
+    const d=await r.json();
+    if(d.mail_participante?.ok)toast("ok","Mail reenviado ✓");
+    else toast("err","Error: "+(d.error||"desconocido"));
+  }catch(e){toast("err","Error: "+e.message)}
 }
-
-window.toggleRow = function(id, ev){
-  if(ev && ev.target.closest('.ins-actions')) return;
-  expandedId = expandedId === id ? null : id;
-  renderInscriptos();
-};
-
-window.confirmarPago = async function(id){
-  if(!confirm("¿Confirmar el pago de esta inscripción? Esto marca la inscripción como pagada.")) return;
-  try {
-    const r = await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id, {
-      method:"PATCH",
-      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json" },
-      body: JSON.stringify({ pago_estado:"confirmado" })
-    });
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const ins = allInscriptos.find(x => x.id === id);
-    if (ins) ins.pago_estado = "confirmado";
-    toast("ok","Pago confirmado ✓");
-    renderActiveTab();
-  } catch(e){
-    toast("err","Error: "+e.message);
-  }
-};
-
-window.reenviarMail = async function(id){
-  if(!confirm("¿Reenviar el mail de confirmación a esta inscripción?")) return;
-  try {
-    const r = await fetch("/api/notify", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ id })
-    });
-    const data = await r.json();
-    if(data.ok && data.mail_participante?.ok) toast("ok","Mail reenviado a "+data.mail_participante.to);
-    else toast("err","No se pudo reenviar: "+JSON.stringify(data.mail_participante?.error||data.error||"err").substring(0,100));
-  } catch(e){
-    toast("err","Error: "+e.message);
-  }
-};
-
-window.exportCsv = function(){
-  const rows = [["Código","Instancia","Responsable","Grupo","Email","Celular","País","Sede","Modalidad","Personas","Categorías","Monto","Moneda","Pago","Música","Fecha"]];
-  filterInscriptos().forEach(ins => {
-    const cats = parseCategorias(ins.categorias).map(c => "N°"+c.c+" "+c.n).join("; ");
-    rows.push([
-      getCodigo(ins),
-      (ins.instancia||"").toUpperCase(),
-      ins.nombre||"",
-      ins.nombre_grupo||"",
-      ins.email||"",
-      ins.celular||"",
-      ins.pais||"",
-      ins.sede_nombre||"",
-      ins.modalidad||"",
-      ins.cant_personas||1,
-      cats,
-      ins.monto_total||0,
-      ins.moneda||"ARS",
-      ins.pago_estado||"pendiente",
-      ins.musica_estado||"pendiente",
-      ins.created_at ? new Date(ins.created_at).toLocaleString("es-AR") : ""
-    ]);
-  });
-  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
-  const blob = new Blob(["\ufeff"+csv], {type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "jam2026-inscripciones-"+new Date().toISOString().substring(0,10)+".csv";
-  a.click();
-  toast("ok","CSV exportado con "+filterInscriptos().length+" inscripciones");
-};
-
-// ============ TAB DJ MODE ============
-function renderDjMode(){
-  const conMusica = allInscriptos.filter(x => x.musica_url);
-  const html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:13px;color:rgba(248,245,238,.6)"><strong style="color:#C9A84C">${conMusica.length}</strong> participantes con música cargada</div>
-      <select class="filter-select" id="djFilterInst" onchange="renderDjMode()">
-        <option value="">Todas las instancias</option>
-        <option value="reg"${filterInst==="reg"?" selected":""}>REG</option>
-        <option value="rep"${filterInst==="rep"?" selected":""}>REP</option>
-        <option value="nac"${filterInst==="nac"?" selected":""}>NAC</option>
-        <option value="int"${filterInst==="int"?" selected":""}>INTER</option>
-      </select>
-    </div>
-    <div class="dj-grid">
-      <div class="dj-list">
-        ${conMusica.filter(x=>!filterInst||x.instancia===filterInst).map(ins => `
-          <div class="dj-item ${djCurrentId===ins.id?'active':''}" onclick="playDj('${ins.id}')">
-            <div class="dj-item-code">${esc(getCodigo(ins))}</div>
-            <div class="dj-item-name">${esc(ins.nombre_grupo||ins.nombre||"—")}</div>
-            <div class="dj-item-cat">${esc(ins.modalidad||"")} · ${parseCategorias(ins.categorias).length} cat.</div>
-          </div>
-        `).join("") || '<div class="empty">No hay música cargada</div>'}
-      </div>
-      <div class="dj-player" id="djPlayer">
-        <div class="dj-player-empty">Seleccioná un participante de la lista<br><br>Click para reproducir su música</div>
-      </div>
-    </div>
-  `;
-  $("pane-djmode").innerHTML = html;
-  if (djCurrentId) playDj(djCurrentId);
-}
-
-window.playDj = function(id){
-  djCurrentId = id;
-  const ins = allInscriptos.find(x => x.id === id);
-  if (!ins || !ins.musica_url) return;
-  document.querySelectorAll(".dj-item").forEach(el => el.classList.remove("active"));
-  $("djPlayer").innerHTML = `
-    <div class="dj-player-info">
-      <div class="dj-player-code">${esc(getCodigo(ins))}</div>
-      <div class="dj-player-name">${esc(ins.nombre_grupo||ins.nombre||"—")}</div>
-      <div class="dj-player-meta">${esc(ins.modalidad||"")} · ${esc((INSTANCIA_CFG[(ins.instancia||"").toLowerCase()]||{}).label||"")}</div>
-    </div>
-    <audio controls autoplay src="${esc(ins.musica_url)}"></audio>
-    <div style="margin-top:14px;font-size:11px;color:rgba(248,245,238,.4);font-family:'JetBrains Mono',monospace">${esc(ins.musica_nombre||"")}</div>
-  `;
-  document.querySelectorAll(".dj-item").forEach(el => {
-    if (el.textContent.includes(getCodigo(ins))) el.classList.add("active");
-  });
-};
-
-// ============ TAB SISTEMA ============
-function renderSistema(){
-  const cnt = allInscriptos.length;
-  const conMusica = allInscriptos.filter(x => x.musica_url).length;
-  const pagados = allInscriptos.filter(x => x.pago_estado === "confirmado").length;
-  const totalEsp = allInscriptos.reduce((s,x)=>s+(+x.monto_total||0), 0);
-  const totalCobr = allInscriptos.filter(x=>x.pago_estado==="confirmado").reduce((s,x)=>s+(+x.monto_total||0), 0);
-
-  const byInst = {};
-  allInscriptos.forEach(x => {
-    const i = (x.instancia||"").toLowerCase();
-    byInst[i] = (byInst[i]||0) + 1;
-  });
-
-  $("pane-sistema").innerHTML = `
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Inscriptos totales</div><div class="stat-value">${cnt}</div></div>
-      <div class="stat green"><div class="stat-label">Pagos confirmados</div><div class="stat-value">${pagados}</div></div>
-      <div class="stat gold"><div class="stat-label">Música cargada</div><div class="stat-value">${conMusica}</div></div>
-    </div>
-    <div class="stats">
-      <div class="stat gold"><div class="stat-label">A recaudar</div><div class="stat-value">$ ${fmtMoney(totalEsp)}</div></div>
-      <div class="stat green"><div class="stat-label">Cobrado</div><div class="stat-value">$ ${fmtMoney(totalCobr)}</div></div>
-      <div class="stat amber"><div class="stat-label">Pendiente</div><div class="stat-value">$ ${fmtMoney(totalEsp-totalCobr)}</div></div>
-    </div>
-    <div class="list" style="margin-top:14px">
-      ${Object.entries(byInst).map(([inst, count])=>{
-        const cfg = INSTANCIA_CFG[inst] || {prefix:inst.toUpperCase(),label:inst};
-        return `<div class="ins-row"><div class="ins-code">${cfg.prefix}</div><div class="ins-info"><div class="ins-name">${cfg.label||cfg.prefix}</div></div><div class="ins-amount">${count} insc.</div></div>`;
-      }).join("")}
-    </div>
-    <div class="det-block" style="margin-top:14px">
-      <div class="det-title">URLs del sistema</div>
-      <div class="det-row"><div class="k">Portal inscripción</div><div class="v"><a href="/" target="_blank" style="color:#C9A84C">jam-inscripciones.vercel.app</a></div></div>
-      <div class="det-row"><div class="k">Subir música</div><div class="v"><a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a></div></div>
-      <div class="det-row"><div class="k">Verificación QR</div><div class="v"><a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a></div></div>
-      <div class="det-row"><div class="k">Sender mails</div><div class="v" style="font-family:'JetBrains Mono',monospace;color:#4CAF7D">info@jamcompetencia.com ✓</div></div>
-    <div class="det-block" style="margin-top:14px;border:1px solid rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones del sistema y limpiar el storage. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:Outfit,sans-serif;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>
-    </div>
-  `;
-}
-
-function logout(){
-  sessionStorage.removeItem("jam_admin");
-  location.reload();
-}
-
-function toast(type, msg){
-  const t = $("toast");
-  t.className = "toast "+type;
-  t.style.display="flex";
-  t.textContent = msg;
-  setTimeout(()=>{ t.style.display="none"; }, 4000);
-}
-
-// ============ TAB PRECIOS ============
-let preciosConfig = null;
-
-async function loadPrecios(){
-  try {
-    const r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1&select=*",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
-    const d = await r.json();
-    preciosConfig = d[0]?.config || null;
-    return preciosConfig;
-  } catch(e){
-    toast("err","Error cargando precios: "+e.message);
-    return null;
-  }
-}
-
-function getCategoriaExtraActual(extras){
-  if (!extras) return { value: 0, periodo: "—" };
-  const m = new Date().getMonth() + 1; // 1-12
-  if (m >= 4 && m <= 5) return { value: extras.abril_mayo || 0, periodo: "Abril–Mayo" };
-  if (m >= 6 && m <= 7) return { value: extras.junio_julio || 0, periodo: "Junio–Julio" };
-  if (m >= 8 && m <= 9) return { value: extras.agosto_septiembre || 0, periodo: "Agosto–Septiembre" };
-  return { value: 0, periodo: "Fuera de temporada (sin extra)" };
-}
-
-async function renderPrecios(){
-  if (!preciosConfig) await loadPrecios();
-  if (!preciosConfig) {
-    $("pane-precios").innerHTML = '<div class="empty">No se pudo cargar la configuración de precios. Verificá que la tabla config_precios exista en Supabase.</div>';
-    return;
-  }
-  const cfg = preciosConfig;
-  const extra = getCategoriaExtraActual(cfg.internacional?.categoria_extra);
-  const mesActual = new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"});
-  
-  $("pane-precios").innerHTML = `
-    <div class="stats">
-      <div class="stat gold"><div class="stat-label">Mes actual</div><div class="stat-value" style="font-size:20px;text-transform:capitalize">${mesActual}</div></div>
-      <div class="stat green"><div class="stat-label">Categoría extra HOY</div><div class="stat-value">USD ${extra.value}</div></div>
-      <div class="stat"><div class="stat-label">Período activo</div><div class="stat-value" style="font-size:18px">${extra.periodo}</div></div>
-    </div>
-    
-    <div class="det-block" style="margin-bottom:14px">
-      <div class="det-title" style="color:#C9A84C">Eventos Nacionales (ARS)</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
-        <div><label class="det-title">Sedes Regionales</label><input id="p-sedes" type="number" value="${cfg.nacional?.sedes_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-        <div><label class="det-title">Repesca</label><input id="p-repesca" type="number" value="${cfg.nacional?.repesca_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-        <div><label class="det-title">Nacional · Solista</label><input id="p-nac-solo" type="number" value="${cfg.nacional?.nacional_solista_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-        <div><label class="det-title">Nacional · Grupo</label><input id="p-nac-grupo" type="number" value="${cfg.nacional?.nacional_grupo_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-      </div>
-    </div>
-    
-    <div class="det-block" style="margin-bottom:14px">
-      <div class="det-title" style="color:#C9A84C">Inter América (USD)</div>
-      <div style="margin-top:12px">
-        <div style="max-width:280px"><label class="det-title">Base inscripción</label><input id="p-int-base" type="number" value="${cfg.internacional?.base_usd||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-      </div>
-      <div style="margin-top:18px;padding:14px;background:#1a1600;border-radius:10px;border:1px solid rgba(201,168,76,.2)">
-        <div class="det-title" style="color:#C9A84C">Categoría EXTRA (escalonado por mes)</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px">
-          <div><label class="det-title">Abril – Mayo</label><input id="p-int-abrmay" type="number" value="${cfg.internacional?.categoria_extra?.abril_mayo||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-          <div><label class="det-title">Junio – Julio</label><input id="p-int-junjul" type="number" value="${cfg.internacional?.categoria_extra?.junio_julio||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-          <div><label class="det-title">Agosto – Septiembre</label><input id="p-int-agosep" type="number" value="${cfg.internacional?.categoria_extra?.agosto_septiembre||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
-        </div>
-        <div style="font-size:11px;color:rgba(248,245,238,.5);margin-top:10px;line-height:1.5">
-          Estos valores se SUMAN al precio base por cada categoría extra. El sistema usa automáticamente el valor del mes en curso.
-        </div>
-      </div>
-    </div>
-    
-    <div style="text-align:center;padding:14px">
-      <button class="btn-primary" onclick="savePrecios()" style="padding:13px 32px;font-size:13px">💾 GUARDAR CAMBIOS</button>
-      <div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:8px">Los nuevos precios aplican a inscripciones futuras. Inscripciones ya creadas conservan su monto original.</div>
-    </div>
-  `;
-}
-
-window.savePrecios = async function(){
-  if (!confirm("¿Guardar los cambios? Aplicarán a todas las inscripciones nuevas a partir de este momento.")) return;
-  const newCfg = {
-    nacional: {
-      sedes_ars: parseInt($("p-sedes").value) || 0,
-      repesca_ars: parseInt($("p-repesca").value) || 0,
-      nacional_solista_ars: parseInt($("p-nac-solo").value) || 0,
-      nacional_grupo_ars: parseInt($("p-nac-grupo").value) || 0
-    },
-    internacional: {
-      base_usd: parseInt($("p-int-base").value) || 0,
-      categoria_extra: {
-        abril_mayo: parseInt($("p-int-abrmay").value) || 0,
-        junio_julio: parseInt($("p-int-junjul").value) || 0,
-        agosto_septiembre: parseInt($("p-int-agosep").value) || 0
-      }
-    }
-  };
-  try {
-    const r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1",{
-      method:"PATCH",
-      headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},
-      body: JSON.stringify({config: newCfg, updated_at: new Date().toISOString()})
-    });
-    if (!r.ok) throw new Error("HTTP "+r.status);
-    preciosConfig = newCfg;
-    toast("ok","Precios guardados ✓");
-    renderPrecios();
-  } catch(e){
-    toast("err","Error guardando: "+e.message);
-  }
-};
-
-
-
-window.eliminarInscripcion = async function(id, codigo){
-  const conf = prompt("Para eliminar la inscripción "+codigo+" escribí: BORRAR");
-  if (conf !== "BORRAR") { toast("err","Cancelado"); return; }
-  try {
-    const r = await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
-    if (!r.ok) throw new Error("HTTP "+r.status);
-    allInscriptos = allInscriptos.filter(x=>x.id!==id);
-    computeAllCodes();
+async function eliminarInscripcion(id,codigo){
+  const c=prompt("Para eliminar "+codigo+" escribí: BORRAR");
+  if(c!=="BORRAR"){toast("err","Cancelado");return}
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/inscripciones?id=eq."+id,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    allInscriptos=allInscriptos.filter(x=>x.id!==id);
+    computeAllCodes();updateStats();renderActiveTab();
     toast("ok","Inscripción "+codigo+" eliminada ✓");
-    renderActiveTab();
-  } catch(e){
-    toast("err","Error: "+e.message);
-  }
-};
-
-window.resetAll = async function(){
-  const conf1 = prompt("⚠️ Esta acción elimina TODAS las inscripciones y archivos del sistema. Para confirmar escribí: BORRAR TODO");
-  if (conf1 !== "BORRAR TODO") { toast("err","Cancelado"); return; }
-  if (!confirm("ÚLTIMA CONFIRMACIÓN: ¿Borrar TODAS las inscripciones y archivos? Esto NO se puede deshacer.")) return;
-  try {
-    window.__BACKUP_PRE_RESET__ = [...allInscriptos];
-    const r = await fetch(SB_URL+"/rest/v1/inscripciones?created_at=lt.2099-01-01",{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,Prefer:"return=representation"}});
-    const deleted = await r.json();
-    const count = Array.isArray(deleted) ? deleted.length : 0;
-    async function cleanBucket(b){
-      const rl = await fetch(SB_URL+"/storage/v1/object/list/"+b,{method:"POST",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({limit:200,offset:0,prefix:"",sortBy:{column:"name",order:"asc"}})});
-      const files = await rl.json();
-      if (!Array.isArray(files) || !files.length) return 0;
-      const rd = await fetch(SB_URL+"/storage/v1/object/"+b,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({prefixes:files.map(f=>f.name)})});
-      return rd.ok ? files.length : 0;
+  }catch(e){toast("err","Error: "+e.message)}
+}
+async function resetAll(){
+  const c1=prompt("⚠️ Elimina TODAS las inscripciones + archivos. Confirmar escribiendo: BORRAR TODO");
+  if(c1!=="BORRAR TODO"){toast("err","Cancelado");return}
+  if(!confirm("ÚLTIMA CONFIRMACIÓN: ¿Borrar todo?"))return;
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/inscripciones?created_at=lt.2099-01-01",{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,Prefer:"return=representation"}});
+    const del=await r.json();const n=Array.isArray(del)?del.length:0;
+    async function clean(b){
+      const rl=await fetch(SB_URL+"/storage/v1/object/list/"+b,{method:"POST",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({limit:500,offset:0,prefix:"",sortBy:{column:"name",order:"asc"}})});
+      const fs=await rl.json();
+      if(!Array.isArray(fs)||!fs.length)return 0;
+      const rd=await fetch(SB_URL+"/storage/v1/object/"+b,{method:"DELETE",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({prefixes:fs.map(f=>f.name)})});
+      return rd.ok?fs.length:0;
     }
-    const m = await cleanBucket("musica");
-    const c = await cleanBucket("comprobantes");
-    allInscriptos = [];
-    computeAllCodes();
-    toast("ok","Reset OK: "+count+" inscripciones + "+m+" músicas + "+c+" comprobantes borrados");
-    renderActiveTab();
-  } catch(e){
-    toast("err","Error: "+e.message);
-  }
-};
+    const m=await clean("musica");const c=await clean("comprobantes");
+    allInscriptos=[];computeAllCodes();updateStats();renderActiveTab();
+    toast("ok","Reset OK: "+n+" inscripciones + "+m+" músicas + "+c+" comprobantes");
+  }catch(e){toast("err","Error: "+e.message)}
+}
+function exportCsv(){
+  const headers=["Codigo","Instancia","Nombre","Grupo","Email","Celular","Pais","Modalidad","Monto","Moneda","Pago","Musica","Fecha"];
+  const rows=allInscriptos.map(ins=>[getCodigo(ins),INSTANCIAS[ins.instancia]?.label||ins.instancia,ins.nombre||"",ins.nombre_grupo||"",ins.email||"",ins.celular||"",ins.pais||"",ins.modalidad||"",ins.monto_total||0,ins.moneda||"",ins.pago_estado||"",ins.musica_estado||"",(ins.created_at||"").substring(0,19)]);
+  const csv=[headers,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="inscriptos-jam-"+new Date().toISOString().substring(0,10)+".csv";a.click();
+  toast("ok","CSV exportado ✓");
+}
+function renderDJ(){
+  const c=allInscriptos.filter(i=>i.musica_estado==="cargada");
+  if(!c.length){$("pane-dj").innerHTML='<div class="empty">No hay músicas cargadas todavía.</div>';return}
+  const list=c.map(ins=>{
+    const cod=getCodigo(ins);
+    return '<div class="ins-row"><div><div class="ins-codigo">'+esc(cod)+'</div></div><div><div class="ins-nombre">'+esc(ins.nombre_grupo||ins.nombre)+'</div><div class="ins-meta">'+esc(ins.musica_nombre||"")+'</div></div><div></div><div class="ins-actions"><button class="btn-icon" onclick="window.open(\''+esc(ins.musica_url)+'\',\'_blank\')">▶ Reproducir</button></div></div>';
+  }).join("");
+  $("pane-dj").innerHTML=list;
+}
+function renderSistema(){
+  $("pane-sistema").innerHTML='<div class="det-block"><div class="det-title">URLs del sistema</div><div style="font-family:monospace;font-size:12px;color:#F8F5EE;line-height:1.9">Portal: <a href="/" target="_blank" style="color:#C9A84C">/</a><br>Check QR: <a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a><br>Música: <a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a><br>Términos Nacional (PDF): <a href="/terminos-nacional.pdf" target="_blank" style="color:#C9A84C">/terminos-nacional.pdf</a><br>Términos Inter (PDF): <a href="/terminos-internacional.pdf" target="_blank" style="color:#C9A84C">/terminos-internacional.pdf</a></div></div><div class="det-block" style="border-color:rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones y archivos. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>';
+}
+async function loadPrecios(){
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1&select=*",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+    const d=await r.json();
+    preciosConfig=d[0]?.config||null;
+    return preciosConfig;
+  }catch(e){toast("err","Error: "+e.message);return null}
+}
+function getCategoriaExtraActual(extras){
+  if(!extras)return{value:0,periodo:"—"};
+  const m=new Date().getMonth()+1;
+  if(m>=4&&m<=5)return{value:extras.abril_mayo||0,periodo:"Abril–Mayo"};
+  if(m>=6&&m<=7)return{value:extras.junio_julio||0,periodo:"Junio–Julio"};
+  if(m>=8&&m<=9)return{value:extras.agosto_septiembre||0,periodo:"Agosto–Septiembre"};
+  return{value:0,periodo:"Fuera de temporada"};
+}
+async function renderPrecios(){
+  if(!preciosConfig)await loadPrecios();
+  if(!preciosConfig){$("pane-precios").innerHTML='<div class="empty">No se pudo cargar la configuración.</div>';return}
+  const cfg=preciosConfig;
+  const e=getCategoriaExtraActual(cfg.internacional?.categoria_extra);
+  const mes=new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"});
+  $("pane-precios").innerHTML='<div class="stats"><div class="stat gold"><div class="stat-label">Mes actual</div><div class="stat-value" style="font-size:20px;text-transform:capitalize">'+mes+'</div></div><div class="stat green"><div class="stat-label">Cat. extra HOY (INT)</div><div class="stat-value">USD '+e.value+'</div></div><div class="stat"><div class="stat-label">Período activo</div><div class="stat-value" style="font-size:18px">'+e.periodo+'</div></div></div><div class="det-block"><div class="det-title" style="color:#C9A84C">Eventos Nacionales (ARS)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px"><div><label class="det-title">Sedes Regionales</label><input id="p-sedes" type="number" value="'+(cfg.nacional?.sedes_ars||0)+'"></div><div><label class="det-title">Repesca</label><input id="p-repesca" type="number" value="'+(cfg.nacional?.repesca_ars||0)+'"></div><div><label class="det-title">Nacional · Solista</label><input id="p-nac-solo" type="number" value="'+(cfg.nacional?.nacional_solista_ars||0)+'"></div><div><label class="det-title">Nacional · Grupo</label><input id="p-nac-grupo" type="number" value="'+(cfg.nacional?.nacional_grupo_ars||0)+'"></div></div></div><div class="det-block"><div class="det-title" style="color:#C9A84C">Inter América (USD)</div><div style="max-width:280px;margin-top:12px"><label class="det-title">Base inscripción</label><input id="p-int-base" type="number" value="'+(cfg.internacional?.base_usd||0)+'"></div><div style="margin-top:18px;padding:14px;background:#1a1600;border-radius:10px;border:1px solid rgba(201,168,76,.2)"><div class="det-title" style="color:#C9A84C">Categoría EXTRA por mes (USD)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px"><div><label class="det-title">Abril – Mayo</label><input id="p-int-abrmay" type="number" value="'+(cfg.internacional?.categoria_extra?.abril_mayo||0)+'"></div><div><label class="det-title">Junio – Julio</label><input id="p-int-junjul" type="number" value="'+(cfg.internacional?.categoria_extra?.junio_julio||0)+'"></div><div><label class="det-title">Agosto – Septiembre</label><input id="p-int-agosep" type="number" value="'+(cfg.internacional?.categoria_extra?.agosto_septiembre||0)+'"></div></div><div style="font-size:11px;color:rgba(248,245,238,.5);margin-top:10px;line-height:1.5">Se SUMA al precio base por cada categoría extra. Aplica solo a Inter América.</div></div></div><div style="text-align:center;padding:14px"><button class="btn-primary" onclick="savePrecios()" style="padding:13px 32px;font-size:13px">💾 GUARDAR CAMBIOS</button><div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:8px">Aplica a inscripciones nuevas.</div></div>';
+}
+async function savePrecios(){
+  if(!confirm("¿Guardar cambios? Aplicarán a las próximas inscripciones."))return;
+  const c={nacional:{sedes_ars:parseInt($("p-sedes").value)||0,repesca_ars:parseInt($("p-repesca").value)||0,nacional_solista_ars:parseInt($("p-nac-solo").value)||0,nacional_grupo_ars:parseInt($("p-nac-grupo").value)||0},internacional:{base_usd:parseInt($("p-int-base").value)||0,categoria_extra:{abril_mayo:parseInt($("p-int-abrmay").value)||0,junio_julio:parseInt($("p-int-junjul").value)||0,agosto_septiembre:parseInt($("p-int-agosep").value)||0}}};
+  try{
+    const r=await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1",{method:"PATCH",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({config:c,updated_at:new Date().toISOString()})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    preciosConfig=c;toast("ok","Precios guardados ✓");renderPrecios();
+  }catch(e){toast("err","Error: "+e.message)}
+}
 </script>
 </body>
 </html>
