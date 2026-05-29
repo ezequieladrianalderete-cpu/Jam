@@ -1,286 +1,819 @@
-<!DOCTYPE html>
-<html lang="es" style="background:#080808">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<meta name="theme-color" content="#080808" />
-<title>Mi Inscripción — JAM 2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-.wrap{max-width:640px;margin:0 auto;padding:24px 16px}
-.header{text-align:center;margin-bottom:28px;padding-top:16px}
-.logo{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;letter-spacing:6px;color:#C9A84C;margin-bottom:4px}
-.sub{font-size:11px;color:rgba(248,245,238,.4);letter-spacing:2px;text-transform:uppercase}
-.tarjeta{background:linear-gradient(135deg,#111,#1a1800);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:28px;position:relative;overflow:hidden;margin-bottom:14px}
-.tarjeta::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%)}
-.ep-label{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(201,168,76,.6);text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:10px;position:relative}
-.ep-dot{width:7px;height:7px;border-radius:50%;background:#4CAF7D;animation:bl 1.5s infinite;flex-shrink:0}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
-.codigo-grande{font-family:'JetBrains Mono',monospace;font-size:clamp(18px,4.5vw,26px);color:#C9A84C;letter-spacing:2px;margin-bottom:14px;font-weight:500;position:relative}
-.nombre-grande{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,7vw,40px);font-weight:600;color:#F8F5EE;margin-bottom:6px;line-height:1.1;position:relative}
-.info-base{font-size:14px;color:rgba(248,245,238,.55);position:relative}
-.badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;position:relative}
-.bdg{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600}
-.bdg-gold{background:#2a2000;border:1px solid rgba(201,168,76,.3);color:#C9A84C}
-.bdg-green{background:#001a0a;border:1px solid rgba(76,175,125,.3);color:#4CAF7D}
-.bdg-blue{background:#001020;border:1px solid rgba(75,150,216,.3);color:#4B96D8}
-.bdg-red{background:#1a0000;border:1px solid rgba(224,82,82,.3);color:#E05252}
-.bdg-amber{background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838}
-.bdg-gray{background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:rgba(248,245,238,.5)}
-.card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px;margin-bottom:14px}
-.card-title{font-size:11px;font-weight:700;color:rgba(248,245,238,.45);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.card-title::before{content:'';width:3px;height:14px;background:#C9A84C;border-radius:2px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;gap:12px}
-.row:last-child{border-bottom:none}
-.row .k{color:rgba(248,245,238,.45);font-size:12px;text-transform:uppercase;letter-spacing:.4px;font-weight:500;flex-shrink:0}
-.row .v{color:#F8F5EE;font-weight:500;text-align:right;word-break:break-word}
-.cat-item{background:#1a1600;border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:14px;margin-bottom:10px}
-.cat-item:last-child{margin-bottom:0}
-.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.cat-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:#C9A84C;background:#2a2000;border:1px solid rgba(201,168,76,.3);padding:3px 9px;border-radius:8px;font-weight:500}
-.cat-genero{font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:1px;font-weight:600}
-.cat-nombre{font-family:'Cormorant Garamond',serif;font-size:19px;color:#F8F5EE;font-weight:600;line-height:1.3}
-.no-cats{color:rgba(248,245,238,.35);font-style:italic;font-size:13px;text-align:center;padding:20px 0}
-.int-item{background:#181818;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px}
-.int-item:last-child{margin-bottom:0}
-.int-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:#C9A84C;background:#2a2000;border:1px solid rgba(201,168,76,.3);padding:5px 10px;border-radius:8px;font-weight:500;letter-spacing:1px;flex-shrink:0;white-space:nowrap}
-.int-data{flex:1;min-width:0}
-.int-nombre{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#F8F5EE;line-height:1.2}
-.int-grupo{font-size:11px;color:rgba(248,245,238,.5);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
-.pago-box{background:#1a1600;border:2px solid rgba(201,168,76,.4);border-radius:14px;padding:20px}
-.pago-label{font-size:10px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:12px;text-align:center}
-.pago-field{background:#0a0a0a;border:1px dashed rgba(201,168,76,.4);padding:12px 14px;border-radius:10px;margin-bottom:8px}
-.pago-field:last-child{margin-bottom:0}
-.pago-k{font-size:10px;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.pago-v{font-family:'JetBrains Mono',monospace;font-size:16px;color:#F8F5EE;font-weight:600;letter-spacing:1px;word-break:break-all}
-.pago-v.serif{font-family:'Cormorant Garamond',serif;letter-spacing:0;font-size:18px}
-.pago-foot{font-size:12px;color:rgba(248,245,238,.55);text-align:center;margin-top:12px;line-height:1.5}
-.qr-self{text-align:center;margin:16px 0}
-.qr-self img{max-width:180px;border:3px solid #fff;border-radius:8px;padding:4px;background:#fff}
-.qr-text{text-align:center;color:rgba(248,245,238,.4);font-size:11px;margin-top:8px}
-.loading{text-align:center;padding:80px 20px;color:rgba(248,245,238,.5)}
-.spinner{display:inline-block;width:50px;height:50px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.alert-err{background:rgba(224,82,82,.1);border-left:3px solid #E05252;color:#E0524C;padding:16px;border-radius:10px;font-size:14px;line-height:1.6}
-.footer{text-align:center;margin-top:32px;color:rgba(248,245,238,.3);font-size:11px;line-height:1.8;padding-bottom:24px}
-.footer strong{color:rgba(248,245,238,.5)}
-.divider{width:60px;height:2px;background:#C9A84C;margin:24px auto;opacity:.4}
-</style>
-</head>
-<body>
+<!doctype html>
+<html lang="es" style="background: #080808">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <meta name="theme-color" content="#080808" />
+    <title>Mi Inscripción — JAM 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        background: #080808 !important;
+        color: #f8f5ee;
+        margin: 0;
+        padding: 0;
+        font-family: "Outfit", sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 24px 16px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 28px;
+        padding-top: 16px;
+      }
+      .logo {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: 6px;
+        color: #c9a84c;
+        margin-bottom: 4px;
+      }
+      .sub {
+        font-size: 11px;
+        color: rgba(248, 245, 238, 0.4);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .tarjeta {
+        background: linear-gradient(135deg, #111, #1a1800);
+        border: 1px solid rgba(201, 168, 76, 0.2);
+        border-radius: 20px;
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .tarjeta::before {
+        content: "";
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(201, 168, 76, 0.1),
+          transparent 70%
+        );
+      }
+      .ep-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: rgba(201, 168, 76, 0.6);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 10px;
+        position: relative;
+      }
+      .ep-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4caf7d;
+        animation: bl 1.5s infinite;
+        flex-shrink: 0;
+      }
+      @keyframes bl {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .codigo-grande {
+        font-family: "JetBrains Mono", monospace;
+        font-size: clamp(18px, 4.5vw, 26px);
+        color: #c9a84c;
+        letter-spacing: 2px;
+        margin-bottom: 14px;
+        font-weight: 500;
+        position: relative;
+      }
+      .nombre-grande {
+        font-family: "Cormorant Garamond", serif;
+        font-size: clamp(28px, 7vw, 40px);
+        font-weight: 600;
+        color: #f8f5ee;
+        margin-bottom: 6px;
+        line-height: 1.1;
+        position: relative;
+      }
+      .info-base {
+        font-size: 14px;
+        color: rgba(248, 245, 238, 0.55);
+        position: relative;
+      }
+      .badges {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        position: relative;
+      }
+      .bdg {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .bdg-gold {
+        background: #2a2000;
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        color: #c9a84c;
+      }
+      .bdg-green {
+        background: #001a0a;
+        border: 1px solid rgba(76, 175, 125, 0.3);
+        color: #4caf7d;
+      }
+      .bdg-blue {
+        background: #001020;
+        border: 1px solid rgba(75, 150, 216, 0.3);
+        color: #4b96d8;
+      }
+      .bdg-red {
+        background: #1a0000;
+        border: 1px solid rgba(224, 82, 82, 0.3);
+        color: #e05252;
+      }
+      .bdg-amber {
+        background: #1a1000;
+        border: 1px solid rgba(232, 168, 56, 0.3);
+        color: #e8a838;
+      }
+      .bdg-gray {
+        background: #1a1a1a;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: rgba(248, 245, 238, 0.5);
+      }
+      .card {
+        background: #141414;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 22px;
+        margin-bottom: 14px;
+      }
+      .card-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(248, 245, 238, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-title::before {
+        content: "";
+        width: 3px;
+        height: 14px;
+        background: #c9a84c;
+        border-radius: 2px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 14px;
+        gap: 12px;
+      }
+      .row:last-child {
+        border-bottom: none;
+      }
+      .row .k {
+        color: rgba(248, 245, 238, 0.45);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
+      .row .v {
+        color: #f8f5ee;
+        font-weight: 500;
+        text-align: right;
+        word-break: break-word;
+      }
+      .cat-item {
+        background: #1a1600;
+        border: 1px solid rgba(201, 168, 76, 0.25);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .cat-item:last-child {
+        margin-bottom: 0;
+      }
+      .cat-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .cat-num {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: #c9a84c;
+        background: #2a2000;
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        padding: 3px 9px;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+      .cat-genero {
+        font-size: 11px;
+        color: #c9a84c;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .cat-nombre {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 19px;
+        color: #f8f5ee;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .no-cats {
+        color: rgba(248, 245, 238, 0.35);
+        font-style: italic;
+        font-size: 13px;
+        text-align: center;
+        padding: 20px 0;
+      }
+      .int-item {
+        background: #181818;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .int-item:last-child {
+        margin-bottom: 0;
+      }
+      .int-num {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        color: #c9a84c;
+        background: #2a2000;
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .int-data {
+        flex: 1;
+        min-width: 0;
+      }
+      .int-nombre {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: #f8f5ee;
+        line-height: 1.2;
+      }
+      .int-grupo {
+        font-size: 11px;
+        color: rgba(248, 245, 238, 0.5);
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pago-box {
+        background: #1a1600;
+        border: 2px solid rgba(201, 168, 76, 0.4);
+        border-radius: 14px;
+        padding: 20px;
+      }
+      .pago-label {
+        font-size: 10px;
+        color: #c9a84c;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      .pago-field {
+        background: #0a0a0a;
+        border: 1px dashed rgba(201, 168, 76, 0.4);
+        padding: 12px 14px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+      }
+      .pago-field:last-child {
+        margin-bottom: 0;
+      }
+      .pago-k {
+        font-size: 10px;
+        color: rgba(248, 245, 238, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 4px;
+      }
+      .pago-v {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        color: #f8f5ee;
+        font-weight: 600;
+        letter-spacing: 1px;
+        word-break: break-all;
+      }
+      .pago-v.serif {
+        font-family: "Cormorant Garamond", serif;
+        letter-spacing: 0;
+        font-size: 18px;
+      }
+      .pago-foot {
+        font-size: 12px;
+        color: rgba(248, 245, 238, 0.55);
+        text-align: center;
+        margin-top: 12px;
+        line-height: 1.5;
+      }
+      .qr-self {
+        text-align: center;
+        margin: 16px 0;
+      }
+      .qr-self img {
+        max-width: 180px;
+        border: 3px solid #fff;
+        border-radius: 8px;
+        padding: 4px;
+        background: #fff;
+      }
+      .qr-text {
+        text-align: center;
+        color: rgba(248, 245, 238, 0.4);
+        font-size: 11px;
+        margin-top: 8px;
+      }
+      .loading {
+        text-align: center;
+        padding: 80px 20px;
+        color: rgba(248, 245, 238, 0.5);
+      }
+      .spinner {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(201, 168, 76, 0.15);
+        border-top-color: #c9a84c;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .alert-err {
+        background: rgba(224, 82, 82, 0.1);
+        border-left: 3px solid #e05252;
+        color: #e0524c;
+        padding: 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 32px;
+        color: rgba(248, 245, 238, 0.3);
+        font-size: 11px;
+        line-height: 1.8;
+        padding-bottom: 24px;
+      }
+      .footer strong {
+        color: rgba(248, 245, 238, 0.5);
+      }
+      .divider {
+        width: 60px;
+        height: 2px;
+        background: #c9a84c;
+        margin: 24px auto;
+        opacity: 0.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">
+        <div class="logo">JAM</div>
+        <div class="sub">Mi inscripción · 2026</div>
+      </div>
 
-<div class="wrap">
-  <div class="header">
-    <div class="logo">JAM</div>
-    <div class="sub">Mi inscripción · 2026</div>
-  </div>
+      <div id="content">
+        <div class="card">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 18px; font-size: 13px">
+              Buscando tu inscripción...
+            </p>
+          </div>
+        </div>
+      </div>
 
-  <div id="content">
-    <div class="card">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p style="margin-top:18px;font-size:13px">Buscando tu inscripción...</p>
+      <div class="footer">
+        <div class="divider"></div>
+        <strong>JAM Inter América Dance Competition 2026</strong><br />
+        2, 3 y 4 de Octubre · Palais Rouge, CABA<br />
+        Jerónimo Salguero 1441
       </div>
     </div>
-  </div>
 
-  <div class="footer">
-    <div class="divider"></div>
-    <strong>JAM Inter América Dance Competition 2026</strong><br>
-    2, 3 y 4 de Octubre · Palais Rouge, CABA<br>
-    Jerónimo Salguero 1441
-  </div>
-</div>
+    <script>
+      const SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
+      const SB_ANON =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
 
-<script>
-const SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
-const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
+      const INSTANCIA_CFG = {
+        reg: { prefix: "REG", offset: 1, pad: 4, label: "Sedes" },
+        rep: { prefix: "REP", offset: 10, pad: 4, label: "Repechaje" },
+        nac: { prefix: "NAC", offset: 200, pad: 4, label: "Final Nacional" },
+        int: {
+          prefix: "INTER",
+          offset: 1000,
+          pad: 4,
+          label: "Final Inter América",
+        },
+      };
 
-const INSTANCIA_CFG = {
-  reg:   { prefix: "REG",   offset: 1,    pad: 4, label: "Sedes" },
-  rep:   { prefix: "REP",   offset: 10,   pad: 4, label: "Repechaje" },
-  nac:   { prefix: "NAC",   offset: 200,  pad: 4, label: "Final Nacional" },
-  int:   { prefix: "INTER", offset: 1000, pad: 4, label: "Final Inter América" }
-};
+      function esc(s) {
+        return (s == null ? "" : String(s)).replace(
+          /[<>&"]/g,
+          (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c],
+        );
+      }
 
-function esc(s){return (s==null?"":String(s)).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));}
+      function parseIntegrantes(raw) {
+        if (!raw) return [];
+        try {
+          if (typeof raw === "string") {
+            const t = raw.trim();
+            if (t.startsWith("[")) return JSON.parse(t);
+            return t
+              .split(/[\n,;]+/)
+              .map((x) => x.trim())
+              .filter(Boolean)
+              .map((n) => ({ nombre: n }));
+          }
+          if (Array.isArray(raw)) return raw;
+          if (typeof raw === "object") return [raw];
+        } catch (e) {
+          if (typeof raw === "string")
+            return raw
+              .split(/[\n,;]+/)
+              .map((x) => x.trim())
+              .filter(Boolean)
+              .map((n) => ({ nombre: n }));
+        }
+        return [];
+      }
 
-function parseIntegrantes(raw){
-  if(!raw) return [];
-  try{
-    if(typeof raw === "string"){
-      const t = raw.trim();
-      if(t.startsWith("[")) return JSON.parse(t);
-      return t.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).map(n=>({nombre:n}));
-    }
-    if(Array.isArray(raw)) return raw;
-    if(typeof raw === "object") return [raw];
-  }catch(e){
-    if(typeof raw === "string") return raw.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean).map(n=>({nombre:n}));
-  }
-  return [];
-}
+      async function init() {
+        const params = new URLSearchParams(location.search);
+        const id = params.get("id");
+        if (!id)
+          return showErr(
+            "Falta el parámetro ID",
+            "Esta página necesita un ID de inscripción. Si llegaste por un mail o QR, asegurate de usar el link completo.",
+          );
+        if (!/^[0-9a-f-]{30,}$/i.test(id))
+          return showErr(
+            "ID inválido",
+            "El identificador no tiene el formato correcto.",
+          );
 
-async function init(){
-  const params = new URLSearchParams(location.search);
-  const id = params.get("id");
-  if (!id) return showErr("Falta el parámetro ID", "Esta página necesita un ID de inscripción. Si llegaste por un mail o QR, asegurate de usar el link completo.");
-  if (!/^[0-9a-f-]{30,}$/i.test(id)) return showErr("ID inválido", "El identificador no tiene el formato correcto.");
+        try {
+          const r = await fetch(
+            SB_URL +
+              "/rest/v1/inscripciones?id=eq." +
+              encodeURIComponent(id) +
+              "&select=*",
+            {
+              headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+            },
+          );
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const rows = await r.json();
+          if (!rows.length)
+            return showErr(
+              "Inscripción no encontrada",
+              "No hay una inscripción con ese ID. Verificá el link.",
+            );
+          const ins = rows[0];
 
-  try {
-    const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + encodeURIComponent(id) + "&select=*", {
-      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const rows = await r.json();
-    if (!rows.length) return showErr("Inscripción no encontrada", "No hay una inscripción con ese ID. Verificá el link.");
-    const ins = rows[0];
+          const cfg = INSTANCIA_CFG[(ins.instancia || "").toLowerCase()] || {
+            prefix: (ins.instancia || "").toUpperCase(),
+            offset: 1,
+            pad: 4,
+            label: "",
+          };
+          let codigoLegible =
+            "JAM-" +
+            cfg.prefix +
+            "-" +
+            String(cfg.offset).padStart(cfg.pad, "0");
+          try {
+            const seqResp = await fetch(
+              SB_URL +
+                "/rest/v1/inscripciones?instancia=eq." +
+                encodeURIComponent(ins.instancia) +
+                "&created_at=lte." +
+                encodeURIComponent(ins.created_at) +
+                "&select=id&order=created_at.asc",
+              {
+                headers: {
+                  apikey: SB_ANON,
+                  Authorization: "Bearer " + SB_ANON,
+                },
+              },
+            );
+            const seqRows = await seqResp.json();
+            let pos = seqRows.findIndex((x) => x.id === ins.id) + 1;
+            if (pos < 1) pos = seqRows.length;
+            const num = cfg.offset + (Math.max(pos, 1) - 1);
+            codigoLegible =
+              "JAM-" + cfg.prefix + "-" + String(num).padStart(cfg.pad, "0");
+          } catch (e) {}
 
-    const cfg = INSTANCIA_CFG[(ins.instancia||"").toLowerCase()] || { prefix: (ins.instancia||"").toUpperCase(), offset: 1, pad: 4, label: "" };
-    let codigoLegible = "JAM-" + cfg.prefix + "-" + String(cfg.offset).padStart(cfg.pad,"0");
-    try {
-      const seqResp = await fetch(SB_URL + "/rest/v1/inscripciones?instancia=eq." + encodeURIComponent(ins.instancia) + "&created_at=lte." + encodeURIComponent(ins.created_at) + "&select=id&order=created_at.asc", {
-        headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
-      });
-      const seqRows = await seqResp.json();
-      let pos = seqRows.findIndex(x => x.id === ins.id) + 1;
-      if (pos < 1) pos = seqRows.length;
-      const num = cfg.offset + (Math.max(pos,1) - 1);
-      codigoLegible = "JAM-" + cfg.prefix + "-" + String(num).padStart(cfg.pad,"0");
-    } catch(e){}
+          render(ins, codigoLegible, cfg);
+        } catch (e) {
+          showErr(
+            "Error de conexión",
+            "No pudimos consultar la base de datos. Intentá de nuevo más tarde.",
+          );
+          console.error(e);
+        }
+      }
 
-    render(ins, codigoLegible, cfg);
-  } catch (e) {
-    showErr("Error de conexión", "No pudimos consultar la base de datos. Intentá de nuevo más tarde.");
-    console.error(e);
-  }
-}
+      function showErr(title, msg) {
+        document.getElementById("content").innerHTML =
+          '<div class="card"><h2 style="color:#E05252;margin-bottom:14px;font-size:17px;font-family:\'Cormorant Garamond\',serif;font-weight:600">' +
+          esc(title) +
+          '</h2><div class="alert-err">' +
+          esc(msg) +
+          "</div></div>";
+      }
 
-function showErr(title, msg){
-  document.getElementById("content").innerHTML =
-    '<div class="card"><h2 style="color:#E05252;margin-bottom:14px;font-size:17px;font-family:\'Cormorant Garamond\',serif;font-weight:600">' + esc(title) + '</h2><div class="alert-err">' + esc(msg) + '</div></div>';
-}
+      function row(k, v) {
+        return (
+          '<div class="row"><div class="k">' +
+          k +
+          '</div><div class="v">' +
+          v +
+          "</div></div>"
+        );
+      }
 
-function row(k, v){return '<div class="row"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';}
+      function render(ins, codigoLegible, cfg) {
+        const inst = (ins.instancia || "").toLowerCase();
+        const pe = ins.pago_estado || "pendiente";
+        const me = ins.musica_estado || "pendiente";
+        const peBadge =
+          pe === "confirmado" ? "green" : pe === "parcial" ? "amber" : "red";
+        const meBadge = me === "cargada" ? "green" : "gray";
+        const qrUrl =
+          "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+          encodeURIComponent(location.href);
+        const grupo = ins.nombre_grupo || ins.nombre || "";
 
-function render(ins, codigoLegible, cfg){
-  const inst = (ins.instancia || "").toLowerCase();
-  const pe = ins.pago_estado || "pendiente";
-  const me = ins.musica_estado || "pendiente";
-  const peBadge = pe==="confirmado"?"green":pe==="parcial"?"amber":"red";
-  const meBadge = me==="cargada"?"green":"gray";
-  const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(location.href);
-  const grupo = ins.nombre_grupo || ins.nombre || "";
+        let html =
+          '<div class="tarjeta">' +
+          '<div class="ep-label"><div class="ep-dot"></div>Inscripción confirmada</div>' +
+          '<div class="codigo-grande">' +
+          esc(codigoLegible) +
+          "</div>" +
+          '<div class="nombre-grande">' +
+          esc(grupo) +
+          "</div>" +
+          '<div class="info-base">' +
+          esc(cfg.label) +
+          (ins.pais ? " · " + esc(ins.pais) : "") +
+          (ins.sede_nombre ? " · Sede " + esc(ins.sede_nombre) : "") +
+          "</div>" +
+          '<div class="badges">' +
+          '<span class="bdg bdg-gold">' +
+          esc(cfg.prefix) +
+          "</span>" +
+          '<span class="bdg bdg-' +
+          peBadge +
+          '">' +
+          (pe === "confirmado" ? "✓ " : "") +
+          "Pago " +
+          esc(pe) +
+          "</span>" +
+          '<span class="bdg bdg-' +
+          meBadge +
+          '">' +
+          (me === "cargada" ? "♪ " : "") +
+          "Música " +
+          esc(me) +
+          "</span>" +
+          "</div>" +
+          "</div>";
 
-  let html = '<div class="tarjeta">' +
-    '<div class="ep-label"><div class="ep-dot"></div>Inscripción confirmada</div>' +
-    '<div class="codigo-grande">' + esc(codigoLegible) + '</div>' +
-    '<div class="nombre-grande">' + esc(grupo) + '</div>' +
-    '<div class="info-base">' + esc(cfg.label) + (ins.pais ? ' · ' + esc(ins.pais) : '') + (ins.sede_nombre ? ' · Sede ' + esc(ins.sede_nombre) : '') + '</div>' +
-    '<div class="badges">' +
-      '<span class="bdg bdg-gold">' + esc(cfg.prefix) + '</span>' +
-      '<span class="bdg bdg-' + peBadge + '">' + (pe==="confirmado"?"✓ ":"") + 'Pago ' + esc(pe) + '</span>' +
-      '<span class="bdg bdg-' + meBadge + '">' + (me==="cargada"?"♪ ":"") + 'Música ' + esc(me) + '</span>' +
-    '</div>' +
-  '</div>';
+        const integrantes = parseIntegrantes(ins.integrantes);
+        if (integrantes.length > 0) {
+          html +=
+            '<div class="card"><div class="card-title">Integrantes (' +
+            integrantes.length +
+            ")</div>";
+          integrantes.forEach(function (int, idx) {
+            const nombre =
+              int.nombre ||
+              int.name ||
+              (typeof int === "string" ? int : "Integrante " + (idx + 1));
+            const subCode = codigoLegible + "-" + (idx + 1);
+            html +=
+              '<div class="int-item">' +
+              '<div class="int-num">' +
+              esc(subCode) +
+              "</div>" +
+              '<div class="int-data">' +
+              '<div class="int-nombre">' +
+              esc(nombre) +
+              "</div>" +
+              (grupo && grupo !== nombre
+                ? '<div class="int-grupo">' + esc(grupo) + "</div>"
+                : "") +
+              "</div>" +
+              "</div>";
+          });
+          html += "</div>";
+        } else if (ins.cant_personas > 1) {
+          html +=
+            '<div class="card"><div class="card-title">Integrantes (' +
+            ins.cant_personas +
+            ")</div>";
+          for (let i = 0; i < ins.cant_personas; i++) {
+            html +=
+              '<div class="int-item">' +
+              '<div class="int-num">' +
+              esc(codigoLegible + "-" + (i + 1)) +
+              "</div>" +
+              '<div class="int-data">' +
+              '<div class="int-nombre" style="color:rgba(248,245,238,.4);font-style:italic">Integrante ' +
+              (i + 1) +
+              "</div>" +
+              '<div class="int-grupo">Datos no cargados</div>' +
+              "</div>" +
+              "</div>";
+          }
+          html += "</div>";
+        }
 
-  const integrantes = parseIntegrantes(ins.integrantes);
-  if (integrantes.length > 0) {
-    html += '<div class="card"><div class="card-title">Integrantes (' + integrantes.length + ')</div>';
-    integrantes.forEach(function(int, idx){
-      const nombre = int.nombre || int.name || (typeof int === "string" ? int : "Integrante " + (idx+1));
-      const subCode = codigoLegible + "-" + (idx+1);
-      html += '<div class="int-item">' +
-        '<div class="int-num">' + esc(subCode) + '</div>' +
-        '<div class="int-data">' +
-          '<div class="int-nombre">' + esc(nombre) + '</div>' +
-          (grupo && grupo !== nombre ? '<div class="int-grupo">' + esc(grupo) + '</div>' : '') +
-        '</div>' +
-      '</div>';
-    });
-    html += '</div>';
-  } else if (ins.cant_personas > 1) {
-    html += '<div class="card"><div class="card-title">Integrantes (' + ins.cant_personas + ')</div>';
-    for (let i=0; i<ins.cant_personas; i++) {
-      html += '<div class="int-item">' +
-        '<div class="int-num">' + esc(codigoLegible + "-" + (i+1)) + '</div>' +
-        '<div class="int-data">' +
-          '<div class="int-nombre" style="color:rgba(248,245,238,.4);font-style:italic">Integrante ' + (i+1) + '</div>' +
-          '<div class="int-grupo">Datos no cargados</div>' +
-        '</div>' +
-      '</div>';
-    }
-    html += '</div>';
-  }
+        let categorias = [];
+        try {
+          categorias =
+            typeof ins.categorias === "string"
+              ? JSON.parse(ins.categorias)
+              : ins.categorias || [];
+          if (!Array.isArray(categorias)) categorias = [];
+        } catch (e) {
+          categorias = [];
+        }
 
-  let categorias = [];
-  try {
-    categorias = typeof ins.categorias === "string" ? JSON.parse(ins.categorias) : (ins.categorias || []);
-    if (!Array.isArray(categorias)) categorias = [];
-  } catch(e){ categorias = []; }
+        html +=
+          '<div class="card"><div class="card-title">Categorías inscriptas (' +
+          categorias.length +
+          ")</div>";
+        if (categorias.length === 0) {
+          html +=
+            '<div class="no-cats">No hay categorías registradas aún</div>';
+        } else {
+          categorias.forEach(function (cat) {
+            html +=
+              '<div class="cat-item">' +
+              '<div class="cat-header">' +
+              '<span class="cat-num">N° ' +
+              esc(cat.c || "—") +
+              "</span>" +
+              '<span class="cat-genero">' +
+              esc(cat.g || "") +
+              "</span>" +
+              "</div>" +
+              '<div class="cat-nombre">' +
+              esc(cat.n || "Sin nombre") +
+              "</div>" +
+              "</div>";
+          });
+        }
+        html += "</div>";
 
-  html += '<div class="card"><div class="card-title">Categorías inscriptas (' + categorias.length + ')</div>';
-  if (categorias.length === 0) {
-    html += '<div class="no-cats">No hay categorías registradas aún</div>';
-  } else {
-    categorias.forEach(function(cat){
-      html += '<div class="cat-item">' +
-        '<div class="cat-header">' +
-          '<span class="cat-num">N° ' + esc(cat.c||"—") + '</span>' +
-          '<span class="cat-genero">' + esc(cat.g||"") + '</span>' +
-        '</div>' +
-        '<div class="cat-nombre">' + esc(cat.n||"Sin nombre") + '</div>' +
-      '</div>';
-    });
-  }
-  html += '</div>';
+        html +=
+          '<div class="card"><div class="card-title">Datos de la inscripción</div>' +
+          row("Responsable", esc(ins.nombre || "—")) +
+          row("Modalidad", esc(ins.modalidad || "—")) +
+          row(
+            "Email",
+            "<span style=\"font-family:'JetBrains Mono',monospace;font-size:12px\">" +
+              esc(ins.email || "—") +
+              "</span>",
+          ) +
+          (ins.celular
+            ? row(
+                "Celular",
+                "<span style=\"font-family:'JetBrains Mono',monospace;font-size:12px\">" +
+                  esc(ins.celular) +
+                  "</span>",
+              )
+            : "") +
+          row(
+            "Monto",
+            '<span style="color:#C9A84C;font-weight:600">' +
+              (ins.moneda || "ARS") +
+              " " +
+              (+(ins.monto_total || 0)).toLocaleString("es-AR") +
+              "</span>",
+          ) +
+          row(
+            "Fecha inscripción",
+            ins.created_at
+              ? new Date(ins.created_at).toLocaleString("es-AR")
+              : "—",
+          ) +
+          "</div>";
 
-  html += '<div class="card"><div class="card-title">Datos de la inscripción</div>' +
-    row("Responsable", esc(ins.nombre || "—")) +
-    row("Modalidad", esc(ins.modalidad || "—")) +
-    row("Email", '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px">' + esc(ins.email||"—") + '</span>') +
-    (ins.celular ? row("Celular", '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px">' + esc(ins.celular) + '</span>') : "") +
-    row("Monto", '<span style="color:#C9A84C;font-weight:600">' + (ins.moneda || "ARS") + " " + (+(ins.monto_total||0)).toLocaleString("es-AR") + '</span>') +
-    row("Fecha inscripción", ins.created_at ? new Date(ins.created_at).toLocaleString("es-AR") : "—") +
-  '</div>';
+        // PAGO: VIAMONTE2600 para NAC/REP/REG. Prex para INTER.
+        if (pe !== "confirmado") {
+          if (inst === "nac" || inst === "rep" || inst === "reg") {
+            html +=
+              '<div class="card"><div class="card-title">Datos para el pago</div>' +
+              '<div class="pago-box">' +
+              '<div class="pago-label">Transferencia bancaria</div>' +
+              '<div class="pago-field"><div class="pago-k">Alias</div><div class="pago-v">VIAMONTE2600</div></div>' +
+              '<div class="pago-field"><div class="pago-k">CBU</div><div class="pago-v">000000310009572128629</div></div>' +
+              '<div class="pago-field"><div class="pago-k">Titular</div><div class="pago-v serif">Liliana Naomi Tanabe</div></div>' +
+              '<div class="pago-foot">Una vez transferido, enviá el comprobante a la organización para confirmar tu inscripción.</div>' +
+              "</div>" +
+              "</div>";
+          } else if (inst === "int") {
+            html +=
+              '<div class="card"><div class="card-title">Datos para el pago · Inter América</div>' +
+              '<div class="pago-box">' +
+              '<div class="pago-label">Pago exclusivo vía Prex</div>' +
+              '<div class="pago-field"><div class="pago-k">Plataforma</div><div class="pago-v serif">Prex</div></div>' +
+              '<div class="pago-field"><div class="pago-k">Cuenta / Alias Prex</div><div class="pago-v" style="color:#E8A838;font-size:13px">35722990</div></div>' +
+              '<div class="pago-field"><div class="pago-k">Titular responsable</div><div class="pago-v serif" style="color:#E8A838;font-size:14px">Nelson Gastón Vidarte</div></div>' +
+              '<div class="pago-foot">La instancia Inter América se abona <strong style="color:#C9A84C">exclusivamente</strong> vía Prex. Contactá a la organización para recibir los datos de cuenta.</div>' +
+              "</div>" +
+              "</div>";
+          }
+        }
 
-  // PAGO: VIAMONTE2600 para NAC/REP/REG. Prex para INTER.
-  if (pe !== "confirmado") {
-    if (inst === "nac" || inst === "rep" || inst === "reg") {
-      html += '<div class="card"><div class="card-title">Datos para el pago</div>' +
-        '<div class="pago-box">' +
-          '<div class="pago-label">Transferencia bancaria</div>' +
-          '<div class="pago-field"><div class="pago-k">Alias</div><div class="pago-v">VIAMONTE2600</div></div>' +
-          '<div class="pago-field"><div class="pago-k">CBU</div><div class="pago-v">000000310009572128629</div></div>' +
-          '<div class="pago-field"><div class="pago-k">Titular</div><div class="pago-v serif">Liliana Naomi Tanabe</div></div>' +
-          '<div class="pago-foot">Una vez transferido, enviá el comprobante a la organización para confirmar tu inscripción.</div>' +
-        '</div>' +
-      '</div>';
-    } else if (inst === "int") {
-      html += '<div class="card"><div class="card-title">Datos para el pago · Inter América</div>' +
-        '<div class="pago-box">' +
-          '<div class="pago-label">Pago exclusivo vía Prex</div>' +
-          '<div class="pago-field"><div class="pago-k">Plataforma</div><div class="pago-v serif">Prex</div></div>' +
-          '<div class="pago-field"><div class="pago-k">Cuenta / Alias Prex</div><div class="pago-v" style="color:#E8A838;font-size:13px">A confirmar con la organización</div></div>' +
-          '<div class="pago-field"><div class="pago-k">Titular responsable</div><div class="pago-v serif" style="color:#E8A838;font-size:14px">A confirmar con la organización</div></div>' +
-          '<div class="pago-foot">La instancia Inter América se abona <strong style="color:#C9A84C">exclusivamente</strong> vía Prex. Contactá a la organización para recibir los datos de cuenta.</div>' +
-        '</div>' +
-      '</div>';
-    }
-  }
+        html +=
+          '<div class="card"><div class="card-title">Código QR de esta credencial</div>' +
+          '<div class="qr-self"><img src="' +
+          qrUrl +
+          '" alt="QR" /></div>' +
+          '<div class="qr-text">Esta misma URL · Escanealo desde otro dispositivo para compartir</div>' +
+          "</div>";
 
-  html += '<div class="card"><div class="card-title">Código QR de esta credencial</div>' +
-    '<div class="qr-self"><img src="' + qrUrl + '" alt="QR" /></div>' +
-    '<div class="qr-text">Esta misma URL · Escanealo desde otro dispositivo para compartir</div>' +
-  '</div>';
+        document.getElementById("content").innerHTML = html;
+      }
 
-  document.getElementById("content").innerHTML = html;
-}
-
-init();
-</script>
-</body>
+      init();
+    </script>
+  </body>
 </html>
