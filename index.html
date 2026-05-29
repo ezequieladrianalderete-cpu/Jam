@@ -6602,6 +6602,63 @@
     + '[id="mslots"]::before, [id="mslots"]::after, #reg-mslot::before, #reg-mslot::after { content: none !important; background: none !important; }';
   if (document.head) document.head.appendChild(__jamStyleReset);
   else document.addEventListener("DOMContentLoaded", function(){ document.head.appendChild(__jamStyleReset); });
+  // ========= Precios dinámicos (v5) =========
+  var __jamPrecios = null;
+  async function __jamLoadPrecios(){
+    try {
+      var r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1&select=config",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+      var d = await r.json();
+      __jamPrecios = (d && d[0] && d[0].config) || null;
+    } catch(e){ console.warn("[JAM] no se pudo cargar precios", e); }
+  }
+  function __jamGetExtraActual(extras){
+    if (!extras) return 0;
+    var m = new Date().getMonth() + 1;
+    if (m >= 4 && m <= 5) return extras.abril_mayo || 0;
+    if (m >= 6 && m <= 7) return extras.junio_julio || 0;
+    if (m >= 8 && m <= 9) return extras.agosto_septiembre || 0;
+    return 0;
+  }
+  function __jamCalcMonto(body){
+    if (!__jamPrecios) return null;
+    var inst = (body.instancia||"").toLowerCase();
+    var cats = [];
+    try { cats = typeof body.categorias === "string" ? JSON.parse(body.categorias) : (body.categorias || []); } catch(e){}
+    var n = (cats && cats.length) ? cats.length : 1;
+    if (inst === "reg") return __jamPrecios.nacional && __jamPrecios.nacional.sedes_ars;
+    if (inst === "rep") return __jamPrecios.nacional && __jamPrecios.nacional.repesca_ars;
+    if (inst === "nac") {
+      var grupo = body.cant_personas && body.cant_personas > 1;
+      return grupo ? __jamPrecios.nacional.nacional_grupo_ars : __jamPrecios.nacional.nacional_solista_ars;
+    }
+    if (inst === "int") {
+      var base = __jamPrecios.internacional && __jamPrecios.internacional.base_usd || 45;
+      var extra = __jamGetExtraActual(__jamPrecios.internacional && __jamPrecios.internacional.categoria_extra);
+      return base + Math.max(0, n - 1) * extra;
+    }
+    return null;
+  }
+  // Monkey-patch fetch para recalcular monto_total antes del INSERT
+  var __jamOrigFetch = window.fetch;
+  window.fetch = async function(url, opts){
+    try {
+      if (typeof url === "string" && url.indexOf("/rest/v1/inscripciones") >= 0 && opts && opts.method === "POST" && opts.body) {
+        var body = typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
+        if (body && body.instancia) {
+          var newM = __jamCalcMonto(body);
+          if (newM != null && newM !== body.monto_total) {
+            console.log("[JAM] monto recalc: " + body.instancia + " " + body.monto_total + " -> " + newM);
+            body.monto_total = newM;
+            opts = Object.assign({}, opts, { body: JSON.stringify(body) });
+          }
+        }
+      }
+    } catch(e){ console.warn("[JAM] price patch error", e); }
+    return __jamOrigFetch.call(this, url, opts);
+  };
+  // Cargar precios al inicio
+  __jamLoadPrecios();
+
         var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
         var SB_ANON =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
