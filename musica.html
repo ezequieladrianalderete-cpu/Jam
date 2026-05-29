@@ -1,348 +1,281 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="background:#080808">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#0a0a0a" />
-<title>JAM 2026 — Subí tu música</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#080808" />
+<title>Subir música — JAM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0a0a; color: #f5f5f5; min-height: 100vh; padding: 20px; display: flex; align-items: flex-start; justify-content: center; }
-  .wrap { width: 100%; max-width: 560px; }
-  .header { text-align: center; margin-bottom: 24px; }
-  .header h1 { color: #d32f2f; font-size: 28px; margin-bottom: 8px; }
-  .header p { color: #888; font-size: 14px; }
-  .card { background: #1a1a1a; border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid #2a2a2a; }
-  .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-  .meta-row:last-child { border: 0; }
-  .meta-row .k { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
-  .meta-row .v { color: #fff; font-weight: 600; text-align: right; }
-  .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
-  .badge.nac { background: #1976d2; }
-  .badge.int { background: #d32f2f; }
-  .badge.rep { background: #7b1fa2; }
-  .badge.reg { background: #455a64; }
-  .badge.cargada { background: #388e3c; }
-  .badge.pendiente { background: #f57c00; }
-
-  .drop {
-    border: 2px dashed #444;
-    border-radius: 12px;
-    padding: 36px 20px;
-    text-align: center;
-    transition: all 0.2s;
-    cursor: pointer;
-    background: #111;
-  }
-  .drop:hover, .drop.drag { border-color: #d32f2f; background: #1a1010; }
-  .drop .icon { font-size: 48px; margin-bottom: 10px; }
-  .drop h3 { color: #fff; font-size: 16px; margin-bottom: 6px; }
-  .drop p { color: #888; font-size: 13px; }
-  .drop input[type=file] { display: none; }
-
-  .file-info { background: #111; border-radius: 8px; padding: 14px; margin-top: 16px; display: none; }
-  .file-info.show { display: block; }
-  .file-info .name { color: #fff; font-weight: 600; font-size: 14px; word-break: break-all; margin-bottom: 4px; }
-  .file-info .size { color: #888; font-size: 12px; }
-  .file-info audio { width: 100%; margin-top: 12px; }
-
-  .progress { background: #0a0a0a; border-radius: 6px; height: 10px; overflow: hidden; margin: 16px 0; display: none; }
-  .progress.show { display: block; }
-  .progress-bar { background: linear-gradient(90deg, #d32f2f, #ff5252); height: 100%; transition: width 0.2s; width: 0%; }
-
-  button {
-    background: #d32f2f; color: #fff; border: 0;
-    padding: 14px 22px; border-radius: 8px;
-    cursor: pointer; font-size: 15px; font-weight: 700;
-    width: 100%; transition: all 0.15s;
-    margin-top: 14px;
-  }
-  button:hover { background: #b71c1c; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.secondary { background: #333; }
-  button.secondary:hover { background: #444; }
-
-  .alert { padding: 14px; border-radius: 8px; margin: 14px 0; font-size: 13px; line-height: 1.5; }
-  .alert.err { background: rgba(211, 47, 47, 0.15); border-left: 3px solid #d32f2f; color: #ff8a80; }
-  .alert.ok { background: rgba(56, 142, 60, 0.15); border-left: 3px solid #388e3c; color: #81c784; }
-  .alert.info { background: rgba(25, 118, 210, 0.15); border-left: 3px solid #1976d2; color: #90caf9; }
-  .alert.warn { background: rgba(245, 124, 0, 0.15); border-left: 3px solid #f57c00; color: #ffb74d; }
-
-  .loading { text-align: center; padding: 60px 20px; color: #888; }
-  .spinner { display: inline-block; width: 40px; height: 40px; border: 3px solid #333; border-top-color: #d32f2f; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .footer { text-align: center; margin-top: 20px; color: #555; font-size: 11px; }
-  .conn-indicator { position: fixed; top: 10px; right: 10px; padding: 4px 10px; border-radius: 12px; font-size: 11px; background: rgba(0,0,0,0.7); display: none; }
-  .conn-indicator.show { display: block; }
-  .conn-indicator.off { color: #f44; }
-  .conn-indicator.on { color: #4caf50; }
+html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:580px;margin:0 auto;padding:24px 16px}
+.header{text-align:center;margin-bottom:28px;padding-top:16px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;letter-spacing:6px;color:#C9A84C;margin-bottom:4px}
+.sub{font-size:11px;color:rgba(248,245,238,.4);letter-spacing:2px;text-transform:uppercase}
+.tarjeta{background:linear-gradient(135deg,#111,#1a1800);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:24px;position:relative;overflow:hidden;margin-bottom:14px}
+.tarjeta::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%)}
+.codigo{font-family:'JetBrains Mono',monospace;font-size:18px;color:#C9A84C;letter-spacing:2px;font-weight:500;margin-bottom:10px;position:relative}
+.nombre{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:#F8F5EE;position:relative;line-height:1.1}
+.info{font-size:13px;color:rgba(248,245,238,.55);margin-top:6px;position:relative}
+.card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:700;color:rgba(248,245,238,.45);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:14px;background:#C9A84C;border-radius:2px}
+.dropzone{border:2px dashed rgba(201,168,76,.35);border-radius:14px;padding:48px 20px;text-align:center;background:rgba(201,168,76,.04);cursor:pointer;transition:all .2s}
+.dropzone:hover,.dropzone.drag{border-color:#C9A84C;background:rgba(201,168,76,.1);transform:translateY(-1px)}
+.dropzone.disabled{opacity:.5;pointer-events:none}
+.dz-icon{font-size:48px;margin-bottom:12px;color:#C9A84C}
+.dz-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:#F8F5EE;margin-bottom:6px;font-weight:600}
+.dz-sub{font-size:12px;color:rgba(248,245,238,.45)}
+.file-info{background:#1a1600;border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:14px;margin-top:14px;display:none}
+.file-info.show{display:block}
+.file-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F8F5EE;word-break:break-all;margin-bottom:4px}
+.file-size{font-size:11px;color:rgba(248,245,238,.5)}
+.progress{background:#1a1600;border:1px solid rgba(201,168,76,.2);border-radius:10px;overflow:hidden;height:10px;margin-top:10px;display:none}
+.progress.show{display:block}
+.progress-bar{background:linear-gradient(90deg,#C9A84C,#E8A838);height:100%;width:0;transition:width .3s;border-radius:8px}
+.btn-main{background:#C9A84C;color:#0A0A0A;border:none;padding:14px 24px;border-radius:10px;font-weight:700;font-size:14px;letter-spacing:.5px;cursor:pointer;width:100%;margin-top:14px;font-family:'Outfit',sans-serif;text-transform:uppercase}
+.btn-main:hover{background:#E8A838}
+.btn-main:disabled{background:#2a2a2a;color:rgba(248,245,238,.3);cursor:not-allowed}
+.alert{padding:14px;border-radius:10px;margin-top:10px;font-size:13px;line-height:1.5;display:flex;align-items:flex-start;gap:8px}
+.alert-ok{background:rgba(76,175,125,.1);border:1px solid rgba(76,175,125,.3);color:#4CAF7D}
+.alert-err{background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);color:#E0524C}
+.alert-info{background:rgba(75,150,216,.08);border:1px solid rgba(75,150,216,.2);color:#4B96D8}
+.player{margin-top:14px}
+.player audio{width:100%;height:42px}
+.loading{text-align:center;padding:80px 20px;color:rgba(248,245,238,.5)}
+.spinner{display:inline-block;width:50px;height:50px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{text-align:center;margin-top:32px;color:rgba(248,245,238,.3);font-size:11px;line-height:1.8;padding-bottom:24px}
+.footer strong{color:rgba(248,245,238,.5)}
+.divider{width:60px;height:2px;background:#C9A84C;margin:24px auto;opacity:.4}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;margin-top:8px}
+.status-green{background:#001a0a;color:#4CAF7D;border:1px solid rgba(76,175,125,.3)}
+.status-gray{background:#1a1a1a;color:rgba(248,245,238,.5);border:1px solid rgba(255,255,255,.1)}
+input[type=file]{display:none}
 </style>
 </head>
 <body>
 
-<div id="connIndicator" class="conn-indicator"></div>
-
 <div class="wrap">
   <div class="header">
-    <h1>JAM 2026</h1>
-    <p>Subí tu tema para la competencia</p>
+    <div class="logo">JAM</div>
+    <div class="sub">Subí tu música · 2026</div>
   </div>
 
   <div id="content">
     <div class="card">
       <div class="loading">
         <div class="spinner"></div>
-        <p style="margin-top:14px">Cargando tu inscripción...</p>
+        <p style="margin-top:18px;font-size:13px">Validando tu link...</p>
       </div>
     </div>
   </div>
 
-  <div class="footer">JAM Dance Competition 2026 · 2, 3 y 4 de Octubre · Palais Rouge, CABA</div>
+  <div class="footer">
+    <div class="divider"></div>
+    <strong>JAM Inter América Dance Competition 2026</strong><br>
+    2, 3 y 4 de Octubre · Palais Rouge, CABA
+  </div>
 </div>
 
 <script>
 const SB_URL  = "https://paexpktmcytccjphoppu.supabase.co";
 const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+const BUCKET = "musica";
+const MAX_SIZE = 50 * 1024 * 1024;
 
-let currentInsc = null;
+const INSTANCIA_CFG = {
+  reg:{prefix:"REG",offset:1,pad:4,label:"Sedes"},
+  rep:{prefix:"REP",offset:10,pad:4,label:"Repechaje"},
+  nac:{prefix:"NAC",offset:200,pad:4,label:"Final Nacional"},
+  int:{prefix:"INTER",offset:1000,pad:4,label:"Final Inter América"}
+};
+
+function esc(s){return (s==null?"":String(s)).replace(/[<>&"]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));}
+function fmtSize(b){if(b<1024)return b+' B';if(b<1024*1024)return (b/1024).toFixed(1)+' KB';return (b/1024/1024).toFixed(2)+' MB';}
+
+let currentIns = null;
+let codigoLegible = "";
 let selectedFile = null;
 
-function esc(s) { return (s == null ? "" : String(s)).replace(/[<>&"]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;","\"":"&quot;"}[c])); }
-function fmtSize(b) { if (b < 1024) return b + " B"; if (b < 1024*1024) return (b/1024).toFixed(1) + " KB"; return (b/(1024*1024)).toFixed(2) + " MB"; }
+async function init(){
+  const params = new URLSearchParams(location.search);
+  const token = params.get("token");
+  if (!token) return showErr("Falta el token","Esta página necesita el link completo que te enviamos por mail.");
+  if (!/^[a-f0-9-]{30,}$/i.test(token)) return showErr("Token inválido","El token del link no es válido.");
 
-function updateConn() {
-  const el = document.getElementById("connIndicator");
-  if (!navigator.onLine) {
-    el.textContent = "⚠️ Sin conexión";
-    el.className = "conn-indicator show off";
-  } else {
-    el.className = "conn-indicator";
-  }
-}
-window.addEventListener("online", updateConn);
-window.addEventListener("offline", updateConn);
-updateConn();
-
-async function init() {
-  const token = new URLSearchParams(location.search).get("token");
-  if (!token) {
-    return showError("Link inválido", "No se encontró un token de acceso en la URL. Revisá el link que te enviamos por mail.");
-  }
-  if (!navigator.onLine) {
-    return showError("Sin conexión", "Para subir tu música necesitás estar conectado a internet. Intentá de nuevo cuando tengas conexión.");
-  }
   try {
     const r = await fetch(SB_URL + "/rest/v1/inscripciones?musica_token=eq." + encodeURIComponent(token) + "&select=*", {
-      headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON }
+      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON }
     });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const rows = await r.json();
-    if (!rows.length) return showError("Token inválido", "No encontramos una inscripción asociada a este link. Si lo copiaste a mano, asegurate de incluir el token completo.");
-    currentInsc = rows[0];
-    renderInscripcion();
-  } catch (e) {
-    showError("Error al cargar", "No pudimos cargar tu inscripción. Intentá recargar la página o escribínos.");
+    if (!rows.length) return showErr("Link inválido","No encontramos tu inscripción con ese token. Verificá que el link esté completo.");
+    currentIns = rows[0];
+
+    const cfg = INSTANCIA_CFG[(currentIns.instancia||"").toLowerCase()] || {prefix:(currentIns.instancia||"").toUpperCase(),offset:1,pad:4,label:""};
+    try {
+      const seqResp = await fetch(SB_URL + "/rest/v1/inscripciones?instancia=eq." + encodeURIComponent(currentIns.instancia) + "&created_at=lte." + encodeURIComponent(currentIns.created_at) + "&select=id&order=created_at.asc", {
+        headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON }
+      });
+      const seqRows = await seqResp.json();
+      let pos = seqRows.findIndex(x => x.id === currentIns.id) + 1;
+      if (pos < 1) pos = seqRows.length;
+      const num = cfg.offset + (Math.max(pos,1) - 1);
+      codigoLegible = "JAM-" + cfg.prefix + "-" + String(num).padStart(cfg.pad,"0");
+    } catch(e){
+      codigoLegible = "JAM-" + cfg.prefix + "-" + String(cfg.offset).padStart(cfg.pad,"0");
+    }
+    render(cfg);
+  } catch(e){
+    showErr("Error de conexión","No pudimos validar tu link. Intentá de nuevo en un momento.");
     console.error(e);
   }
 }
 
-function showError(title, msg) {
+function showErr(title,msg){
   document.getElementById("content").innerHTML =
-    '<div class="card"><h2 style="color:#ff5252;margin-bottom:8px;font-size:18px">' + esc(title) + '</h2>' +
-    '<div class="alert err">' + esc(msg) + '</div></div>';
+    '<div class="card"><h2 style="color:#E05252;margin-bottom:14px;font-size:17px;font-family:\'Cormorant Garamond\',serif;font-weight:600">'+esc(title)+'</h2><div class="alert alert-err"><div>'+esc(msg)+'</div></div></div>';
 }
 
-function renderInscripcion() {
-  const i = currentInsc;
-  const inst = (i.instancia || "").toLowerCase();
-  const yaCargada = i.musica_estado === "cargada" && i.musica_url;
+function render(cfg){
+  const ins = currentIns;
+  const grupo = ins.nombre_grupo || ins.nombre || "";
+  const ya = ins.musica_estado === "cargada" && ins.musica_url;
 
-  let metaHtml =
-    '<div class="card">' +
-      '<h2 style="color:#ff5252;margin-bottom:12px;font-size:18px">Tu inscripción</h2>' +
-      row("Nombre", esc(i.nombre || "")) +
-      row("Instancia", '<span class="badge ' + inst + '">' + (i.instancia||"").toUpperCase() + '</span>') +
-      row("Modalidad", esc(i.modalidad || "") + (i.cant_personas > 1 ? " (" + i.cant_personas + ")" : "")) +
-      row("Música", '<span class="badge ' + (yaCargada ? "cargada" : "pendiente") + '">' + (yaCargada ? "cargada" : "pendiente") + '</span>') +
+  let html = '<div class="tarjeta">' +
+    '<div class="codigo">'+esc(codigoLegible)+'</div>' +
+    '<div class="nombre">'+esc(grupo)+'</div>' +
+    '<div class="info">'+esc(cfg.label)+(ins.modalidad?' · '+esc(ins.modalidad):'')+'</div>' +
+    '<div class="status-badge '+(ya?'status-green':'status-gray')+'">'+(ya?'♪ Música cargada':'Pendiente de carga')+'</div>' +
+  '</div>';
+
+  if (ya) {
+    html += '<div class="card"><div class="card-title">Tu música actual</div>' +
+      '<div class="file-info show">' +
+        '<div class="file-name">'+esc(ins.musica_nombre||'audio')+'</div>' +
+        '<div class="file-size" style="color:#4CAF7D">✓ Subida correctamente</div>' +
+      '</div>' +
+      '<div class="player"><audio controls src="'+esc(ins.musica_url)+'"></audio></div>' +
+      '<div class="alert alert-info"><div>Si querés <strong>cambiar</strong> el archivo, podés subir uno nuevo abajo. Reemplazará al anterior.</div></div>' +
     '</div>';
-
-  let uploadHtml;
-  if (yaCargada) {
-    uploadHtml =
-      '<div class="card">' +
-        '<h2 style="color:#ff5252;margin-bottom:12px;font-size:18px">Música actual</h2>' +
-        '<div class="alert ok">✓ Ya cargaste tu tema. Podés escucharlo abajo o reemplazarlo por otro.</div>' +
-        '<div class="file-info show">' +
-          '<div class="name">' + esc(i.musica_nombre || "tema actual") + '</div>' +
-          '<audio controls preload="metadata" src="' + esc(i.musica_url) + '"></audio>' +
-        '</div>' +
-        '<button class="secondary" onclick="enableReplace()">Reemplazar por otro tema</button>' +
-        '<div id="replaceSlot"></div>' +
-      '</div>';
-  } else {
-    uploadHtml = renderUploadUI();
   }
 
-  document.getElementById("content").innerHTML = metaHtml + uploadHtml;
-  if (!yaCargada) bindUploadUI();
-}
-
-function row(k, v) { return '<div class="meta-row"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
-
-function renderUploadUI() {
-  return '<div class="card">' +
-    '<h2 style="color:#ff5252;margin-bottom:12px;font-size:18px">Subí tu tema</h2>' +
-    '<div class="alert info">Formatos aceptados: MP3, WAV, M4A, OGG. Máximo 50 MB.</div>' +
-    '<label class="drop" id="dropZone">' +
-      '<div class="icon">🎵</div>' +
-      '<h3>Arrastrá tu archivo de audio</h3>' +
-      '<p>o tocá para seleccionarlo</p>' +
-      '<input type="file" id="fileInput" accept="audio/*" />' +
-    '</label>' +
-    '<div class="file-info" id="fileInfo">' +
-      '<div class="name" id="fileName"></div>' +
-      '<div class="size" id="fileSize"></div>' +
-      '<audio controls id="filePreview"></audio>' +
+  html += '<div class="card"><div class="card-title">'+(ya?'Cambiar música':'Subir tu música')+'</div>' +
+    '<div class="dropzone" id="dz">' +
+      '<div class="dz-icon">♪</div>' +
+      '<div class="dz-title">Tocá o arrastrá un archivo</div>' +
+      '<div class="dz-sub">MP3, WAV, M4A, OGG · Máximo 50 MB</div>' +
+    '</div>' +
+    '<input type="file" id="fileInput" accept="audio/*" />' +
+    '<div class="file-info" id="filePicked">' +
+      '<div class="file-name" id="pickedName"></div>' +
+      '<div class="file-size" id="pickedSize"></div>' +
     '</div>' +
     '<div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>' +
-    '<div id="uploadAlert"></div>' +
-    '<button id="uploadBtn" disabled>Subir tema</button>' +
+    '<button class="btn-main" id="uploadBtn" disabled>Subir archivo</button>' +
+    '<div id="resultMsg"></div>' +
   '</div>';
+
+  document.getElementById("content").innerHTML = html;
+  bindUpload();
 }
 
-function enableReplace() {
-  document.getElementById("replaceSlot").innerHTML = renderUploadUI().replace('<div class="card">', '<div class="card" style="margin-top:16px">');
-  bindUploadUI();
-  document.getElementById("replaceSlot").scrollIntoView({behavior: "smooth"});
-}
-
-function bindUploadUI() {
-  const drop = document.getElementById("dropZone");
-  const input = document.getElementById("fileInput");
+function bindUpload(){
+  const dz = document.getElementById("dz");
+  const fi = document.getElementById("fileInput");
   const btn = document.getElementById("uploadBtn");
 
-  if (!drop) return;
-
-  drop.addEventListener("click", () => input.click());
-  input.addEventListener("change", e => handleFile(e.target.files[0]));
-
-  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("drag"); });
-  drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
-  drop.addEventListener("drop", e => {
+  dz.addEventListener("click", ()=> fi.click());
+  dz.addEventListener("dragover", e=>{e.preventDefault();dz.classList.add("drag")});
+  dz.addEventListener("dragleave", ()=> dz.classList.remove("drag"));
+  dz.addEventListener("drop", e=>{
     e.preventDefault();
-    drop.classList.remove("drag");
-    handleFile(e.dataTransfer.files[0]);
+    dz.classList.remove("drag");
+    if(e.dataTransfer.files && e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]);
   });
-
-  btn.addEventListener("click", doUpload);
+  fi.addEventListener("change", e=>{
+    if(e.target.files && e.target.files[0]) pickFile(e.target.files[0]);
+  });
+  btn.addEventListener("click", upload);
 }
 
-function handleFile(file) {
-  if (!file) return;
-  const alert = document.getElementById("uploadAlert");
-  alert.innerHTML = "";
-
-  if (!file.type.startsWith("audio/")) {
-    alert.innerHTML = '<div class="alert err">El archivo no es un audio válido. Subí un MP3, WAV, M4A o similar.</div>';
+function pickFile(f){
+  if(!f.type.startsWith("audio/")){
+    showResult("err","El archivo debe ser de audio (MP3, WAV, M4A, OGG).");
     return;
   }
-  if (file.size > MAX_BYTES) {
-    alert.innerHTML = '<div class="alert err">El archivo pesa ' + fmtSize(file.size) + '. El límite es 50 MB.</div>';
+  if(f.size > MAX_SIZE){
+    showResult("err","El archivo supera los 50 MB. Convertilo a MP3 192kbps si es muy grande.");
     return;
   }
-
-  selectedFile = file;
-  document.getElementById("fileName").textContent = file.name;
-  document.getElementById("fileSize").textContent = fmtSize(file.size) + " · " + (file.type || "audio");
-  document.getElementById("filePreview").src = URL.createObjectURL(file);
-  document.getElementById("fileInfo").classList.add("show");
+  selectedFile = f;
+  document.getElementById("pickedName").textContent = f.name;
+  document.getElementById("pickedSize").textContent = fmtSize(f.size);
+  document.getElementById("filePicked").classList.add("show");
   document.getElementById("uploadBtn").disabled = false;
+  document.getElementById("resultMsg").innerHTML = "";
 }
 
-function doUpload() {
-  if (!selectedFile || !currentInsc) return;
-  if (!navigator.onLine) {
-    document.getElementById("uploadAlert").innerHTML = '<div class="alert err">Sin conexión. Esperate a tener internet.</div>';
-    return;
-  }
-
+async function upload(){
+  if(!selectedFile || !currentIns) return;
   const btn = document.getElementById("uploadBtn");
   const prog = document.getElementById("progress");
   const bar = document.getElementById("progressBar");
-  const alert = document.getElementById("uploadAlert");
-
   btn.disabled = true;
   btn.textContent = "Subiendo...";
   prog.classList.add("show");
-  bar.style.width = "0%";
-  alert.innerHTML = "";
 
-  const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 80);
-  const path = currentInsc.id + "/" + Date.now() + "-" + safeName;
-  const uploadUrl = SB_URL + "/storage/v1/object/musica/" + path;
-  const publicUrl = SB_URL + "/storage/v1/object/public/musica/" + path;
+  try {
+    const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g,"_").substring(0,80);
+    const path = currentIns.id + "-" + Date.now() + "-" + safeName;
+    const url = SB_URL + "/storage/v1/object/" + BUCKET + "/" + path;
+    const pubUrl = SB_URL + "/storage/v1/object/public/" + BUCKET + "/" + path;
 
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", uploadUrl);
-  xhr.setRequestHeader("Authorization", "Bearer " + SB_ANON);
-  xhr.setRequestHeader("apikey", SB_ANON);
-  xhr.setRequestHeader("x-upsert", "true");
-  xhr.setRequestHeader("Content-Type", selectedFile.type || "audio/mpeg");
+    const xhr = new XMLHttpRequest();
+    await new Promise((resolve,reject)=>{
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Authorization","Bearer "+SB_ANON);
+      xhr.setRequestHeader("apikey",SB_ANON);
+      xhr.setRequestHeader("x-upsert","true");
+      xhr.setRequestHeader("Content-Type", selectedFile.type || "audio/mpeg");
+      xhr.upload.onprogress = e=>{
+        if(e.lengthComputable) bar.style.width = (e.loaded/e.total*100).toFixed(0)+"%";
+      };
+      xhr.onload = ()=> xhr.status>=200&&xhr.status<300 ? resolve() : reject(new Error("HTTP "+xhr.status));
+      xhr.onerror = ()=> reject(new Error("Network error"));
+      xhr.send(selectedFile);
+    });
+    bar.style.width = "100%";
 
-  xhr.upload.addEventListener("progress", e => {
-    if (e.lengthComputable) {
-      const pct = (e.loaded / e.total) * 100;
-      bar.style.width = pct + "%";
-      btn.textContent = "Subiendo " + Math.round(pct) + "%...";
-    }
-  });
+    const patch = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq."+currentIns.id, {
+      method:"PATCH",
+      headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json" },
+      body: JSON.stringify({ musica_url: pubUrl, musica_estado:"cargada", musica_nombre: selectedFile.name })
+    });
+    if(!patch.ok) throw new Error("Patch failed");
 
-  xhr.addEventListener("load", async () => {
-    if (xhr.status < 200 || xhr.status >= 300) {
-      alert.innerHTML = '<div class="alert err">Error subiendo el archivo (HTTP ' + xhr.status + '). Intentá de nuevo o escribínos.</div>';
-      btn.disabled = false;
-      btn.textContent = "Subir tema";
-      prog.classList.remove("show");
-      return;
-    }
-    btn.textContent = "Confirmando...";
-    try {
-      const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + currentInsc.id, {
-        method: "PATCH",
-        headers: {
-          apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json", Prefer: "return=representation"
-        },
-        body: JSON.stringify({
-          musica_url: publicUrl,
-          musica_nombre: selectedFile.name,
-          musica_estado: "cargada"
-        })
-      });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const updated = await r.json();
-      currentInsc = updated[0] || currentInsc;
-      alert.innerHTML = '<div class="alert ok">✓ ¡Listo! Tu tema fue cargado correctamente.</div>';
-      btn.textContent = "Subido ✓";
-      btn.disabled = true;
-      prog.classList.remove("show");
-      setTimeout(() => renderInscripcion(), 1500);
-    } catch (e) {
-      alert.innerHTML = '<div class="alert warn">El archivo se subió pero hubo un problema al actualizar tu inscripción. Escribínos para confirmar.</div>';
-      btn.disabled = false;
-      btn.textContent = "Reintentar";
-    }
-  });
-
-  xhr.addEventListener("error", () => {
-    alert.innerHTML = '<div class="alert err">Error de red. Verificá tu conexión e inten tá de nuevo.</div>';
+    showResult("ok","¡Música subida correctamente! Tu inscripción ya tiene el audio asociado.");
+    btn.textContent = "Subir otra";
+    btn.disabled = true;
+    selectedFile = null;
+    document.getElementById("filePicked").classList.remove("show");
+    setTimeout(()=>{ location.reload(); }, 2000);
+  } catch(e){
+    console.error(e);
+    showResult("err","Error subiendo: "+e.message+". Intentá de nuevo.");
+    btn.textContent = "Reintentar";
     btn.disabled = false;
-    btn.textContent = "Subir tema";
     prog.classList.remove("show");
-  });
+    bar.style.width = "0";
+  }
+}
 
-  xhr.send(selectedFile);
+function showResult(type,msg){
+  document.getElementById("resultMsg").innerHTML =
+    '<div class="alert alert-'+type+'"><div>'+esc(msg)+'</div></div>';
 }
 
 init();
