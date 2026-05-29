@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
     />
     <title>Inscripciones — JAM 2026</title>
-    <link rel="icon" type="image/png" href="./public/imgs/logo-int.png" />
+    <link rel="icon" type="image/png" href="./imgs/logo-int.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -1312,7 +1312,7 @@
       <div id="sok">
         <img
           id="ok-logo"
-          src="./public/imgs/logo-nac.png"
+          src="./imgs/logo-nac.png"
           alt="logo"
           style="
             width: 250px;
@@ -1471,7 +1471,7 @@
       <div id="sok-regional">
         <img
           id="ok-logo-reg"
-          src="./public/imgs/logo-nac.png"
+          src="./imgs/logo-nac.png"
           alt="logo"
           style="
             width: 250px;
@@ -5125,18 +5125,6 @@
               : "Opcional \u2014 pod\u00e9s subirla despu\u00e9s") +
             "</div>" +
             '</div><div class="mx" style="font-size:16px;color:rgba(248,245,238,.25)">+</div></div>';
-          s.onclick = function () {
-            s.classList.remove("click");
-            s.classList.add("upl");
-            s.querySelector(".mf").textContent =
-              "Competidor_Cat" + cat.c + ".mp3 \u00b7 1:52 min";
-            s.querySelector(".mf").style.color = "#F8F5EE";
-            s.querySelector(".ms").textContent = "\u2713 Subida correctamente";
-            s.querySelector(".ms").style.color = "#4CAF7D";
-            s.querySelector(".mx").textContent = "\u2713";
-            s.querySelector(".mx").style.color = "#4CAF7D";
-            s.onclick = null;
-          };
           c.appendChild(s);
         });
         // Nota de límites de duración por instancia
@@ -6445,9 +6433,7 @@
         var okLogo = document.getElementById("ok-logo");
         var okLogoReg = document.getElementById("ok-logo-reg");
         var logoSrc =
-          INST === "int"
-            ? "./public/imgs/logo-int.png"
-            : "./public/imgs/logo-nac.png";
+          INST === "int" ? "./imgs/logo-int.png" : "./imgs/logo-nac.png";
         if (okLogo) okLogo.src = logoSrc;
         if (okLogoReg) okLogoReg.src = logoSrc;
         var nacWarn = document.getElementById("ok-nac-warning");
@@ -6495,8 +6481,8 @@
       function tcNac() {
         var pdf =
           INST === "int"
-            ? "./public/docs/TERMINOS-Y-CONDICIONES-INTER-AMERICA-2026.pdf"
-            : "./public/docs/TERMINOS-Y-CONDICIONES-JAM-2026.pdf";
+            ? "/docs/TERMINOS-Y-CONDICIONES-INTER-AMERICA-2026.pdf"
+            : "/docs/TERMINOS-Y-CONDICIONES-JAM-2026.pdf";
         var titulo =
           INST === "int"
             ? "Términos y Condiciones — INTER AMÉRICA 2026"
@@ -6644,7 +6630,7 @@
         function setSlotLabel(t) {
           var s = findActiveSlot();
           if (!s) return;
-          var l = s.querySelector("div");
+          var l = s.querySelector(".mf") || s.querySelector("div");
           if (!l) return;
           if (!l.dataset._orig) l.dataset._orig = l.innerText;
           l.innerText = t;
@@ -6653,8 +6639,45 @@
         function restoreSlotLabel() {
           var s = findActiveSlot();
           if (!s) return;
-          var l = s.querySelector("div");
+          var l = s.querySelector(".mf") || s.querySelector("div");
           if (l && l.dataset._orig) l.innerText = l.dataset._orig;
+        }
+
+        function markSlotUploaded(slotEl, fileName) {
+          if (!slotEl) return;
+          slotEl.classList.remove("click");
+          slotEl.classList.add("upl");
+          if (slotEl.id === "reg-mslot") {
+            slotEl.innerHTML =
+              '<div style="display:flex;align-items:center;gap:10px">' +
+              '<div style="font-size:17px">&#127925;</div>' +
+              '<div style="flex:1">' +
+              '<div style="font-size:13px;color:#F8F5EE">' +
+              fileName +
+              "</div>" +
+              '<div style="font-size:11px;color:#4CAF7D;margin-top:2px">\u2713 Subida correctamente</div>' +
+              '</div><div style="color:#4CAF7D">\u2713</div></div>';
+            slotEl.onclick = function () {
+              pendingSlotEl = slotEl;
+              $audioInput().click();
+            };
+            return;
+          }
+          var mf = slotEl.querySelector(".mf");
+          var ms = slotEl.querySelector(".ms");
+          var mx = slotEl.querySelector(".mx");
+          if (mf) {
+            mf.textContent = fileName;
+            mf.style.color = "#F8F5EE";
+          }
+          if (ms) {
+            ms.textContent = "\u2713 Subida correctamente";
+            ms.style.color = "#4CAF7D";
+          }
+          if (mx) {
+            mx.textContent = "\u2713";
+            mx.style.color = "#4CAF7D";
+          }
         }
 
         async function uploadAudio(file) {
@@ -6701,10 +6724,8 @@
           setSlotLabel("Subiendo: " + f.name);
           try {
             pickedUrl = await uploadAudio(f);
-            if (pendingSlotEl && window.__originalRegSubirMusica) {
-              try {
-                window.__originalRegSubirMusica.call(window, pendingSlotEl);
-              } catch (e) {}
+            if (pendingSlotEl) {
+              markSlotUploaded(pendingSlotEl, f.name);
             }
             setSlotLabel("OK - " + f.name);
             pendingSlotEl = null;
@@ -6720,9 +6741,9 @@
         }
 
         function wireAllSlots() {
-          var mslotsList = document.querySelectorAll('[id="mslots"]');
-          for (var j = 0; j < mslotsList.length; j++) {
-            var slot = mslotsList[j];
+          var slots = document.querySelectorAll("#mslots .mslot, #reg-mslot");
+          for (var j = 0; j < slots.length; j++) {
+            var slot = slots[j];
             if (slot.dataset._jamWired) continue;
             slot.dataset._jamWired = "1";
             slot.style.cursor = "pointer";
