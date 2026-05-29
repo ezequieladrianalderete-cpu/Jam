@@ -184,11 +184,13 @@ function renderShell(){
       <div class="tab active" data-tab="inscriptos">Inscriptos <span class="count" id="cnt-ins">0</span></div>
       <div class="tab" data-tab="djmode">DJ Mode</div>
       <div class="tab" data-tab="sistema">Sistema</div>
+      <div class="tab" data-tab="precios">💰 Precios</div>
     </div>
     <div class="container">
       <div id="pane-inscriptos" class="tab-pane active"></div>
       <div id="pane-djmode" class="tab-pane"></div>
       <div id="pane-sistema" class="tab-pane"></div>
+      <div id="pane-precios" class="tab-pane"></div>
     </div>
   `;
 }
@@ -211,6 +213,7 @@ function renderActiveTab(){
   if(currentTab==="inscriptos") renderInscriptos();
   else if(currentTab==="djmode") renderDjMode();
   else if(currentTab==="sistema") renderSistema();
+  else if(currentTab==="precios") renderPrecios();
 }
 
 async function loadAll(){
@@ -577,6 +580,116 @@ function toast(type, msg){
   t.textContent = msg;
   setTimeout(()=>{ t.style.display="none"; }, 4000);
 }
+
+// ============ TAB PRECIOS ============
+let preciosConfig = null;
+
+async function loadPrecios(){
+  try {
+    const r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1&select=*",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+    const d = await r.json();
+    preciosConfig = d[0]?.config || null;
+    return preciosConfig;
+  } catch(e){
+    toast("err","Error cargando precios: "+e.message);
+    return null;
+  }
+}
+
+function getCategoriaExtraActual(extras){
+  if (!extras) return { value: 0, periodo: "—" };
+  const m = new Date().getMonth() + 1; // 1-12
+  if (m >= 4 && m <= 5) return { value: extras.abril_mayo || 0, periodo: "Abril–Mayo" };
+  if (m >= 6 && m <= 7) return { value: extras.junio_julio || 0, periodo: "Junio–Julio" };
+  if (m >= 8 && m <= 9) return { value: extras.agosto_septiembre || 0, periodo: "Agosto–Septiembre" };
+  return { value: 0, periodo: "Fuera de temporada (sin extra)" };
+}
+
+async function renderPrecios(){
+  if (!preciosConfig) await loadPrecios();
+  if (!preciosConfig) {
+    $("pane-precios").innerHTML = '<div class="empty">No se pudo cargar la configuración de precios. Verificá que la tabla config_precios exista en Supabase.</div>';
+    return;
+  }
+  const cfg = preciosConfig;
+  const extra = getCategoriaExtraActual(cfg.internacional?.categoria_extra);
+  const mesActual = new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"});
+  
+  $("pane-precios").innerHTML = `
+    <div class="stats">
+      <div class="stat gold"><div class="stat-label">Mes actual</div><div class="stat-value" style="font-size:20px;text-transform:capitalize">${mesActual}</div></div>
+      <div class="stat green"><div class="stat-label">Categoría extra HOY</div><div class="stat-value">USD ${extra.value}</div></div>
+      <div class="stat"><div class="stat-label">Período activo</div><div class="stat-value" style="font-size:18px">${extra.periodo}</div></div>
+    </div>
+    
+    <div class="det-block" style="margin-bottom:14px">
+      <div class="det-title" style="color:#C9A84C">Eventos Nacionales (ARS)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
+        <div><label class="det-title">Sedes Regionales</label><input id="p-sedes" type="number" value="${cfg.nacional?.sedes_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+        <div><label class="det-title">Repesca</label><input id="p-repesca" type="number" value="${cfg.nacional?.repesca_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+        <div><label class="det-title">Nacional · Solista</label><input id="p-nac-solo" type="number" value="${cfg.nacional?.nacional_solista_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+        <div><label class="det-title">Nacional · Grupo</label><input id="p-nac-grupo" type="number" value="${cfg.nacional?.nacional_grupo_ars||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+      </div>
+    </div>
+    
+    <div class="det-block" style="margin-bottom:14px">
+      <div class="det-title" style="color:#C9A84C">Inter América (USD)</div>
+      <div style="margin-top:12px">
+        <div style="max-width:280px"><label class="det-title">Base inscripción</label><input id="p-int-base" type="number" value="${cfg.internacional?.base_usd||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+      </div>
+      <div style="margin-top:18px;padding:14px;background:#1a1600;border-radius:10px;border:1px solid rgba(201,168,76,.2)">
+        <div class="det-title" style="color:#C9A84C">Categoría EXTRA (escalonado por mes)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px">
+          <div><label class="det-title">Abril – Mayo</label><input id="p-int-abrmay" type="number" value="${cfg.internacional?.categoria_extra?.abril_mayo||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+          <div><label class="det-title">Junio – Julio</label><input id="p-int-junjul" type="number" value="${cfg.internacional?.categoria_extra?.junio_julio||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+          <div><label class="det-title">Agosto – Septiembre</label><input id="p-int-agosep" type="number" value="${cfg.internacional?.categoria_extra?.agosto_septiembre||0}" class="search-box" style="width:100%;margin-top:4px" /></div>
+        </div>
+        <div style="font-size:11px;color:rgba(248,245,238,.5);margin-top:10px;line-height:1.5">
+          Estos valores se SUMAN al precio base por cada categoría extra. El sistema usa automáticamente el valor del mes en curso.
+        </div>
+      </div>
+    </div>
+    
+    <div style="text-align:center;padding:14px">
+      <button class="btn-primary" onclick="savePrecios()" style="padding:13px 32px;font-size:13px">💾 GUARDAR CAMBIOS</button>
+      <div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:8px">Los nuevos precios aplican a inscripciones futuras. Inscripciones ya creadas conservan su monto original.</div>
+    </div>
+  `;
+}
+
+window.savePrecios = async function(){
+  if (!confirm("¿Guardar los cambios? Aplicarán a todas las inscripciones nuevas a partir de este momento.")) return;
+  const newCfg = {
+    nacional: {
+      sedes_ars: parseInt($("p-sedes").value) || 0,
+      repesca_ars: parseInt($("p-repesca").value) || 0,
+      nacional_solista_ars: parseInt($("p-nac-solo").value) || 0,
+      nacional_grupo_ars: parseInt($("p-nac-grupo").value) || 0
+    },
+    internacional: {
+      base_usd: parseInt($("p-int-base").value) || 0,
+      categoria_extra: {
+        abril_mayo: parseInt($("p-int-abrmay").value) || 0,
+        junio_julio: parseInt($("p-int-junjul").value) || 0,
+        agosto_septiembre: parseInt($("p-int-agosep").value) || 0
+      }
+    }
+  };
+  try {
+    const r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1",{
+      method:"PATCH",
+      headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},
+      body: JSON.stringify({config: newCfg, updated_at: new Date().toISOString()})
+    });
+    if (!r.ok) throw new Error("HTTP "+r.status);
+    preciosConfig = newCfg;
+    toast("ok","Precios guardados ✓");
+    renderPrecios();
+  } catch(e){
+    toast("err","Error guardando: "+e.message);
+  }
+};
+
 </script>
 </body>
 </html>
