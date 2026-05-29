@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
       }
     } catch (e) {}
 
-    const escEq = u => u.replace(/=/g, '&#x3D;');
+    const escEq = u => u;
     const checkUrlRaw = SITE_URL + '/check?id=' + ins.id;
     const checkUrlSafe = escEq(checkUrlRaw);
     const qrUrlRaw = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(checkUrlRaw);
