@@ -6594,6 +6594,14 @@
     <script>
       (function () {
         "use strict";
+
+  // Neutralizar verde/check post-upload (queda solo texto, sin colores)
+  var __jamStyleReset = document.createElement("style");
+  __jamStyleReset.textContent =
+    '[id="mslots"], #reg-mslot { background: inherit !important; color: inherit !important; border-color: inherit !important; }'
+    + '[id="mslots"]::before, [id="mslots"]::after, #reg-mslot::before, #reg-mslot::after { content: none !important; background: none !important; }';
+  if (document.head) document.head.appendChild(__jamStyleReset);
+  else document.addEventListener("DOMContentLoaded", function(){ document.head.appendChild(__jamStyleReset); });
         var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
         var SB_ANON =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
@@ -6732,7 +6740,7 @@
             if (pendingSlotEl) {
               markSlotUploaded(pendingSlotEl, f.name);
             }
-            setSlotLabel("OK - " + f.name);
+            setSlotLabel(f.name);
             pendingSlotEl = null;
             ev.target.value = "";
           } catch (e) {
