@@ -5042,6 +5042,14 @@
             ? "ARS $" + tot.v.toLocaleString("es-AR")
             : "U$S " + tot.v;
         // Usar data-v para evitar conflictos de comillas en onclick
+        var extra =
+          INST === "int"
+            ? '<div class="trrow"><span class="trk">Cuenta Prex</span>' +
+              '<div style="display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:4px">' +
+              '<span class="trv">35722990</span>' +
+              '<button class="cpybtn" data-v="35722990" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
+              "</div></div>"
+            : "";
         ct.innerHTML =
           '<div class="trbox" style="margin-bottom:14px"><div class="trtit">Datos para transferir</div>' +
           '<div class="trrow"><span class="trk">Alias</span>' +
@@ -5064,6 +5072,7 @@
           banco.cbu +
           '" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
           "</div></div>" +
+          extra +
           '<div class="trrow"><span class="trk">Titular</span><span class="trv">' +
           banco.titular +
           "</span></div>" +
@@ -6432,7 +6441,8 @@
         document.getElementById("sform").style.display = "none";
         var okLogo = document.getElementById("ok-logo");
         var okLogoReg = document.getElementById("ok-logo-reg");
-        var logoSrc = INST === "int" ? "/imgs/logo-int.png" : "/imgs/logo-nac.png";
+        var logoSrc =
+          INST === "int" ? "/imgs/logo-int.png" : "/imgs/logo-nac.png";
         if (okLogo) okLogo.src = logoSrc;
         if (okLogoReg) okLogoReg.src = logoSrc;
         var nacWarn = document.getElementById("ok-nac-warning");
