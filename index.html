@@ -6657,7 +6657,7 @@
     return __jamOrigFetch.call(this, url, opts);
   };
   // Cargar precios al inicio
-  __jamLoadPrecios();
+  setTimeout(__jamLoadPrecios, 0);
 
         var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
         var SB_ANON =
