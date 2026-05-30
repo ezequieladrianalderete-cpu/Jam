@@ -238,22 +238,117 @@ function getCategoriaExtraActual(extras){
   return{value:0,periodo:"Fuera de temporada"};
 }
 async function renderPrecios(){
-  if(!preciosConfig)await loadPrecios();
-  if(!preciosConfig){$("pane-precios").innerHTML='<div class="empty">No se pudo cargar la configuración.</div>';return}
-  const cfg=preciosConfig;
-  const e=getCategoriaExtraActual(cfg.internacional?.categoria_extra);
-  const mes=new Date().toLocaleDateString("es-AR",{month:"long",year:"numeric"});
-  $("pane-precios").innerHTML='<div class="stats"><div class="stat gold"><div class="stat-label">Mes actual</div><div class="stat-value" style="font-size:20px;text-transform:capitalize">'+mes+'</div></div><div class="stat green"><div class="stat-label">Cat. extra HOY (INT)</div><div class="stat-value">USD '+e.value+'</div></div><div class="stat"><div class="stat-label">Período activo</div><div class="stat-value" style="font-size:18px">'+e.periodo+'</div></div></div><div class="det-block"><div class="det-title" style="color:#C9A84C">Eventos Nacionales (ARS)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px"><div><label class="det-title">Sedes Regionales</label><input id="p-sedes" type="number" value="'+(cfg.nacional?.sedes_ars||0)+'"></div><div><label class="det-title">Repesca</label><input id="p-repesca" type="number" value="'+(cfg.nacional?.repesca_ars||0)+'"></div><div><label class="det-title">Nacional · Solista</label><input id="p-nac-solo" type="number" value="'+(cfg.nacional?.nacional_solista_ars||0)+'"></div><div><label class="det-title">Nacional · Grupo</label><input id="p-nac-grupo" type="number" value="'+(cfg.nacional?.nacional_grupo_ars||0)+'"></div></div></div><div class="det-block"><div class="det-title" style="color:#C9A84C">Inter América (USD)</div><div style="max-width:280px;margin-top:12px"><label class="det-title">Base inscripción</label><input id="p-int-base" type="number" value="'+(cfg.internacional?.base_usd||0)+'"></div><div style="margin-top:18px;padding:14px;background:#1a1600;border-radius:10px;border:1px solid rgba(201,168,76,.2)"><div class="det-title" style="color:#C9A84C">Categoría EXTRA por mes (USD)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px"><div><label class="det-title">Abril – Mayo</label><input id="p-int-abrmay" type="number" value="'+(cfg.internacional?.categoria_extra?.abril_mayo||0)+'"></div><div><label class="det-title">Junio – Julio</label><input id="p-int-junjul" type="number" value="'+(cfg.internacional?.categoria_extra?.junio_julio||0)+'"></div><div><label class="det-title">Agosto – Septiembre</label><input id="p-int-agosep" type="number" value="'+(cfg.internacional?.categoria_extra?.agosto_septiembre||0)+'"></div></div><div style="font-size:11px;color:rgba(248,245,238,.5);margin-top:10px;line-height:1.5">Se SUMA al precio base por cada categoría extra. Aplica solo a Inter América.</div></div></div><div style="text-align:center;padding:14px"><button class="btn-primary" onclick="savePrecios()" style="padding:13px 32px;font-size:13px">💾 GUARDAR CAMBIOS</button><div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:8px">Aplica a inscripciones nuevas.</div></div>';
-}
-async function savePrecios(){
-  if(!confirm("¿Guardar cambios? Aplicarán a las próximas inscripciones."))return;
-  const c={nacional:{sedes_ars:parseInt($("p-sedes").value)||0,repesca_ars:parseInt($("p-repesca").value)||0,nacional_solista_ars:parseInt($("p-nac-solo").value)||0,nacional_grupo_ars:parseInt($("p-nac-grupo").value)||0},internacional:{base_usd:parseInt($("p-int-base").value)||0,categoria_extra:{abril_mayo:parseInt($("p-int-abrmay").value)||0,junio_julio:parseInt($("p-int-junjul").value)||0,agosto_septiembre:parseInt($("p-int-agosep").value)||0}}};
-  try{
-    const r=await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1",{method:"PATCH",headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON,"Content-Type":"application/json"},body:JSON.stringify({config:c,updated_at:new Date().toISOString()})});
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    preciosConfig=c;toast("ok","Precios guardados ✓");renderPrecios();
-  }catch(e){toast("err","Error: "+e.message)}
-}
+      var box = $('#precios-box');
+      if(!box) return;
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:#888">Cargando precios…</div>';
+      
+      fetch(SB_URL+'/rest/v1/config_precios?id=eq.1&select=config',{
+        headers:{apikey:SB_ANON, Authorization:'Bearer '+SB_ANON}
+      }).then(function(r){return r.json()}).then(function(d){
+        var P = (d && d[0] && d[0].config) || {};
+        var N = P.nacional || {};
+        var I = P.internacional || {};
+        
+        function input(id, val, suffix){
+          var v = val != null ? val : '';
+          return '<div style="margin-bottom:10px"><label style="display:block;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">'+id.replace(/_/g,' ').replace(/ars/i,'(ARS)').replace(/usd/i,'(USD)')+'</label><input id="p_'+id+'" type="number" value="'+v+'" style="width:100%;padding:10px 12px;background:#0e0e0e;color:#F8F5EE;border:1px solid rgba(201,168,76,.3);border-radius:8px;font-size:14px;font-family:\'JetBrains Mono\',monospace"></div>';
+        }
+        
+        function section(title, html){
+          return '<div style="background:#141414;border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:18px;margin-bottom:16px">'
+            +'<div style="font-size:12px;color:#C9A84C;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(201,168,76,.15)">'+title+'</div>'
+            +html
+            +'</div>';
+        }
+        
+        var sedesH = input('sedes_solista_ars', N.sedes_solista_ars)
+          + input('sedes_grupo_ars', N.sedes_grupo_ars)
+          + input('sedes_extra_categoria_ars', N.sedes_extra_categoria_ars);
+        
+        var repH = input('repesca_solista_ars', N.repesca_solista_ars)
+          + input('repesca_grupo_ars', N.repesca_grupo_ars)
+          + input('repesca_extra_categoria_ars', N.repesca_extra_categoria_ars);
+        
+        var finalH = input('final_solista_ars', N.final_solista_ars)
+          + input('final_grupo_ars', N.final_grupo_ars)
+          + input('final_extra_categoria_ars', N.final_extra_categoria_ars);
+        
+        var interH = input('solista_usd', I.solista_usd)
+          + input('grupo_usd', I.grupo_usd)
+          + input('extra_categoria_usd', I.extra_categoria_usd);
+        
+        var helpH = '<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:#E8A838;line-height:1.6">'
+          +'<strong style="color:#C9A84C">Cómo se calcula:</strong><br>'
+          +'• Modalidad solista 1 categoría → cobra base solista<br>'
+          +'• Modalidad solista N categorías → base solista + (N-1) × extra por categoría<br>'
+          +'• Modalidad grupo 1 categoría → cobra base grupo<br>'
+          +'• Modalidad grupo N categorías → base grupo + (N-1) × extra por categoría'
+          +'</div>';
+        
+        var btnH = '<div style="display:flex;gap:10px;margin-top:8px">'
+          +'<button onclick="savePrecios()" style="flex:1;padding:14px 24px;background:#C9A84C;color:#0A0A0A;border:none;border-radius:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-size:14px">💾 Guardar precios</button>'
+          +'<button onclick="renderPrecios()" style="padding:14px 24px;background:transparent;color:#C9A84C;border:1px solid #C9A84C;border-radius:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-size:14px">↻ Recargar</button>'
+          +'</div>';
+        
+        box.innerHTML = helpH
+          + section('💵 Inter América (USD)', interH)
+          + section('🇦🇷 Sedes — Final Regional (ARS)', sedesH)
+          + section('🔄 Repechaje (ARS)', repH)
+          + section('🏆 Final Nacional (ARS)', finalH)
+          + btnH
+          + '<div id="precios-msg" style="margin-top:14px;text-align:center"></div>';
+      }).catch(function(e){
+        box.innerHTML = '<div style="background:rgba(224,82,76,.1);border:1px solid #E0524C;color:#E0524C;padding:14px;border-radius:10px">Error cargando precios: '+e.message+'</div>';
+      });
+    }
+    
+    function savePrecios(){
+      function num(id){
+        var el = document.getElementById('p_'+id);
+        var v = Number(el && el.value);
+        return isFinite(v) && v >= 0 ? v : 0;
+      }
+      var newCfg = {
+        nacional: {
+          sedes_solista_ars: num('sedes_solista_ars'),
+          sedes_grupo_ars: num('sedes_grupo_ars'),
+          sedes_extra_categoria_ars: num('sedes_extra_categoria_ars'),
+          repesca_solista_ars: num('repesca_solista_ars'),
+          repesca_grupo_ars: num('repesca_grupo_ars'),
+          repesca_extra_categoria_ars: num('repesca_extra_categoria_ars'),
+          final_solista_ars: num('final_solista_ars'),
+          final_grupo_ars: num('final_grupo_ars'),
+          final_extra_categoria_ars: num('final_extra_categoria_ars')
+        },
+        internacional: {
+          solista_usd: num('solista_usd'),
+          grupo_usd: num('grupo_usd'),
+          extra_categoria_usd: num('extra_categoria_usd')
+        }
+      };
+      var msg = $('#precios-msg');
+      if(msg) msg.innerHTML = '<span style="color:#E8A838">⏳ Guardando…</span>';
+      
+      fetch(SB_URL+'/rest/v1/config_precios?id=eq.1',{
+        method:'PATCH',
+        headers:{
+          apikey:SB_ANON,
+          Authorization:'Bearer '+SB_ANON,
+          'Content-Type':'application/json',
+          Prefer:'return=representation'
+        },
+        body:JSON.stringify({config:newCfg, updated_at:new Date().toISOString()})
+      }).then(function(r){
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.json();
+      }).then(function(d){
+        if(msg) msg.innerHTML = '<span style="color:#4CAF7D">✓ Precios guardados — los cambios se aplican a las próximas inscripciones</span>';
+        setTimeout(function(){if(msg)msg.innerHTML=''},5000);
+      }).catch(function(e){
+        if(msg) msg.innerHTML = '<span style="color:#E0524C">✗ Error: '+e.message+'</span>';
+      });
+    }
+
 </script>
 </body>
 </html>
