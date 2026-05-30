@@ -1275,15 +1275,16 @@
               class="io-pr"
               style="background: #1e1a00; color: #c9a84c"
               id="nac-pr"
-            >
-            </div>
+            ></div>
           </button>
           <button class="io" id="opt-int" onclick="selI('int')">
             <div class="ii">&#127758;</div>
             <div class="in">Final Internacional</div>
             <div class="if">S&#225;b. 3 (tarde)<br />Precios en USD</div>
-            <div class="io-pr" style="background: #001020; color: #4b96d8">
-            </div>
+            <div
+              class="io-pr"
+              style="background: #001020; color: #4b96d8"
+            ></div>
           </button>
           <button class="io" id="opt-rep" onclick="selI('rep')">
             <div class="ii">&#128260;</div>
@@ -1292,8 +1293,10 @@
               Vier. 2 de Octubre &middot; 20hs<br />Hipólito Yrigoyen 3140,
               Lanús
             </div>
-            <div class="io-pr" style="background: #1a1200; color: #e8a838">
-            </div>
+            <div
+              class="io-pr"
+              style="background: #1a1200; color: #e8a838"
+            ></div>
           </button>
         </div>
 
@@ -6185,6 +6188,8 @@
           pwr.innerHTML = "";
           pwr.appendChild(buildPlanillaBlock());
         }
+        var okLogoReg = document.getElementById("ok-logo-reg");
+        if (okLogoReg) okLogoReg.src = "/imgs/logo-nac.png";
         document.getElementById("sform").style.display = "none";
         var regMsg = document.getElementById("ok-reg-message");
         if (regMsg) regMsg.style.display = "block";
@@ -6346,11 +6351,27 @@
           );
         }
 
-        // Upload música (primera encontrada)
+        // Upload música (prioriza archivo subido en slots)
         var musUrl = null;
+        var musName = null;
+        if (window.jamMusicPicked && window.jamMusicPicked.url) {
+          musUrl = window.jamMusicPicked.url;
+          musName =
+            window.jamMusicPicked.name ||
+            (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
+        }
         var musInput = document.querySelector(".mslot-file-input");
-        if (musInput && musInput.files && musInput.files[0]) {
+        if (!musUrl && musInput && musInput.files && musInput.files[0]) {
           musUrl = await sbUpload("musica", INST + "_" + ts, musInput.files[0]);
+          musName = musInput.files[0].name;
+        }
+        if (!musUrl && window.jamMusicPicked && window.jamMusicPicked.file) {
+          musUrl = await sbUpload(
+            "musica",
+            INST + "_" + ts,
+            window.jamMusicPicked.file,
+          );
+          musName = window.jamMusicPicked.file.name;
         }
 
         var record = {
@@ -6372,6 +6393,7 @@
           moneda: tot.m,
           musica_url: musUrl,
           musica_estado: musUrl ? "cargada" : "pendiente",
+          musica_nombre: musName || null,
         };
         if (clasifUrl) record.clasif_url = clasifUrl;
 
@@ -6595,98 +6617,168 @@
       (function () {
         "use strict";
 
-  // Neutralizar verde/check post-upload (queda solo texto, sin colores)
-  var __jamStyleReset = document.createElement("style");
-  __jamStyleReset.textContent =
-    '[id="mslots"], #reg-mslot { background: inherit !important; color: inherit !important; border-color: inherit !important; }'
-    + '[id="mslots"]::before, [id="mslots"]::after, #reg-mslot::before, #reg-mslot::after { content: none !important; background: none !important; }';
-  if (document.head) document.head.appendChild(__jamStyleReset);
-  else document.addEventListener("DOMContentLoaded", function(){ document.head.appendChild(__jamStyleReset); });
-  // ========= Precios dinámicos (v5) =========
-  var __jamPrecios = null;
-  async function __jamLoadPrecios(){
-    return fetch(SB_URL+'/rest/v1/config_precios?id=eq.1&select=config',{
-      headers:{apikey:SB_ANON, Authorization:'Bearer '+SB_ANON}
-    }).then(function(r){
-      if(!r.ok) throw new Error('http '+r.status);
-      return r.json();
-    }).then(function(d){
-      if(d && d[0] && d[0].config){
-        window.__jamPrecios = d[0].config;
-        console.log('[JAM precios] cargados:', d[0].config);
-      } else {
-        console.warn('[JAM precios] sin data');
-      }
-      return window.__jamPrecios;
-    }).catch(function(e){
-      console.warn('[JAM precios] error', e.message);
-      return window.__jamPrecios;
-    });
-  }
-
-  function __jamCalcMonto(body){
-    if(!window.__jamPrecios) return null;
-    var P = window.__jamPrecios;
-    var inst = body.instancia;
-    var modalidad = body.modalidad;
-    if(!modalidad){
-      var cp = Number(body.cant_personas)||1;
-      modalidad = cp > 1 ? 'grupo' : 'solista';
-    }
-    modalidad = String(modalidad).toLowerCase();
-    var isGrupo = modalidad.indexOf('grupo')>=0 || modalidad.indexOf('pareja')>=0 || modalidad.indexOf('equipo')>=0 || modalidad.indexOf('cuarteto')>=0 || modalidad.indexOf('quinteto')>=0;
-    
-    var cats = [];
-    try{
-      cats = typeof body.categorias === 'string' ? JSON.parse(body.categorias) : (body.categorias || []);
-    }catch(e){}
-    if(!Array.isArray(cats)) cats = [];
-    var nCat = Math.max(cats.length, 1);
-
-    var base, extra, monto;
-
-    if(inst === 'int'){
-      base = isGrupo ? (P.internacional && P.internacional.grupo_usd || 80) : (P.internacional && P.internacional.solista_usd || 45);
-      extra = (P.internacional && P.internacional.extra_categoria_usd) || 20;
-      monto = base + (nCat - 1) * extra;
-      console.log('[JAM calc] int '+modalidad+' x'+nCat+' = '+base+'+('+(nCat-1)+'×'+extra+') = '+monto);
-      return monto;
-    }
-    
-    var prefix = null;
-    if(inst === 'reg') prefix = 'sedes';
-    else if(inst === 'rep') prefix = 'repesca';
-    else if(inst === 'nac') prefix = 'final';
-    if(!prefix) return null;
-    
-    var N = P.nacional || {};
-    base = isGrupo ? (N[prefix+'_grupo_ars'] || 0) : (N[prefix+'_solista_ars'] || 0);
-    extra = N[prefix+'_extra_categoria_ars'] || 0;
-    monto = base + (nCat - 1) * extra;
-    console.log('[JAM calc] '+inst+' '+modalidad+' x'+nCat+' = '+base+'+('+(nCat-1)+'×'+extra+') = '+monto);
-    return monto;
-  }
-  // Monkey-patch fetch para recalcular monto_total antes del INSERT
-  var __jamOrigFetch = window.fetch;
-  window.fetch = async function(url, opts){
-    try {
-      if (typeof url === "string" && url.indexOf("/rest/v1/inscripciones") >= 0 && opts && opts.method === "POST" && opts.body) {
-        var body = typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
-        await __jamLoadPrecios();
-        if (body && body.instancia) {
-          var newM = __jamCalcMonto(body);
-          if (newM != null && newM !== body.monto_total) {
-            console.log("[JAM] monto recalc: " + body.instancia + " " + body.monto_total + " -> " + newM);
-            body.monto_total = newM;
-            opts = Object.assign({}, opts, { body: JSON.stringify(body) });
-          }
+        // Neutralizar verde/check post-upload (queda solo texto, sin colores)
+        var __jamStyleReset = document.createElement("style");
+        __jamStyleReset.textContent =
+          '[id="mslots"], #reg-mslot { background: inherit !important; color: inherit !important; border-color: inherit !important; }' +
+          '[id="mslots"]::before, [id="mslots"]::after, #reg-mslot::before, #reg-mslot::after { content: none !important; background: none !important; }';
+        if (document.head) document.head.appendChild(__jamStyleReset);
+        else
+          document.addEventListener("DOMContentLoaded", function () {
+            document.head.appendChild(__jamStyleReset);
+          });
+        // ========= Precios dinámicos (v5) =========
+        var __jamPrecios = null;
+        async function __jamLoadPrecios() {
+          return fetch(
+            SB_URL + "/rest/v1/config_precios?id=eq.1&select=config",
+            {
+              headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+            },
+          )
+            .then(function (r) {
+              if (!r.ok) throw new Error("http " + r.status);
+              return r.json();
+            })
+            .then(function (d) {
+              if (d && d[0] && d[0].config) {
+                window.__jamPrecios = d[0].config;
+                console.log("[JAM precios] cargados:", d[0].config);
+              } else {
+                console.warn("[JAM precios] sin data");
+              }
+              return window.__jamPrecios;
+            })
+            .catch(function (e) {
+              console.warn("[JAM precios] error", e.message);
+              return window.__jamPrecios;
+            });
         }
-      }
-    } catch(e){ console.warn("[JAM] price patch error", e); }
-    return __jamOrigFetch.call(this, url, opts);
-  };
-  // Cargar precios al inicio
-  setTimeout(__jamLoadPrecios, 0);
+
+        function __jamCalcMonto(body) {
+          if (!window.__jamPrecios) return null;
+          var P = window.__jamPrecios;
+          var inst = body.instancia;
+          var modalidad = body.modalidad;
+          if (!modalidad) {
+            var cp = Number(body.cant_personas) || 1;
+            modalidad = cp > 1 ? "grupo" : "solista";
+          }
+          modalidad = String(modalidad).toLowerCase();
+          var isGrupo =
+            modalidad.indexOf("grupo") >= 0 ||
+            modalidad.indexOf("pareja") >= 0 ||
+            modalidad.indexOf("equipo") >= 0 ||
+            modalidad.indexOf("cuarteto") >= 0 ||
+            modalidad.indexOf("quinteto") >= 0;
+
+          var cats = [];
+          try {
+            cats =
+              typeof body.categorias === "string"
+                ? JSON.parse(body.categorias)
+                : body.categorias || [];
+          } catch (e) {}
+          if (!Array.isArray(cats)) cats = [];
+          var nCat = Math.max(cats.length, 1);
+
+          var base, extra, monto;
+
+          if (inst === "int") {
+            base = isGrupo
+              ? (P.internacional && P.internacional.grupo_usd) || 80
+              : (P.internacional && P.internacional.solista_usd) || 45;
+            extra =
+              (P.internacional && P.internacional.extra_categoria_usd) || 20;
+            monto = base + (nCat - 1) * extra;
+            console.log(
+              "[JAM calc] int " +
+                modalidad +
+                " x" +
+                nCat +
+                " = " +
+                base +
+                "+(" +
+                (nCat - 1) +
+                "×" +
+                extra +
+                ") = " +
+                monto,
+            );
+            return monto;
+          }
+
+          var prefix = null;
+          if (inst === "reg") prefix = "sedes";
+          else if (inst === "rep") prefix = "repesca";
+          else if (inst === "nac") prefix = "final";
+          if (!prefix) return null;
+
+          var N = P.nacional || {};
+          base = isGrupo
+            ? N[prefix + "_grupo_ars"] || 0
+            : N[prefix + "_solista_ars"] || 0;
+          extra = N[prefix + "_extra_categoria_ars"] || 0;
+          monto = base + (nCat - 1) * extra;
+          console.log(
+            "[JAM calc] " +
+              inst +
+              " " +
+              modalidad +
+              " x" +
+              nCat +
+              " = " +
+              base +
+              "+(" +
+              (nCat - 1) +
+              "×" +
+              extra +
+              ") = " +
+              monto,
+          );
+          return monto;
+        }
+        // Monkey-patch fetch para recalcular monto_total antes del INSERT
+        var __jamOrigFetch = window.fetch;
+        window.fetch = async function (url, opts) {
+          try {
+            if (
+              typeof url === "string" &&
+              url.indexOf("/rest/v1/inscripciones") >= 0 &&
+              opts &&
+              opts.method === "POST" &&
+              opts.body
+            ) {
+              var body =
+                typeof opts.body === "string"
+                  ? JSON.parse(opts.body)
+                  : opts.body;
+              await __jamLoadPrecios();
+              if (body && body.instancia) {
+                var newM = __jamCalcMonto(body);
+                if (newM != null && newM !== body.monto_total) {
+                  console.log(
+                    "[JAM] monto recalc: " +
+                      body.instancia +
+                      " " +
+                      body.monto_total +
+                      " -> " +
+                      newM,
+                  );
+                  body.monto_total = newM;
+                  opts = Object.assign({}, opts, {
+                    body: JSON.stringify(body),
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("[JAM] price patch error", e);
+          }
+          return __jamOrigFetch.call(this, url, opts);
+        };
+        // Cargar precios al inicio
+        setTimeout(__jamLoadPrecios, 0);
 
         var SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
         var SB_ANON =
@@ -6823,6 +6915,7 @@
           setSlotLabel("Subiendo: " + f.name);
           try {
             pickedUrl = await uploadAudio(f);
+            window.jamMusicPicked = { file: f, url: pickedUrl, name: f.name };
             if (pendingSlotEl) {
               markSlotUploaded(pendingSlotEl, f.name);
             }
@@ -6832,6 +6925,7 @@
           } catch (e) {
             pickedFile = null;
             pickedUrl = null;
+            window.jamMusicPicked = null;
             restoreSlotLabel();
             pendingSlotEl = null;
             ev.target.value = "";
@@ -6844,6 +6938,7 @@
           for (var j = 0; j < slots.length; j++) {
             var slot = slots[j];
             if (slot.dataset._jamWired) continue;
+            if (slot.id === "reg-mslot") continue;
             slot.dataset._jamWired = "1";
             slot.style.cursor = "pointer";
             slot.addEventListener("click", function (e) {
@@ -6931,10 +7026,12 @@
 
         async function updateInscripcionMusica(email) {
           if (!email || !pickedUrl || !pickedFile) return;
+          var inst = window.INST || "";
           var q =
             SB_URL +
             "/rest/v1/inscripciones?email=eq." +
             encodeURIComponent(email) +
+            (inst ? "&instancia=eq." + encodeURIComponent(inst) : "") +
             "&select=id&order=created_at.desc&limit=1";
           var r = await fetch(q, {
             headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
