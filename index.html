@@ -4963,6 +4963,45 @@
         buildInts(4);
       }
 
+      function toggleModalidadNacRep(val) {
+        STATE.modalidad = val;
+        STATE.ints = [];
+        var wrap = document.getElementById("ints-wrap");
+        if (!wrap) return;
+        wrap.style.display = "none";
+        wrap.innerHTML = "";
+        if (val === "1") {
+          STATE.cant = "1";
+          updTotal();
+          return;
+        }
+        wrap.style.display = "block";
+        if (val === "pareja") {
+          STATE.cant = "2";
+          buildInts(2);
+          return;
+        }
+        var cantSel = document.createElement("div");
+        cantSel.className = "card";
+        cantSel.style.marginBottom = "10px";
+        var opts = Array.from({ length: 29 }, function (_, i) {
+          return (
+            '<option value="' +
+            (i + 3) +
+            '">' +
+            (i + 3) +
+            " integrantes</option>"
+          );
+        }).join("");
+        cantSel.innerHTML =
+          '<div class="fld" style="margin-bottom:0"><label>Cantidad de integrantes</label><select id="f-cant" onchange="buildInts(this.value)">' +
+          opts +
+          "</select></div>";
+        wrap.appendChild(cantSel);
+        STATE.cant = "3";
+        buildInts(3);
+      }
+
       function toggleModalidadReg(val) {
         STATE.modalidad = val;
         STATE.ints = [];
@@ -4980,20 +5019,15 @@
           buildIntsReg(2);
           return;
         }
-        if (val === "trio") {
-          STATE.cant = "3";
-          buildIntsReg(3);
-          return;
-        }
         var cantSel = document.createElement("div");
         cantSel.className = "card";
         cantSel.style.marginBottom = "10px";
-        var opts = Array.from({ length: 28 }, function (_, i) {
+        var opts = Array.from({ length: 29 }, function (_, i) {
           return (
             '<option value="' +
-            (i + 4) +
+            (i + 3) +
             '">' +
-            (i + 4) +
+            (i + 3) +
             " integrantes</option>"
           );
         }).join("");
@@ -5002,8 +5036,8 @@
           opts +
           "</select></div>";
         wrap.appendChild(cantSel);
-        STATE.cant = "4";
-        buildIntsReg(4);
+        STATE.cant = "3";
+        buildIntsReg(3);
       }
 
       function buildIntegrante(i, isResp, showPais) {
@@ -5415,8 +5449,7 @@
               '<select id="f-modalidad-reg" onchange="toggleModalidadReg(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
               '<option value="pareja">Pareja / Dúo (2 personas)</option>' +
-              '<option value="trio">Trío (3 personas)</option>' +
-              '<option value="grupo">Grupo / Academia (4 o más personas)</option>' +
+              '<option value="grupo">Grupo / Academia (3 o más personas)</option>' +
               "</select></div></div>" +
               '<div id="reg-ints-wrap" class="mt3" style="display:none"></div>' +
               '<div class="sf mt3"><button class="btn bo" onclick="goTo(1)">← Atrás</button>' +
@@ -5533,16 +5566,16 @@
               " Final Nacional \u2014 Contacto</div>" +
               '<div class="ss">Te enviaremos la confirmaci\u00f3n y tu credencial a este email.</div></div>' +
               '<div class="card">' +
+              '<div class="fld"><label>Nombre completo del responsable *</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               '<div class="fld"><label>Email *</label><input type="email" id="f-email" placeholder="tu@email.com"></div>' +
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
               sedesOpts() +
               "</select></div>" +
-              '<div class="fld" id="virtual-sede-wrap" style="display:none"><label>Provincia / Sede virtual *</label><select id="f-sede-virtual">' +
+              '<div class="fld" id="virtual-sede-wrap" style="display:none;margin-bottom:0"><label>Provincia / Sede virtual *</label><select id="f-sede-virtual">' +
               sedesVirtualesOpts() +
               "</select></div>" +
-              '<div class="fld" style="margin-bottom:0"><label>Nombre completo del responsable *</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               "</div>" +
               '<div class="cg mt3"><p style="font-size:12px;color:rgba(248,245,238,.6)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#C9A84C">$25.000 por participante</strong>.</p></div>' +
               '<div class="sf"><div></div><button class="btn bg" onclick="goTo(2)">Continuar \u2192</button></div>';
@@ -5557,7 +5590,7 @@
               '<div class="card">' +
               '<div class="fld"><label>Nombre art\u00edstico / del grupo *</label><input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
-              '<select id="f-modalidad" onchange="toggleModalidad(this.value)">' +
+              '<select id="f-modalidad" onchange="toggleModalidadNacRep(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
               '<option value="pareja">Pareja / D\u00fao (2 personas)</option>' +
               '<option value="grupo">Grupo (3 o m\u00e1s personas)</option>' +
@@ -5741,15 +5774,15 @@
               '<div class="sh"><div class="st">INTER AMÉRICA — Contacto</div>' +
               '<div class="ss">Te enviaremos la confirmación y tu credencial a este email.</div></div>' +
               '<div class="card">' +
+              '<div class="fld"><label>Nombre completo del responsable *</label>' +
+              '<input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               '<div class="fld"><label>Email *</label><input type="email" id="f-email" placeholder="tu@email.com"></div>' +
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="g2">' +
               '<div class="fld"><label>Celular *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
-              '<div class="fld"><label>País de origen *</label><select id="f-pais">' +
+              '<div class="fld" style="margin-bottom:0"><label>País de origen *</label><select id="f-pais">' +
               paisesOpts() +
               "</select></div></div>" +
-              '<div class="fld" style="margin-bottom:0"><label>Nombre completo del responsable *</label>' +
-              '<input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               "</div>" +
               '<div class="sf"><div></div><button class="btn bd" onclick="goTo(2)">Continuar →</button></div>';
             w.appendChild(d);
@@ -5924,10 +5957,10 @@
               '<div class="sh"><div class="st">Repesca \u2014 Contacto</div>' +
               '<div class="ss">La repesca se realiza el Viernes 2 de Octubre a las 20hs en Hipólito Yrigoyen 3140, Lanús. Costo fijo: ARS $50.000. La inscripci\u00f3n queda <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong>.</div></div>' +
               '<div class="card">' +
+              '<div class="fld"><label>Nombre completo *</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               '<div class="fld"><label>Email *</label><input type="email" id="f-email" placeholder="tu@email.com"></div>' +
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
-              '<div class="fld"><label>Nombre completo *</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
               sedesOpts() +
               "</select></div>" +
@@ -5948,7 +5981,7 @@
               '<div class="card">' +
               '<div class="fld"><label>Nombre art\u00edstico / del grupo *</label><input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
-              '<select id="f-modalidad" onchange="toggleModalidad(this.value)">' +
+              '<select id="f-modalidad" onchange="toggleModalidadNacRep(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
               '<option value="pareja">Pareja / D\u00fao (2 personas)</option>' +
               '<option value="grupo">Grupo (3 o m\u00e1s personas)</option>' +
