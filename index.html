@@ -6605,38 +6605,66 @@
   // ========= Precios dinámicos (v5) =========
   var __jamPrecios = null;
   async function __jamLoadPrecios(){
-    try {
-      var r = await fetch(SB_URL+"/rest/v1/config_precios?id=eq.1&select=config",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
-      var d = await r.json();
-      __jamPrecios = (d && d[0] && d[0].config) || null;
-    } catch(e){ console.warn("[JAM] no se pudo cargar precios", e); }
+    return fetch(SB_URL+'/rest/v1/config_precios?id=eq.1&select=config',{
+      headers:{apikey:SB_ANON, Authorization:'Bearer '+SB_ANON}
+    }).then(function(r){
+      if(!r.ok) throw new Error('http '+r.status);
+      return r.json();
+    }).then(function(d){
+      if(d && d[0] && d[0].config){
+        window.__jamPrecios = d[0].config;
+        console.log('[JAM precios] cargados:', d[0].config);
+      } else {
+        console.warn('[JAM precios] sin data');
+      }
+      return window.__jamPrecios;
+    }).catch(function(e){
+      console.warn('[JAM precios] error', e.message);
+      return window.__jamPrecios;
+    });
   }
-  function __jamGetExtraActual(extras){
-    if (!extras) return 0;
-    var m = new Date().getMonth() + 1;
-    if (m >= 4 && m <= 5) return extras.abril_mayo || 0;
-    if (m >= 6 && m <= 7) return extras.junio_julio || 0;
-    if (m >= 8 && m <= 9) return extras.agosto_septiembre || 0;
-    return 0;
-  }
+
   function __jamCalcMonto(body){
-    if (!__jamPrecios) return null;
-    var inst = (body.instancia||"").toLowerCase();
+    if(!window.__jamPrecios) return null;
+    var P = window.__jamPrecios;
+    var inst = body.instancia;
+    var modalidad = body.modalidad;
+    if(!modalidad){
+      var cp = Number(body.cant_personas)||1;
+      modalidad = cp > 1 ? 'grupo' : 'solista';
+    }
+    modalidad = String(modalidad).toLowerCase();
+    var isGrupo = modalidad.indexOf('grupo')>=0 || modalidad.indexOf('pareja')>=0 || modalidad.indexOf('equipo')>=0 || modalidad.indexOf('cuarteto')>=0 || modalidad.indexOf('quinteto')>=0;
+    
     var cats = [];
-    try { cats = typeof body.categorias === "string" ? JSON.parse(body.categorias) : (body.categorias || []); } catch(e){}
-    var n = (cats && cats.length) ? cats.length : 1;
-    if (inst === "reg") return __jamPrecios.nacional && __jamPrecios.nacional.sedes_ars;
-    if (inst === "rep") return __jamPrecios.nacional && __jamPrecios.nacional.repesca_ars;
-    if (inst === "nac") {
-      var grupo = body.cant_personas && body.cant_personas > 1;
-      return grupo ? __jamPrecios.nacional.nacional_grupo_ars : __jamPrecios.nacional.nacional_solista_ars;
+    try{
+      cats = typeof body.categorias === 'string' ? JSON.parse(body.categorias) : (body.categorias || []);
+    }catch(e){}
+    if(!Array.isArray(cats)) cats = [];
+    var nCat = Math.max(cats.length, 1);
+
+    var base, extra, monto;
+
+    if(inst === 'int'){
+      base = isGrupo ? (P.internacional && P.internacional.grupo_usd || 80) : (P.internacional && P.internacional.solista_usd || 45);
+      extra = (P.internacional && P.internacional.extra_categoria_usd) || 20;
+      monto = base + (nCat - 1) * extra;
+      console.log('[JAM calc] int '+modalidad+' x'+nCat+' = '+base+'+('+(nCat-1)+'×'+extra+') = '+monto);
+      return monto;
     }
-    if (inst === "int") {
-      var base = __jamPrecios.internacional && __jamPrecios.internacional.base_usd || 45;
-      var extra = __jamGetExtraActual(__jamPrecios.internacional && __jamPrecios.internacional.categoria_extra);
-      return base + Math.max(0, n - 1) * extra;
-    }
-    return null;
+    
+    var prefix = null;
+    if(inst === 'reg') prefix = 'sedes';
+    else if(inst === 'rep') prefix = 'repesca';
+    else if(inst === 'nac') prefix = 'final';
+    if(!prefix) return null;
+    
+    var N = P.nacional || {};
+    base = isGrupo ? (N[prefix+'_grupo_ars'] || 0) : (N[prefix+'_solista_ars'] || 0);
+    extra = N[prefix+'_extra_categoria_ars'] || 0;
+    monto = base + (nCat - 1) * extra;
+    console.log('[JAM calc] '+inst+' '+modalidad+' x'+nCat+' = '+base+'+('+(nCat-1)+'×'+extra+') = '+monto);
+    return monto;
   }
   // Monkey-patch fetch para recalcular monto_total antes del INSERT
   var __jamOrigFetch = window.fetch;
