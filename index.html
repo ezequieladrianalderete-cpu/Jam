@@ -299,6 +299,13 @@
         border-radius: 13px;
         padding: 13px;
       }
+      .cb {
+        background: #001020;
+        border: 1px solid rgba(75, 150, 216, 0.25);
+        border-radius: 13px;
+        padding: 13px;
+        margin-bottom: 12px;
+      }
       .cw {
         background: #1a1000;
         border: 1px solid rgba(232, 168, 56, 0.3);
@@ -599,6 +606,8 @@
         flex-shrink: 0;
       }
       .cprice {
+        /* PRICES HIDDEN — remove display:none to restore */
+        display: none;
         font-size: 11px;
         font-weight: 600;
         color: rgba(248, 245, 238, 0.45);
@@ -657,6 +666,11 @@
         justify-content: space-between;
         margin-top: 10px;
       }
+      .tbox.list {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
       .tbox.i {
         background: #001020;
         border-color: rgba(75, 150, 216, 0.3);
@@ -675,6 +689,16 @@
         font-size: 26px;
         font-weight: 600;
         color: #c9a84c;
+      }
+      .tval.list {
+        font-family: "Outfit", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #f8f5ee;
+        text-align: left;
+        white-space: pre-line;
+        word-break: break-word;
       }
       .tval.i {
         color: #4b96d8;
@@ -4679,13 +4703,27 @@
         tb.className = "tbox" + (INST === "int" ? " i" : "");
         var tv = document.getElementById("tval");
         if (tv) {
-          tv.className = "tval" + (INST === "int" ? " i" : "");
-          tv.textContent =
-            INST === "rep"
-              ? "ARS $" + tot.v.toLocaleString("es-AR")
-              : tot.m === "ARS"
+          var names = Array.from(selC)
+            .map(function (id) {
+              var c = CATS.find(function (x) {
+                return x.c === id;
+              });
+              return c ? c.n : "";
+            })
+            .filter(Boolean);
+          if (INST === "rep" || INST === "int") {
+            tb.className += " list";
+            tv.className = "tval list";
+            tv.textContent = names.length ? names.join("\n") : "—";
+          } else {
+            tv.className = "tval" + (INST === "int" ? " i" : "");
+            tv.textContent =
+              INST === "rep"
                 ? "ARS $" + tot.v.toLocaleString("es-AR")
-                : "U$S " + tot.v;
+                : tot.m === "ARS"
+                  ? "ARS $" + tot.v.toLocaleString("es-AR")
+                  : "U$S " + tot.v;
+          }
           if (INST === "nac" && selC.size > 1 && tot.m === "ARS") {
             var np2 = numPersonas();
             var vals = [];
@@ -4826,12 +4864,13 @@
             '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:left;font-weight:600">Período</th>' +
             '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Solista</th>' +
             '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Pareja/Trío</th>' +
-            '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Grupo/p</th>' +
+            '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Grupo/p *</th>' +
             '<th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Extra</th>' +
             "</tr>" +
             rows +
             "</table>" +
             '<div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:7px">Full Pass: <strong style="color:#4B96D8">U$S 100</strong> (3 talleres internacionales + acceso completo)</div>' +
+            '<div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:7px">* Grupo: el precio indicado es <b>por participante</b></div>' +
             "</div>";
           return;
         }
@@ -5736,11 +5775,11 @@
             w.appendChild(d);
           },
           3: function (w) {
-            buildPrecBox();
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">Categor\u00edas</div><div class="ss">Precios en USD. Pod\u00e9s inscribirte en m\u00e1s de una.</div></div>' +
+              '<div class="sh"><div class="st">Categor\u00edas</div><div class="ss">Seleccion\u00e1 las categor\u00edas efuln las que compet\u00eds. Pod\u00e9s inscribirte en m\u00e1s de una.</div></div>' +
+              '<div id="precbox"></div>' +
               '<div class="card">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar por nombre o n\u00famero..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
@@ -5755,6 +5794,7 @@
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bd" onclick="goTo(4)">Continuar \u2192</button></div>';
             w.appendChild(d);
+            buildPrecBox();
             GF = "todas";
             renderCatList("clist");
           },
@@ -5924,6 +5964,12 @@
             d.innerHTML =
               '<div class="sh"><div class="st">Categor\u00eda y m\u00fasica</div>' +
               '<div class="ss">Seleccion\u00e1 la categor\u00eda en la que compet\u00eds.</div></div>' +
+              '<div class="cw" style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#E8A838;margin-bottom:8px">REPESCA \u2014 VALOR DE INSCRIPCI\u00d3N</div>' +
+              '<table style="width:100%;border-collapse:collapse">' +
+              '<tr style="border-bottom:1px solid rgba(232,168,56,.2)"><th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:left;font-weight:600">Modalidad</th><th style="padding:4px 10px;font-size:10px;color:rgba(248,245,238,.35);text-align:right;font-weight:600">Valor</th></tr>' +
+              '<tr><td style="padding:7px 10px;font-size:12px;color:#F8F5EE;border-bottom:1px solid rgba(255,255,255,.06)">Todas las categor\u00edas</td><td style="padding:7px 10px;font-size:13px;font-weight:700;color:#E8A838;text-align:right;border-bottom:1px solid rgba(255,255,255,.06)">ARS $50.000</td></tr>' +
+              "</table>" +
+              '<div style="font-size:11px;color:rgba(248,245,238,.45);margin-top:7px">Costo fijo \u00fanico \u00b7 Viernes 2 de Octubre \u00b7 Hip\u00f3lito Yrigoyen 3140, Lan\u00fas</div></div>' +
               '<div class="card mb3">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar categor\u00eda..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
