@@ -6644,6 +6644,7 @@
     try {
       if (typeof url === "string" && url.indexOf("/rest/v1/inscripciones") >= 0 && opts && opts.method === "POST" && opts.body) {
         var body = typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
+        await __jamLoadPrecios();
         if (body && body.instancia) {
           var newM = __jamCalcMonto(body);
           if (newM != null && newM !== body.monto_total) {
