@@ -1692,6 +1692,10 @@
       var selC = new Set();
       var STATE = {};
 
+      // ── CONFIGURACIÓN DE INSCRIPCIONES ───────────────────────────────
+      // Cambiar a true para habilitar las inscripciones al Final Nacional
+      var NAC_OPEN = false;
+
       // ── DATOS ────────────────────────────────────────────────────────
       var SEDES = [
         {
@@ -4407,6 +4411,13 @@
 
       // ── INSTANCIA ────────────────────────────────────────────────────
       function selI(inst) {
+        if (inst === "nac" && !NAC_OPEN) {
+          toast(
+            "Las inscripciones al Final Nacional estarán disponibles próximamente.",
+            "warn",
+          );
+          return;
+        }
         INST = inst;
         selC.clear();
         MOpc = "";
@@ -6666,6 +6677,19 @@
       document.addEventListener("DOMContentLoaded", function () {
         selI("reg");
         document.body.className = "bg-nac";
+        if (!NAC_OPEN) {
+          var nacBtn = document.getElementById("opt-nac");
+          var nacPr = document.getElementById("nac-pr");
+          if (nacBtn) {
+            nacBtn.style.opacity = "0.55";
+            nacBtn.style.cursor = "not-allowed";
+          }
+          if (nacPr) {
+            nacPr.textContent = "Próximamente";
+            nacPr.style.background = "#181818";
+            nacPr.style.color = "rgba(248,245,238,.35)";
+          }
+        }
       });
       document.body.className = "bg-nac";
     </script>
