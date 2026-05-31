@@ -7335,5 +7335,50 @@
 })();
 </script>
 
+
+<script>
+/* JAM 2026 — Fix Resumen Categorías v1
+   stateCatsText busca con CATS.find(x => x.c === id) que devuelve la PRIMERA
+   entry → en CATS hay duplicados (mismo código, distintos nombres por instancia)
+   → muestra nombre equivocado. Fix: filtrar por INST. */
+(function(){
+  if (window.__jamResumenFixInstalled) return;
+  window.__jamResumenFixInstalled = true;
+  
+  function installFix(){
+    if (typeof window.stateCatsText !== 'function') return false;
+    if (window.stateCatsText.__jamPatched) return true;
+    var orig = window.stateCatsText;
+    var patched = function(){
+      try{
+        return Array.from(window.selC).map(function(id){
+          var INST = window.INST;
+          var c = window.CATS.find(function(x){
+            return x.c === id && (INST === "int" ? x.inst === "int" : x.inst !== "int");
+          });
+          if (!c) c = window.CATS.find(function(x){ return x.c === id; });
+          return c ? c.c + " \u2014 " + c.n : "";
+        }).filter(Boolean).join(" \u00b7 ") || "\u2014";
+      }catch(e){
+        if (window.console && console.warn) console.warn('[JAM resumen fix] error', e);
+        return orig();
+      }
+    };
+    patched.__jamPatched = true;
+    window.stateCatsText = patched;
+    if (window.console && console.log) console.log('[JAM] Fix stateCatsText instalado');
+    return true;
+  }
+  
+  if (!installFix()){
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if (installFix() || tries > 40) clearInterval(iv);
+    }, 100);
+  }
+})();
+</script>
+
 </body>
 </html>
