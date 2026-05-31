@@ -4545,9 +4545,9 @@
             return;
           }
         }
-        // Validar música obligatoria: reg/rep (paso 3→4) y nac/int (paso 4→5)
+        // Validar música obligatoria: rep (paso 3→4) y nac/int (paso 4→5); reg es opcional
         if (
-          (n === 4 && (INST === "rep" || INST === "reg")) ||
+          (n === 4 && INST === "rep") ||
           (n === 5 && (INST === "nac" || INST === "int"))
         ) {
           var totalSlots = document.querySelectorAll("#mslots .mslot").length;
@@ -5479,11 +5479,11 @@
               '<div class="chips" id="reg-chips"></div>' +
               '<div class="clist" id="clist"></div></div>' +
               '<div class="card">' +
-              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">OBLIGATORIO</span></div>' +
+              '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">Opcional</span></div>' +
               '<div id="reg-mslot" class="mslot click" onclick="regSubirMusica(this)">' +
               '<div style="display:flex;align-items:center;gap:10px">' +
               '<div style="font-size:17px">&#127925;</div>' +
-              '<div style="flex:1"><div style="font-size:13px;color:rgba(248,245,238,.25)">Tocar para subir MP3 (obligatorio)</div></div>' +
+              '<div style="flex:1"><div style="font-size:13px;color:rgba(248,245,238,.25)">Tocar para subir MP3 (opcional)</div></div>' +
               '<div style="font-size:16px;color:rgba(248,245,238,.25)">+</div></div></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">← Atrás</button>' +
