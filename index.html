@@ -7243,5 +7243,97 @@
         else init();
       })();
     </script>
-  </body>
+  
+<script>
+/* =============================================================
+   JAM 2026 — Fix Categorías v1
+   Soluciona el bug "selecciono A, se marca B"
+   
+   Estrategia: event delegation en CAPTURE phase que lee el código
+   del .ccode visible del DOM (lo que el usuario ve), no del closure
+   que Lorenzo arma en renderCatList.
+   ============================================================= */
+(function(){
+  if (window.__jamCatFixInstalled) return;
+  window.__jamCatFixInstalled = true;
+
+  // Garantiza que cada botón .crow tenga data-c con el código del .ccode visible
+  function ensureDataC(btn){
+    try{
+      if (btn.hasAttribute('data-c')) return;
+      var span = btn.querySelector('.ccode');
+      if (!span) return;
+      var code = parseInt(String(span.textContent || '').trim(), 10);
+      if (!isNaN(code)) btn.setAttribute('data-c', String(code));
+    }catch(e){}
+  }
+
+  function fixAllCrows(){
+    var btns = document.querySelectorAll('button.crow');
+    for (var i=0; i<btns.length; i++) ensureDataC(btns[i]);
+  }
+
+  // Buscar el contenedor que tiene id (catlist, catlistInt, etc)
+  function findListId(btn){
+    var p = btn.parentElement;
+    while (p){
+      if (p.id) return p.id;
+      p = p.parentElement;
+    }
+    return null;
+  }
+
+  // Intercept de TODOS los clicks en captura (corre antes del onclick original)
+  document.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest && ev.target.closest('button.crow');
+    if (!btn) return;
+
+    // Asegurar data-c en este botón (por si recién apareció)
+    ensureDataC(btn);
+    var dataC = btn.getAttribute('data-c');
+    if (!dataC) return;
+    var code = parseInt(dataC, 10);
+    if (isNaN(code)) return;
+
+    // VERIFICAR: ¿el código del closure original coincidiría con el del DOM?
+    // Lo logueamos para diagnóstico
+    if (window.console && console.log) {
+      console.log('[JAM cat fix] click sobre .ccode='+code+', nombre='+(btn.querySelector('.cname')||{}).textContent);
+    }
+
+    // Cortar el onclick original (closure potencialmente desincronizado)
+    ev.stopPropagation();
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+
+    var listId = findListId(btn);
+    if (!listId) listId = 'catlist'; // fallback
+
+    // Llamar togC con el código FRESCO del DOM
+    if (typeof window.togC === 'function'){
+      try{
+        window.togC(code, btn, listId);
+      }catch(e){
+        if (console && console.warn) console.warn('[JAM cat fix] togC threw', e);
+      }
+    }
+  }, true);  // <-- capture phase = corre ANTES del onclick original
+
+  // Observer para fixear botones recién creados
+  var mo = new MutationObserver(function(){ fixAllCrows(); });
+  try{
+    mo.observe(document.body, { childList: true, subtree: true });
+  }catch(e){}
+
+  // Aplicar inmediato + safety net
+  fixAllCrows();
+  setTimeout(fixAllCrows, 100);
+  setTimeout(fixAllCrows, 500);
+  setTimeout(fixAllCrows, 1500);
+
+  if (window.console && console.log) console.log('[JAM] Fix categorías v1 activo');
+})();
+</script>
+
+</body>
 </html>
