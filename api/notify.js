@@ -8,28 +8,31 @@ const SENDER = "JAM Producciones <info@jamcompetencia.com>";
 const ADMIN_EMAIL = "info@jamcompetencia.com";
 
 const INSTANCIA_CFG = {
-  reg:  { label: "Sedes",                code: "JAM-REG",   offset: 1 },
-  rep:  { label: "Repechaje",            code: "JAM-REP",   offset: 10 },
-  nac:  { label: "Final Nacional",       code: "JAM-NAC",   offset: 200 },
-  int:  { label: "Final Inter América",  code: "JAM-INTER", offset: 1000 }
+  reg: { label: "Sedes", code: "JAM-REG", offset: 1 },
+  rep: { label: "Repechaje", code: "JAM-REP", offset: 10 },
+  nac: { label: "Final Nacional", code: "JAM-NAC", offset: 200 },
+  int: { label: "Final Inter América", code: "JAM-INTER", offset: 1000 },
 };
 
 const PAGO_VIAMONTE = {
   alias: "VIAMONTE2600",
   cbu: "000000310009572128629",
-  titular: "Liliana Naomi Tanabe"
+  titular: "Liliana Naomi Tanabe",
 };
 
 const PAGO_PREX = {
   plataforma: "Prex",
   cuenta: "35722990",
-  titular: "Nelson Gastón Vidarte"
+  titular: "Nelson Gastón Vidarte",
 };
 
 function esc(s) {
   return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // === Supabase REST API helper (sin SDK) ===
@@ -38,10 +41,11 @@ async function supaSelect(table, query) {
   const res = await fetch(url, {
     headers: {
       apikey: process.env.SUPABASE_SERVICE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`
-    }
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+    },
   });
-  if (!res.ok) throw new Error(`Supabase ${table} ${res.status}: ${await res.text()}`);
+  if (!res.ok)
+    throw new Error(`Supabase ${table} ${res.status}: ${await res.text()}`);
   return res.json();
 }
 
@@ -51,26 +55,31 @@ async function sendMail({ from, to, subject, html, text }) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       from,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
-      text
-    })
+      text,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    return { ok: false, error: data.message || `HTTP ${res.status}`, status: res.status };
+    return {
+      ok: false,
+      error: data.message || `HTTP ${res.status}`,
+      status: res.status,
+    };
   }
   return { ok: true, id: data.id };
 }
 
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { id } = req.body || {};
@@ -79,15 +88,18 @@ export default async function handler(req, res) {
     // 1) Buscar inscripción
     const insArr = await supaSelect("inscripciones", `id=eq.${id}&select=*`);
     const ins = insArr && insArr[0];
-    if (!ins) return res.status(404).json({ error: "Inscripción no encontrada" });
+    if (!ins)
+      return res.status(404).json({ error: "Inscripción no encontrada" });
 
     // 2) Calcular código (instancia + offset + posición)
     const cfg = INSTANCIA_CFG[ins.instancia] || INSTANCIA_CFG.reg;
-    const allInst = await supaSelect("inscripciones",
-      `instancia=eq.${ins.instancia}&select=id,created_at&order=created_at.asc`);
+    const allInst = await supaSelect(
+      "inscripciones",
+      `instancia=eq.${ins.instancia}&select=id,created_at&order=created_at.asc`,
+    );
     let pos = 1;
     if (Array.isArray(allInst)) {
-      const idx = allInst.findIndex(x => x.id === ins.id);
+      const idx = allInst.findIndex((x) => x.id === ins.id);
       pos = idx >= 0 ? idx + 1 : 1;
     }
     const num = String(cfg.offset + (Math.max(pos, 1) - 1)).padStart(4, "0");
@@ -110,34 +122,64 @@ export default async function handler(req, res) {
 
     const nombre_grupo = ins.nombre_grupo || ins.nombre || "Participante";
     const fecha = ins.created_at
-      ? new Date(ins.created_at).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })
+      ? new Date(ins.created_at).toLocaleString("es-AR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })
       : "—";
 
     // === HTML INTEGRANTES ===
-    const intHtml = integrantes.length ? integrantes.map((it, idx) => {
-      const subCode = codigo_legible + "-" + (idx + 1);
-      const nm = (it && (it.nombre || it.name)) || "Integrante " + (idx + 1);
-      return '<tr><td style="padding:10px 12px;background:#1a1600;border-left:3px solid #C9A84C">' +
-        '<div style="font-family:\'Courier New\',monospace;font-size:12px;color:#C9A84C;letter-spacing:1px;font-weight:600;margin-bottom:3px">' + esc(subCode) + '</div>' +
-        '<div style="font-family:Georgia,serif;font-size:16px;color:#F8F5EE;font-weight:600">' + esc(nm) + '</div>' +
-        '<div style="font-size:11px;color:#888;margin-top:2px">' + esc(nombre_grupo) + '</div>' +
-        '</td></tr>';
-    }).join("") : "";
+    const intHtml = integrantes.length
+      ? integrantes
+          .map((it, idx) => {
+            const subCode = codigo_legible + "-" + (idx + 1);
+            const nm =
+              (it && (it.nombre || it.name)) || "Integrante " + (idx + 1);
+            return (
+              '<tr><td style="padding:10px 12px;background:#1a1600;border-left:3px solid #C9A84C">' +
+              "<div style=\"font-family:'Courier New',monospace;font-size:12px;color:#C9A84C;letter-spacing:1px;font-weight:600;margin-bottom:3px\">" +
+              esc(subCode) +
+              "</div>" +
+              '<div style="font-family:Georgia,serif;font-size:16px;color:#F8F5EE;font-weight:600">' +
+              esc(nm) +
+              "</div>" +
+              '<div style="font-size:11px;color:#888;margin-top:2px">' +
+              esc(nombre_grupo) +
+              "</div>" +
+              "</td></tr>"
+            );
+          })
+          .join("")
+      : "";
 
     // === HTML CATEGORÍAS ===
-    const catHtml = categorias.length ? categorias.map(c => {
-      const n = c.c != null ? "N° " + c.c : "";
-      const g = c.g ? " · " + String(c.g).toUpperCase() : "";
-      const nm = c.n || c.nombre || "Categoría";
-      return '<tr><td style="padding:10px 12px;background:#1a1600;border-left:3px solid #C9A84C">' +
-        '<div style="font-family:\'Courier New\',monospace;font-size:11px;color:#C9A84C;margin-bottom:3px;font-weight:600">' + esc(n + g) + '</div>' +
-        '<div style="font-family:Georgia,serif;font-size:16px;color:#F8F5EE;font-weight:600">' + esc(nm) + '</div>' +
-        '</td></tr>';
-    }).join("") : "";
+    const catHtml = categorias.length
+      ? categorias
+          .map((c) => {
+            const n = c.c != null ? "N° " + c.c : "";
+            const g = c.g ? " · " + String(c.g).toUpperCase() : "";
+            const nm = c.n || c.nombre || "Categoría";
+            return (
+              '<tr><td style="padding:10px 12px;background:#1a1600;border-left:3px solid #C9A84C">' +
+              "<div style=\"font-family:'Courier New',monospace;font-size:11px;color:#C9A84C;margin-bottom:3px;font-weight:600\">" +
+              esc(n + g) +
+              "</div>" +
+              '<div style="font-family:Georgia,serif;font-size:16px;color:#F8F5EE;font-weight:600">' +
+              esc(nm) +
+              "</div>" +
+              "</td></tr>"
+            );
+          })
+          .join("")
+      : "";
 
     // === BLOQUE DE PAGO ===
     const isInter = ins.instancia === "int";
-    const pagoHtml = isInter ? `
+    const includePago = ins.instancia !== "reg";
+    const pagoHtml = !includePago
+      ? ""
+      : isInter
+        ? `
 <div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0">
   <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;text-align:center">Datos para pagar · Inter América</div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
@@ -153,7 +195,8 @@ export default async function handler(req, res) {
     <div style="font-family:Georgia,serif;font-size:15px;color:#E8A838">${PAGO_PREX.titular}</div>
   </div>
   <div style="font-size:12px;color:rgba(248,245,238,.6);text-align:center;margin-top:14px;line-height:1.5">El total se calcula según la tabla publicada en el portal. Podés pagar la totalidad o el 50% como seña.</div>
-</div>` : `
+</div>`
+        : `
 <div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0">
   <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;text-align:center">Datos para pagar (transferencia)</div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
@@ -173,7 +216,9 @@ export default async function handler(req, res) {
 
     const SITE = process.env.SITE_URL || "https://jam-inscripciones.vercel.app";
     const checkUrl = SITE + "/check?id=" + ins.id;
-    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(checkUrl);
+    const qrUrl =
+      "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+      encodeURIComponent(checkUrl);
     const subj = "Inscripción JAM 2026 confirmada — " + codigo_legible;
 
     // === HTML MAIL PARTICIPANTE (SIN MONTO) ===
@@ -191,8 +236,8 @@ export default async function handler(req, res) {
 </div>
 <div style="padding:24px">
   <p style="margin:0 0 16px;color:#444">Hola <strong>${esc(ins.nombre || nombre_grupo)}</strong>, tu inscripción a <strong>${esc(cfg.label)}</strong> fue recibida correctamente.</p>
-  ${integrantes.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Integrantes (' + integrantes.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + intHtml + '</table>' : ''}
-  ${categorias.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Categorías (' + categorias.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + catHtml + '</table>' : ''}
+  ${integrantes.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Integrantes (' + integrantes.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + intHtml + "</table>" : ""}
+  ${categorias.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Categorías (' + categorias.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + catHtml + "</table>" : ""}
   <h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Datos</h3>
   <table style="width:100%;border-collapse:collapse">
     <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:.5px">Responsable</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>${esc(ins.nombre)}</strong></td></tr>
@@ -213,26 +258,69 @@ export default async function handler(req, res) {
 
     // === TEXT MAIL PARTICIPANTE ===
     const intText = integrantes.length
-      ? "\n\nINTEGRANTES (" + integrantes.length + ")\n" + integrantes.map((it, idx) =>
-          (codigo_legible + "-" + (idx + 1)) + "\n" +
-          ((it && (it.nombre || it.name)) || "Integrante " + (idx + 1)) + "\n" + nombre_grupo
-        ).join("\n\n")
+      ? "\n\nINTEGRANTES (" +
+        integrantes.length +
+        ")\n" +
+        integrantes
+          .map(
+            (it, idx) =>
+              codigo_legible +
+              "-" +
+              (idx + 1) +
+              "\n" +
+              ((it && (it.nombre || it.name)) || "Integrante " + (idx + 1)) +
+              "\n" +
+              nombre_grupo,
+          )
+          .join("\n\n")
       : "";
     const catText = categorias.length
-      ? "\n\nCATEGORÍAS (" + categorias.length + ")\n" + categorias.map(c =>
-          "N° " + (c.c || "?") + " · " + (c.g || "").toUpperCase() + "\n" + (c.n || c.nombre || "Categoría")
-        ).join("\n")
+      ? "\n\nCATEGORÍAS (" +
+        categorias.length +
+        ")\n" +
+        categorias
+          .map(
+            (c) =>
+              "N° " +
+              (c.c || "?") +
+              " · " +
+              (c.g || "").toUpperCase() +
+              "\n" +
+              (c.n || c.nombre || "Categoría"),
+          )
+          .join("\n")
       : "";
-    const pagoText = isInter
-      ? "\n\nDatos para pagar · Inter América\nPlataforma: " + PAGO_PREX.plataforma +
-        "\nCuenta/Alias Prex: " + PAGO_PREX.cuenta + "\nTitular: " + PAGO_PREX.titular +
-        "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)"
-      : "\n\nDatos para pagar (transferencia)\nAlias: " + PAGO_VIAMONTE.alias +
-        "\nCBU: " + PAGO_VIAMONTE.cbu + "\nTitular: " + PAGO_VIAMONTE.titular +
-        "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)";
-    const textParticipante = "JAM 2026\nInscripción confirmada\nCódigo: " + codigo_legible + "\n" +
-      nombre_grupo + "\n" + cfg.label + intText + catText + "\n\nResponsable: " + ins.nombre +
-      pagoText + "\n\nVer: " + checkUrl;
+    const pagoText = !includePago
+      ? ""
+      : isInter
+        ? "\n\nDatos para pagar · Inter América\nPlataforma: " +
+          PAGO_PREX.plataforma +
+          "\nCuenta/Alias Prex: " +
+          PAGO_PREX.cuenta +
+          "\nTitular: " +
+          PAGO_PREX.titular +
+          "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)"
+        : "\n\nDatos para pagar (transferencia)\nAlias: " +
+          PAGO_VIAMONTE.alias +
+          "\nCBU: " +
+          PAGO_VIAMONTE.cbu +
+          "\nTitular: " +
+          PAGO_VIAMONTE.titular +
+          "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)";
+    const textParticipante =
+      "JAM 2026\nInscripción confirmada\nCódigo: " +
+      codigo_legible +
+      "\n" +
+      nombre_grupo +
+      "\n" +
+      cfg.label +
+      intText +
+      catText +
+      "\n\nResponsable: " +
+      ins.nombre +
+      pagoText +
+      "\n\nVer: " +
+      checkUrl;
 
     // === ENVIAR MAIL AL PARTICIPANTE ===
     const mail_participante = await sendMail({
@@ -240,68 +328,144 @@ export default async function handler(req, res) {
       to: ins.email,
       subject: subj,
       html: htmlParticipante,
-      text: textParticipante
+      text: textParticipante,
     });
 
     // === MAIL A LA SEDE (solo REG) ===
     let mail_sede = null;
     if (ins.instancia === "reg" && ins.sede_email_org) {
-      const sedeHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">' +
+      const sedeHtml =
+        '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">' +
         '<div style="background:#0A0A0A;padding:24px;text-align:center"><div style="font-family:Georgia,serif;font-size:36px;color:#C9A84C;letter-spacing:6px;font-weight:700">JAM</div><div style="color:rgba(248,245,238,.5);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-top:4px">Nueva inscripción en tu sede</div></div>' +
-        '<div style="padding:24px"><p>Se inscribió un nuevo participante en la sede <strong>' + esc(ins.sede_nombre || "—") + '</strong>.</p>' +
+        '<div style="padding:24px"><p>Se inscribió un nuevo participante en la sede <strong>' +
+        esc(ins.sede_nombre || "—") +
+        "</strong>.</p>" +
         '<table style="width:100%;border-collapse:collapse;margin-top:16px">' +
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Código</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-family:monospace;color:#C9A84C;font-weight:700">' + esc(codigo_legible) + '</td></tr>' +
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Responsable</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' + esc(ins.nombre) + '</strong></td></tr>' +
-        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.email) + '</td></tr>' +
-        '<tr><td style="padding:8px 0;color:#888;font-size:12px;text-transform:uppercase">Categorías</td><td style="padding:8px 0;text-align:right">' + categorias.length + '</td></tr>' +
-        '</table>' +
-        '<p style="margin-top:20px;text-align:center"><a href="' + checkUrl + '" style="background:#C9A84C;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ver →</a></p>' +
-        '</div></div>';
+        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Código</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-family:monospace;color:#C9A84C;font-weight:700">' +
+        esc(codigo_legible) +
+        "</td></tr>" +
+        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Responsable</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' +
+        esc(ins.nombre) +
+        "</strong></td></tr>" +
+        '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+        esc(ins.email) +
+        "</td></tr>" +
+        '<tr><td style="padding:8px 0;color:#888;font-size:12px;text-transform:uppercase">Categorías</td><td style="padding:8px 0;text-align:right">' +
+        categorias.length +
+        "</td></tr>" +
+        "</table>" +
+        '<p style="margin-top:20px;text-align:center"><a href="' +
+        checkUrl +
+        '" style="background:#C9A84C;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Ver →</a></p>' +
+        "</div></div>";
       mail_sede = await sendMail({
         from: SENDER,
         to: ins.sede_email_org,
         subject: "Nueva inscripción " + codigo_legible + " — " + nombre_grupo,
         html: sedeHtml,
-        text: "Nueva inscripción en sede " + (ins.sede_nombre || "") +
-          "\nCódigo: " + codigo_legible + "\nResponsable: " + ins.nombre +
-          "\nEmail: " + ins.email + "\nCategorías: " + categorias.length +
-          "\nVer: " + checkUrl
+        text:
+          "Nueva inscripción en sede " +
+          (ins.sede_nombre || "") +
+          "\nCódigo: " +
+          codigo_legible +
+          "\nResponsable: " +
+          ins.nombre +
+          "\nEmail: " +
+          ins.email +
+          "\nCategorías: " +
+          categorias.length +
+          "\nVer: " +
+          checkUrl,
       });
     }
 
     // === MAIL AL ADMIN (info@jamcompetencia.com) - SIEMPRE ===
-    const adminHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">' +
+    const adminHtml =
+      '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">' +
       '<div style="background:#0A0A0A;padding:24px;text-align:center"><div style="font-family:Georgia,serif;font-size:36px;color:#C9A84C;letter-spacing:6px;font-weight:700">JAM</div><div style="color:rgba(248,245,238,.5);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-top:4px">Panel director · Nueva inscripción</div></div>' +
       '<div style="padding:24px">' +
       '<p style="margin:0 0 14px"><strong style="color:#C9A84C">Nueva inscripción registrada</strong></p>' +
       '<table style="width:100%;border-collapse:collapse">' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Instancia</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' + esc(cfg.label) + '</strong></td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Código</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-family:monospace;color:#C9A84C;font-weight:700">' + esc(codigo_legible) + '</td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Nombre/Grupo</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' + esc(nombre_grupo) + '</strong></td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Responsable</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.nombre) + '</td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.email) + '</td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Celular</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.celular || "—") + '</td></tr>' +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">País</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.pais || "—") + '</td></tr>' +
-      (ins.sede_nombre ? '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Sede</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.sede_nombre) + '</td></tr>' : '') +
-      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Modalidad</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' + esc(ins.modalidad || "—") + ' (' + (ins.cant_personas || 1) + ' pers.)</td></tr>' +
-      '<tr><td style="padding:8px 0;color:#888;font-size:12px;text-transform:uppercase">Categorías</td><td style="padding:8px 0;text-align:right">' + categorias.length + '</td></tr>' +
-      '</table>' +
-      '<p style="margin-top:24px;text-align:center"><a href="' + checkUrl + '" style="background:#C9A84C;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Ver →</a> &nbsp; <a href="' + SITE + '/admin" style="background:transparent;color:#C9A84C;border:1px solid #C9A84C;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Admin →</a></p>' +
-      '</div></div>';
-    const adminText = "JAM · Nueva inscripción\nInstancia: " + cfg.label + "\nCódigo: " + codigo_legible +
-      "\nNombre: " + nombre_grupo + "\nResponsable: " + ins.nombre + "\nEmail: " + ins.email +
-      "\nCelular: " + (ins.celular || "—") + "\nPaís: " + (ins.pais || "—") +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Instancia</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' +
+      esc(cfg.label) +
+      "</strong></td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Código</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;font-family:monospace;color:#C9A84C;font-weight:700">' +
+      esc(codigo_legible) +
+      "</td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Nombre/Grupo</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>' +
+      esc(nombre_grupo) +
+      "</strong></td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Responsable</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+      esc(ins.nombre) +
+      "</td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Email</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+      esc(ins.email) +
+      "</td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Celular</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+      esc(ins.celular || "—") +
+      "</td></tr>" +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">País</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+      esc(ins.pais || "—") +
+      "</td></tr>" +
+      (ins.sede_nombre
+        ? '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Sede</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+          esc(ins.sede_nombre) +
+          "</td></tr>"
+        : "") +
+      '<tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase">Modalidad</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">' +
+      esc(ins.modalidad || "—") +
+      " (" +
+      (ins.cant_personas || 1) +
+      " pers.)</td></tr>" +
+      '<tr><td style="padding:8px 0;color:#888;font-size:12px;text-transform:uppercase">Categorías</td><td style="padding:8px 0;text-align:right">' +
+      categorias.length +
+      "</td></tr>" +
+      "</table>" +
+      '<p style="margin-top:24px;text-align:center"><a href="' +
+      checkUrl +
+      '" style="background:#C9A84C;color:#0A0A0A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Ver →</a> &nbsp; <a href="' +
+      SITE +
+      '/admin" style="background:transparent;color:#C9A84C;border:1px solid #C9A84C;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Admin →</a></p>' +
+      "</div></div>";
+    const adminText =
+      "JAM · Nueva inscripción\nInstancia: " +
+      cfg.label +
+      "\nCódigo: " +
+      codigo_legible +
+      "\nNombre: " +
+      nombre_grupo +
+      "\nResponsable: " +
+      ins.nombre +
+      "\nEmail: " +
+      ins.email +
+      "\nCelular: " +
+      (ins.celular || "—") +
+      "\nPaís: " +
+      (ins.pais || "—") +
       (ins.sede_nombre ? "\nSede: " + ins.sede_nombre : "") +
-      "\nModalidad: " + (ins.modalidad || "—") + " (" + (ins.cant_personas || 1) + " pers.)" +
-      "\nCategorías: " + categorias.length +
-      "\n\nVer: " + checkUrl + "\nAdmin: " + SITE + "/admin";
+      "\nModalidad: " +
+      (ins.modalidad || "—") +
+      " (" +
+      (ins.cant_personas || 1) +
+      " pers.)" +
+      "\nCategorías: " +
+      categorias.length +
+      "\n\nVer: " +
+      checkUrl +
+      "\nAdmin: " +
+      SITE +
+      "/admin";
 
     const mail_admin = await sendMail({
       from: SENDER,
       to: ADMIN_EMAIL,
-      subject: "[Admin JAM] Nueva inscripción " + codigo_legible + " — " + nombre_grupo,
+      subject:
+        "[Admin JAM] Nueva inscripción " +
+        codigo_legible +
+        " — " +
+        nombre_grupo,
       html: adminHtml,
-      text: adminText
+      text: adminText,
     });
 
     return res.status(200).json({
@@ -313,7 +477,7 @@ export default async function handler(req, res) {
       categorias_count: categorias.length,
       mail_participante,
       mail_sede,
-      mail_admin
+      mail_admin,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message || "Internal error" });
