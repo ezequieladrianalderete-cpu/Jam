@@ -5197,9 +5197,13 @@
         if (!c) return;
         var cats = Array.from(selC)
           .map(function (id) {
-            return CATS.find(function (x) {
-              return x.c === id;
-            });
+            return (
+              CATS.find(function (x) {
+                return INST === "int"
+                  ? x.c === id && x.inst === "int"
+                  : x.c === id && x.inst !== "int";
+              }) || CATS.find(function (x) { return x.c === id; })
+            );
           })
           .filter(Boolean);
         if (!cats.length) {
