@@ -50,13 +50,15 @@ async function supaSelect(table, query) {
 }
 
 // === Resend HTTP API (sin SDK) ===
-async function sendMail({ from, to, subject, html, text }) {
+async function sendMail({ from, to, subject, html, text, idempotencyKey }) {
+  const headers = {
+    Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+    "Content-Type": "application/json",
+  };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       from,
       to: Array.isArray(to) ? to : [to],
@@ -329,6 +331,7 @@ export default async function handler(req, res) {
       subject: subj,
       html: htmlParticipante,
       text: textParticipante,
+      idempotencyKey: `${ins.id}-participant`,
     });
 
     // === MAIL A LA SEDE (solo REG) ===
@@ -363,6 +366,7 @@ export default async function handler(req, res) {
         to: ins.sede_email_org,
         subject: "Nueva inscripción " + codigo_legible + " — " + nombre_grupo,
         html: sedeHtml,
+        idempotencyKey: `${ins.id}-sede`,
         text:
           "Nueva inscripción en sede " +
           (ins.sede_nombre || "") +
@@ -459,6 +463,7 @@ export default async function handler(req, res) {
     const mail_admin = await sendMail({
       from: SENDER,
       to: ADMIN_EMAIL,
+      idempotencyKey: `${ins.id}-admin`,
       subject:
         "[Admin JAM] Nueva inscripción " +
         codigo_legible +
