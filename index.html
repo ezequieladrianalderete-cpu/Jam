@@ -6239,6 +6239,8 @@
       };
 
       // ── CONFIRMACIONES ────────────────────────────────────────────────
+      var _submitting = false;
+
       function sendNotify(id) {
         if (!id) return;
         if (
@@ -6270,8 +6272,11 @@
       }
 
       async function confirmarReg() {
+        if (_submitting) return;
+        _submitting = true;
         var chkEl = document.getElementById("chk");
         if (chkEl && !chkEl.checked) {
+          _submitting = false;
           toast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
@@ -6286,10 +6291,12 @@
           showSaving(false);
         }
         if (dbRecord === "DUPLICATE_EMAIL") {
+          _submitting = false;
           toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
           return;
         }
         if (!dbRecord) {
+          _submitting = false;
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
@@ -6580,8 +6587,11 @@
       spinStyle.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
       document.head.appendChild(spinStyle);
       async function confirmar() {
+        if (_submitting) return;
+        _submitting = true;
         var chkEl = document.getElementById("chk");
         if (chkEl && !chkEl.checked) {
+          _submitting = false;
           toast("Acept\u00e1 los t\u00e9rminos para continuar.");
           return;
         }
@@ -6596,10 +6606,12 @@
           showSaving(false);
         }
         if (dbRecord === "DUPLICATE_EMAIL") {
+          _submitting = false;
           toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
           return;
         }
         if (!dbRecord) {
+          _submitting = false;
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
