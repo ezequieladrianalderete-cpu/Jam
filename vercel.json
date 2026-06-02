@@ -12,7 +12,6 @@
   "rewrites": [
     { "source": "/musica", "destination": "/musica.html" },
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/check", "destination": "/check.html" },
-    { "source": "/api/notify", "destination": "/api/notify.js" }
+    { "source": "/check", "destination": "/check.html" }
   ]
 }
