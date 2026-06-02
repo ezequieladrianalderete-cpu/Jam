@@ -4133,11 +4133,15 @@
         return (
           Array.from(selC)
             .map(function (id) {
-              var c = CATS.find(function (x) {
-                return INST === "int"
-                  ? x.c === id && x.inst === "int"
-                  : x.c === id && x.inst !== "int";
-              }) || CATS.find(function (x) { return x.c === id; });
+              var c =
+                CATS.find(function (x) {
+                  return INST === "int"
+                    ? x.c === id && x.inst === "int"
+                    : x.c === id && x.inst !== "int";
+                }) ||
+                CATS.find(function (x) {
+                  return x.c === id;
+                });
               return c ? c.c + " \u2014 " + c.n : "";
             })
             .filter(Boolean)
@@ -4726,11 +4730,15 @@
         if (tv) {
           var names = Array.from(selC)
             .map(function (id) {
-              var c = CATS.find(function (x) {
-                return INST === "int"
-                  ? x.c === id && x.inst === "int"
-                  : x.c === id && x.inst !== "int";
-              }) || CATS.find(function (x) { return x.c === id; });
+              var c =
+                CATS.find(function (x) {
+                  return INST === "int"
+                    ? x.c === id && x.inst === "int"
+                    : x.c === id && x.inst !== "int";
+                }) ||
+                CATS.find(function (x) {
+                  return x.c === id;
+                });
               return c ? c.n : "";
             })
             .filter(Boolean);
@@ -5171,11 +5179,11 @@
           extra +
           '<div class="trrow"><span class="trk">Titular</span><span class="trv">' +
           banco.titular +
-          "</span></div>" +
-          '<div class="trrow" style="border-bottom:none"><span class="trk">Monto total</span>' +
-          '<span class="trv">' +
-          fT +
           "</span></div></div>";
+        // '<div class="trrow" style="border-bottom:none"><span class="trk">Monto total</span>' +
+        // '<span class="trv">' +
+        // fT +
+        // "</span></div></div>";
       }
       function cpy(txt, btn) {
         try {
@@ -5202,7 +5210,10 @@
                 return INST === "int"
                   ? x.c === id && x.inst === "int"
                   : x.c === id && x.inst !== "int";
-              }) || CATS.find(function (x) { return x.c === id; })
+              }) ||
+              CATS.find(function (x) {
+                return x.c === id;
+              })
             );
           })
           .filter(Boolean);
@@ -5689,23 +5700,23 @@
               "</div></div></div>" +
               '<div style="font-size:13px;font-weight:600;color:rgba(248,245,238,.5);margin-bottom:9px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
-              '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total</div><div class="mod" id="mo-tv">' +
-              fT +
+              '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total: - </div><div class="mod" id="mo-tv">' +
+              // fT +
               "</div></button>" +
               '<button class="mopt" id="mo-s" onclick="selM(&apos;senia&apos;)"><div class="mol">Se\u00f1a 50%</div><div class="mod" id="mo-sv">' +
-              fH +
-              "</div></button>" +
-              // '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
-              "</div>" +
-              '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
-              '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
-              '<label>Monto (<span id="mcur">ARS</span>)</label>' +
-              '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
-              '<div class="dbox mt2" id="dbox" style="display:none">' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div>' +
-              '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:6px">Saldo: vence el <strong style="color:#F8F5EE">5 de septiembre 2026</strong>.</div></div>' +
+              // fH +
+              "</div></button></div>" +
+              // CUADRADITO CON LA INFO DEL MONTO TOTAL O SEÑA DEL NACIONAL
+
+              // '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
+              // '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
+              // '<label>Monto (<span id="mcur">ARS</span>)</label>' +
+              // '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
+              // '<div class="dbox mt2" id="dbox" style="display:none">' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div>' +
+              // '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:6px">Saldo: vence el <strong style="color:#F8F5EE">5 de septiembre 2026</strong>.</div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante de pago</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
@@ -5750,9 +5761,8 @@
               ["Categor\u00edas", stateCatsText()],
               [
                 "Estado de pago",
-                pag >= tot.v
-                  ? "Pago completo"
-                  : "Se\u00f1a \u2014 saldo " + f(sal),
+                pag >= tot.v ? "Pago completo" : "Se\u00f1a",
+                // : "Se\u00f1a \u2014 saldo " + f(sal),
               ],
             ];
             var d = document.createElement("div");
@@ -5771,14 +5781,14 @@
                   );
                 })
                 .join("") +
-              '<div class="rtot"><span class="rtotl">Total inscripci\u00f3n</span><span class="rtotv">' +
-              fT +
+              '<div class="rtot"><span class="rtotl">Total inscripci\u00f3n: - </span><span class="rtotv">' +
+              // fT +
               "</span></div>" +
-              (sal > 0
-                ? '<div class="rsald"><span class="rsaldl">Saldo pendiente</span><span class="rsaldv">' +
-                  f(sal) +
-                  "</span></div>"
-                : "") +
+              // (sal > 0
+              //   ? '<div class="rsald"><span class="rsaldl">Saldo pendiente: </span><span class="rsaldv">' +
+              //     f(sal) +
+              //     "</span></div>"
+              //   : "") +
               "</div></div>" +
               '<div class="card mb3" style="text-align:center">' +
               tcNac() +
@@ -5880,20 +5890,20 @@
               '<div style="font-size:13px;font-weight:600;color:rgba(248,245,238,.5);margin-bottom:9px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
               '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total</div><div class="mod" id="mo-tv">' +
-              fT +
+              // fT +
               "</div></button>" +
               '<button class="mopt" id="mo-s" onclick="selM(&apos;senia&apos;)"><div class="mol">Se\u00f1a 50%</div><div class="mod" id="mo-sv">' +
-              fH +
-              "</div></button>" +
-              // '<button class="mopt" id="mo-o" onclick="selM(&apos;otro&apos;)"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
-              "</div>" +
-              '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
-              '<label>Monto (<span id="mcur">USD</span>)</label>' +
-              '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
-              '<div class="dbox mt2" id="dbox" style="display:none">' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div></div>' +
+              // fH +
+              "</div></button></div>" +
+              // CUADRADITO CON LA INFO DEL MONTO TOTAL O SEÑA DEL INTERNACIONAL
+
+              // '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
+              // '<label>Monto (<span id="mcur">USD</span>)</label>' +
+              // '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
+              // '<div class="dbox mt2" id="dbox" style="display:none">' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
@@ -5932,9 +5942,8 @@
               ["Categor\u00edas", stateCatsText()],
               [
                 "Estado de pago",
-                pag >= tot.v
-                  ? "Pago completo"
-                  : "Se\u00f1a \u2014 saldo U$S " + sal,
+                pag >= tot.v ? "Pago completo" : "Se\u00f1a",
+                // : "Se\u00f1a \u2014 saldo U$S " + sal,
               ],
             ];
             var d = document.createElement("div");
@@ -5953,14 +5962,14 @@
                   );
                 })
                 .join("") +
-              '<div class="rtot"><span class="rtotl">Total</span><span class="rtotv" style="color:#4B96D8">' +
-              fT +
+              '<div class="rtot"><span class="rtotl">Total: - </span><span class="rtotv" style="color:#4B96D8">' +
+              // fT +
               "</span></div>" +
-              (sal > 0
-                ? '<div class="rsald"><span class="rsaldl">Saldo pendiente</span><span class="rsaldv">U$S ' +
-                  sal +
-                  "</span></div>"
-                : "") +
+              // (sal > 0
+              //   ? '<div class="rsald"><span class="rsaldl">Saldo pendiente:</span><span> ' +
+              //     sal +
+              //     "</span></div>"
+              //   : "") +
               "</div></div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
               '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
@@ -6088,20 +6097,21 @@
               '<button class="cpybtn" id="rp4-btn-cvu">Copiar</button></div></div>' +
               '<div class="trrow"><span class="trk">Titular</span><span class="trv">' +
               titular +
-              "</span></div>" +
-              '<div class="trrow" style="border-bottom:none"><span class="trk">Total</span>' +
-              '<span class="trv" style="font-size:14px;color:#E8A838">' +
-              fT4 +
               "</span></div>";
+            // '<div class="trrow" style="border-bottom:none"><span class="trk">Total</span>' +
+            // '<span class="trv" style="font-size:14px;color:#E8A838">' +
+            // fT4 +
+            // "</span></div>";
             d.innerHTML =
               '<div class="sh"><div class="st">Pago de la repesca</div>' +
-              '<div class="ss"><strong style="color:#E8A838">ARS $50.000 \u00d7 ' +
-              np4 +
-              " integrante" +
-              (np4 > 1 ? "s" : "") +
-              " = " +
-              fT4 +
-              "</strong></div></div>" +
+              // '<div class="ss"><strong style="color:#E8A838">ARS $50.000 \u00d7 ' +
+              // np4 +
+              // " integrante" +
+              // (np4 > 1 ? "s" : "") +
+              // " = " +
+              // fT4 +
+              // "</strong></div></div>" +
+              "</div>" +
               '<div class="card" id="rp4-card">' +
               '<div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:12px">Datos para la transferencia</div>' +
               "</div>" +
@@ -6112,23 +6122,23 @@
               '<div style="font-size:13px;font-weight:600;color:rgba(248,245,238,.5);margin-bottom:9px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
               '<button class="mopt" id="mo-t"><div class="mol">Total</div><div class="mod">' +
-              fT4 +
+              // fT4 +
               "</div></button>" +
               '<button class="mopt" id="mo-s"><div class="mol">Se\u00f1a 50%</div><div class="mod">' +
-              fH4 +
-              "</div></button>" +
-              // '<button class="mopt" id="mo-o"><div class="mol">Otro monto</div><div class="mod">Importe libre</div></button>' +
-              "</div>" +
-              '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
-              '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
-              "<label>Monto a abonar (ARS)</label>" +
-              '<input type="number" id="cv" placeholder="0" min="0"></div></div>' +
-              '<div class="dbox mt2" id="dbox" style="display:none">' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600">' +
-              fT4 +
-              "</span></div>" +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="color:#4CAF7D;font-weight:600"></span></div>' +
-              '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo</span><span class="dsal" id="d-s"></span></div></div>' +
+              // fH4 +
+              "</div></button></div>" +
+              // CUADRADITO CON LA INFO DEL MONTO TOTAL O SEÑA DEL REPECHAJE
+
+              // '<div style="font-size:11px;color:rgba(248,245,238,.62);line-height:1.5;margin-top:8px">En caso de abonar con se\u00f1a del 50%, la cancelaci\u00f3n deber\u00e1 realizarse antes del 8 de septiembre en efectivo o por transferencia. Efectivo en oficina comercial en CABA.</div>' +
+              // '<div id="custom-w" style="display:none;margin-bottom:10px"><div class="fld" style="margin-bottom:0">' +
+              // "<label>Monto a abonar (ARS)</label>" +
+              // '<input type="number" id="cv" placeholder="0" min="0"></div></div>' +
+              // '<div class="dbox mt2" id="dbox" style="display:none">' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600">' +
+              // fT4 +
+              // "</span></div>" +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="color:#4CAF7D;font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo</span><span class="dsal" id="d-s"></span></div></div>' +
               '<hr><div style="font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:8px">Subir comprobante de pago</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()"><div style="font-size:24px;margin-bottom:6px">&#128206;</div>' +
               '<div style="font-size:13px;color:rgba(248,245,238,.45)">Subir captura o PDF</div>' +
@@ -6214,7 +6224,7 @@
               '<div class="rtot"><span class="rtotl">Total a pagar</span><span class="rtotv" style="color:#E8A838">ARS $' +
               getTotal().v.toLocaleString("es-AR") +
               "</span></div>" +
-              '<div class="rsald"><span class="rsaldl">Estado</span><span class="rsaldv" style="color:#E8A838">Pendiente de aprobaci\u00f3n</span></div>' +
+              // '<div class="rsald"><span class="rsaldl">Estado</span><span class="rsaldv" style="color:#E8A838">Pendiente de aprobaci\u00f3n</span></div>' +
               "</div>" +
               '<div class="card mb3" style="text-align:center">' +
               tcNac() +
@@ -6396,8 +6406,6 @@
           return null;
         }
 
-  
-
         var np = parseInt(STATE.cant) || 1;
         var sedeData =
           INST === "reg" && STATE.sede_idx != null
@@ -6538,12 +6546,12 @@
               ? "ARS $" + n.toLocaleString("es-AR")
               : "U$S " + n;
           };
-          oip.innerHTML =
-            _sal > 0
-              ? "Saldo pendiente de <strong>" +
-                _f(_sal) +
-                "</strong> \u2014 vence 5 de septiembre"
-              : "Pago completo registrado \u2014 pendiente de confirmaci\u00f3n";
+          // oip.innerHTML =
+          //   _sal > 0
+          //     ? "Saldo pendiente de <strong>" +
+          //       _f(_sal) +
+          //       "</strong> \u2014 vence 5 de septiembre"
+          //     : "Pago completo registrado \u2014 pendiente de confirmaci\u00f3n";
         }
         var pw = document.getElementById("ok-planilla");
         if (pw) {
@@ -7353,6 +7361,5 @@
           console.log("[JAM] Fix categorías v1 activo");
       })();
     </script>
-
   </body>
 </html>
