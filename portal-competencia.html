@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es" style="background:#080808">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Competencia — JAM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#080808}
+.login-box{width:100%;max-width:340px}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;letter-spacing:6px;color:#C9A84C;text-align:center;margin-bottom:4px}
+.login-sub{font-size:12px;color:rgba(248,245,238,.4);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:32px}
+.login-card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
+.login-title{font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:20px;text-align:center}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:600;color:rgba(248,245,238,.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px}
+.fld input{width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:12px 14px;color:#F8F5EE;font-family:'Outfit',sans-serif;font-size:15px;transition:all .2s;-webkit-appearance:none}
+.fld input:focus{outline:none;border-color:#C9A84C;background:#221e00;box-shadow:0 0 0 3px rgba(201,168,76,.08)}
+.fld input::placeholder{color:rgba(248,245,238,.25)}
+.login-hint{font-size:11px;color:rgba(248,245,238,.3);text-align:center;margin-top:14px;line-height:1.6}
+.login-err{background:#1a0000;border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#E05252;margin-bottom:14px;display:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;white-space:nowrap}
+.bg{background:#C9A84C;color:#0A0A0A}.bg:hover{background:#E8C97A;transform:translateY(-1px)}
+.bd{background:#4B96D8;color:#fff}.bd:hover{background:#5EA8E8}
+.bgn{background:#4CAF7D;color:#000}.bgn:hover{background:#5CC88A}
+.br{background:#E05252;color:#fff}.br:hover{background:#E86464}
+.bo{background:transparent;color:#F8F5EE;border:1px solid rgba(255,255,255,.2)}.bo:hover{background:rgba(255,255,255,.06)}
+.bam{background:#E8A838;color:#000}.bam:hover{background:#F0B840}
+.bfull{width:100%;padding:13px;font-size:15px;border-radius:14px}
+.bsm{padding:6px 14px;font-size:12px;border-radius:8px}
+.hdr{border-bottom:1px solid rgba(255,255,255,.07);padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:#0a0a0a;position:sticky;top:0;z-index:200;height:48px}
+.hdr-logo{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px;letter-spacing:4px;color:#C9A84C}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hdr-user{font-size:12px;color:rgba(248,245,238,.5)}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:#4CAF7D;animation:bl 2s infinite;flex-shrink:0}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto;background:#0d0d0d;padding:0 12px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 14px;font-size:12px;font-weight:500;color:rgba(248,245,238,.4);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;flex-shrink:0}
+.tab:hover{color:#F8F5EE}.tab.on{color:#C9A84C;border-bottom-color:#C9A84C}
+.tp{display:none}.tp.show{display:block}
+.card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+.cg{background:#1a1600;border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:14px}
+.cw{background:#1a1000;border:1px solid rgba(232,168,56,.3);border-radius:14px;padding:14px}
+.cgn{background:#001a0a;border:1px solid rgba(76,175,125,.25);border-radius:14px;padding:14px}
+.cr{background:#1a0000;border:1px solid rgba(224,82,82,.25);border-radius:14px;padding:14px}
+.cb{background:#001020;border:1px solid rgba(75,150,216,.25);border-radius:14px;padding:14px}
+.tarjeta{background:linear-gradient(135deg,#111,#1a1800);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:24px;position:relative;overflow:hidden}
+.tarjeta::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%)}
+.ep-label{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(201,168,76,.6);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.ep-dot{width:7px;height:7px;border-radius:50%;background:#4CAF7D;animation:bl 1.5s infinite;flex-shrink:0}
+.ep-id{font-family:'JetBrains Mono',monospace;font-size:14px;color:#C9A84C;margin-bottom:3px}
+.ep-nombre{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:#F8F5EE;margin-bottom:4px}
+.ep-info{font-size:13px;color:rgba(248,245,238,.5)}
+.ep-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.bdg-gold{background:#2a2000;border:1px solid rgba(201,168,76,.3);color:#C9A84C}
+.bdg-green{background:#001a0a;border:1px solid rgba(76,175,125,.3);color:#4CAF7D}
+.bdg-blue{background:#001020;border:1px solid rgba(75,150,216,.3);color:#4B96D8}
+.bdg-red{background:#1a0000;border:1px solid rgba(224,82,82,.3);color:#E05252}
+.bdg-amber{background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838}
+.bdg-gray{background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:rgba(248,245,238,.5)}
+.jgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.jcel{border-radius:10px;padding:9px 6px;text-align:center;border:1px solid rgba(255,255,255,.08);background:#181818;transition:all .3s}
+.jcel.done{background:#001a0a;border-color:rgba(76,175,125,.3)}
+.jcel.pend{background:#1a1000;border-color:rgba(232,168,56,.25)}
+.jcel.empty{background:#141414}
+.jnum{font-size:10px;color:rgba(248,245,238,.4)}
+.jscore{font-size:15px;font-weight:700;margin:3px 0}
+.jcel.done .jscore{color:#4CAF7D}.jcel.pend .jscore{color:#E8A838}.jcel.empty .jscore{color:rgba(255,255,255,.15)}
+.jforzar{background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838;border-radius:5px;padding:2px 6px;font-size:9px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;margin-top:3px;display:block;width:100%}
+.jforzar:hover{background:#2a1800}
+.item-wrap{background:#181818;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:10px}
+.item-nombre{font-size:13px;font-weight:600;color:#F8F5EE;margin-bottom:12px}
+.score-row{display:flex;align-items:center;gap:12px}
+.score-num{width:88px;flex-shrink:0}
+.score-input{width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px 12px;color:#C9A84C;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;text-align:center;transition:all .2s;-webkit-appearance:none}
+.score-input:focus{outline:none;border-color:#C9A84C;background:#221e00}
+.score-slider{flex:1;accent-color:#C9A84C;height:4px}
+input[type=range]{width:100%;cursor:pointer}
+.total-score-box{background:#1a1600;border:1px solid rgba(201,168,76,.3);border-radius:14px;padding:16px;text-align:center}
+.ts-label{font-size:12px;color:rgba(248,245,238,.5);margin-bottom:4px}
+.ts-val{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:600;color:#C9A84C;line-height:1}
+.ts-max{font-size:13px;color:rgba(248,245,238,.4);margin-top:4px}
+.tabla{width:100%;border-collapse:collapse}
+.tabla th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.07)}
+.tabla td{padding:9px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);color:#F8F5EE}
+.tabla tr:hover td{background:rgba(255,255,255,.02)}
+.tabla tr:last-child td{border-bottom:none}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#141414;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;width:100%;max-width:380px;animation:pop .2s ease}
+@keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.con{max-width:860px;margin:0 auto;padding:20px 16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:600px){.g2,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.g4{grid-template-columns:1fr 1fr}}
+.sf{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;gap:10px}
+.row:last-child{border-bottom:none}
+.rk{color:rgba(248,245,238,.5);flex-shrink:0}.rv{font-weight:500;text-align:right}
+.mono{font-family:'JetBrains Mono',monospace}
+.gold{color:#C9A84C}.green{color:#4CAF7D}.red{color:#E05252}.amber{color:#E8A838}.blue{color:#4B96D8}
+.muted{color:rgba(248,245,238,.45)}.faint{color:rgba(248,245,238,.25)}
+.fw7{font-weight:700}.fw6{font-weight:600}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.mt2{margin-top:8px}.mt3{margin-top:12px}.mt4{margin-top:16px}
+.mb2{margin-bottom:8px}.mb3{margin-bottom:12px}.mb4{margin-bottom:16px}
+.sy2>*+*{margin-top:8px}.sy3>*+*{margin-top:12px}
+hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:14px 0}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#2a2000;border-radius:2px}
+#loading-overlay{position:fixed;inset:0;background:#080808;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.spin{width:32px;height:32px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spin"></div>
+  <div style="font-size:13px;color:rgba(248,245,238,.4)">Conectando...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="login-wrap" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">JAM</div>
+    <div class="login-sub">Portal de Competencia · 2026</div>
+    <div class="login-card">
+      <div class="login-title">Acceso restringido</div>
+      <div class="login-err" id="login-err">Usuario o contraseña incorrectos.</div>
+      <div class="fld"><label>Usuario</label><input type="text" id="l-user" placeholder="jurado1 / director" autocomplete="username"></div>
+      <div class="fld"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn bg bfull" onclick="doLogin()">Ingresar →</button>
+      <div class="login-hint">Jurados: usuario <strong style="color:#C9A84C">jurado1</strong> al <strong style="color:#C9A84C">jurado10</strong><br>Contraseña inicial: <strong style="color:#C9A84C">1234</strong><br><br>Director: contraseña provista por el organizador</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL JURADO -->
+<div id="screen-jurado" style="display:none">
+  <header class="hdr">
+    <div class="hdr-logo">JAM</div>
+    <div class="hdr-right">
+      <div class="hdr-dot"></div>
+      <div class="hdr-user" id="j-header-user">Jurado 3</div>
+      <button class="btn bo bsm" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+
+  <div class="con" style="max-width:540px">
+
+    <!-- En pista -->
+    <div class="tarjeta mb4 mt3" id="j-tarjeta">
+      <div class="ep-label"><div class="ep-dot"></div> EN PISTA</div>
+      <div class="ep-id" id="j-codigo">—</div>
+      <div class="ep-nombre" id="j-nombre">Esperando...</div>
+      <div class="ep-info" id="j-info">Sin sesión activa</div>
+      <div class="ep-badges">
+        <span class="bdg bdg-gold" id="j-instancia-badge">—</span>
+        <span class="bdg bdg-blue" id="j-tanda-badge">Ítems: —</span>
+      </div>
+    </div>
+
+    <!-- Ítems a puntuar -->
+    <div class="card mb4" id="j-scoring-panel">
+      <div class="sf mb4">
+        <div>
+          <div class="fw6" style="font-size:15px">Tus puntajes</div>
+          <div class="muted text-xs mt2" id="j-escala-label">Escala 0 a 10 · 2 decimales</div>
+        </div>
+        <span class="bdg bdg-amber" id="j-estado-badge">Sin cerrar</span>
+      </div>
+
+      <div id="j-items-container">
+        <!-- ítems generados dinámicamente -->
+      </div>
+
+      <div class="total-score-box mt3">
+        <div class="ts-label" id="j-sub-label">Tu subtotal</div>
+        <div class="ts-val" id="j-sub">0.00</div>
+        <div class="ts-max" id="j-sub-max">/ 20 puntos</div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="sy3" id="j-btns">
+      <button class="btn bo bfull" onclick="jGuardarBorrador()">Guardar borrador (sin cerrar)</button>
+      <button class="btn bg bfull" style="padding:15px;font-size:16px" id="j-cerrar-btn" onclick="jCerrar()">Cerrar evaluación →</button>
+      <p class="muted text-xs" style="text-align:center">Una vez cerrada no puede modificarse.</p>
+      <button class="btn br bfull" style="background:transparent;border:1px solid rgba(224,82,82,.3);color:#E05252" onclick="document.getElementById('modal-desc').classList.add('open')">⚠ Votar descalificación</button>
+    </div>
+
+    <!-- Estado cerrado -->
+    <div id="j-cerrado" style="display:none;margin-top:24px">
+      <div class="cgn" style="text-align:center;padding:24px">
+        <div style="font-size:40px;margin-bottom:10px">✅</div>
+        <div class="fw7" style="font-size:18px;color:#4CAF7D">Evaluación cerrada</div>
+        <div class="muted text-sm mt2">Subtotal enviado: <span class="gold fw7" id="j-sub-final">0.00</span> <span id="j-sub-final-max">/ 20</span></div>
+        <div class="muted text-xs mt2">Esperando que los demás jueces cierren...</div>
+      </div>
+    </div>
+
+    <!-- Sin sesión -->
+    <div id="j-sin-sesion" style="display:none;text-align:center;padding:48px 20px">
+      <div style="font-size:48px;margin-bottom:16px;opacity:.3">⏳</div>
+      <div class="muted">Esperando que el director inicie una sesión...</div>
+    </div>
+
+  </div>
+</div><!-- /jurado -->
+
+<!-- PANEL DIRECTOR -->
+<div id="screen-director" style="display:none">
+  <header class="hdr">
+    <div class="hdr-logo">JAM</div>
+    <div class="hdr-right">
+      <div class="hdr-dot"></div>
+      <div class="hdr-user" id="d-hora-hdr"></div>
+      <button class="btn bo bsm" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab on" onclick="dTab('envivo',this)">⚡ En vivo</div>
+    <div class="tab" onclick="dTab('lineup',this)">Line Up</div>
+    <div class="tab" onclick="dTab('repesca',this)">Repesca</div>
+    <div class="tab" onclick="dTab('rankings',this)">Rankings</div>
+    <div class="tab" onclick="dTab('jurados-cfg',this)">⚙ Jurados</div>
+    <div class="tab" onclick="dTab('mails',this)">Mails</div>
+  </div>
+
+  <div class="con">
+
+    <!-- EN VIVO -->
+    <div class="tp show" id="d-envivo">
+      <div class="g4 mb4 mt3" id="d-stats">
+        <div class="card" style="padding:14px;text-align:center"><div id="d-stat-inscrip" style="font-size:24px;font-weight:700;color:#F8F5EE">—</div><div class="muted text-xs mt2">Inscriptos</div></div>
+        <div class="card" style="padding:14px;text-align:center"><div id="d-stat-acred" style="font-size:24px;font-weight:700;color:#4CAF7D">—</div><div class="muted text-xs mt2">Acreditados</div></div>
+        <div class="card" style="padding:14px;text-align:center"><div id="d-stat-puntuados" style="font-size:24px;font-weight:700;color:#C9A84C">—</div><div class="muted text-xs mt2">Puntuados</div></div>
+        <div class="card" style="padding:14px;text-align:center"><div id="d-stat-sesion" style="font-size:24px;font-weight:700;color:#4B96D8">—</div><div class="muted text-xs mt2">Sesión actual</div></div>
+      </div>
+
+      <div class="tarjeta mb4">
+        <div class="sf mb3">
+          <div>
+            <div class="ep-label"><div class="ep-dot"></div> EN PISTA</div>
+            <div class="ep-id" id="d-codigo">—</div>
+            <div class="ep-nombre" style="font-size:22px" id="d-nombre">Sin sesión activa</div>
+            <div class="ep-info" id="d-info"></div>
+          </div>
+          <span class="bdg bdg-amber" id="d-estado">—</span>
+        </div>
+
+        <div class="jgrid mb3" id="d-jgrid"></div>
+
+        <div style="background:#0d1200;border:1px solid rgba(201,168,76,.15);border-radius:12px;padding:14px;text-align:center;margin-bottom:14px">
+          <span style="font-size:11px;color:rgba(248,245,238,.4);display:block;margin-bottom:4px" id="d-sistema-label">—</span>
+          <span style="color:rgba(248,245,238,.5);font-size:13px">Puntaje parcial: </span>
+          <span style="font-family:'Cormorant Garamond',serif;font-size:32px;color:#C9A84C;font-weight:600" id="d-parcial">—</span>
+          <span style="color:rgba(248,245,238,.5)"> / 100</span>
+        </div>
+
+        <div id="d-esperando" class="cw" style="text-align:center;padding:12px"><span class="muted text-sm">Esperando que todos los jueces cierren...</span></div>
+        <button id="d-pasar-btn" class="btn bg bfull mt3" style="padding:14px;font-size:15px;display:none" onclick="dPasar()">Pasar al siguiente participante →</button>
+      </div>
+
+      <!-- Nueva sesión manual -->
+      <div class="card mb4" id="d-nueva-sesion-panel">
+        <div class="fw6 mb3">Iniciar sesión manual</div>
+        <div class="g2">
+          <div class="fld" style="margin-bottom:0"><label>Código ID</label><input type="text" id="ns-codigo" placeholder="JAM-NAC-0200" style="background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#F8F5EE;width:100%;font-size:13px"></div>
+          <div class="fld" style="margin-bottom:0"><label>Instancia</label>
+            <select id="ns-instancia" style="background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#F8F5EE;width:100%;font-size:13px;-webkit-appearance:none">
+              <option value="nac">Nacional</option>
+              <option value="rep">Repesca</option>
+              <option value="inter">Inter América</option>
+            </select>
+          </div>
+        </div>
+        <div class="fld mt2" style="margin-bottom:0"><label>Nombre del grupo</label><input type="text" id="ns-nombre" placeholder="Nombre del grupo..." style="background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#F8F5EE;width:100%;font-size:13px"></div>
+        <button class="btn bg bfull mt3" onclick="dIniciarSesion()">Iniciar sesión en pista →</button>
+      </div>
+
+    </div><!-- /envivo -->
+
+    <!-- LINE UP -->
+    <div class="tp" id="d-lineup">
+      <div class="sf mb4 mt3">
+        <div class="fw7" style="font-size:16px">Orden de competencia</div>
+        <span class="muted text-sm" id="d-lineup-count">—</span>
+      </div>
+      <div class="sy2" id="d-lineup-list"></div>
+    </div>
+
+    <!-- REPESCA -->
+    <div class="tp" id="d-repesca">
+      <div class="fw7 mb4 mt3" style="font-size:16px">Repesca</div>
+      <div class="sy2" id="d-repesca-list"></div>
+    </div>
+
+    <!-- RANKINGS -->
+    <div class="tp" id="d-rankings">
+      <div class="sf mb4 mt3">
+        <div class="fw7" style="font-size:16px">Ranking en tiempo real</div>
+        <button class="btn bgn bsm" onclick="toast('Ranking publicado en pantalla de proyección','ok')">📺 Publicar en pantalla</button>
+      </div>
+      <div class="card" style="overflow-x:auto">
+        <table class="tabla">
+          <thead><tr><th>Pos.</th><th>Nº ID</th><th>Grupo</th><th>Cat.</th><th>Puntaje</th></tr></thead>
+          <tbody id="d-rank-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MAILS -->
+    <div class="tp" id="d-mails">
+      <div class="fw7 mb4 mt3" style="font-size:16px">Enviar mails</div>
+      <div class="card mb3">
+        <div class="fw6 mb3">Enviar mail masivo</div>
+        <select id="mail-tipo" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;color:#F8F5EE;font-family:'Outfit',sans-serif;font-size:13px;margin-bottom:10px;-webkit-appearance:none">
+          <option>Confirmación de inscripción</option>
+          <option>Recordatorio de pago</option>
+          <option>Fecha y hora de presentación</option>
+          <option>Resultado de puntuación</option>
+          <option>Mensaje personalizado</option>
+        </select>
+        <button class="btn bg bfull" onclick="toast('Funcionalidad disponible en panel admin','warn')">Enviar a todos los confirmados →</button>
+      </div>
+    </div>
+
+    <!-- CONFIGURAR JURADOS -->
+    <div class="tp" id="d-jurados-cfg">
+      <div class="sf mb4 mt3">
+        <div>
+          <div class="fw7" style="font-size:16px">Configuración de Jurados</div>
+          <div class="muted text-xs mt2">Asigná ítems a cada jurado antes de iniciar la competencia</div>
+        </div>
+        <button class="btn bgn bsm" onclick="dGuardarTodosJurados()">💾 Guardar todo</button>
+      </div>
+
+      <div class="card mb3" style="padding:14px">
+        <div class="sf">
+          <div>
+            <label class="muted text-xs" style="display:block;margin-bottom:4px">Cantidad de jurados activos</label>
+            <div class="g2" style="gap:8px">
+              <input type="number" id="cfg-cant-jurados" value="5" min="1" max="20" style="width:70px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;color:#C9A84C;font-size:18px;font-weight:700;text-align:center;font-family:'JetBrains Mono',monospace">
+              <button class="btn bo bsm" onclick="dGenerarJurados()">Generar grilla ↓</button>
+            </div>
+          </div>
+          <div>
+            <label class="muted text-xs" style="display:block;margin-bottom:4px">Presets rápidos</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn bam bsm" onclick="dPresetNacional()">NAC (5×2)</button>
+              <button class="btn bd bsm" onclick="dPresetInter()">INTER (3×5)</button>
+              <button class="btn bo bsm" onclick="dPresetRegional()">REGIONAL (libre)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="muted text-xs mb2">Ítems disponibles: <span class="gold">Técnica · Proyección · Coreografía · Vestuario · Actuación · Interpretación Musical · Conexión · Factor Sorpresa · Tiempo · Edición Musical</span></div>
+
+      <div id="d-jurados-grid" class="sy2"></div>
+    </div>
+
+  </div>
+</div><!-- /director -->
+
+<!-- MODAL DESCALIFICACIÓN -->
+<div class="modal" id="modal-desc">
+  <div class="modal-box">
+    <div class="fw7 mb2" style="font-size:16px;color:#E05252">⚠ Votar descalificación</div>
+    <p class="muted text-sm mb4">La descalificación requiere unanimidad de todos los jueces activos del sistema.</p>
+    <div class="fld mb4"><label>Motivo (opcional)</label><input type="text" id="desc-motivo" placeholder="Ej: No se presentó, vestuario inapropiado..." style="background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;color:#F8F5EE;width:100%;font-size:13px"></div>
+    <div class="g2">
+      <button class="btn bo bfull" onclick="document.getElementById('modal-desc').classList.remove('open')">Cancelar</button>
+      <button class="btn br bfull" onclick="jVotarDesc()">Confirmar voto</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3000;pointer-events:none;display:flex;flex-direction:column;gap:8px;align-items:center"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG — Cambiar por las claves reales de Supabase
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://paexpktmcytccjphoppu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg'; // ← pegar desde Supabase > Settings > API
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════════════════
+// ESTADO LOCAL
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;
+let sesionActiva = null;
+let miPuntaje = null;
+let jCerradoFlag = false;
+let realtimeSub = null;
+
+const ITEMS_NAC = ['Técnica','Proyección','Coreografía','Vestuario','Actuación','Interpretación Musical','Conexión','Factor Sorpresa','Tiempo','Edición Musical'];
+const ITEMS_INT = ['Técnica','Musicalidad y Tiempo','Vestuario y Creatividad','Presencia Escénica','Ejecución Coreográfica'];
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  // Verificar conexión
+  try {
+    const { error } = await db.from('evento.config').select('clave').limit(1);
+    // Si hay error de schema, intentar sin schema
+  } catch(e) {}
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════
+async function doLogin() {
+  const user = document.getElementById('l-user').value.trim().toLowerCase();
+  const pass = document.getElementById('l-pass').value;
+  const err  = document.getElementById('login-err');
+  err.style.display = 'none';
+
+  try {
+    const { data, error } = await db.rpc('verificar_login', { p_user: user, p_pass: pass });
+    if (error || !data || data.length === 0) {
+      err.style.display = 'block';
+      err.textContent = 'Usuario o contraseña incorrectos.';
+      return;
+    }
+    currentUser = data[0];
+    document.getElementById('screen-login').style.display = 'none';
+    if (currentUser.rol === 'director') {
+      document.getElementById('screen-director').style.display = 'block';
+      initDirector();
+    } else {
+      document.getElementById('screen-jurado').style.display = 'block';
+      initJurado();
+    }
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = 'Error de conexión. Verificá la configuración.';
+    console.error(e);
+  }
+}
+
+function doLogout() {
+  currentUser = null; sesionActiva = null; miPuntaje = null; jCerradoFlag = false;
+  if (realtimeSub) { db.removeChannel(realtimeSub); realtimeSub = null; }
+  ['screen-director','screen-jurado'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('l-pass').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════
+// JURADO
+// ═══════════════════════════════════════════════════════════
+async function initJurado() {
+  document.getElementById('j-header-user').textContent = 'Jurado ' + currentUser.juez_num + ' · Tablet ' + currentUser.juez_num;
+  await loadSesionJurado();
+  subscribeRealtimeJurado();
+}
+
+async function loadSesionJurado() {
+  const { data: sesiones } = await db.schema('scoring').from('sesiones').select('*').eq('activa', true).limit(1);
+  if (!sesiones || sesiones.length === 0) {
+    mostrarSinSesion();
+    return;
+  }
+  sesionActiva = sesiones[0];
+  renderTarjetaJurado();
+
+  // Cargar puntaje existente (si ya había guardado borrador)
+  const { data: punt } = await db.schema('scoring').from('puntajes')
+    .select('*').eq('sesion_id', sesionActiva.id).eq('juez_num', currentUser.juez_num).limit(1);
+  if (punt && punt.length > 0) {
+    miPuntaje = punt[0];
+    if (miPuntaje.cerrado) {
+      mostrarCerrado();
+    } else {
+      cargarBorrador(miPuntaje.items);
+    }
+  } else {
+    mostrarPanelScoring();
+  }
+}
+
+function mostrarSinSesion() {
+  document.getElementById('j-scoring-panel').style.display = 'none';
+  document.getElementById('j-btns').style.display = 'none';
+  document.getElementById('j-sin-sesion').style.display = 'block';
+}
+
+function renderTarjetaJurado() {
+  const s = sesionActiva;
+  document.getElementById('j-codigo').textContent = s.codigo_id;
+  document.getElementById('j-nombre').textContent = s.nombre_grupo;
+  document.getElementById('j-info').textContent = s.pais + ' · ' + (s.categoria || '') + ' · ' + s.instancia.toUpperCase();
+  document.getElementById('j-instancia-badge').textContent = 'Sesión #' + s.id;
+  const items = currentUser.items || ['Ítem 1','Ítem 2'];
+  document.getElementById('j-tanda-badge').textContent = 'Ítems: ' + items.join(' · ');
+  const maxPts = items.length * 10;
+  document.getElementById('j-escala-label').textContent = 'Escala 0 a 10 · ' + items.length + ' ítems asignados';
+  document.getElementById('j-sub-max').textContent = '/ ' + maxPts + ' puntos';
+  document.getElementById('j-sub-label').textContent = 'Tu subtotal';
+  buildItemsJurado();
+}
+
+function buildItemsJurado() {
+  const items = currentUser.items || ['Ítem 1','Ítem 2'];
+  const maxVal = 10;
+  const cont = document.getElementById('j-items-container');
+  cont.innerHTML = '';
+  items.forEach((nombre, i) => {
+    const n = i + 1;
+    cont.innerHTML += `
+    <div class="item-wrap" id="item${n}-wrap">
+      <div class="item-nombre" id="item${n}-nombre">${n}. ${nombre}</div>
+      <div class="score-row">
+        <div class="score-num"><input type="number" class="score-input" id="v${n}" value="0.00" min="0" max="${maxVal}" step="0.01" oninput="syncSlider(${n});calcSub()"></div>
+        <input type="range" class="score-slider" id="r${n}" min="0" max="${maxVal}" step="0.5" value="0" oninput="syncInput(${n});calcSub()">
+      </div>
+    </div>`;
+  });
+  calcSub();
+}
+
+function cargarBorrador(items) {
+  if (!items) return;
+  Object.keys(items).forEach(k => {
+    const idx = k.replace('item','');
+    const vEl = document.getElementById('v' + idx);
+    const rEl = document.getElementById('r' + idx);
+    if (vEl) { vEl.value = items[k]; }
+    if (rEl) { rEl.value = items[k]; }
+  });
+  calcSub();
+}
+
+function mostrarPanelScoring() {
+  document.getElementById('j-scoring-panel').style.display = 'block';
+  document.getElementById('j-btns').style.display = 'block';
+  document.getElementById('j-cerrado').style.display = 'none';
+  document.getElementById('j-sin-sesion').style.display = 'none';
+}
+
+function mostrarCerrado() {
+  document.getElementById('j-cerrar-btn').style.display = 'none';
+  document.getElementById('j-cerrado').style.display = 'block';
+  document.getElementById('j-sub-final').textContent = miPuntaje.subtotal;
+  const maxPts = (currentUser?.items?.length || 2) * 10;
+  document.getElementById('j-sub-final-max').textContent = '/ ' + maxPts;
+  document.getElementById('j-estado-badge').textContent = '✓ Cerrado';
+  document.getElementById('j-estado-badge').className = 'bdg bdg-green';
+  document.querySelectorAll('.score-input,.score-slider').forEach(el => el.disabled = true);
+}
+
+function syncSlider(n) { const r=document.getElementById('r'+n),v=document.getElementById('v'+n); if(r&&v)r.value=v.value; }
+function syncInput(n)  { const r=document.getElementById('r'+n),v=document.getElementById('v'+n); if(r&&v)v.value=parseFloat(r.value).toFixed(2); }
+
+function getItemsValues() {
+  const userItems = currentUser?.items || ['Ítem 1','Ítem 2'];
+  const count = userItems.length;
+  const items = {};
+  let total = 0;
+  for (let i = 1; i <= count; i++) {
+    const el = document.getElementById('v' + i);
+    const val = el ? parseFloat(el.value) || 0 : 0;
+    items['item' + i] = val;
+    total += val;
+  }
+  return { items, total };
+}
+
+function calcSub() {
+  const { total } = getItemsValues();
+  const el = document.getElementById('j-sub');
+  if (el) el.textContent = total.toFixed(2);
+}
+
+async function jGuardarBorrador() {
+  if (!sesionActiva) { toast('Sin sesión activa','err'); return; }
+  const { items, total } = getItemsValues();
+  const payload = { sesion_id: sesionActiva.id, juez_num: currentUser.juez_num, items, subtotal: total, cerrado: false };
+  const { error } = await db.schema('scoring').from('puntajes').upsert(payload, { onConflict: 'sesion_id,juez_num' });
+  if (error) { toast('Error al guardar: ' + error.message, 'err'); return; }
+  toast('Borrador guardado · podés seguir editando', 'ok');
+}
+
+async function jCerrar() {
+  if (!sesionActiva) { toast('Sin sesión activa','err'); return; }
+  const { items, total } = getItemsValues();
+  if (total === 0) { toast('Ingresá al menos un puntaje antes de cerrar','err'); return; }
+  const payload = { sesion_id: sesionActiva.id, juez_num: currentUser.juez_num, items, subtotal: total, cerrado: true, cerrado_at: new Date().toISOString() };
+  const { error } = await db.schema('scoring').from('puntajes').upsert(payload, { onConflict: 'sesion_id,juez_num' });
+  if (error) { toast('Error al cerrar: ' + error.message, 'err'); return; }
+  jCerradoFlag = true;
+  miPuntaje = { ...payload };
+  mostrarCerrado();
+  toast('Evaluación cerrada · Subtotal: ' + total.toFixed(2) + ' pts', 'ok');
+}
+
+async function jVotarDesc() {
+  if (!sesionActiva) return;
+  const motivo = document.getElementById('desc-motivo').value;
+  const { error } = await db.schema('scoring').from('descalificaciones')
+    .upsert({ sesion_id: sesionActiva.id, juez_num: currentUser.juez_num, motivo }, { onConflict: 'sesion_id,juez_num' });
+  document.getElementById('modal-desc').classList.remove('open');
+  if (!error) toast('Voto registrado. Se requiere unanimidad para descalificar.', 'warn');
+  else toast('Error: ' + error.message, 'err');
+}
+
+function subscribeRealtimeJurado() {
+  realtimeSub = db.channel('sesiones-jurado')
+    .on('postgres_changes', { event: '*', schema: 'scoring', table: 'sesiones' }, async (payload) => {
+      if (payload.new && payload.new.activa) {
+        sesionActiva = payload.new;
+        jCerradoFlag = false;
+        miPuntaje = null;
+        document.getElementById('j-cerrar-btn').style.display = 'flex';
+        document.getElementById('j-cerrado').style.display = 'none';
+        document.getElementById('j-estado-badge').textContent = 'Sin cerrar';
+        document.getElementById('j-estado-badge').className = 'bdg bdg-amber';
+        renderTarjetaJurado();
+        mostrarPanelScoring();
+        toast('Nueva sesión: ' + payload.new.nombre_grupo, 'ok');
+      }
+      if (payload.new && !payload.new.activa) {
+        mostrarSinSesion();
+      }
+    })
+    .subscribe();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DIRECTOR
+// ═══════════════════════════════════════════════════════════
+async function initDirector() {
+  await dCargarJurados();
+  await loadSesionDirector();
+  await buildLineup();
+  setInterval(() => {
+    const el = document.getElementById('d-hora-hdr');
+    if (el) el.textContent = new Date().toLocaleTimeString('es-AR');
+  }, 1000);
+  subscribeRealtimeDirector();
+  loadStats();
+}
+
+async function loadSesionDirector() {
+  const { data: sesiones } = await db.schema('scoring').from('sesiones').select('*').eq('activa', true).limit(1);
+  if (!sesiones || sesiones.length === 0) {
+    document.getElementById('d-nombre').textContent = 'Sin sesión activa';
+    document.getElementById('d-codigo').textContent = '—';
+    document.getElementById('d-estado').textContent = '—';
+    buildJuecesGrid([]);
+    return;
+  }
+  sesionActiva = sesiones[0];
+  renderSesionDirector(sesionActiva);
+  await loadPuntajesDirector();
+}
+
+function renderSesionDirector(s) {
+  document.getElementById('d-codigo').textContent = s.codigo_id;
+  document.getElementById('d-nombre').textContent = s.nombre_grupo;
+  document.getElementById('d-info').textContent = (s.pais || '') + ' · ' + (s.instancia || '').toUpperCase();
+  const activos = juradosConfig.filter(j => j.activo);
+  const nJueces = activos.length || (s.instancia === 'inter' ? 3 : 5);
+  const itemsPorJuez = activos[0]?.items?.length || 2;
+  const label = nJueces + ' jueces · ' + itemsPorJuez + ' ítems c/u · Escala 0-10 · Máx ' + (nJueces * itemsPorJuez * 10) + ' pts';
+  document.getElementById('d-sistema-label').textContent = label;
+}
+
+async function loadPuntajesDirector() {
+  if (!sesionActiva) return;
+  const { data: puntajes } = await db.schema('scoring').from('puntajes').select('*').eq('sesion_id', sesionActiva.id);
+  buildJuecesGrid(puntajes || []);
+}
+
+function buildJuecesGrid(puntajes) {
+  const grid = document.getElementById('d-jgrid');
+  grid.innerHTML = '';
+  const activos = juradosConfig.filter(j => j.activo);
+  const maxJueces = activos.length || (sesionActiva?.instancia === 'inter' ? 3 : 5);
+  let total = 0, cerrados = 0;
+
+  for (let idx = 0; idx < maxJueces; idx++) {
+    const i = activos[idx]?.juez_num || (idx + 1);
+    const p = puntajes.find(x => x.juez_num === i);
+    const div = document.createElement('div');
+    const cls = p ? (p.cerrado ? 'done' : 'pend') : 'empty';
+    div.className = 'jcel ' + cls;
+    div.id = 'djcel-' + i;
+    const score = p ? p.subtotal : '—';
+    if (p && p.cerrado) { total += parseFloat(p.subtotal); cerrados++; }
+    div.innerHTML = `<div class="jnum">J${i}</div><div class="jscore">${score}</div>` +
+      (!p?.cerrado && p ? `<button class="jforzar" onclick="dForzar(${i})">Forzar</button>` : '');
+    grid.appendChild(div);
+  }
+
+  document.getElementById('d-parcial').textContent = total.toFixed(2);
+  document.getElementById('d-estado').textContent = cerrados + '/' + maxJueces + ' cerrados';
+  document.getElementById('d-estado').className = cerrados >= maxJueces ? 'bdg bdg-green' : 'bdg bdg-amber';
+
+  if (cerrados >= maxJueces) {
+    document.getElementById('d-esperando').style.display = 'none';
+    document.getElementById('d-pasar-btn').style.display = 'block';
+  } else {
+    document.getElementById('d-esperando').style.display = 'block';
+    document.getElementById('d-pasar-btn').style.display = 'none';
+  }
+}
+
+async function dForzar(juezNum) {
+  if (!sesionActiva) return;
+  const subtotal = 8.25; // promedio neutro
+  const { error } = await db.schema('scoring').from('puntajes').upsert({
+    sesion_id: sesionActiva.id, juez_num: juezNum,
+    items: { item1: 4.25, item2: 4.00 }, subtotal,
+    cerrado: true, cerrado_at: new Date().toISOString(), forzado: true
+  }, { onConflict: 'sesion_id,juez_num' });
+  if (!error) toast('Cierre forzado en Jurado ' + juezNum, 'ok');
+  await loadPuntajesDirector();
+}
+
+async function dPasar() {
+  if (!sesionActiva) return;
+  // Calcular total final
+  const { data: puntajes } = await db.schema('scoring').from('puntajes').select('subtotal').eq('sesion_id', sesionActiva.id).eq('cerrado', true);
+  const total = puntajes ? puntajes.reduce((acc, p) => acc + parseFloat(p.subtotal), 0) : 0;
+
+  // Cerrar sesión actual
+  await db.schema('scoring').from('sesiones').update({ activa: false, finalizada_at: new Date().toISOString(), total_final: total }).eq('id', sesionActiva.id);
+  sesionActiva = null;
+  document.getElementById('d-nombre').textContent = 'Listo para siguiente';
+  document.getElementById('d-codigo').textContent = '—';
+  document.getElementById('d-estado').textContent = '✓ Completado';
+  document.getElementById('d-estado').className = 'bdg bdg-green';
+  document.getElementById('d-pasar-btn').style.display = 'none';
+  buildJuecesGrid([]);
+  await buildRankings();
+  toast('Pasando al siguiente participante...', 'ok');
+}
+
+async function dIniciarSesion() {
+  const codigo = document.getElementById('ns-codigo').value.trim();
+  const nombre = document.getElementById('ns-nombre').value.trim();
+  const instancia = document.getElementById('ns-instancia').value;
+  if (!codigo || !nombre) { toast('Ingresá código y nombre del grupo','err'); return; }
+
+  // Desactivar cualquier sesión activa
+  await db.schema('scoring').from('sesiones').update({ activa: false }).eq('activa', true);
+
+  const { data, error } = await db.schema('scoring').from('sesiones').insert({
+    codigo_id: codigo, nombre_grupo: nombre, instancia, activa: true
+  }).select();
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  sesionActiva = data[0];
+  renderSesionDirector(sesionActiva);
+  buildJuecesGrid([]);
+  document.getElementById('ns-codigo').value = '';
+  document.getElementById('ns-nombre').value = '';
+  toast('Sesión iniciada: ' + nombre, 'ok');
+}
+
+async function buildLineup() {
+  const { data } = await db.schema('evento').from('lineup').select('*').order('posicion');
+  const cont = document.getElementById('d-lineup-list');
+  document.getElementById('d-lineup-count').textContent = (data?.length || 0) + ' participantes';
+  if (!data || !data.length) { cont.innerHTML = '<div class="muted" style="text-align:center;padding:32px">Sin lineup cargado en evento.lineup</div>'; return; }
+  cont.innerHTML = '';
+  data.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cssText = 'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+    const badge = p.estado === 'pista' ? '<span class="bdg bdg-gold">En pista</span>' :
+                  p.estado === 'listo' ? '<span class="bdg bdg-green">✓ ' + (p.total_final||'—') + '</span>' :
+                  '<button class="btn bgn bsm" onclick="dPonerEnPista(\'' + p.id + '\',\'' + p.nombre_grupo + '\',\'' + p.codigo_id + '\',\'' + (p.instancia||'nac') + '\')">Poner en pista</button>';
+    div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:20px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="muted text-xs">${p.categoria||''}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
+    cont.appendChild(div);
+  });
+}
+
+async function dPonerEnPista(lineupId, nombre, codigo, instancia) {
+  // Desactivar sesión actual
+  await db.schema('scoring').from('sesiones').update({ activa: false }).eq('activa', true);
+  // Crear nueva sesión
+  const { data } = await db.schema('scoring').from('sesiones').insert({ codigo_id: codigo, nombre_grupo: nombre, instancia, activa: true }).select();
+  if (data) { sesionActiva = data[0]; renderSesionDirector(sesionActiva); buildJuecesGrid([]); }
+  toast(nombre + ' en pista', 'ok');
+}
+
+async function buildRankings() {
+  const { data } = await db.schema('scoring').from('v_totales').select('*').order('subtotal_parcial', { ascending: false });
+  const tbody = document.getElementById('d-rank-tbody');
+  tbody.innerHTML = '';
+  if (!data) return;
+  data.forEach((r, i) => {
+    const posStyle = i===0 ? 'background:#C9A84C;color:#000;' : i===1 ? 'background:#888;color:#000;' : i===2 ? 'background:#8B6D28;color:#000;' : 'color:rgba(248,245,238,.4);';
+    tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i+1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${r.instancia}</td><td><span class="fw7 gold">${r.subtotal_parcial||'—'}</span></td></tr>`;
+  });
+}
+
+async function loadStats() {
+  const { data: lineup } = await db.schema('evento').from('lineup').select('estado,estado_pago');
+  if (!lineup) return;
+  document.getElementById('d-stat-inscrip').textContent = lineup.length;
+  document.getElementById('d-stat-acred').textContent = lineup.filter(x => x.estado !== 'pendiente').length;
+  const { data: sesiones } = await db.schema('scoring').from('sesiones').select('id').eq('activa', false);
+  document.getElementById('d-stat-puntuados').textContent = sesiones?.length || 0;
+  document.getElementById('d-stat-sesion').textContent = sesionActiva ? ('#' + sesionActiva.id) : '—';
+}
+
+function subscribeRealtimeDirector() {
+  db.channel('puntajes-director')
+    .on('postgres_changes', { event: '*', schema: 'scoring', table: 'puntajes' }, async () => {
+      await loadPuntajesDirector();
+    })
+    .subscribe();
+}
+
+function dTab(id, btn) {
+  document.querySelectorAll('.tp').forEach(t => t.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('d-' + id).classList.add('show');
+  btn.classList.add('on');
+  if (id === 'rankings') buildRankings();
+  if (id === 'lineup') buildLineup();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// CONFIGURAR JURADOS
+// ═══════════════════════════════════════════════════════════
+const TODOS_ITEMS = ['Técnica','Proyección','Coreografía','Vestuario','Actuación','Interpretación Musical','Conexión','Factor Sorpresa','Tiempo','Edición Musical'];
+let juradosConfig = [];
+
+async function dCargarJurados() {
+  const { data } = await db.rpc('obtener_jurados');
+  juradosConfig = data || [];
+  renderJuradosGrid();
+}
+
+function renderJuradosGrid() {
+  const cont = document.getElementById('d-jurados-grid');
+  if (!cont) return;
+  const cant = parseInt(document.getElementById('cfg-cant-jurados')?.value || 5);
+  cont.innerHTML = '';
+  for (let i = 1; i <= cant; i++) {
+    const cfg = juradosConfig.find(j => j.juez_num === i);
+    const items = cfg?.items || [];
+    const activo = cfg?.activo !== false;
+    cont.innerHTML += `
+    <div class="card mb2" style="padding:14px" id="jcfg-${i}">
+      <div class="sf mb2">
+        <div class="fw6" style="color:${activo?'#C9A84C':'rgba(248,245,238,.3)'}">Jurado ${i} <span class="muted text-xs">(jurado${i} / 1234)</span></div>
+        <span class="bdg ${activo?'bdg-green':'bdg-gray'}" style="cursor:pointer" onclick="dToggleJurado(${i})" id="jcfg-estado-${i}">${activo?'✓ Activo':'Inactivo'}</span>
+      </div>
+      <div class="text-xs muted mb2">Ítems asignados (click para agregar/quitar):</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap" id="jcfg-items-${i}">
+        ${TODOS_ITEMS.map(it => `<span class="bdg ${items.includes(it)?'bdg-gold':'bdg-gray'}" style="cursor:pointer;font-size:10px" onclick="dToggleItem(${i},'${it}',this)">${it}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+}
+
+function dToggleItem(juezNum, item, el) {
+  const isActive = el.classList.contains('bdg-gold');
+  el.className = 'bdg ' + (isActive ? 'bdg-gray' : 'bdg-gold');
+  el.style.cursor = 'pointer';
+  el.style.fontSize = '10px';
+}
+
+function dToggleJurado(num) {
+  const el = document.getElementById('jcfg-estado-' + num);
+  const isActive = el.textContent.includes('Activo');
+  el.textContent = isActive ? 'Inactivo' : '✓ Activo';
+  el.className = 'bdg ' + (isActive ? 'bdg-gray' : 'bdg-green');
+  el.style.cursor = 'pointer';
+  const card = document.getElementById('jcfg-' + num);
+  card.querySelector('.fw6').style.color = isActive ? 'rgba(248,245,238,.3)' : '#C9A84C';
+}
+
+function dGenerarJurados() {
+  renderJuradosGrid();
+  toast('Grilla generada. Asigná ítems y guardá.', 'ok');
+}
+
+function dPresetNacional() {
+  document.getElementById('cfg-cant-jurados').value = 5;
+  // Asignar 2 ítems por jurado = 10 ítems total
+  juradosConfig = [];
+  for (let i = 0; i < 5; i++) {
+    juradosConfig.push({ juez_num: i+1, items: [TODOS_ITEMS[i*2], TODOS_ITEMS[i*2+1]], activo: true });
+  }
+  renderJuradosGrid();
+  toast('Preset Nacional: 5 jurados × 2 ítems', 'ok');
+}
+
+function dPresetInter() {
+  document.getElementById('cfg-cant-jurados').value = 3;
+  const itemsInt = ['Técnica','Musicalidad y Tiempo','Vestuario y Creatividad','Presencia Escénica','Ejecución Coreográfica'];
+  juradosConfig = [];
+  for (let i = 0; i < 3; i++) {
+    juradosConfig.push({ juez_num: i+1, items: itemsInt, activo: true });
+  }
+  renderJuradosGrid();
+  toast('Preset Inter América: 3 jurados × 5 ítems', 'ok');
+}
+
+function dPresetRegional() {
+  document.getElementById('cfg-cant-jurados').value = 5;
+  juradosConfig = [];
+  renderJuradosGrid();
+  toast('Regional: configurá libremente los jurados', 'ok');
+}
+
+async function dGuardarTodosJurados() {
+  const cant = parseInt(document.getElementById('cfg-cant-jurados').value);
+  // Primero desactivar todos
+  await db.rpc('resetear_jurados');
+  let saved = 0;
+  for (let i = 1; i <= cant; i++) {
+    const estadoEl = document.getElementById('jcfg-estado-' + i);
+    const activo = estadoEl?.textContent?.includes('Activo') ?? true;
+    const itemEls = document.querySelectorAll('#jcfg-items-' + i + ' .bdg-gold');
+    const items = Array.from(itemEls).map(el => el.textContent.trim());
+    if (items.length === 0 && activo) {
+      toast('Jurado ' + i + ' está activo pero sin ítems asignados', 'warn');
+      continue;
+    }
+    await db.rpc('configurar_jurado', { p_juez_num: i, p_items: items, p_activo: activo });
+    saved++;
+  }
+  toast(saved + ' jurados configurados correctamente', 'ok');
+  await dCargarJurados();
+}
+
+function toast(msg, tipo='ok') {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  const colors = {ok:'#4CAF7D',err:'#E05252',warn:'#E8A838'};
+  el.style.cssText = `background:#1a1a1a;border:1px solid ${colors[tipo]};border-radius:100px;padding:10px 20px;font-size:13px;font-weight:500;white-space:nowrap;color:${colors[tipo]};animation:fi .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.5)`;
+  el.textContent = msg; t.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2800);
+}
+
+// Arrancar
+init();
+</script>
+</body>
+</html>
