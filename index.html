@@ -1248,6 +1248,238 @@
       .rtotv {
         display: none !important;
       }
+
+      /* ══════════════════════════════════════════════════════════
+         TEMA NACIONAL  (Argentina — celeste y blanco)
+         ══════════════════════════════════════════════════════════ */
+      body.tema-nac {
+        background: #0d1c30 !important;
+      }
+      /* Franja bandera bajo el header */
+      body.tema-nac .hdr::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          #75aadb 8%,
+          #75aadb 40%,
+          #ffffff 40%,
+          #ffffff 60%,
+          #75aadb 60%,
+          #75aadb 92%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+      body.tema-nac .hdr {
+        border-bottom-color: rgba(117, 170, 219, 0.2);
+        background: rgba(3, 13, 28, 0.98);
+      }
+      body.tema-nac .logo {
+        color: #75aadb;
+      }
+      /* Botón seleccionado brilla en celeste */
+      body.tema-nac .io.s-nac,
+      body.tema-nac .io.s-rep,
+      body.tema-nac .io.s-reg {
+        border-color: #75aadb;
+        background: linear-gradient(135deg, #001428, #001e40);
+        box-shadow:
+          0 0 18px rgba(117, 170, 219, 0.2),
+          0 0 0 1px rgba(117, 170, 219, 0.4);
+      }
+      /* Cards con tinte celeste */
+      body.tema-nac .card {
+        border-color: rgba(117, 170, 219, 0.12);
+        background: #07101b;
+      }
+      body.tema-nac .cg {
+        background: #001428;
+        border-color: rgba(117, 170, 219, 0.25);
+      }
+      body.tema-nac .cgn {
+        background: #001a0a;
+        border-color: rgba(76, 175, 125, 0.25);
+      }
+      body.tema-nac .cw {
+        background: #0a1428;
+        border-color: rgba(117, 170, 219, 0.2);
+      }
+      /* Inputs */
+      body.tema-nac input:focus,
+      body.tema-nac select:focus,
+      body.tema-nac textarea:focus {
+        border-color: #75aadb !important;
+        background: #001428 !important;
+        box-shadow: 0 0 0 3px rgba(117, 170, 219, 0.1) !important;
+      }
+      /* Botón principal */
+      body.tema-nac .btn.bg,
+      body.tema-nac button.bg {
+        background: #75aadb !important;
+        color: #fff !important;
+      }
+      body.tema-nac .btn.bg:hover,
+      body.tema-nac button.bg:hover {
+        background: #9cc2e5 !important;
+        transform: translateY(-1px);
+      }
+      /* Stepper */
+      body.tema-nac .snum.on-nac,
+      body.tema-nac .snum.on-rep,
+      body.tema-nac .snum.on-reg {
+        background: #001428 !important;
+        border-color: #75aadb !important;
+        color: #75aadb !important;
+        box-shadow: 0 0 0 3px rgba(117, 170, 219, 0.12) !important;
+      }
+      body.tema-nac .slbl.on-nac,
+      body.tema-nac .slbl.on-rep,
+      body.tema-nac .slbl.on-reg {
+        color: #75aadb !important;
+      }
+      body.tema-nac .snum.dn {
+        background: #001428;
+        border-color: #75aadb;
+        color: #75aadb;
+      }
+      body.tema-nac .stline.dn {
+        background: rgba(117, 170, 219, 0.3);
+      }
+      /* Misc */
+      body.tema-nac .oinfobox {
+        background: #001428;
+        border-color: rgba(117, 170, 219, 0.18);
+      }
+      body.tema-nac ::-webkit-scrollbar-thumb {
+        background: #001428;
+      }
+      body.tema-nac .planilla-block {
+        border-color: #75aadb;
+        background: linear-gradient(135deg, #001428, #001a38);
+      }
+      body.tema-nac .planilla-title {
+        color: #75aadb;
+      }
+      body.tema-nac .planilla-btn {
+        background: #75aadb;
+      }
+
+      /* ══════════════════════════════════════════════════════════
+         TEMA INTERNACIONAL  (colorido / festivo)
+         ══════════════════════════════════════════════════════════ */
+      body.tema-inter {
+        background: linear-gradient(
+          180deg,
+          #080618 0%,
+          #0a0616 50%,
+          #0c0a14 100%
+        ) !important;
+      }
+      /* Franja arcoíris bajo el header */
+      body.tema-inter .hdr::after {
+        content: "";
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(
+          90deg,
+          #e05252 0%,
+          #e8a838 20%,
+          #f6d840 35%,
+          #4caf7d 52%,
+          #4baede 70%,
+          #9b59b6 100%
+        );
+        pointer-events: none;
+      }
+      body.tema-inter .hdr {
+        border-bottom-color: rgba(232, 168, 56, 0.2);
+        background: rgba(13, 6, 8, 0.98);
+      }
+      body.tema-inter .logo {
+        background: linear-gradient(90deg, #e05252, #e8a838, #4caf7d, #4baede);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      /* Botón seleccionado: borde arcoíris */
+      body.tema-inter .io.s-int {
+        border-color: #e8a838;
+        background: linear-gradient(135deg, #1a0800, #0a0014);
+        box-shadow:
+          0 0 22px rgba(232, 168, 56, 0.18),
+          0 0 0 1px rgba(232, 168, 56, 0.5);
+      }
+      /* Cards con tinte cálido */
+      body.tema-inter .card {
+        border-color: rgba(232, 168, 56, 0.1);
+        background: #160e08;
+      }
+      body.tema-inter .cg {
+        background: #1a0e00;
+        border-color: rgba(232, 168, 56, 0.25);
+      }
+      body.tema-inter .cgn {
+        background: #001608;
+        border-color: rgba(76, 175, 125, 0.25);
+      }
+      body.tema-inter .cw {
+        background: #1a1000;
+        border-color: rgba(232, 168, 56, 0.2);
+      }
+      /* Inputs */
+      body.tema-inter input:focus,
+      body.tema-inter select:focus,
+      body.tema-inter textarea:focus {
+        border-color: #e8a838 !important;
+        background: #1a1000 !important;
+        box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.1) !important;
+      }
+      /* Botón principal */
+      body.tema-inter .btn.bg,
+      body.tema-inter button.bg {
+        background: linear-gradient(135deg, #e8a838, #e05252) !important;
+        color: #fff !important;
+      }
+      body.tema-inter .btn.bg:hover,
+      body.tema-inter button.bg:hover {
+        background: linear-gradient(135deg, #f0c060, #e86464) !important;
+        transform: translateY(-1px);
+      }
+      /* Stepper */
+      body.tema-inter .snum.on-int {
+        background: #1a0800 !important;
+        border-color: #e8a838 !important;
+        color: #e8a838 !important;
+        box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.12) !important;
+      }
+      body.tema-inter .slbl.on-int {
+        color: #e8a838 !important;
+      }
+      body.tema-inter .snum.dn {
+        background: #1a0800;
+        border-color: #e8a838;
+        color: #e8a838;
+      }
+      body.tema-inter .stline.dn {
+        background: rgba(232, 168, 56, 0.3);
+      }
+      /* Misc */
+      body.tema-inter .oinfobox {
+        background: #1a0e00;
+        border-color: rgba(232, 168, 56, 0.18);
+      }
+      body.tema-inter ::-webkit-scrollbar-thumb {
+        background: #1a0e00;
+      }
     </style>
   </head>
   <body>
@@ -4438,6 +4670,8 @@
         MOpc = "";
         STEP = 1;
         STATE = {};
+        document.body.classList.toggle("tema-inter", inst === "int");
+        document.body.classList.toggle("tema-nac", inst !== "int");
         ["reg", "nac", "int", "rep"].forEach(function (i) {
           document.getElementById("opt-" + i).className =
             "io" + (i === inst ? " s-" + i : "");
@@ -5472,7 +5706,7 @@
               '<input type="text" id="f-ciudad" placeholder="Ciudad de donde venís"></div>' +
               "</div>" +
               '<div class="cgn mt3"><p style="font-size:12px;color:rgba(248,245,238,.8)">El pre-registro no requiere pago online. Tu sede coordinará todo directamente.</p></div>' +
-              '<div class="sf"><div></div><button class="btn bgn" onclick="goTo(2)">Continuar →</button></div>';
+              '<div class="sf"><div></div><button class="btn bd" onclick="goTo(2)">Continuar →</button></div>';
             w.appendChild(d);
           },
           2: function (w) {
@@ -5492,7 +5726,7 @@
               "</select></div></div>" +
               '<div id="reg-ints-wrap" class="mt3" style="display:none"></div>' +
               '<div class="sf mt3"><button class="btn bo" onclick="goTo(1)">← Atrás</button>' +
-              '<button class="btn bgn" onclick="goTo(3)">Continuar →</button></div>';
+              '<button class="btn bd" onclick="goTo(3)">Continuar →</button></div>';
             w.appendChild(d);
           },
           3: function (w) {
@@ -5514,7 +5748,7 @@
               '<div style="font-size:16px;color:rgba(248,245,238,.25)">+</div></div></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">← Atrás</button>' +
-              '<button class="btn bgn" onclick="goTo(4)">Continuar →</button></div>';
+              '<button class="btn bd" onclick="goTo(4)">Continuar →</button></div>';
             w.appendChild(d);
             // Inicializar chips y lista de reg step 3
             var rc = document.getElementById("reg-chips");
@@ -5591,7 +5825,7 @@
               '<p style="font-size:12px;color:rgba(248,245,238,.75);line-height:1.5;margin:4px 0 0">Debés imprimir la planilla, completarla a puño y letra y presentarla el día de la sede. La podrás descargar en la próxima pantalla.</p>' +
               "</div>" +
               '<div class="sf" style="margin-top:6px"><button class="btn bo" onclick="goTo(3)">← Atrás</button>' +
-              '<button class="btn bgn" style="padding:13px 24px;font-size:15px" onclick="confirmarReg()">Enviar pre-registro →</button></div>';
+              '<button class="btn bd" style="padding:13px 24px;font-size:15px" onclick="confirmarReg()">Enviar pre-registro →</button></div>';
             w.appendChild(d);
           },
         },
@@ -5822,7 +6056,7 @@
               paisesOpts() +
               "</select></div></div>" +
               "</div>" +
-              '<div class="sf"><div></div><button class="btn bd" onclick="goTo(2)">Continuar →</button></div>';
+              '<div class="sf"><div></div><button class="btn bam" onclick="goTo(2)">Continuar →</button></div>';
             w.appendChild(d);
           },
           2: function (w) {
@@ -5842,7 +6076,7 @@
               "</select></div></div>" +
               '<div id="ints-wrap" class="mt3" style="display:none"></div>' +
               '<div class="sf mt3"><button class="btn bo" onclick="goTo(1)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bd" onclick="goTo(3)">Continuar \u2192</button></div>';
+              '<button class="btn bam" onclick="goTo(3)">Continuar \u2192</button></div>';
             w.appendChild(d);
           },
           3: function (w) {
@@ -5863,7 +6097,7 @@
               '<div><div class="tlbl">Total</div><div class="tcnt" id="tcnt"></div></div>' +
               '<div class="tval i" id="tval">0</div></div></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bd" onclick="goTo(4)">Continuar \u2192</button></div>';
+              '<button class="btn bam" onclick="goTo(4)">Continuar \u2192</button></div>';
             w.appendChild(d);
             buildPrecBox();
             GF = "todas";
@@ -5912,7 +6146,7 @@
               '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               "</div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bd" onclick="goTo(5)">Continuar \u2192</button></div>';
+              '<button class="btn bam" onclick="goTo(5)">Continuar \u2192</button></div>';
             w.appendChild(d);
             buildTrDatos("tr-datos");
             buildMSlots("mslots");
@@ -5975,7 +6209,7 @@
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
               '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
               '<div class="sf mt2"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bd bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
+              '<button class="btn bam bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
             var tcCard = document.createElement("div");
             tcCard.className = "card mb3";
             tcCard.style.textAlign = "center";
@@ -6006,7 +6240,7 @@
               "</select></div>" +
               "</div>" +
               '<div class="cw mt3"><p style="font-size:12px;color:rgba(248,245,238,.6)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
-              '<div class="sf"><div></div><button class="btn bam" onclick="goTo(2)">Continuar \u2192</button></div>';
+              '<div class="sf"><div></div><button class="btn bd" onclick="goTo(2)">Continuar \u2192</button></div>';
             w.appendChild(d);
           },
           2: function (w) {
@@ -6025,7 +6259,7 @@
               "</select></div></div>" +
               '<div id="ints-wrap" class="mt3" style="display:none"></div>' +
               '<div class="sf mt3"><button class="btn bo" onclick="goTo(1)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bam" onclick="goTo(3)">Continuar \u2192</button></div>';
+              '<button class="btn bd" onclick="goTo(3)">Continuar \u2192</button></div>';
             w.appendChild(d);
           },
           3: function (w) {
@@ -6060,7 +6294,7 @@
               '<div id="mslots"></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bam" onclick="goTo(4)">Continuar \u2192</button></div>';
+              '<button class="btn bd" onclick="goTo(4)">Continuar \u2192</button></div>';
             w.appendChild(d);
             GF = "todas";
             renderCatList("clist");
@@ -6147,7 +6381,7 @@
               '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               '<div class="cgn mt3"><p style="font-size:11px;color:rgba(248,245,238,.55)">Tu inscripci\u00f3n quedar\u00e1 <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong> hasta que el staff confirme tu pago.</p></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bam" onclick="goTo(5)">Continuar \u2192</button></div>';
+              '<button class="btn bd" onclick="goTo(5)">Continuar \u2192</button></div>';
             w.appendChild(d);
             // Insertar el trBox en el card
             var card = document.getElementById("rp4-card");
@@ -6233,7 +6467,7 @@
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
               '<span>Acepto los <a href="#">T\u00e9rminos y Condiciones</a> del evento y entiendo que esta inscripci\u00f3n debe ser aprobada por el staff.</span></label>' +
               '<div class="sf mt2"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
-              '<button class="btn bam bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Enviar inscripci\u00f3n \u2192</button></div>';
+              '<button class="btn bd bfull" style="max-width:240px;font-size:15px" onclick="confirmar()">Enviar inscripci\u00f3n \u2192</button></div>';
             w.appendChild(d);
           },
         },
@@ -6321,7 +6555,7 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
         sendNotify(dbRecord.id);
       }
-      
+
       function getPlanillaPDF() {
         return INST === "int" ? PDF_INT : PDF_NAC;
       }
@@ -6697,7 +6931,7 @@
       // ── INIT ──────────────────────────────────────────────────────────
       document.addEventListener("DOMContentLoaded", function () {
         selI("reg");
-        document.body.className = "bg-nac";
+        document.body.classList.add("bg-nac");
         if (!NAC_OPEN) {
           var nacBtn = document.getElementById("opt-nac");
           var nacPr = document.getElementById("nac-pr");

@@ -780,122 +780,254 @@
           transform: rotate(360deg);
         }
       }
-      /* TEMA INTER OVERRIDE */
+      /* ── TEMA NACIONAL (Argentina: celeste y blanco) ─────────── */
+      body.tema-nac {
+        background: #050a10 !important;
+      }
+      body.tema-nac .login-logo,
+      body.tema-nac .hdr-logo {
+        color: #75aadb;
+      }
+      body.tema-nac .bg {
+        background: #75aadb;
+        color: #fff;
+      }
+      body.tema-nac .bg:hover {
+        background: #9cc2e5;
+        transform: translateY(-1px);
+      }
+      body.tema-nac .fld input:focus {
+        border-color: #75aadb;
+        background: #001428;
+        box-shadow: 0 0 0 3px rgba(117, 170, 219, 0.08);
+      }
+      body.tema-nac .hdr {
+        background: #050a10;
+        border-bottom-color: rgba(117, 170, 219, 0.15);
+      }
+      body.tema-nac .tabs {
+        background: #070d16;
+      }
+      body.tema-nac .tab.on {
+        color: #75aadb;
+        border-bottom-color: #75aadb;
+      }
+      body.tema-nac .tarjeta {
+        background: linear-gradient(135deg, #080e1c, #0a1830);
+        border-color: rgba(117, 170, 219, 0.2);
+      }
+      body.tema-nac .tarjeta::before {
+        background: radial-gradient(
+          circle,
+          rgba(117, 170, 219, 0.1),
+          transparent 70%
+        );
+      }
+      body.tema-nac .ep-label {
+        color: rgba(117, 170, 219, 0.65);
+      }
+      body.tema-nac .ep-id {
+        color: #75aadb;
+      }
+      body.tema-nac .cg {
+        background: #001428;
+        border-color: rgba(117, 170, 219, 0.25);
+      }
+      body.tema-nac .bdg-gold {
+        background: #001428;
+        border-color: rgba(117, 170, 219, 0.3);
+        color: #75aadb;
+      }
+      body.tema-nac .total-score-box {
+        background: linear-gradient(135deg, #001428, #001a38);
+        border-color: rgba(117, 170, 219, 0.3);
+      }
+      body.tema-nac .ts-val {
+        color: #75aadb;
+      }
+      body.tema-nac .score-input {
+        color: #75aadb;
+      }
+      body.tema-nac .score-input:focus {
+        border-color: #75aadb;
+        background: #001428;
+      }
+      body.tema-nac .score-slider {
+        accent-color: #75aadb;
+      }
+      body.tema-nac .gold {
+        color: #75aadb;
+      }
+      body.tema-nac .jcel.done {
+        background: #001428;
+        border-color: rgba(117, 170, 219, 0.3);
+      }
+      body.tema-nac .jcel.done .jscore {
+        color: #75aadb;
+      }
+      body.tema-nac .card {
+        border-color: rgba(117, 170, 219, 0.1);
+      }
+      body.tema-nac ::-webkit-scrollbar-thumb {
+        background: #001428;
+      }
+      body.tema-nac #loading-overlay {
+        background: #050a10;
+      }
+      body.tema-nac .spin {
+        border-color: rgba(117, 170, 219, 0.15);
+        border-top-color: #75aadb;
+      }
+      body.tema-nac .hdr-dot {
+        background: #75aadb;
+      }
+
+      /* ── TEMA INTERNACIONAL (colorido / festivo) ─────────────── */
+      body.tema-inter {
+        background: linear-gradient(180deg, #080618 0%, #0a0616 50%, #0c0a14 100%) !important;
+      }
       body.tema-inter .login-logo,
       body.tema-inter .hdr-logo {
-        color: var(--accent);
+        background: linear-gradient(90deg, #e05252, #e8a838, #4caf7d, #4baede);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       body.tema-inter .bg {
-        background: var(--accent);
+        background: linear-gradient(135deg, #e8a838, #e05252);
         color: #fff;
       }
       body.tema-inter .bg:hover {
-        background: var(--accent2);
+        background: linear-gradient(135deg, #f0c060, #e86464);
+        transform: translateY(-1px);
       }
       body.tema-inter .fld input:focus {
-        border-color: var(--accent);
-        background: var(--accent-bg);
-        box-shadow: 0 0 0 3px var(--accent-glow);
+        border-color: #e8a838;
+        background: #1a1000;
+        box-shadow: 0 0 0 3px rgba(232, 168, 56, 0.08);
       }
       body.tema-inter .hdr {
-        background: #060810;
-        border-bottom-color: rgba(75, 174, 222, 0.12);
+        background: #080618;
+        border-bottom-color: rgba(232, 168, 56, 0.3);
       }
       body.tema-inter .tabs {
-        background: #080c14;
+        background: #090608;
       }
       body.tema-inter .tab.on {
-        color: var(--accent);
-        border-bottom-color: var(--accent);
+        color: #e8a838;
+        border-bottom-color: #e8a838;
       }
       body.tema-inter .tarjeta {
-        background: linear-gradient(135deg, #0a0e18, #001a2a);
-        border-color: rgba(75, 174, 222, 0.2);
+        background: linear-gradient(135deg, #0e0810, #140a08);
+        border-color: rgba(232, 168, 56, 0.2);
       }
       body.tema-inter .tarjeta::before {
         background: radial-gradient(
           circle,
-          rgba(75, 174, 222, 0.1),
+          rgba(232, 168, 56, 0.08),
+          rgba(75, 174, 222, 0.05),
           transparent 70%
         );
       }
       body.tema-inter .ep-label {
-        color: rgba(75, 174, 222, 0.6);
+        color: rgba(232, 168, 56, 0.7);
       }
       body.tema-inter .ep-id {
-        color: var(--accent);
+        background: linear-gradient(90deg, #e8a838, #4baede);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       body.tema-inter .cg {
-        background: var(--accent-bg);
-        border-color: var(--accent-border);
+        background: #1a1000;
+        border-color: rgba(232, 168, 56, 0.25);
       }
       body.tema-inter .bdg-gold {
-        background: var(--badge-bg);
-        border-color: var(--badge-border);
-        color: var(--accent);
+        background: #1a0a00;
+        border-color: rgba(232, 168, 56, 0.3);
+        color: #e8a838;
       }
       body.tema-inter .total-score-box {
-        background: var(--accent-bg);
-        border-color: var(--accent-border);
+        background: linear-gradient(135deg, #1a0e00, #001428);
+        border-color: rgba(232, 168, 56, 0.3);
       }
       body.tema-inter .ts-val {
-        color: var(--accent);
+        background: linear-gradient(90deg, #e8a838, #e05252, #4baede);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       body.tema-inter .score-input {
-        color: var(--accent);
+        color: #e8a838;
       }
       body.tema-inter .score-input:focus {
-        border-color: var(--accent);
-        background: var(--accent-bg);
+        border-color: #e8a838;
+        background: #1a1000;
+      }
+      body.tema-inter .score-slider {
+        accent-color: #e8a838;
       }
       body.tema-inter .gold {
-        color: var(--accent);
+        color: #e8a838;
       }
       body.tema-inter .jcel.done {
-        background: #001a2a;
-        border-color: rgba(75, 174, 222, 0.3);
+        background: linear-gradient(135deg, #001a0a, #1a1000);
+        border-color: rgba(75, 174, 222, 0.4);
       }
       body.tema-inter .jcel.done .jscore {
-        color: var(--accent);
+        color: #4caf7d;
       }
       body.tema-inter .card {
-        border-color: rgba(75, 174, 222, 0.1);
+        border-color: rgba(232, 168, 56, 0.1);
       }
       body.tema-inter ::-webkit-scrollbar-thumb {
-        background: #001a2a;
+        background: #1a0e00;
       }
       body.tema-inter #loading-overlay {
-        background: #060810;
+        background: #080618;
       }
-      /* Indicador visual de instancia */
+      body.tema-inter .spin {
+        border-color: rgba(232, 168, 56, 0.15);
+        border-top-color: #e8a838;
+      }
+      body.tema-inter .hdr-dot {
+        background: #e8a838;
+      }
+
+      /* Indicador de instancia */
       .instancia-banner {
         display: none;
         text-align: center;
-        padding: 6px;
+        padding: 5px 12px;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 4px;
         text-transform: uppercase;
       }
+      body.tema-nac .instancia-banner {
+        display: block;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(117, 170, 219, 0.12),
+          transparent
+        );
+        color: #75aadb;
+        border-top: 2px solid #75aadb;
+      }
       body.tema-inter .instancia-banner {
         display: block;
         background: linear-gradient(
           90deg,
-          transparent,
-          rgba(75, 174, 222, 0.15),
-          transparent
+          #e05252,
+          #e8a838,
+          #f6d840,
+          #4caf7d,
+          #4baede,
+          #9b59b6
         );
-        color: var(--accent);
-      }
-      body:not(.tema-inter) .instancia-banner {
-        display: block;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(201, 168, 76, 0.1),
-          transparent
-        );
-        color: var(--accent);
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
       }
     </style>
   </head>
@@ -1618,6 +1750,7 @@
           db.removeChannel(realtimeSub);
           realtimeSub = null;
         }
+        document.body.classList.remove("tema-nac", "tema-inter");
         ["screen-director", "screen-jurado"].forEach(
           (id) => (document.getElementById(id).style.display = "none"),
         );
@@ -2254,14 +2387,24 @@
       function setTema(instancia) {
         const isInter = instancia === "inter";
         document.body.classList.toggle("tema-inter", isInter);
+        document.body.classList.toggle("tema-nac", !isInter);
+
+        const flagAR = `<svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;flex-shrink:0;margin-right:6px">
+          <rect width="22" height="4.67" fill="#74ACDF"/>
+          <rect width="22" height="4.67" y="4.67" fill="#fff"/>
+          <rect width="22" height="4.67" y="9.33" fill="#74ACDF"/>
+          <circle cx="11" cy="7" r="2.2" fill="#F6B40E"/>
+        </svg>`;
+
         const label = isInter
           ? "🌎 INTER AMÉRICA · JAM 2026"
-          : "🇦🇷 FINAL NACIONAL · JAM 2026";
-        const regLabel = instancia === "reg" ? "🏆 REGIONAL · JAM 2026" : label;
-        const finalLabel = instancia === "reg" ? regLabel : label;
+          : instancia === "rep"
+            ? `${flagAR} REPESCA · JAM 2026`
+            : `${flagAR} FINAL NACIONAL · JAM 2026`;
+
         document
           .querySelectorAll(".instancia-banner")
-          .forEach((el) => (el.textContent = finalLabel));
+          .forEach((el) => (el.innerHTML = label));
       }
 
       // ═══════════════════════════════════════════════════════════
