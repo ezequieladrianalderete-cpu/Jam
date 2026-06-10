@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es" style="background:#080808">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Evento — JAM 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+html,body{background:#080808!important;color:#F8F5EE;margin:0;padding:0;font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#080808}
+.login-box{width:100%;max-width:320px;text-align:center}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;letter-spacing:6px;color:#C9A84C;margin-bottom:4px}
+.login-sub{font-size:12px;color:rgba(248,245,238,.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:32px}
+.login-card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;text-align:left}
+.login-err{background:#1a0000;border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:9px 13px;font-size:13px;color:#E05252;margin-bottom:13px;display:none}
+.login-hint{font-size:11px;color:rgba(248,245,238,.35);margin-top:14px;line-height:1.6;text-align:center}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:11px;font-weight:600;color:rgba(248,245,238,.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px}
+.fld input,.fld select,.srch{width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 13px;color:#F8F5EE;font-family:'Outfit',sans-serif;font-size:14px;transition:all .2s;-webkit-appearance:none;appearance:none}
+.fld input:focus,.fld select:focus,.srch:focus{outline:none;border-color:#C9A84C;background:#221e00}
+.fld input::placeholder,.srch::placeholder{color:rgba(248,245,238,.25)}
+.fld select option{background:#1e1e1e}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;white-space:nowrap}
+.bg{background:#C9A84C;color:#0A0A0A}.bg:hover{background:#E8C97A;transform:translateY(-1px)}
+.bgn{background:#4CAF7D;color:#000}.bgn:hover{background:#5CC88A}
+.br{background:#E05252;color:#fff}
+.bo{background:transparent;color:#F8F5EE;border:1px solid rgba(255,255,255,.2)}.bo:hover{background:rgba(255,255,255,.06)}
+.bfull{width:100%;padding:13px;font-size:15px;border-radius:14px}
+.bsm{padding:6px 14px;font-size:12px;border-radius:8px}
+.hdr{border-bottom:1px solid rgba(255,255,255,.07);height:48px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:#0a0a0a;position:sticky;top:0;z-index:200}
+.hdr-logo{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:20px;letter-spacing:4px;color:#C9A84C}
+.hdot{width:7px;height:7px;border-radius:50%;background:#4CAF7D;animation:bl 2s infinite;flex-shrink:0}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.07);overflow-x:auto;background:#0d0d0d;padding:0 12px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 14px;font-size:12px;font-weight:500;color:rgba(248,245,238,.4);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;flex-shrink:0}
+.tab:hover{color:#F8F5EE}.tab.on{color:#C9A84C;border-bottom-color:#C9A84C}
+.tp{display:none}.tp.show{display:block}
+.card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+.cg{background:#1a1600;border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:14px}
+.cw{background:#1a1000;border:1px solid rgba(232,168,56,.3);border-radius:14px;padding:14px}
+.cgn{background:#001a0a;border:1px solid rgba(76,175,125,.25);border-radius:14px;padding:14px}
+.cr{background:#1a0000;border:1px solid rgba(224,82,82,.25);border-radius:14px;padding:14px}
+.tarjeta{background:linear-gradient(135deg,#111,#1a1800);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:24px;position:relative;overflow:hidden}
+.tarjeta::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.1),transparent 70%)}
+.ep-dot{width:7px;height:7px;border-radius:50%;background:#4CAF7D;animation:bl 1.5s infinite;flex-shrink:0}
+.ep-label{font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(201,168,76,.6);text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.bdg{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.bdg-gold{background:#2a2000;border:1px solid rgba(201,168,76,.3);color:#C9A84C}
+.bdg-green{background:#001a0a;border:1px solid rgba(76,175,125,.3);color:#4CAF7D}
+.bdg-blue{background:#001020;border:1px solid rgba(75,150,216,.3);color:#4B96D8}
+.bdg-red{background:#1a0000;border:1px solid rgba(224,82,82,.3);color:#E05252}
+.bdg-amber{background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838}
+.bdg-gray{background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:rgba(248,245,238,.5)}
+.mtrack{background:#181818;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px}
+.mtrack.activo{background:#1a1800;border-color:rgba(201,168,76,.35)}
+.mtrack.falta{background:#1a0000;border-color:rgba(224,82,82,.2)}
+.proy-ctrl{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:500;display:flex;gap:8px;background:rgba(10,10,10,.85);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:8px 14px;backdrop-filter:blur(12px)}
+
+/* PROYECCIÓN — TEMA NACIONAL (bandera argentina) */
+#screen-proyeccion-full.proy-nac{background:linear-gradient(180deg,#75AADB 0%,#75AADB 33%,#FFFFFF 33%,#FFFFFF 66%,#75AADB 66%,#75AADB 100%)}
+#screen-proyeccion-full.proy-nac #pf-pista{background:radial-gradient(ellipse at center,rgba(0,0,0,.92) 0%,rgba(0,0,0,.75) 60%,rgba(117,170,219,.15) 100%)}
+#screen-proyeccion-full.proy-nac #pf-ranking{background:radial-gradient(ellipse at center,rgba(0,0,0,.95) 0%,rgba(0,0,0,.8) 60%,rgba(117,170,219,.1) 100%)}
+#screen-proyeccion-full.proy-nac #pf-espera{background:linear-gradient(180deg,#75AADB 0%,#75AADB 30%,#fff 30%,#fff 45%,rgba(201,168,76,.15) 50%,#fff 55%,#fff 70%,#75AADB 70%,#75AADB 100%)}
+#screen-proyeccion-full.proy-nac .pf-accent{color:#C9A84C}
+#screen-proyeccion-full.proy-nac .pf-logo-text::after{content:'🇦🇷';font-size:clamp(28px,6vw,64px);display:block;margin-top:8px}
+#screen-proyeccion-full.proy-nac .pf-divider{background:#C9A84C}
+
+/* PROYECCIÓN — TEMA INTERNACIONAL (globo/mundial) */
+#screen-proyeccion-full.proy-inter{background:linear-gradient(135deg,#0a0030 0%,#001a4a 30%,#002a5a 50%,#1a0040 70%,#0a0030 100%)}
+#screen-proyeccion-full.proy-inter #pf-pista{background:radial-gradient(ellipse at 30% 20%,rgba(75,174,222,.08),transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(168,75,222,.08),transparent 50%),radial-gradient(ellipse at center,rgba(0,0,0,.6) 0%,transparent 80%)}
+#screen-proyeccion-full.proy-inter #pf-ranking{background:radial-gradient(ellipse at center,rgba(0,10,30,.9) 0%,transparent 80%)}
+#screen-proyeccion-full.proy-inter #pf-espera{background:radial-gradient(ellipse at 25% 25%,rgba(0,100,200,.12),transparent 50%),radial-gradient(ellipse at 75% 75%,rgba(200,100,0,.08),transparent 50%),radial-gradient(ellipse at 50% 50%,rgba(0,180,100,.06),transparent 40%)}
+#screen-proyeccion-full.proy-inter .pf-accent{color:#4BAEDE}
+#screen-proyeccion-full.proy-inter .pf-logo-text::after{content:'🌎';font-size:clamp(28px,6vw,64px);display:block;margin-top:8px}
+#screen-proyeccion-full.proy-inter .pf-divider{background:linear-gradient(90deg,#E8A838,#4BAEDE,#4CAF7D,#E05252)}
+#screen-proyeccion-full.proy-inter #pf-nombre{background:linear-gradient(90deg,#fff,#7CC8F0);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#screen-proyeccion-full.proy-inter #pf-pais-el{color:#4BAEDE}
+.lu-row{border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;transition:background .2s}
+.lu-row.pendiente{background:#1a1a1a;border:1px solid rgba(255,255,255,.08)}
+.lu-row.presente{background:#001a0a;border:1px solid rgba(76,175,125,.25)}
+.lu-row.pista{background:#1a1800;border:1px solid rgba(201,168,76,.35)}
+.lu-row.listo{background:#001020;border:1px solid rgba(75,150,216,.15)}
+.lu-row.ausente{background:#1a0000;border:1px solid rgba(224,82,82,.2)}
+.lu-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.lu-pos{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0;text-align:center}
+.lu-info{flex:1;min-width:0}
+.lu-nombre{font-weight:600;font-size:13px;color:#F8F5EE}
+.lu-cat{font-size:11px;color:rgba(248,245,238,.45);margin-top:1px}
+.lu-ctrl{display:flex;flex-direction:column;gap:4px;flex-shrink:0;align-items:flex-end}
+.lu-estado-btn{background:#1e1e1e;border:1px solid rgba(255,255,255,.15);color:#F8F5EE;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;white-space:nowrap;transition:all .15s}
+.lu-flechas{display:flex;gap:3px}
+.lu-flecha{background:#1e1e1e;border:1px solid rgba(255,255,255,.1);color:rgba(248,245,238,.5);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif}
+.lu-flecha:hover{background:#2a2a2a;color:#F8F5EE}
+.import-zone{background:#181818;border:1.5px dashed rgba(255,255,255,.15);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}
+.import-zone:hover{border-color:rgba(201,168,76,.5);background:#1e1a00}
+.import-zone.drag{border-color:#C9A84C;background:#1e1a00}
+.con{max-width:860px;margin:0 auto;padding:18px 16px}
+.sf{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;gap:10px}
+.row:last-child{border-bottom:none}
+.sy2>*+*{margin-top:8px}.sy3>*+*{margin-top:12px}
+.mono{font-family:'JetBrains Mono',monospace}
+.gold{color:#C9A84C}.green{color:#4CAF7D}.red{color:#E05252}.amber{color:#E8A838}.muted{color:rgba(248,245,238,.45)}
+.fw7{font-weight:700}.fw6{font-weight:600}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.mt2{margin-top:8px}.mt3{margin-top:12px}.mt4{margin-top:16px}
+.mb2{margin-bottom:8px}.mb3{margin-bottom:12px}.mb4{margin-bottom:16px}
+hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:14px 0}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#2a2000;border-radius:2px}
+#loading-overlay{position:fixed;inset:0;background:#080808;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.spin{width:32px;height:32px;border:3px solid rgba(201,168,76,.15);border-top-color:#C9A84C;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spin"></div>
+  <div style="font-size:13px;color:rgba(248,245,238,.4)">Conectando...</div>
+</div>
+
+<!-- PROYECCIÓN FULLSCREEN -->
+<div id="screen-proyeccion-full" class="proy-nac" style="display:none;min-height:100vh">
+  <div id="pf-pista" style="display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:40px 24px">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px">
+        <div style="width:10px;height:10px;border-radius:50%;background:#4CAF7D;animation:bl 1.5s infinite"></div>
+        <span id="pf-instancia-label" style="letter-spacing:5px;font-size:12px;color:rgba(201,168,76,.5);font-weight:700;text-transform:uppercase">FINAL NACIONAL</span>
+      </div>
+      <div class="pf-logo-text" id="pf-logo-area" style="margin-bottom:24px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(24px,5vw,48px);font-weight:700;letter-spacing:8px;color:rgba(255,255,255,.15)">JAM 2026</div>
+      </div>
+      <div id="pf-id" class="pf-accent" style="font-family:'Cormorant Garamond',serif;font-size:clamp(14px,4vw,28px);opacity:.4;margin-bottom:12px;letter-spacing:2px">—</div>
+      <div id="pf-nombre" style="font-family:'Cormorant Garamond',serif;font-size:clamp(40px,12vw,120px);line-height:1;margin-bottom:12px;font-weight:600">—</div>
+      <div id="pf-pais-el" class="pf-accent" style="font-size:clamp(20px,5vw,48px);font-weight:700;margin-bottom:28px">—</div>
+      <div class="pf-divider" style="width:80px;height:3px;margin:0 auto 20px;border-radius:2px"></div>
+      <div id="pf-cat" style="font-size:clamp(13px,2.5vw,24px);color:rgba(255,255,255,.5)">—</div>
+    </div>
+  </div>
+
+  <div id="pf-ranking" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:60px 32px">
+    <div style="width:100%;max-width:780px;margin:0 auto">
+      <div id="pf-ranking-title" style="font-family:'Cormorant Garamond',serif;font-size:clamp(32px,8vw,72px);text-align:center;margin-bottom:36px;letter-spacing:4px;font-weight:600" class="pf-accent">RANKING</div>
+      <div id="pf-rank-rows"></div>
+    </div>
+  </div>
+
+  <div id="pf-espera" style="display:none;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:40px">
+    <div>
+      <div class="pf-logo-text" style="font-family:'Cormorant Garamond',serif;font-size:clamp(60px,22vw,220px);color:rgba(201,168,76,.07);line-height:1;font-weight:700">JAM</div>
+      <div id="pf-espera-sub" style="font-size:clamp(12px,2.5vw,24px);color:rgba(255,255,255,.12);letter-spacing:6px;text-transform:uppercase;margin-top:-16px">Dance Competition 2026</div>
+    </div>
+  </div>
+
+  <div class="proy-ctrl" id="pf-ctrl">
+    <button class="btn bg bsm" id="pfc-pista" onclick="pfMode('pista',this)">⚡ En pista</button>
+    <button class="btn bo bsm" id="pfc-ranking" onclick="pfMode('ranking',this)">🏆 Ranking</button>
+    <button class="btn bo bsm" id="pfc-espera" onclick="pfMode('espera',this)">⏸ Espera</button>
+    <button class="btn bo bsm" onclick="eLogout()">✕</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="login-wrap" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">JAM</div>
+    <div class="login-sub">Portal del Evento · 2026</div>
+    <div class="login-card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:18px;color:#F8F5EE;text-align:center">Acceso al evento</div>
+      <div class="login-err" id="e-err">PIN incorrecto.</div>
+      <div class="fld">
+        <label>Rol</label>
+        <select id="e-rol">
+          <option value="staff">📝 Staff</option>
+          <option value="lineup">📋 Line Up</option>
+          <option value="acreditacion">📷 Acreditación</option>
+          <option value="dj">🎧 DJ</option>
+          <option value="presentador">🎤 Presentador</option>
+          <option value="proyeccion">📺 Proyección</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label>PIN del evento</label>
+        <input type="password" id="e-pin" placeholder="••••" maxlength="8" onkeydown="if(event.key==='Enter')eLogin()">
+      </div>
+      <button class="btn bg bfull" onclick="eLogin()">Ingresar →</button>
+      <div class="login-hint">PIN provisto por el organizador el día del evento</div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL EVENTO -->
+<div id="screen-evento" style="display:none">
+  <header class="hdr">
+    <div class="hdr-logo">JAM</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="hdot"></div>
+      <span style="font-size:12px;color:rgba(248,245,238,.45)" id="e-hdr-user">Staff</span>
+      <button class="btn bo bsm" onclick="eLogout()">Salir</button>
+    </div>
+  </header>
+  <div class="tabs" id="e-tabs"></div>
+
+  <!-- STAFF -->
+  <div class="tp" id="tp-staff">
+    <div class="con">
+      <div class="sf mt3 mb4">
+        <div>
+          <div class="fw7" style="font-size:16px">Participantes</div>
+          <div class="muted text-xs mt2" id="st-count"></div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn bo bsm" onclick="showImport(true)">📥 Importar CSV</button>
+          <button class="btn bg bsm" onclick="showNuevo(true)">+ Cargar manual</button>
+        </div>
+      </div>
+      <input type="text" class="srch mb4" id="st-buscar" placeholder="🔍  Buscar por nombre, número o país..." oninput="stFiltrar(this.value)">
+      <div class="sy2" id="st-lista"></div>
+
+      <!-- Nuevo manual -->
+      <div id="st-form" style="display:none">
+        <div class="sf mb4">
+          <div class="fw7" style="font-size:16px">Carga manual</div>
+          <button class="btn bo bsm" onclick="showNuevo(false)">✕ Cancelar</button>
+        </div>
+        <div class="cw mb4"><p style="font-size:12px;color:rgba(248,245,238,.6)">📋 Datos exactamente como figuran en el DNI.</p></div>
+        <div class="card sy3">
+          <div class="g2">
+            <div class="fld"><label>Nombre artístico / grupo *</label><input type="text" id="nf-grupo" placeholder="Nombre del grupo"></div>
+            <div class="fld"><label>Responsable *</label><input type="text" id="nf-resp" placeholder="Nombre completo"></div>
+          </div>
+          <div class="g2">
+            <div class="fld"><label>Email *</label><input type="email" id="nf-email" placeholder="email@ejemplo.com"></div>
+            <div class="fld"><label>Celular</label><input type="tel" id="nf-cel" placeholder="+54 11..."></div>
+          </div>
+          <div class="g2">
+            <div class="fld"><label>País</label><input type="text" id="nf-pais" value="Argentina"></div>
+            <div class="fld"><label>Instancia</label>
+              <select id="nf-inst"><option>Final Nacional</option><option>JAM Inter América</option><option>Repesca</option></select>
+            </div>
+          </div>
+          <div class="fld"><label>Categorías</label><input type="text" id="nf-cats" placeholder="100 — Sol. Masc. Prof. · Salsa"></div>
+          <div class="g2">
+            <div class="fld"><label>Estado de pago</label>
+              <select id="nf-pago"><option>Sin pago</option><option>Seña 50%</option><option>Confirmado</option></select>
+            </div>
+            <div class="fld"><label>Monto abonado (ARS)</label><input type="number" id="nf-monto" placeholder="0"></div>
+          </div>
+          <div class="fld" style="margin-bottom:0"><label>Notas internas</label><input type="text" id="nf-notas" placeholder="Ej: viene de regional Córdoba..."></div>
+        </div>
+        <div class="g2 mt3">
+          <button class="btn bo bfull" onclick="showNuevo(false)">Cancelar</button>
+          <button class="btn bg bfull" onclick="stGuardar()">Guardar →</button>
+        </div>
+      </div>
+
+      <!-- Import CSV -->
+      <div id="st-import" style="display:none">
+        <div class="sf mb4">
+          <div class="fw7" style="font-size:16px">Importar participantes</div>
+          <button class="btn bo bsm" onclick="showImport(false)">✕ Cancelar</button>
+        </div>
+        <div class="cg mb4">
+          <div class="fw6 gold mb2 text-sm">📋 Formato del archivo CSV</div>
+          <p style="font-size:12px;color:rgba(248,245,238,.6);line-height:1.7">Columnas requeridas (en este orden):<br>
+          <span class="mono" style="color:#C9A84C">Nombre Grupo, Responsable, Email, Celular, País, Instancia, Categorías, Estado Pago, Monto, Notas</span></p>
+        </div>
+        <div class="import-zone" id="import-zone" onclick="document.getElementById('import-file').click()">
+          <div style="font-size:36px;margin-bottom:10px">📎</div>
+          <div class="fw6 mb2">Arrastrar o tocar para seleccionar</div>
+          <div class="muted text-sm">CSV, XLS o XLSX · Máx 5MB</div>
+          <input type="file" id="import-file" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleImport(this)">
+        </div>
+        <div id="import-preview" style="display:none;margin-top:16px">
+          <div class="card" style="overflow-x:auto;margin-bottom:14px">
+            <div class="fw6 mb3">Vista previa · <span id="import-count" class="gold">0</span> participantes</div>
+            <table id="import-table" style="width:100%;border-collapse:collapse;font-size:12px"></table>
+          </div>
+          <div class="g2">
+            <button class="btn bo bfull" onclick="showImport(false)">Cancelar</button>
+            <button class="btn bg bfull" onclick="confirmarImport()">✓ Importar todos →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINE UP -->
+  <div class="tp" id="tp-lineup">
+    <div class="con">
+      <div class="sf mt3 mb3">
+        <div>
+          <div class="fw7" style="font-size:16px">Line Up</div>
+          <div class="muted text-xs mt2" id="lu-stats">—</div>
+        </div>
+        <button class="btn bo bsm" id="lu-btn-grupo" onclick="luToggleGrupo()">Agrupar por categoría</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <input type="text" class="srch" id="lu-q" placeholder="🔍 Buscar..." oninput="luRender()" style="flex:1;min-width:140px;padding:9px 13px;font-size:13px">
+        <select id="lu-filtro" onchange="luRender()" style="background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#F8F5EE;font-family:'Outfit',sans-serif;font-size:13px;-webkit-appearance:none;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="presente">Presentes</option>
+          <option value="pista">En pista</option>
+          <option value="listo">Finalizados</option>
+          <option value="ausente">Ausentes</option>
+        </select>
+      </div>
+      <div id="lu-lista" class="sy2"></div>
+    </div>
+  </div>
+
+  <!-- ACREDITACIÓN -->
+  <div class="tp" id="tp-acreditacion">
+    <div class="con" style="max-width:540px">
+      <div id="acr-scan" class="mt3">
+        <div class="card" style="text-align:center;padding:36px">
+          <div style="font-size:56px;margin-bottom:14px">📷</div>
+          <div class="fw6 mb2" style="font-size:17px">Escanear credencial QR</div>
+          <div class="muted text-sm mb4">El participante muestra el QR desde su celular</div>
+          <button class="btn bg bfull" style="max-width:280px;margin:0 auto" onclick="acrEscanear()">Abrir cámara y escanear</button>
+        </div>
+        <div class="card mt3">
+          <div class="fw6 mb3">Búsqueda manual</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="acr-input" class="srch" placeholder="JAM-NAC-0200 o nombre..." style="flex:1" onkeydown="if(event.key==='Enter')acrBuscar()">
+            <button class="btn bg" onclick="acrBuscar()">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="acr-res" style="display:none" class="sy3 mt3">
+        <!-- resultado de búsqueda -->
+      </div>
+
+      <div id="acr-ok" style="display:none;text-align:center;padding:48px 0;animation:pop .5s ease">
+        <div style="font-size:64px;margin-bottom:14px">✅</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:#4CAF7D">¡ACREDITADO!</div>
+        <div class="muted mt2 mb4" id="acr-nombre-ok">— · <span id="acr-hora"></span></div>
+        <button class="btn bg" onclick="acrReset()">Escanear siguiente →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DJ -->
+  <div class="tp" id="tp-dj">
+    <div class="con">
+      <div class="tarjeta mt3 mb4" id="dj-tarjeta">
+        <div class="ep-label"><div class="ep-dot"></div>TOCANDO AHORA</div>
+        <div class="mono gold text-xs mb2" id="dj-codigo">—</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:4px" id="dj-nombre">Sin pista activa</div>
+        <div class="muted text-sm mb3" id="dj-info"></div>
+        <div id="dj-musica-activa"></div>
+      </div>
+      <div class="sf mb4">
+        <div class="fw7" style="font-size:15px">Lineup</div>
+        <input type="text" class="srch" placeholder="🔍 Buscar..." oninput="djFiltrar(this.value)" style="width:160px;padding:8px 12px;font-size:13px">
+      </div>
+      <div class="sy2" id="dj-lista"></div>
+      <div class="cr mt4" id="dj-sin-musica" style="display:none">
+        <div class="fw6 red mb3 text-sm">⚠️ Sin música cargada</div>
+        <div id="dj-faltante-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESENTADOR -->
+  <div class="tp" id="tp-presentador">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 90px);padding:32px 20px">
+      <div style="width:100%;max-width:640px">
+        <div class="tarjeta" style="padding:32px" id="pres-tarjeta">
+          <div class="ep-label" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:7px"><div class="ep-dot"></div>EN COMPETENCIA AHORA</div>
+            <span class="bdg bdg-green" id="pres-sede">—</span>
+          </div>
+          <div class="mono gold text-xs" style="margin-bottom:6px" id="pres-codigo">—</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(30px,7vw,64px);line-height:1.1;margin-bottom:8px;font-weight:600" id="pres-nombre">—</div>
+          <div style="font-size:clamp(18px,4vw,32px);color:#C9A84C;font-weight:700;margin-bottom:20px" id="pres-pais">—</div>
+          <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px" id="pres-extra"></div>
+        </div>
+        <p class="muted text-xs mt3" style="text-align:center">Se actualiza cuando el director cambia el participante en pista</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROYECCIÓN (embebida) -->
+  <div class="tp" id="tp-proyeccion">
+    <div style="display:flex;gap:8px;padding:10px 14px;background:rgba(8,8,8,.9);border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;z-index:100;overflow-x:auto;scrollbar-width:none">
+      <button class="btn bg bsm" id="pe-pista" onclick="peMode('pista',this)">⚡ En pista</button>
+      <button class="btn bo bsm" id="pe-ranking" onclick="peMode('ranking',this)">🏆 Ranking</button>
+      <button class="btn bo bsm" id="pe-espera" onclick="peMode('espera',this)">⏸ Espera</button>
+    </div>
+    <div id="pe-pista-v" style="display:flex;min-height:calc(100vh - 90px);align-items:center;justify-content:center;text-align:center;padding:40px 24px">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px"><div style="width:9px;height:9px;border-radius:50%;background:#4CAF7D;animation:bl 1.5s infinite"></div><span style="letter-spacing:5px;font-size:11px;color:rgba(201,168,76,.5);font-weight:700;text-transform:uppercase">En competencia</span></div>
+        <div id="pe-id" style="font-family:'Cormorant Garamond',serif;font-size:clamp(14px,4vw,28px);opacity:.3;margin-bottom:10px;color:#C9A84C">—</div>
+        <div id="pe-nombre" style="font-family:'Cormorant Garamond',serif;font-size:clamp(36px,10vw,100px);line-height:1;margin-bottom:10px;font-weight:600">—</div>
+        <div id="pe-pais-el" style="font-size:clamp(18px,4vw,36px);color:#C9A84C;font-weight:700;margin-bottom:24px">—</div>
+        <div style="width:50px;height:2px;background:#C9A84C;margin:0 auto 18px"></div>
+        <div id="pe-cat" style="font-size:clamp(12px,2vw,20px);color:rgba(255,255,255,.5)">—</div>
+      </div>
+    </div>
+    <div id="pe-ranking-v" style="display:none;min-height:calc(100vh - 90px);padding:40px 24px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,56px);text-align:center;margin-bottom:28px;color:#C9A84C;font-weight:600">RANKING</div>
+      <div id="pe-rank-rows" style="max-width:700px;margin:0 auto"></div>
+    </div>
+    <div id="pe-espera-v" style="display:none;min-height:calc(100vh - 90px);align-items:center;justify-content:center;text-align:center;padding:40px">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:clamp(60px,22vw,200px);color:rgba(201,168,76,.07);line-height:1;font-weight:700">JAM</div>
+        <div style="font-size:clamp(12px,2.5vw,22px);color:rgba(255,255,255,.12);letter-spacing:6px;text-transform:uppercase;margin-top:-12px">Dance Competition 2026</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screen-evento -->
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3000;pointer-events:none;display:flex;flex-direction:column;gap:8px;align-items:center"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://paexpktmcytccjphoppu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg'; // ← pegar desde Supabase > Settings > API
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════════════════════════════════
+// ROLES
+// ═══════════════════════════════════════════════════════════
+const ROL_TABS = {
+  staff:         ['staff','acreditacion','proyeccion'],
+  lineup:        ['lineup'],
+  acreditacion:  ['acreditacion'],
+  dj:            ['dj','proyeccion'],
+  presentador:   ['presentador','proyeccion'],
+  proyeccion:    []
+};
+const TAB_INFO = {
+  staff:         {label:'📝 Staff'},
+  lineup:        {label:'📋 Line Up'},
+  acreditacion:  {label:'📷 Acreditación'},
+  dj:            {label:'🎧 DJ'},
+  presentador:   {label:'🎤 Presentador'},
+  proyeccion:    {label:'📺 Proyección'}
+};
+
+// ═══════════════════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════════════════
+let currentRol = null;
+let luData = [];
+let djData = [];
+let luAgrupado = false;
+let importRows = [];
+let sesionActiva = null;
+let realtimeSub = null;
+
+const LU_DOT  = {pendiente:'#555',presente:'#4CAF7D',pista:'#C9A84C',listo:'#4B96D8',ausente:'#E05252'};
+const LU_LBL  = {pendiente:'Pendiente',presente:'Presente',pista:'En pista',listo:'Finalizado',ausente:'Ausente'};
+const LU_BTN  = {pendiente:'→ Marcar presente',presente:'→ Poner en pista',pista:'→ Finalizar',listo:'✓ Finalizado',ausente:'↩ Reactivar'};
+const LU_NEXT = {pendiente:'presente',presente:'pista',pista:'listo',listo:'listo',ausente:'pendiente'};
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  try {
+    await db.schema('evento').from('config').select('valor').eq('clave','pin_evento').limit(1);
+  } catch(e) {}
+  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════
+async function eLogin() {
+  const pin = document.getElementById('e-pin').value;
+  const rol = document.getElementById('e-rol').value;
+  const err = document.getElementById('e-err');
+  err.style.display = 'none';
+
+  // Verificar PIN contra la BD
+  const { data, error } = await db.schema('evento').from('config').select('valor').eq('clave','pin_evento').single();
+  if (error || !data || data.valor !== pin) {
+    err.style.display = 'block';
+    err.textContent = 'PIN incorrecto.';
+    return;
+  }
+
+  currentRol = rol;
+  document.getElementById('screen-login').style.display = 'none';
+
+  if (rol === 'proyeccion') {
+    document.getElementById('screen-proyeccion-full').style.display = 'block';
+    await loadSesionActivaForProy();
+    await buildPfRanking();
+    subscribeRealtimeSesion();
+    return;
+  }
+
+  document.getElementById('screen-evento').style.display = 'block';
+  const labels = {staff:'📝 Staff',lineup:'📋 Line Up',acreditacion:'📷 Acreditación',dj:'🎧 DJ',presentador:'🎤 Presentador'};
+  document.getElementById('e-hdr-user').textContent = labels[rol] || rol;
+
+  const tabsEl = document.getElementById('e-tabs');
+  tabsEl.innerHTML = '';
+  const allowedTabs = ROL_TABS[rol] || [rol];
+  allowedTabs.forEach((tabId, idx) => {
+    const info = TAB_INFO[tabId]; if (!info) return;
+    const t = document.createElement('div');
+    t.className = 'tab' + (idx === 0 ? ' on' : '');
+    t.textContent = info.label;
+    t.onclick = () => eTab(tabId, t);
+    tabsEl.appendChild(t);
+  });
+
+  document.querySelectorAll('.tp').forEach(t => t.classList.remove('show'));
+  if (allowedTabs[0]) document.getElementById('tp-' + allowedTabs[0])?.classList.add('show');
+
+  initEvento();
+}
+
+function eLogout() {
+  currentRol = null;
+  if (realtimeSub) { db.removeChannel(realtimeSub); realtimeSub = null; }
+  document.getElementById('screen-evento').style.display = 'none';
+  document.getElementById('screen-proyeccion-full').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('e-pin').value = '';
+}
+
+async function initEvento() {
+  await loadLineup();
+  await loadDjData();
+  await loadSesionActivaForProy();
+  subscribeRealtimeEvento();
+}
+
+function eTab(id, btn) {
+  document.querySelectorAll('.tp').forEach(t => t.classList.remove('show'));
+  document.querySelectorAll('#e-tabs .tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('tp-' + id)?.classList.add('show');
+  btn.classList.add('on');
+  if (id === 'lineup') luRender();
+  if (id === 'dj') buildDjLista();
+}
+
+// ═══════════════════════════════════════════════════════════
+// STAFF
+// ═══════════════════════════════════════════════════════════
+async function loadLineup() {
+  const { data } = await db.schema('evento').from('lineup').select('*').order('posicion');
+  luData = data || [];
+  buildStLista(luData);
+  luRender();
+}
+
+function buildStLista(lista) {
+  const cont = document.getElementById('st-lista');
+  const countEl = document.getElementById('st-count');
+  if (countEl) countEl.textContent = luData.length + ' participantes cargados';
+  cont.innerHTML = '';
+  lista.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cssText = 'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+    const pgBdg = p.estado_pago==='confirmado' ? '<span class="bdg bdg-green">✓ Pagado</span>' :
+                  p.estado_pago==='senia' ? '<span class="bdg bdg-amber">50% Señado</span>' :
+                  '<span class="bdg bdg-red">Sin pago</span>';
+    const acrBdg = p.acreditado_at ? '<span class="bdg bdg-green">✓ Acreditado</span>' : '<span class="bdg bdg-gray">Sin acreditar</span>';
+    div.innerHTML = `<div style="min-width:0"><div><span class="mono gold text-xs">${p.codigo_id}</span> <span style="font-weight:600">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="muted text-xs mt2">${p.categoria||''}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${pgBdg}${acrBdg}</div>`;
+    cont.appendChild(div);
+  });
+  if (!lista.length) cont.innerHTML = '<div class="muted" style="text-align:center;padding:32px;font-size:13px">Sin resultados</div>';
+}
+
+function stFiltrar(q) {
+  const f = luData.filter(p => !q || p.nombre_grupo?.toLowerCase().includes(q.toLowerCase()) || p.codigo_id?.toLowerCase().includes(q.toLowerCase()) || p.pais?.toLowerCase().includes(q.toLowerCase()));
+  buildStLista(f);
+}
+
+function showNuevo(show) {
+  document.getElementById('st-lista').style.display = show ? 'none' : 'block';
+  document.getElementById('st-form').style.display  = show ? 'block' : 'none';
+  document.getElementById('st-import').style.display = 'none';
+  const topBar = document.querySelector('#tp-staff .sf');
+  const buscar = document.getElementById('st-buscar');
+  if (topBar) topBar.style.display = show ? 'none' : 'flex';
+  if (buscar) buscar.style.display  = show ? 'none' : 'block';
+}
+
+async function stGuardar() {
+  const grupo = document.getElementById('nf-grupo').value.trim();
+  if (!grupo) { toast('Ingresá el nombre del grupo','err'); return; }
+  const pais = document.getElementById('nf-pais').value || 'Argentina';
+  const inst = document.getElementById('nf-inst').value;
+  const instCod = inst.includes('Inter') ? 'inter' : inst.includes('Repesca') ? 'rep' : 'nac';
+  const prefijo = instCod === 'inter' ? 'INTER' : instCod === 'rep' ? 'REP' : 'NAC';
+  const nextNum = luData.length + 1;
+  const codigo_id = 'JAM-' + prefijo + '-' + String(nextNum).padStart(4,'0');
+  const pago = document.getElementById('nf-pago').value;
+  const estado_pago = pago === 'Confirmado' ? 'confirmado' : pago === 'Seña 50%' ? 'senia' : 'sin_pago';
+
+  const payload = {
+    codigo_id, nombre_grupo: grupo, responsable: document.getElementById('nf-resp').value,
+    pais, instancia: instCod, categoria: document.getElementById('nf-cats').value,
+    estado_pago, posicion: nextNum, estado: 'pendiente'
+  };
+
+  const { error } = await db.schema('evento').from('lineup').insert(payload);
+  if (error) { toast('Error: ' + error.message, 'err'); return; }
+  await loadLineup();
+  showNuevo(false);
+  toast('Participante guardado · ' + codigo_id, 'ok');
+}
+
+function showImport(show) {
+  document.getElementById('st-lista').style.display = show ? 'none' : 'block';
+  document.getElementById('st-import').style.display = show ? 'block' : 'none';
+  document.getElementById('st-form').style.display   = 'none';
+  const topBar = document.querySelector('#tp-staff .sf');
+  const buscar = document.getElementById('st-buscar');
+  if (topBar) topBar.style.display = show ? 'none' : 'flex';
+  if (buscar) buscar.style.display  = show ? 'none' : 'block';
+  if (!show) { document.getElementById('import-preview').style.display='none'; importRows=[]; }
+}
+
+function handleImport(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => parseCSV(e.target.result);
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { toast('Archivo vacío o con formato incorrecto','err'); return; }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  const hasId = headers[0].toLowerCase() === 'id' || headers[0].toLowerCase().includes('jam-');
+  importRows = [];
+  let nextNum = luData.length + 1;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',').map(c => c.trim().replace(/"/g,''));
+    if (!cols[0] && !cols[1]) continue;
+    const off = hasId ? 1 : 0;
+    const pais = cols[off+4] || 'Argentina';
+    const instRaw = (cols[off+5] || '').toLowerCase();
+    const instCod = instRaw.includes('inter') ? 'inter' : instRaw.includes('rep') ? 'rep' : 'nac';
+    const prefijo = instCod === 'inter' ? 'INTER' : instCod === 'rep' ? 'REP' : 'NAC';
+    const id = hasId ? cols[0] : ('JAM-' + prefijo + '-' + String(nextNum).padStart(4,'0'));
+    const pagoRaw = (cols[off+7] || '').toLowerCase();
+    importRows.push({
+      codigo_id: id, nombre_grupo: cols[off] || 'Sin nombre',
+      responsable: cols[off+1] || '', pais, instancia: instCod,
+      categoria: cols[off+6] || '',
+      estado_pago: pagoRaw.includes('confirm') ? 'confirmado' : pagoRaw.includes('se') ? 'senia' : 'sin_pago',
+      posicion: nextNum, estado: 'pendiente'
+    });
+    if (!hasId) nextNum++;
+  }
+  document.getElementById('import-count').textContent = importRows.length;
+  const table = document.getElementById('import-table');
+  table.innerHTML = '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)"><th style="padding:7px 10px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);font-weight:600">ID</th><th style="padding:7px 10px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);font-weight:600">Nombre</th><th style="padding:7px 10px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);font-weight:600">País</th><th style="padding:7px 10px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);font-weight:600">Pago</th></tr></thead><tbody>' +
+    importRows.slice(0,10).map(r => {
+      const pg = r.estado_pago==='confirmado' ? '<span style="color:#4CAF7D;font-size:11px">✓ Ok</span>' : r.estado_pago==='senia' ? '<span style="color:#E8A838;font-size:11px">50%</span>' : '<span style="color:#E05252;font-size:11px">Sin pago</span>';
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${r.codigo_id}</td><td style="padding:6px 10px;font-size:12px">${r.nombre_grupo}</td><td style="padding:6px 10px;font-size:12px;color:rgba(248,245,238,.5)">${r.pais}</td><td style="padding:6px 10px">${pg}</td></tr>`;
+    }).join('') + (importRows.length > 10 ? `<tr><td colspan="4" style="padding:8px 10px;font-size:11px;color:rgba(248,245,238,.4);text-align:center">... y ${importRows.length-10} más</td></tr>` : '') + '</tbody>';
+  document.getElementById('import-preview').style.display = 'block';
+}
+
+async function confirmarImport() {
+  const { error } = await db.schema('evento').from('lineup').insert(importRows);
+  if (error) { toast('Error al importar: ' + error.message, 'err'); return; }
+  await loadLineup();
+  showImport(false);
+  toast(importRows.length + ' participantes importados correctamente', 'ok');
+  importRows = [];
+}
+
+// ═══════════════════════════════════════════════════════════
+// LINE UP
+// ═══════════════════════════════════════════════════════════
+function luStats() {
+  const el = document.getElementById('lu-stats');
+  if (!el) return;
+  const pres  = luData.filter(x => x.estado === 'presente').length;
+  const pista = luData.filter(x => x.estado === 'pista').length;
+  const listo = luData.filter(x => x.estado === 'listo').length;
+  el.textContent = luData.length + ' participantes · ' + pres + ' presentes · ' + pista + ' en pista · ' + listo + ' finalizados';
+}
+
+function luRender() {
+  if (luAgrupado) { luRenderAgrupado(); return; }
+  const q   = (document.getElementById('lu-q')?.value || '').toLowerCase();
+  const est = document.getElementById('lu-filtro')?.value || '';
+  const lista = luData.filter(p => (!q || p.nombre_grupo?.toLowerCase().includes(q) || p.codigo_id?.toLowerCase().includes(q)) && (!est || p.estado === est));
+  buildLuLista(lista);
+}
+
+function buildLuLista(lista) {
+  const cont = document.getElementById('lu-lista'); if (!cont) return;
+  cont.innerHTML = ''; luStats();
+  if (!lista.length) { cont.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>'; return; }
+  lista.forEach(p => {
+    const idx = luData.findIndex(x => x.id === p.id);
+    const row = document.createElement('div');
+    row.className = 'lu-row ' + p.estado;
+    const dot = document.createElement('div'); dot.className = 'lu-dot'; dot.style.background = LU_DOT[p.estado] || '#555';
+    if (p.estado === 'pista') dot.style.animation = 'bl 1.5s infinite';
+    const pos = document.createElement('div'); pos.className = 'lu-pos'; pos.textContent = p.posicion;
+    const info = document.createElement('div'); info.className = 'lu-info';
+    info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="lu-cat">${p.categoria||''}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado]||'#555'}">${LU_LBL[p.estado]||p.estado}</div>`;
+    const ctrl = document.createElement('div'); ctrl.className = 'lu-ctrl';
+    const eBtn = document.createElement('button'); eBtn.className = 'lu-estado-btn'; eBtn.textContent = LU_BTN[p.estado] || '→';
+    if (p.estado === 'listo') { eBtn.style.color='#4B96D8'; eBtn.style.borderColor='rgba(75,150,216,.3)'; eBtn.style.background='#001020'; eBtn.disabled=true; }
+    else { (id => eBtn.onclick = e => { e.stopPropagation(); luCambiarEstado(id, LU_NEXT[p.estado] || 'listo'); })(p.id); }
+    const flechas = document.createElement('div'); flechas.className = 'lu-flechas';
+    if (idx > 0) { const up=document.createElement('button');up.className='lu-flecha';up.textContent='↑';((i)=>{up.onclick=e=>{e.stopPropagation();luMover(i,-1);};})(idx);flechas.appendChild(up); }
+    if (idx < luData.length-1) { const dn=document.createElement('button');dn.className='lu-flecha';dn.textContent='↓';((i)=>{dn.onclick=e=>{e.stopPropagation();luMover(i,1);};})(idx);flechas.appendChild(dn); }
+    ctrl.appendChild(eBtn); ctrl.appendChild(flechas);
+    row.appendChild(pos); row.appendChild(dot); row.appendChild(info); row.appendChild(ctrl);
+    cont.appendChild(row);
+  });
+}
+
+async function luCambiarEstado(id, nuevoEstado) {
+  if (nuevoEstado === 'pista') luData.forEach(x => { if (x.estado === 'pista') x.estado = 'presente'; });
+  const p = luData.find(x => x.id === id); if (!p) return;
+  p.estado = nuevoEstado;
+  const update = { estado: nuevoEstado };
+  if (nuevoEstado === 'presente') update.acreditado_at = new Date().toISOString();
+  if (nuevoEstado === 'pista')    update.pista_desde    = new Date().toISOString();
+  if (nuevoEstado === 'listo')    update.listo_at        = new Date().toISOString();
+  await db.schema('evento').from('lineup').update(update).eq('id', id);
+  luRender();
+  const msgs = {presente:'marcado como presente',pista:'puesto en pista',listo:'marcado como finalizado',pendiente:'reactivado',ausente:'marcado como ausente'};
+  toast(p.nombre_grupo + ' ' + (msgs[nuevoEstado] || nuevoEstado), 'ok');
+}
+
+async function luMover(idx, dir) {
+  const ni = idx + dir;
+  if (ni < 0 || ni >= luData.length) return;
+  const tmp = luData[idx]; luData[idx] = luData[ni]; luData[ni] = tmp;
+  luData.forEach((p, i) => p.posicion = i + 1);
+  // Actualizar posiciones en BD
+  const updates = [{ id: luData[idx].id, posicion: luData[idx].posicion }, { id: luData[ni].id, posicion: luData[ni].posicion }];
+  for (const u of updates) await db.schema('evento').from('lineup').update({ posicion: u.posicion }).eq('id', u.id);
+  luRender();
+}
+
+function luToggleGrupo() {
+  luAgrupado = !luAgrupado;
+  const btn = document.getElementById('lu-btn-grupo');
+  if (btn) btn.textContent = luAgrupado ? 'Ver por posición' : 'Agrupar por categoría';
+  luRender();
+}
+
+function luRenderAgrupado() {
+  const cont = document.getElementById('lu-lista'); if (!cont) return;
+  cont.innerHTML = ''; luStats();
+  const grupos = {Salsa:[],Bachata:[],Otros:[]};
+  luData.forEach(p => {
+    const g = p.categoria?.toLowerCase().includes('bachata') ? 'Bachata' : p.categoria?.toLowerCase().includes('salsa') ? 'Salsa' : 'Otros';
+    grupos[g].push(p);
+  });
+  ['Salsa','Bachata','Otros'].forEach(gen => {
+    const lista = grupos[gen]; if (!lista.length) return;
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:11px;font-weight:700;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1.5px;padding:12px 4px 6px;margin-top:8px';
+    hdr.textContent = '⚡ ' + gen + ' (' + lista.length + ')';
+    cont.appendChild(hdr);
+    buildLuLista(lista);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACREDITACIÓN
+// ═══════════════════════════════════════════════════════════
+function acrEscanear() {
+  toast('Escaneando QR...','ok');
+  setTimeout(() => {
+    toast('Cámara QR disponible solo en dispositivo real','warn');
+  }, 1200);
+}
+
+async function acrBuscar() {
+  const q = document.getElementById('acr-input').value.trim();
+  if (!q) return;
+  const p = luData.find(x => x.codigo_id?.toLowerCase() === q.toLowerCase() || x.nombre_grupo?.toLowerCase().includes(q.toLowerCase()));
+  if (!p) { toast('No se encontró el participante','err'); return; }
+  renderAcrResultado(p);
+}
+
+function renderAcrResultado(p) {
+  document.getElementById('acr-scan').style.display = 'none';
+  document.getElementById('acr-ok').style.display = 'none';
+  const cont = document.getElementById('acr-res');
+  cont.style.display = 'block';
+  const pgBdg = p.estado_pago === 'confirmado' ? '<span class="bdg bdg-green">✓ Pago confirmado</span>' : p.estado_pago === 'senia' ? '<span class="bdg bdg-amber">50% Señado</span>' : '<span class="bdg bdg-red">Sin pago</span>';
+  const acrBdg = p.acreditado_at ? '<span class="bdg bdg-green">✓ Ya acreditado</span>' : '';
+  cont.innerHTML = `
+    <div class="tarjeta">
+      <div class="ep-label"><div class="ep-dot"></div>CREDENCIAL ENCONTRADA</div>
+      <div class="mono gold text-xs mb2">${p.codigo_id}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:4px">${p.nombre_grupo}</div>
+      <div class="muted text-sm mb3">${p.pais||''}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${acrBdg}<span class="bdg bdg-blue">${p.categoria||'—'}</span></div>
+    </div>
+    <div class="card sy2">
+      <div class="row"><span class="muted text-xs">Responsable</span><span>${p.responsable||'—'}</span></div>
+      <div class="row"><span class="muted text-xs">Instancia</span><span>${p.instancia?.toUpperCase()||'—'}</span></div>
+      <div class="row" style="border-bottom:none"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado]||p.estado}</span></div>
+    </div>
+    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${p.nombre_grupo}')">✓ Confirmar presencia y acreditar</button>
+    <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
+}
+
+async function acrConfirmar(id, nombre) {
+  const h = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('acr-hora').textContent = h + 'hs';
+  document.getElementById('acr-nombre-ok').innerHTML = nombre + ' · <span id="acr-hora">' + h + 'hs</span>';
+  document.getElementById('acr-res').style.display = 'none';
+  document.getElementById('acr-ok').style.display = 'block';
+  // Actualizar en BD
+  const p = luData.find(x => x.id === id);
+  if (p && p.estado === 'pendiente') await luCambiarEstado(id, 'presente');
+  else { await db.schema('evento').from('lineup').update({ acreditado_at: new Date().toISOString() }).eq('id', id); }
+  toast('Presencia confirmada', 'ok');
+}
+
+function acrReset() {
+  document.getElementById('acr-scan').style.display = 'block';
+  document.getElementById('acr-res').style.display = 'none';
+  document.getElementById('acr-ok').style.display = 'none';
+  document.getElementById('acr-input').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════
+// DJ
+// ═══════════════════════════════════════════════════════════
+async function loadDjData() {
+  const { data } = await db.schema('evento').from('musica').select('*, lineup:inscripcion_id(nombre_grupo,codigo_id,posicion)').order('subido_at');
+  djData = data || [];
+  buildDjLista();
+}
+
+function buildDjLista(filtro) {
+  const lista = filtro ? djData.filter(t => t.nombre_grupo?.toLowerCase().includes(filtro.toLowerCase()) || t.codigo_id?.toLowerCase().includes(filtro.toLowerCase())) : djData;
+  const cont = document.getElementById('dj-lista'); cont.innerHTML = '';
+
+  // Mostrar sesión activa en DJ
+  if (sesionActiva) {
+    document.getElementById('dj-codigo').textContent = sesionActiva.codigo_id;
+    document.getElementById('dj-nombre').textContent = sesionActiva.nombre_grupo;
+    document.getElementById('dj-info').textContent = (sesionActiva.pais||'') + ' · ' + (sesionActiva.categoria||'') + ' · ' + (sesionActiva.instancia||'').toUpperCase();
+    const m = djData.find(x => x.codigo_id === sesionActiva.codigo_id);
+    if (m) {
+      document.getElementById('dj-musica-activa').innerHTML = `<div style="background:#0d0d0d;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:12px"><span>🎵</span><div style="flex:1"><div class="fw6 text-sm">${m.filename}</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div style="flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px"><div style="width:40%;height:100%;background:#C9A84C;border-radius:2px"></div></div><span class="mono text-xs muted">${m.duracion_fmt||'—'}</span></div></div><span class="bdg bdg-green">✓ OK</span></div>`;
+    }
+  }
+
+  lista.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'mtrack' + (t.activo_dj ? ' activo' : '') + (!t.verificado ? ' falta' : '');
+    div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion||'—'}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj?' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>':''}</div><div style="font-size:11px;color:${t.verificado?'#4CAF7D':'#E05252'};margin-top:2px">${t.verificado?'🎵 '+t.filename:'⚠️ Sin música'}</div></div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(248,245,238,.4)">${t.duracion_fmt||'—'}</div>`;
+    cont.appendChild(div);
+  });
+
+  // Sin música
+  const sinMusica = luData.filter(p => !djData.find(m => m.codigo_id === p.codigo_id));
+  const sm = document.getElementById('dj-sin-musica');
+  if (sinMusica.length && sm) {
+    sm.style.display = 'block';
+    document.getElementById('dj-faltante-list').innerHTML = sinMusica.slice(0,5).map(p => `<div class="row"><span><span class="mono gold text-xs">${p.codigo_id}</span> ${p.nombre_grupo}</span><button class="btn bsm" style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:#F8F5EE;font-size:11px" onclick="toast('Notificación enviada','ok')">Notificar</button></div>`).join('');
+  }
+}
+
+function djFiltrar(q) { buildDjLista(q); }
+
+// ═══════════════════════════════════════════════════════════
+// PRESENTADOR + PROYECCIÓN
+// ═══════════════════════════════════════════════════════════
+async function loadSesionActivaForProy() {
+  const { data: sesiones } = await db.schema('scoring').from('sesiones').select('*').eq('activa', true).limit(1);
+  sesionActiva = sesiones?.[0] || null;
+  updatePresViews();
+}
+
+function updatePresViews() {
+  const s = sesionActiva;
+  const nombre = s ? s.nombre_grupo : '—';
+  const codigo = s ? s.codigo_id : '—';
+  const pais   = s ? (s.pais || '') : '—';
+  const cat    = s ? (s.categoria || '') : '—';
+
+  // Presentador
+  document.getElementById('pres-codigo').textContent = codigo;
+  document.getElementById('pres-nombre').textContent = nombre;
+  document.getElementById('pres-pais').innerHTML = pais ? '🌎 ' + pais : '—';
+  document.getElementById('pres-extra').innerHTML = `<div><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(248,245,238,.4);text-transform:uppercase;margin-bottom:5px">Categoría</div><div style="font-size:clamp(14px,2.5vw,18px);font-weight:600">${cat}</div></div><div><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(248,245,238,.4);text-transform:uppercase;margin-bottom:5px">Instancia</div><div style="font-size:clamp(14px,2.5vw,18px);font-weight:600;color:#C9A84C">${(s?.instancia||'').toUpperCase()}</div></div>`;
+
+  // Proyección embebida
+  ['pe-id','pf-id'].forEach(id => { const el=document.getElementById(id); if(el)el.textContent=codigo; });
+  ['pe-nombre','pf-nombre'].forEach(id => { const el=document.getElementById(id); if(el)el.textContent=nombre; });
+  ['pe-pais-el','pf-pais-el'].forEach(id => { const el=document.getElementById(id); if(el)el.innerHTML=pais?'🌎 '+pais:'—'; });
+  ['pe-cat'].forEach(id => { const el=document.getElementById(id); if(el)el.textContent=cat; });
+
+  // Cambiar tema visual de proyección según instancia
+  const pfScreen = document.getElementById('screen-proyeccion-full');
+  const inst = s?.instancia || 'nac';
+  pfScreen.className = inst === 'inter' ? 'proy-inter' : 'proy-nac';
+  const instLabel = document.getElementById('pf-instancia-label');
+  if (instLabel) {
+    if (inst === 'inter') { instLabel.textContent = '🌎 INTER AMÉRICA'; instLabel.style.color = 'rgba(75,174,222,.5)'; }
+    else if (inst === 'reg') { instLabel.textContent = '🏆 REGIONAL'; instLabel.style.color = 'rgba(201,168,76,.5)'; }
+    else { instLabel.textContent = '🇦🇷 FINAL NACIONAL'; instLabel.style.color = 'rgba(201,168,76,.5)'; }
+  }
+  const pfCat = document.getElementById('pf-cat'); if(pfCat) pfCat.textContent = cat;
+}
+
+async function buildPfRanking() {
+  const { data } = await db.schema('scoring').from('v_totales').select('*').order('subtotal_parcial', { ascending: false });
+  buildRankingRows('pf-rank-rows', data, true);
+  buildRankingRows('pe-rank-rows', data, false);
+}
+
+function buildRankingRows(contId, data, large) {
+  const cont = document.getElementById(contId); if (!cont) return;
+  cont.innerHTML = '';
+  if (!data) return;
+  data.forEach((r, i) => {
+    const ps = i===0?'background:#C9A84C;color:#000;':i===1?'background:#888;color:#000;':i===2?'background:#8B6D28;color:#000;':'background:#222;color:rgba(255,255,255,.4);';
+    const rc = i===0?'background:#1e1800;border:1px solid rgba(201,168,76,.3)':'background:#181818;border:1px solid rgba(255,255,255,.08)';
+    const sz = large ? 'clamp(16px,3vw,26px)' : 'clamp(14px,2.5vw,20px)';
+    cont.innerHTML += `<div style="display:flex;align-items:center;gap:${large?20:16}px;padding:${large?18:14}px ${large?28:22}px;border-radius:${large?18:16}px;margin-bottom:${large?12:10}px;${rc}"><div style="${ps}border-radius:50%;width:${large?44:34}px;height:${large?44:34}px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,32px);font-weight:600;flex-shrink:0">${i+1}</div><div style="flex:1"><div style="font-size:${sz};font-weight:700">${r.nombre_grupo}</div><div style="font-size:clamp(12px,${large?'2vw':'1.5vw'},18px);color:rgba(255,255,255,.5)">${r.instancia?.toUpperCase()||''}</div></div><div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,${large?44:34}px);color:#C9A84C;font-weight:600">${r.subtotal_parcial||'—'}</div></div>`;
+  });
+}
+
+function subscribeRealtimeSesion() {
+  realtimeSub = db.channel('sesion-evento')
+    .on('postgres_changes', { event: '*', schema: 'scoring', table: 'sesiones' }, async () => {
+      await loadSesionActivaForProy();
+      await buildPfRanking();
+    })
+    .subscribe();
+}
+
+function subscribeRealtimeEvento() {
+  db.channel('lineup-realtime')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'evento', table: 'lineup' }, payload => {
+      const idx = luData.findIndex(x => x.id === payload.new.id);
+      if (idx >= 0) luData[idx] = { ...luData[idx], ...payload.new };
+      luRender();
+    })
+    .subscribe();
+  subscribeRealtimeSesion();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROYECCIÓN MODO
+// ═══════════════════════════════════════════════════════════
+function pfMode(mode, btn) {
+  ['pista','ranking','espera'].forEach(m => { const el=document.getElementById('pf-'+m); if(el)el.style.display='none'; });
+  const target = document.getElementById('pf-' + mode); if (target) target.style.display = 'flex';
+  document.querySelectorAll('[id^="pfc-"]').forEach(b => b.className = 'btn bo bsm');
+  btn.className = 'btn bg bsm';
+}
+
+function peMode(mode, btn) {
+  ['pista-v','ranking-v','espera-v'].forEach(m => { document.getElementById('pe-'+m).style.display='none'; });
+  document.getElementById('pe-' + mode + '-v').style.display = 'flex';
+  document.querySelectorAll('[id^="pe-"][class*="btn"]').forEach(b => b.className = 'btn bo bsm');
+  btn.className = 'btn bg bsm';
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function toast(msg, tipo='ok') {
+  tipo = tipo || 'ok';
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  const c = tipo==='ok'?'#4CAF7D':tipo==='err'?'#E05252':'#E8A838';
+  el.style.cssText = `background:#1a1a1a;border:1px solid ${c};border-radius:100px;padding:10px 20px;font-size:13px;font-weight:500;white-space:nowrap;color:${c};box-shadow:0 4px 20px rgba(0,0,0,.5)`;
+  el.textContent = msg; t.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2800);
+}
+
+// Arrancar
+init();
+</script>
+</body>
+</html>
