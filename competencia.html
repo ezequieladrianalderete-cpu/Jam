@@ -897,6 +897,32 @@
         );
         color: var(--accent);
       }
+      /* WATERMARK LOGO */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 100vmin;
+        pointer-events: none;
+        z-index: 0;
+      }
+      body:not(.tema-inter)::before {
+        background-image: url("/imgs/logo-nac-black.jpg");
+        opacity: 0.06;
+      }
+      body.tema-inter::before {
+        background-image: url("/imgs/logo-int.png");
+        background-size: 115vmin;
+        opacity: 0.08;
+      }
+      #screen-login,
+      #screen-jurado,
+      #screen-director {
+        position: relative;
+        z-index: 1;
+      }
     </style>
   </head>
   <body>
@@ -1262,7 +1288,7 @@
                 >
                   <option value="nac">Nacional</option>
                   <option value="rep">Repesca</option>
-                  <option value="inter">Inter América</option>
+                  <option value="int">Inter América</option>
                 </select>
               </div>
             </div>
@@ -1942,7 +1968,7 @@
         document.getElementById("d-info").textContent =
           (s.pais || "") + " · " + (s.instancia || "").toUpperCase();
         const activos = juradosConfig.filter((j) => j.activo);
-        const nJueces = activos.length || (s.instancia === "inter" ? 3 : 5);
+        const nJueces = activos.length || (s.instancia === "int" ? 3 : 5);
         const itemsPorJuez = activos[0]?.items?.length || 2;
         const label =
           nJueces +
@@ -1969,7 +1995,7 @@
         grid.innerHTML = "";
         const activos = juradosConfig.filter((j) => j.activo);
         const maxJueces =
-          activos.length || (sesionActiva?.instancia === "inter" ? 3 : 5);
+          activos.length || (sesionActiva?.instancia === "int" ? 3 : 5);
         let total = 0,
           cerrados = 0;
 
@@ -2252,7 +2278,7 @@
       // TEMA VISUAL (NAC vs INTER)
       // ═══════════════════════════════════════════════════════════
       function setTema(instancia) {
-        const isInter = instancia === "inter";
+        const isInter = instancia === "int";
         document.body.classList.toggle("tema-inter", isInter);
         const label = isInter
           ? "🌎 INTER AMÉRICA · JAM 2026"
