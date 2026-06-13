@@ -473,10 +473,32 @@ const LU_NEXT = {pendiente:'presente',presente:'pista',pista:'listo',listo:'list
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
+function parseCat(c) { try { const a = typeof c==="string" ? JSON.parse(c) : c; if(Array.isArray(a)) return a.map(x=>x.n||x.name||x).join(", "); return String(c||""); } catch(e) { return String(c||""); } }
 async function init() {
   try {
-    await db.schema('evento').from('config').select('valor').eq('clave','pin_evento').limit(1);
+    const saved = sessionStorage.getItem('jam_evento');
+    if (saved) {
+      const s = JSON.parse(saved);
+      currentRol = s.rol;
+      document.getElementById('loading-overlay').style.display = 'none';
+      if (currentRol === 'proyeccion') {
+        document.getElementById('screen-proyeccion-full').style.display = 'block';
+        await loadSesionActivaForProy(); await buildPfRanking(); subscribeRealtimeSesion();
+      } else {
+        document.getElementById('screen-evento').style.display = 'block';
+        const labels = {staff:'📝 Staff',lineup:'📋 Line Up',acreditacion:'📷 Acreditación',dj:'🎧 DJ',presentador:'🎤 Presentador'};
+        document.getElementById('e-hdr-user').textContent = labels[currentRol] || currentRol;
+        const tabsEl = document.getElementById('e-tabs'); tabsEl.innerHTML = '';
+        const allowedTabs = ROL_TABS[currentRol] || [currentRol];
+        allowedTabs.forEach((tabId, idx) => { const info = TAB_INFO[tabId]; if(!info) return; const t=document.createElement('div'); t.className='tab'+(idx===0?' on':''); t.textContent=info.label; t.onclick=()=>eTab(tabId,t); tabsEl.appendChild(t); });
+        document.querySelectorAll('.tp').forEach(t => t.classList.remove('show'));
+        if (allowedTabs[0]) document.getElementById('tp-'+allowedTabs[0])?.classList.add('show');
+        initEvento();
+      }
+      return;
+    }
   } catch(e) {}
+  try { await db.schema('evento').from('config').select('valor').eq('clave','pin_evento').limit(1); } catch(e) {}
   document.getElementById('loading-overlay').style.display = 'none';
   document.getElementById('screen-login').style.display = 'flex';
 }
@@ -499,6 +521,7 @@ async function eLogin() {
   }
 
   currentRol = rol;
+  sessionStorage.setItem('jam_evento', JSON.stringify({rol}));
   document.getElementById('screen-login').style.display = 'none';
 
   if (rol === 'proyeccion') {
@@ -533,6 +556,7 @@ async function eLogin() {
 
 function eLogout() {
   currentRol = null;
+  sessionStorage.removeItem('jam_evento');
   if (realtimeSub) { db.removeChannel(realtimeSub); realtimeSub = null; }
   document.getElementById('screen-evento').style.display = 'none';
   document.getElementById('screen-proyeccion-full').style.display = 'none';
@@ -579,7 +603,7 @@ function buildStLista(lista) {
                   p.estado_pago==='senia' ? '<span class="bdg bdg-amber">50% Señado</span>' :
                   '<span class="bdg bdg-red">Sin pago</span>';
     const acrBdg = p.acreditado_at ? '<span class="bdg bdg-green">✓ Acreditado</span>' : '<span class="bdg bdg-gray">Sin acreditar</span>';
-    div.innerHTML = `<div style="min-width:0"><div><span class="mono gold text-xs">${p.codigo_id}</span> <span style="font-weight:600">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="muted text-xs mt2">${p.categoria||''}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${pgBdg}${acrBdg}</div>`;
+    div.innerHTML = `<div style="min-width:0"><div><span class="mono gold text-xs">${p.codigo_id}</span> <span style="font-weight:600">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="muted text-xs mt2">${parseCat(p.categoria)}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${pgBdg}${acrBdg}</div>`;
     cont.appendChild(div);
   });
   if (!lista.length) cont.innerHTML = '<div class="muted" style="text-align:center;padding:32px;font-size:13px">Sin resultados</div>';
@@ -720,7 +744,7 @@ function buildLuLista(lista) {
     if (p.estado === 'pista') dot.style.animation = 'bl 1.5s infinite';
     const pos = document.createElement('div'); pos.className = 'lu-pos'; pos.textContent = p.posicion;
     const info = document.createElement('div'); info.className = 'lu-info';
-    info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="lu-cat">${p.categoria||''}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado]||'#555'}">${LU_LBL[p.estado]||p.estado}</div>`;
+    info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais||''}</span></div><div class="lu-cat">${parseCat(p.categoria)}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado]||'#555'}">${LU_LBL[p.estado]||p.estado}</div>`;
     const ctrl = document.createElement('div'); ctrl.className = 'lu-ctrl';
     const eBtn = document.createElement('button'); eBtn.className = 'lu-estado-btn'; eBtn.textContent = LU_BTN[p.estado] || '→';
     if (p.estado === 'listo') { eBtn.style.color='#4B96D8'; eBtn.style.borderColor='rgba(75,150,216,.3)'; eBtn.style.background='#001020'; eBtn.disabled=true; }
@@ -743,8 +767,23 @@ async function luCambiarEstado(id, nuevoEstado) {
   if (nuevoEstado === 'pista')    update.pista_desde    = new Date().toISOString();
   if (nuevoEstado === 'listo')    update.listo_at        = new Date().toISOString();
   await db.schema('evento').from('lineup').update(update).eq('id', id);
+
+  // Si se pone en pista → crear sesión en scoring para que los jurados lo vean
+  if (nuevoEstado === 'pista') {
+    try {
+      // Desactivar sesión anterior
+      await db.schema('scoring').from('sesiones').update({ activa: false }).eq('activa', true);
+      // Crear nueva sesión activa
+      await db.schema('scoring').from('sesiones').insert({
+        codigo_id: p.codigo_id, nombre_grupo: p.nombre_grupo,
+        instancia: p.instancia || 'nac', activa: true,
+        pais: p.pais, categoria: typeof p.categoria === 'string' ? p.categoria : JSON.stringify(p.categoria)
+      });
+    } catch(e) { console.error('Error creando sesión:', e); }
+  }
+
   luRender();
-  const msgs = {presente:'marcado como presente',pista:'puesto en pista',listo:'marcado como finalizado',pendiente:'reactivado',ausente:'marcado como ausente'};
+  const msgs = {presente:'marcado como presente',pista:'puesto en pista — sesión creada',listo:'marcado como finalizado',pendiente:'reactivado',ausente:'marcado como ausente'};
   toast(p.nombre_grupo + ' ' + (msgs[nuevoEstado] || nuevoEstado), 'ok');
 }
 
@@ -815,7 +854,7 @@ function renderAcrResultado(p) {
       <div class="mono gold text-xs mb2">${p.codigo_id}</div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:4px">${p.nombre_grupo}</div>
       <div class="muted text-sm mb3">${p.pais||''}</div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${acrBdg}<span class="bdg bdg-blue">${p.categoria||'—'}</span></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${acrBdg}<span class="bdg bdg-blue">${parseCat(p.categoria)}</span></div>
     </div>
     <div class="card sy2">
       <div class="row"><span class="muted text-xs">Responsable</span><span>${p.responsable||'—'}</span></div>
@@ -850,8 +889,22 @@ function acrReset() {
 // DJ
 // ═══════════════════════════════════════════════════════════
 async function loadDjData() {
-  const { data } = await db.schema('evento').from('musica').select('*, lineup:inscripcion_id(nombre_grupo,codigo_id,posicion)').order('subido_at');
-  djData = data || [];
+  // Traer música desde inscripciones (via lineup)
+  const { data: lineup } = await db.schema('evento').from('lineup').select('codigo_id, nombre_grupo, posicion, inscripcion_id, instancia').order('posicion');
+  if (!lineup) { djData = []; buildDjLista(); return; }
+  // Buscar música de cada inscripción
+  const ids = lineup.map(l => l.inscripcion_id).filter(Boolean);
+  const { data: inscrip } = await db.from('inscripciones').select('id, musica_url, musica_nombre').in('id', ids);
+  const musicMap = {};
+  (inscrip||[]).forEach(i => { musicMap[i.id] = i; });
+  djData = lineup.map(l => {
+    const m = musicMap[l.inscripcion_id] || {};
+    return {
+      codigo_id: l.codigo_id, nombre_grupo: l.nombre_grupo, posicion: l.posicion,
+      filename: m.musica_nombre || 'Sin nombre', verificado: !!m.musica_url,
+      musica_url: m.musica_url || null, activo_dj: false, duracion_fmt: '—'
+    };
+  });
   buildDjLista();
 }
 
@@ -902,7 +955,7 @@ function updatePresViews() {
   const nombre = s ? s.nombre_grupo : '—';
   const codigo = s ? s.codigo_id : '—';
   const pais   = s ? (s.pais || '') : '—';
-  const cat    = s ? (s.categoria || '') : '—';
+  const cat    = s ? (parseCat(s.categoria)) : '—';
 
   // Presentador
   document.getElementById('pres-codigo').textContent = codigo;

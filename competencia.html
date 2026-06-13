@@ -1584,15 +1584,32 @@
       // ═══════════════════════════════════════════════════════════
       // INIT
       // ═══════════════════════════════════════════════════════════
-      async function init() {
-        // Verificar conexión
+      function parseCat(c) {
+        if (!c) return '';
         try {
-          const { error } = await db
-            .from("evento.config")
-            .select("clave")
-            .limit(1);
-          // Si hay error de schema, intentar sin schema
-        } catch (e) {}
+          const arr = typeof c === 'string' ? JSON.parse(c) : c;
+          if (Array.isArray(arr)) return arr.map(x => x.n || x.name || x).join(', ');
+          return String(c);
+        } catch(e) { return String(c); }
+      }
+
+      async function init() {
+        try {
+          const saved = sessionStorage.getItem('jam_user');
+          if (saved) {
+            currentUser = JSON.parse(saved);
+            document.getElementById('loading-overlay').style.display = 'none';
+            if (currentUser.rol === 'director') {
+              document.getElementById('screen-director').style.display = 'block';
+              initDirector();
+            } else {
+              document.getElementById('screen-jurado').style.display = 'block';
+              initJurado();
+            }
+            return;
+          }
+        } catch(e) {}
+        try { await db.schema('evento').from('config').select('clave').limit(1); } catch(e) {}
         document.getElementById("loading-overlay").style.display = "none";
         document.getElementById("screen-login").style.display = "flex";
       }
@@ -1620,6 +1637,7 @@
             return;
           }
           currentUser = data[0];
+          sessionStorage.setItem('jam_user', JSON.stringify(currentUser));
           document.getElementById("screen-login").style.display = "none";
           if (currentUser.rol === "director") {
             document.getElementById("screen-director").style.display = "block";
@@ -1640,6 +1658,7 @@
         sesionActiva = null;
         miPuntaje = null;
         jCerradoFlag = false;
+        sessionStorage.removeItem('jam_user');
         if (realtimeSub) {
           db.removeChannel(realtimeSub);
           realtimeSub = null;
@@ -1712,7 +1731,7 @@
         document.getElementById("j-info").textContent =
           s.pais +
           " · " +
-          (s.categoria || "") +
+          (parseCat(s.categoria)) +
           " · " +
           s.instancia.toUpperCase();
         document.getElementById("j-instancia-badge").textContent =
@@ -2171,7 +2190,7 @@
             p.estado_pago === "confirmado"
               ? '<span class="bdg bdg-green text-xs">Pago ✓</span>'
               : '<span class="bdg bdg-amber text-xs">Pago pendiente</span>';
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${p.categoria || ""} ${pgBdg}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categoria)} ${pgBdg}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
           cont.appendChild(div);
         });
       }
