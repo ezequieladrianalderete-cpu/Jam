@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es" style="background: #0a0a0a">
   <head>
     <meta charset="UTF-8" />
@@ -6282,24 +6282,30 @@
           return;
         }
         var dbRecord = null;
-        var _timeout = setTimeout(function() { _submitting = false; showSaving(false); toast("La operaci\u00f3n tard\u00f3 demasiado. Intent\u00e1 de nuevo.", "err"); }, 60000);
+        showSaving(true);
+        var stepEl = document.getElementById("saving-step");
         try {
-          showSaving(true);
+          if (stepEl) stepEl.textContent = "Preparando datos...";
           saveState();
-          dbRecord = await saveInscripcion();
+          if (stepEl) stepEl.textContent = "Guardando pre-registro...";
+          dbRecord = await Promise.race([
+            saveInscripcion(),
+            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, 45000); })
+          ]);
         } catch (e) {
-          console.error(e);
-        } finally {
-          clearTimeout(_timeout);
+          console.error("confirmarReg error:", e);
           showSaving(false);
-        }
-        if (dbRecord === "DUPLICATE_EMAIL") {
           _submitting = false;
+          toast("Hubo un problema al guardar. Intent\u00e1 de nuevo.", "err");
+          return;
+        }
+        showSaving(false);
+        _submitting = false;
+        if (dbRecord === "DUPLICATE_EMAIL") {
           toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
           return;
         }
         if (!dbRecord) {
-          _submitting = false;
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
@@ -6516,10 +6522,19 @@
             "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px";
           el.innerHTML =
             '<div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#C9A84C;border-radius:50%;animation:spin 1s linear infinite"></div>' +
-            '<div style="color:#F8F5EE;font-size:15px;font-weight:600">Guardando inscripción...</div>';
+            '<div style="color:#F8F5EE;font-size:15px;font-weight:600" id="saving-label">Guardando inscripción...</div>' +
+            '<div style="color:rgba(248,245,238,.4);font-size:12px" id="saving-step"></div>' +
+            '<button onclick="cancelSaving()" style="margin-top:20px;background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(248,245,238,.5);padding:8px 20px;cursor:pointer;font-size:13px">Cancelar y reintentar</button>';
           document.body.appendChild(el);
         }
         el.style.display = visible ? "flex" : "none";
+        if (!visible) { _submitting = false; }
+      }
+
+      function cancelSaving() {
+        _submitting = false;
+        showSaving(false);
+        toast("Operación cancelada. Podés intentar de nuevo.", "err");
       }
 
       function showSuccess() {
@@ -6583,29 +6598,35 @@
           return;
         }
         var dbRecord = null;
-        var _timeout = setTimeout(function() { _submitting = false; showSaving(false); toast("La operaci\u00f3n tard\u00f3 demasiado. Intent\u00e1 de nuevo.", "err"); }, 60000);
+        showSaving(true);
+        var stepEl = document.getElementById("saving-step");
         try {
-          showSaving(true);
+          if (stepEl) stepEl.textContent = "Preparando datos...";
           saveState();
-          dbRecord = await saveInscripcion();
+          if (stepEl) stepEl.textContent = "Subiendo archivos y guardando...";
+          dbRecord = await Promise.race([
+            saveInscripcion(),
+            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, 45000); })
+          ]);
         } catch (e) {
-          console.error(e);
-        } finally {
-          clearTimeout(_timeout);
+          console.error("confirmar error:", e);
           showSaving(false);
-        }
-        if (dbRecord === "DUPLICATE_EMAIL") {
           _submitting = false;
+          toast("Hubo un problema al guardar. Intent\u00e1 de nuevo.", "err");
+          return;
+        }
+        showSaving(false);
+        _submitting = false;
+        if (dbRecord === "DUPLICATE_EMAIL") {
           toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
           return;
         }
         if (!dbRecord) {
-          _submitting = false;
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
         }
         showSuccess();
-        sendNotify(dbRecord.id);
+        try { sendNotify(dbRecord.id); } catch(e) { console.warn("notify error:", e); }
       }
 
       function tcNac() {
