@@ -918,15 +918,39 @@ function buildDjLista(filtro) {
     document.getElementById('dj-nombre').textContent = sesionActiva.nombre_grupo;
     document.getElementById('dj-info').textContent = (sesionActiva.pais||'') + ' · ' + (sesionActiva.categoria||'') + ' · ' + (sesionActiva.instancia||'').toUpperCase();
     const m = djData.find(x => x.codigo_id === sesionActiva.codigo_id);
-    if (m) {
-      document.getElementById('dj-musica-activa').innerHTML = `<div style="background:#0d0d0d;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:12px"><span>🎵</span><div style="flex:1"><div class="fw6 text-sm">${m.filename}</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div style="flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px"><div style="width:40%;height:100%;background:#C9A84C;border-radius:2px"></div></div><span class="mono text-xs muted">${m.duracion_fmt||'—'}</span></div></div><span class="bdg bdg-green">✓ OK</span></div>`;
+    if (m && m.musica_url) {
+      document.getElementById('dj-musica-activa').innerHTML = `
+        <div style="background:#0d0d0d;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <button onclick="djTogglePlay()" id="dj-play-btn" style="width:48px;height:48px;border-radius:50%;background:#C9A84C;border:none;cursor:pointer;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>
+            <div style="flex:1">
+              <div class="fw6">${m.filename}</div>
+              <div class="muted text-xs">${m.codigo_id} · ${m.nombre_grupo}</div>
+            </div>
+            <button onclick="djStop()" style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:16px;color:#E05252;display:flex;align-items:center;justify-content:center">⏹</button>
+          </div>
+          <audio id="dj-audio" src="${m.musica_url}" preload="auto" ontimeupdate="djUpdateProgress()" onended="djOnEnded()"></audio>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="mono text-xs muted" id="dj-time-current">0:00</span>
+            <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative" onclick="djSeek(event)">
+              <div id="dj-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#C9A84C,#E8C97A);border-radius:3px;transition:width .1s"></div>
+            </div>
+            <span class="mono text-xs muted" id="dj-time-total">0:00</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <span class="muted text-xs">Vol</span>
+            <input type="range" min="0" max="1" step="0.05" value="1" style="flex:1;accent-color:#C9A84C" oninput="document.getElementById('dj-audio').volume=this.value">
+          </div>
+        </div>`;
+    } else if (m) {
+      document.getElementById('dj-musica-activa').innerHTML = `<div style="background:#1a0000;border:1px solid rgba(224,82,82,.2);border-radius:12px;padding:14px;text-align:center;color:#E05252;font-size:13px">⚠️ ${m.nombre_grupo} no tiene música cargada</div>`;
     }
   }
 
   lista.forEach(t => {
     const div = document.createElement('div');
     div.className = 'mtrack' + (t.activo_dj ? ' activo' : '') + (!t.verificado ? ' falta' : '');
-    div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion||'—'}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj?' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>':''}</div><div style="font-size:11px;color:${t.verificado?'#4CAF7D':'#E05252'};margin-top:2px">${t.verificado?'🎵 '+t.filename:'⚠️ Sin música'}</div></div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(248,245,238,.4)">${t.duracion_fmt||'—'}</div>`;
+    div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion||'—'}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj?' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>':''}</div><div style="font-size:11px;color:${t.verificado?'#4CAF7D':'#E05252'};margin-top:2px">${t.verificado?'🎵 '+t.filename:'⚠️ Sin música'}</div></div>${t.musica_url?'<button onclick="djPreview(\''+t.musica_url.replace(/'/g,"\\'")+'\',\''+t.nombre_grupo.replace(/'/g,"\\'")+'\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>':'<div style="width:32px"></div>'}`;
     cont.appendChild(div);
   });
 
@@ -1040,6 +1064,69 @@ function peMode(mode, btn) {
 // ═══════════════════════════════════════════════════════════
 // TOAST
 // ═══════════════════════════════════════════════════════════
+// DJ Audio Controls
+function djTogglePlay() {
+  const audio = document.getElementById('dj-audio');
+  const btn = document.getElementById('dj-play-btn');
+  if (!audio) return;
+  if (audio.paused) { audio.play(); btn.textContent = '⏸'; btn.style.background = '#E8A838'; }
+  else { audio.pause(); btn.textContent = '▶'; btn.style.background = '#C9A84C'; }
+}
+function djStop() {
+  const audio = document.getElementById('dj-audio');
+  const btn = document.getElementById('dj-play-btn');
+  if (!audio) return;
+  audio.pause(); audio.currentTime = 0;
+  if (btn) { btn.textContent = '▶'; btn.style.background = '#C9A84C'; }
+}
+function djUpdateProgress() {
+  const audio = document.getElementById('dj-audio');
+  if (!audio || !audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  const bar = document.getElementById('dj-progress-bar');
+  if (bar) bar.style.width = pct + '%';
+  const fmt = s => Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0');
+  const cur = document.getElementById('dj-time-current');
+  const tot = document.getElementById('dj-time-total');
+  if (cur) cur.textContent = fmt(audio.currentTime);
+  if (tot) tot.textContent = fmt(audio.duration);
+}
+function djSeek(e) {
+  const audio = document.getElementById('dj-audio');
+  if (!audio || !audio.duration) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+function djOnEnded() {
+  const btn = document.getElementById('dj-play-btn');
+  if (btn) { btn.textContent = '▶'; btn.style.background = '#C9A84C'; }
+}
+function djPreview(url, nombre) {
+  let audio = document.getElementById('dj-audio');
+  if (!audio) {
+    document.getElementById('dj-musica-activa').innerHTML = `
+      <div style="background:#0d0d0d;border-radius:14px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <button onclick="djTogglePlay()" id="dj-play-btn" style="width:48px;height:48px;border-radius:50%;background:#C9A84C;border:none;cursor:pointer;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>
+          <div style="flex:1"><div class="fw6" id="dj-preview-name">${nombre}</div><div class="muted text-xs">Preview</div></div>
+          <button onclick="djStop()" style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:16px;color:#E05252;display:flex;align-items:center;justify-content:center">⏹</button>
+        </div>
+        <audio id="dj-audio" preload="auto" ontimeupdate="djUpdateProgress()" onended="djOnEnded()"></audio>
+        <div style="display:flex;align-items:center;gap:10px"><span class="mono text-xs muted" id="dj-time-current">0:00</span><div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative" onclick="djSeek(event)"><div id="dj-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#C9A84C,#E8C97A);border-radius:3px;transition:width .1s"></div></div><span class="mono text-xs muted" id="dj-time-total">0:00</span></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="muted text-xs">Vol</span><input type="range" min="0" max="1" step="0.05" value="1" style="flex:1;accent-color:#C9A84C" oninput="document.getElementById('dj-audio').volume=this.value"></div>
+      </div>`;
+    audio = document.getElementById('dj-audio');
+  }
+  const nameEl = document.getElementById('dj-preview-name');
+  if (nameEl) nameEl.textContent = nombre;
+  audio.src = url;
+  audio.play();
+  const btn = document.getElementById('dj-play-btn');
+  if (btn) { btn.textContent = '⏸'; btn.style.background = '#E8A838'; }
+  toast('Reproduciendo: ' + nombre, 'ok');
+}
+
 function toast(msg, tipo='ok') {
   tipo = tipo || 'ok';
   const t = document.getElementById('toast');

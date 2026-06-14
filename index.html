@@ -6389,18 +6389,23 @@
       async function sbUpload(bucket, path, file) {
         var sb = getSb();
         if (!sb || !file) return null;
-        var ext = file.name.split(".").pop();
-        var fullPath = path + "." + ext;
-        var res = await withTimeout(
-          sb.storage.from(bucket).upload(fullPath, file, { upsert: true }),
-          30000,
-          "Upload to " + bucket,
-        );
-        if (res.error) {
-          console.error("Upload err:", res.error);
+        try {
+          var ext = file.name.split(".").pop();
+          var fullPath = path + "." + ext;
+          var res = await withTimeout(
+            sb.storage.from(bucket).upload(fullPath, file, { upsert: true }),
+            20000,
+            "Upload to " + bucket,
+          );
+          if (res.error) {
+            console.error("Upload err:", res.error);
+            return null;
+          }
+          return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
+        } catch(e) {
+          console.error("Upload exception:", e.message);
           return null;
         }
-        return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
       }
 
       // Guardar inscripción en Supabase
@@ -6441,21 +6446,13 @@
         // Upload comprobante de clasificación (solo nac)
         var clasifUrl = null;
         if (STATE.clasif_file) {
-          clasifUrl = await sbUpload(
-            "comprobantes",
-            "clasif_" + INST + "_" + ts,
-            STATE.clasif_file,
-          );
+          try { clasifUrl = await sbUpload("comprobantes", "clasif_" + INST + "_" + ts, STATE.clasif_file); } catch(e) { console.error("clasif upload:", e); }
         }
 
         // Upload comprobante de pago
         var compUrl = null;
         if (STATE.comp_file) {
-          compUrl = await sbUpload(
-            "comprobantes",
-            INST + "_" + ts,
-            STATE.comp_file,
-          );
+          try { compUrl = await sbUpload("comprobantes", INST + "_" + ts, STATE.comp_file); } catch(e) { console.error("comp upload:", e); }
         }
 
         // Upload música (prioriza archivo subido en slots)
@@ -6463,22 +6460,14 @@
         var musName = null;
         if (window.jamMusicPicked && window.jamMusicPicked.url) {
           musUrl = window.jamMusicPicked.url;
-          musName =
-            window.jamMusicPicked.name ||
-            (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
+          musName = window.jamMusicPicked.name || (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
         }
         var musInput = document.querySelector(".mslot-file-input");
         if (!musUrl && musInput && musInput.files && musInput.files[0]) {
-          musUrl = await sbUpload("musica", INST + "_" + ts, musInput.files[0]);
-          musName = musInput.files[0].name;
+          try { musUrl = await sbUpload("musica", INST + "_" + ts, musInput.files[0]); musName = musInput.files[0].name; } catch(e) { console.error("music upload:", e); }
         }
         if (!musUrl && window.jamMusicPicked && window.jamMusicPicked.file) {
-          musUrl = await sbUpload(
-            "musica",
-            INST + "_" + ts,
-            window.jamMusicPicked.file,
-          );
-          musName = window.jamMusicPicked.file.name;
+          try { musUrl = await sbUpload("musica", INST + "_" + ts, window.jamMusicPicked.file); musName = window.jamMusicPicked.file.name; } catch(e) { console.error("music upload:", e); }
         }
 
         var record = {
