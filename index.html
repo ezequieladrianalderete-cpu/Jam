@@ -6331,7 +6331,8 @@
       }
       
       function getPlanillaPDF() {
-        return INST === "int" ? PDF_INT : PDF_NAC;
+        if (INST === "int") return typeof PDF_INT !== 'undefined' ? PDF_INT : null;
+        return typeof PDF_NAC !== 'undefined' ? PDF_NAC : null;
       }
       function getPlanillaFilename() {
         return INST === "int"
