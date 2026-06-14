@@ -2077,12 +2077,13 @@
 
       async function dPasar() {
         if (!sesionActiva) return;
+        const sesId = sesionActiva.id;
         // Calcular total final
         const { data: puntajes } = await db
           .schema("scoring")
           .from("puntajes")
           .select("subtotal")
-          .eq("sesion_id", sesionActiva.id)
+          .eq("sesion_id", sesId)
           .eq("cerrado", true);
         const total = puntajes
           ? puntajes.reduce((acc, p) => acc + parseFloat(p.subtotal), 0)
@@ -2097,7 +2098,18 @@
             finalizada_at: new Date().toISOString(),
             total_final: total,
           })
-          .eq("id", sesionActiva.id);
+          .eq("id", sesId);
+
+        // Enviar email de devolución al participante (async, no bloquea)
+        fetch("/api/enviar-devolucion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sesion_id: sesId }),
+        }).then(r => r.json()).then(r => {
+          if (r.ok) toast("Devolución enviada a " + r.to, "ok");
+          else console.warn("Email no enviado:", r.error);
+        }).catch(e => console.warn("Error email:", e));
+
         sesionActiva = null;
         document.getElementById("d-nombre").textContent =
           "Listo para siguiente";

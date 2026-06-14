@@ -6282,6 +6282,7 @@
           return;
         }
         var dbRecord = null;
+        var _timeout = setTimeout(function() { _submitting = false; showSaving(false); toast("La operaci\u00f3n tard\u00f3 demasiado. Intent\u00e1 de nuevo.", "err"); }, 60000);
         try {
           showSaving(true);
           saveState();
@@ -6289,6 +6290,7 @@
         } catch (e) {
           console.error(e);
         } finally {
+          clearTimeout(_timeout);
           showSaving(false);
         }
         if (dbRecord === "DUPLICATE_EMAIL") {
@@ -6592,6 +6594,7 @@
           return;
         }
         var dbRecord = null;
+        var _timeout = setTimeout(function() { _submitting = false; showSaving(false); toast("La operaci\u00f3n tard\u00f3 demasiado. Intent\u00e1 de nuevo.", "err"); }, 60000);
         try {
           showSaving(true);
           saveState();
@@ -6599,6 +6602,7 @@
         } catch (e) {
           console.error(e);
         } finally {
+          clearTimeout(_timeout);
           showSaving(false);
         }
         if (dbRecord === "DUPLICATE_EMAIL") {
