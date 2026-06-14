@@ -15,6 +15,7 @@
     { "source": "/check", "destination": "/check.html" },
     { "source": "/evento", "destination": "/evento.html" },
     { "source": "/competencia", "destination": "/competencia.html" },
-    { "source": "/api/notify", "destination": "/api/notify.js" }
+    { "source": "/api/notify", "destination": "/api/notify.js" },
+    { "source": "/api/enviar-devolucion", "destination": "/api/enviar-devolucion.js" }
   ]
 }
