@@ -142,6 +142,7 @@ module.exports = async function handler(req, res) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Preparar attachments (audio si existe)
+    const attachments = [];
     for (const p of puntajes) {
       if (p.audio_url) {
         try {
