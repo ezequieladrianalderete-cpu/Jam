@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es" style="background: #0a0a0a">
   <head>
     <meta charset="UTF-8" />
@@ -305,6 +305,11 @@
         border-radius: 13px;
         padding: 13px;
         margin-bottom: 12px;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+      .cb::-webkit-scrollbar {
+        display: none;
       }
       .cw {
         background: #1a1000;
@@ -6290,7 +6295,11 @@
           if (stepEl) stepEl.textContent = "Guardando pre-registro...";
           dbRecord = await Promise.race([
             saveInscripcion(),
-            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, 45000); })
+            new Promise(function (_, reject) {
+              setTimeout(function () {
+                reject(new Error("timeout"));
+              }, 45000);
+            }),
           ]);
         } catch (e) {
           console.error("confirmarReg error:", e);
@@ -6329,10 +6338,11 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
         sendNotify(dbRecord.id);
       }
-      
+
       function getPlanillaPDF() {
-        if (INST === "int") return typeof PDF_INT !== 'undefined' ? PDF_INT : null;
-        return typeof PDF_NAC !== 'undefined' ? PDF_NAC : null;
+        if (INST === "int")
+          return typeof PDF_INT !== "undefined" ? PDF_INT : null;
+        return typeof PDF_NAC !== "undefined" ? PDF_NAC : null;
       }
       function getPlanillaFilename() {
         return INST === "int"
@@ -6409,7 +6419,7 @@
             return null;
           }
           return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
-        } catch(e) {
+        } catch (e) {
           console.error("Upload exception:", e.message);
           return null;
         }
@@ -6453,13 +6463,29 @@
         // Upload comprobante de clasificación (solo nac)
         var clasifUrl = null;
         if (STATE.clasif_file) {
-          try { clasifUrl = await sbUpload("comprobantes", "clasif_" + INST + "_" + ts, STATE.clasif_file); } catch(e) { console.error("clasif upload:", e); }
+          try {
+            clasifUrl = await sbUpload(
+              "comprobantes",
+              "clasif_" + INST + "_" + ts,
+              STATE.clasif_file,
+            );
+          } catch (e) {
+            console.error("clasif upload:", e);
+          }
         }
 
         // Upload comprobante de pago
         var compUrl = null;
         if (STATE.comp_file) {
-          try { compUrl = await sbUpload("comprobantes", INST + "_" + ts, STATE.comp_file); } catch(e) { console.error("comp upload:", e); }
+          try {
+            compUrl = await sbUpload(
+              "comprobantes",
+              INST + "_" + ts,
+              STATE.comp_file,
+            );
+          } catch (e) {
+            console.error("comp upload:", e);
+          }
         }
 
         // Upload música (prioriza archivo subido en slots)
@@ -6467,14 +6493,34 @@
         var musName = null;
         if (window.jamMusicPicked && window.jamMusicPicked.url) {
           musUrl = window.jamMusicPicked.url;
-          musName = window.jamMusicPicked.name || (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
+          musName =
+            window.jamMusicPicked.name ||
+            (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
         }
         var musInput = document.querySelector(".mslot-file-input");
         if (!musUrl && musInput && musInput.files && musInput.files[0]) {
-          try { musUrl = await sbUpload("musica", INST + "_" + ts, musInput.files[0]); musName = musInput.files[0].name; } catch(e) { console.error("music upload:", e); }
+          try {
+            musUrl = await sbUpload(
+              "musica",
+              INST + "_" + ts,
+              musInput.files[0],
+            );
+            musName = musInput.files[0].name;
+          } catch (e) {
+            console.error("music upload:", e);
+          }
         }
         if (!musUrl && window.jamMusicPicked && window.jamMusicPicked.file) {
-          try { musUrl = await sbUpload("musica", INST + "_" + ts, window.jamMusicPicked.file); musName = window.jamMusicPicked.file.name; } catch(e) { console.error("music upload:", e); }
+          try {
+            musUrl = await sbUpload(
+              "musica",
+              INST + "_" + ts,
+              window.jamMusicPicked.file,
+            );
+            musName = window.jamMusicPicked.file.name;
+          } catch (e) {
+            console.error("music upload:", e);
+          }
         }
 
         var record = {
@@ -6529,7 +6575,9 @@
           document.body.appendChild(el);
         }
         el.style.display = visible ? "flex" : "none";
-        if (!visible) { _submitting = false; }
+        if (!visible) {
+          _submitting = false;
+        }
       }
 
       function cancelSaving() {
@@ -6607,7 +6655,11 @@
           if (stepEl) stepEl.textContent = "Subiendo archivos y guardando...";
           dbRecord = await Promise.race([
             saveInscripcion(),
-            new Promise(function(_, reject) { setTimeout(function() { reject(new Error("timeout")); }, 45000); })
+            new Promise(function (_, reject) {
+              setTimeout(function () {
+                reject(new Error("timeout"));
+              }, 45000);
+            }),
           ]);
         } catch (e) {
           console.error("confirmar error:", e);
@@ -6627,7 +6679,11 @@
           return;
         }
         showSuccess();
-        try { sendNotify(dbRecord.id); } catch(e) { console.warn("notify error:", e); }
+        try {
+          sendNotify(dbRecord.id);
+        } catch (e) {
+          console.warn("notify error:", e);
+        }
       }
 
       function tcNac() {
