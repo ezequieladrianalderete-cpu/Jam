@@ -137,7 +137,56 @@ module.exports = async function handler(req, res) {
       </div>
     </div>`;
 
-    // 7. Enviar con Resend
+    // 7. Generar certificado de participación PDF
+    const PDFDocument = require("pdfkit");
+    const certBuffer = await new Promise((resolve) => {
+      const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 60 });
+      const chunks = [];
+      doc.on("data", (c) => chunks.push(c));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+
+      // Fondo
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill("#080808");
+
+      // Borde dorado
+      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).lineWidth(2).stroke("#C9A84C");
+      doc.rect(38, 38, doc.page.width - 76, doc.page.height - 76).lineWidth(0.5).stroke("rgba(201,168,76,0.3)");
+
+      // Header
+      doc.font("Helvetica-Bold").fontSize(42).fillColor("#C9A84C").text("JAM", 0, 80, { align: "center" });
+      doc.fontSize(14).fillColor("#888888").text("DANCE COMPETITION 2026", 0, 130, { align: "center" });
+      doc.fontSize(11).fillColor("#666666").text(instLabel.toUpperCase(), 0, 152, { align: "center" });
+
+      // Línea decorativa
+      doc.moveTo(doc.page.width / 2 - 80, 178).lineTo(doc.page.width / 2 + 80, 178).lineWidth(1).stroke("#C9A84C");
+
+      // Certificado
+      doc.fontSize(16).fillColor("#AAAAAA").text("CERTIFICADO DE PARTICIPACIÓN", 0, 200, { align: "center" });
+
+      // Nombre del participante
+      doc.fontSize(36).fillColor("#F8F5EE").text(sesion.nombre_grupo || "—", 0, 240, { align: "center" });
+
+      // Código y categoría
+      doc.fontSize(12).fillColor("#C9A84C").text(sesion.codigo_id + "  ·  " + (sesion.pais || ""), 0, 290, { align: "center" });
+      doc.fontSize(11).fillColor("#888888").text(sesion.categoria || "", 0, 310, { align: "center" });
+
+      // Puntaje
+      doc.moveTo(doc.page.width / 2 - 60, 340).lineTo(doc.page.width / 2 + 60, 340).lineWidth(0.5).stroke("#333333");
+      doc.fontSize(14).fillColor("#AAAAAA").text("Puntaje obtenido", 0, 355, { align: "center" });
+      doc.fontSize(48).fillColor("#C9A84C").text(String(totalPts), 0, 375, { align: "center" });
+      doc.fontSize(12).fillColor("#666666").text("/ " + maxTotal + " puntos", 0, 430, { align: "center" });
+
+      // Fecha
+      const fecha = new Date().toLocaleDateString("es-AR", { year: "numeric", month: "long", day: "numeric" });
+      doc.fontSize(10).fillColor("#555555").text(fecha, 0, 470, { align: "center" });
+
+      // Footer
+      doc.fontSize(8).fillColor("#444444").text("JAM Producciones · Palais Rouge · Buenos Aires, Argentina", 0, doc.page.height - 70, { align: "center" });
+
+      doc.end();
+    });
+
+    // 8. Enviar con Resend
     const { Resend } = require("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -169,7 +218,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const audioNote = attachments.length > 0 
+    // Agregar certificado PDF a attachments
+    attachments.push({
+      filename: `Certificado-JAM-2026-${sesion.codigo_id}.pdf`,
+      content: certBuffer,
+    });
+
+    const audioNote = attachments.length > 1 
       ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${attachments.length} audio(s) adjunto(s). Revisá los archivos de este email.</div></div>`
       : "";
 
