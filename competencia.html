@@ -2374,18 +2374,22 @@
       async function jSubirAudio() {
         if (!audioBlob || !miPuntaje) return;
         try {
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const b64 = reader.result.split(",")[1];
-            await db
-              .schema("scoring")
-              .from("puntajes")
-              .update({ audio_url: "data:audio/webm;base64," + b64 })
-              .eq("id", miPuntaje.id);
-            toast("Audio guardado con la evaluación", "ok");
-          };
-          reader.readAsDataURL(audioBlob);
+          const b64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(audioBlob);
+          });
+          const { error } = await db
+            .schema("scoring")
+            .from("puntajes")
+            .update({ audio_url: "data:audio/webm;base64," + b64 })
+            .eq("sesion_id", miPuntaje.sesion_id)
+            .eq("juez_num", miPuntaje.juez_num);
+          if (error) { console.error("Audio save error:", error); toast("Error al guardar audio", "err"); }
+          else { toast("Audio guardado con la evaluación", "ok"); }
         } catch (e) {
+          console.error("jSubirAudio:", e);
           toast("Error al subir audio", "err");
         }
       }
