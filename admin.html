@@ -1016,6 +1016,9 @@
             : musState === "fuera_de_termino"
               ? '<span class="status-pill err" title="Música fuera de término"><span class="ico">!</span>Música</span>'
               : '<span class="status-pill pend" title="Música pendiente"><span class="ico">⏳</span>Música</span>';
+        const recargoPill = ins.musica_fuera_termino
+          ? '<span class="status-pill pend" title="Música subida fuera de término: cobrar recargo">$ Recargo</span>'
+          : "";
 
         const compPill = ins.comprobante_url
           ? '<span class="status-pill ok" title="Comprobante subido"><span class="ico">📎</span>Compr.</span>'
@@ -1072,6 +1075,7 @@
           "</div>" +
           '<div class="ins-status-row">' +
           musPill +
+          recargoPill +
           pagoPill +
           compPill +
           "</div>" +
@@ -1320,6 +1324,7 @@
           "Moneda",
           "Pago",
           "Musica",
+          "RecargoMusica",
           "Comprobante",
           "Fecha",
         ];
@@ -1344,6 +1349,7 @@
             ins.moneda || "",
             ins.pago_estado || "",
             ins.musica_estado || "",
+            ins.musica_fuera_termino ? "sí" : "no",
             ins.comprobante_url ? "sí" : "no",
             (ins.created_at || "").substring(0, 19),
           ];

@@ -26,6 +26,10 @@ const PAGO_PREX = {
   titular: "Nelson Gastón Vidarte",
 };
 
+// Días de margen para subir la música sin recargo (instancia Sedes),
+// contados desde el momento de la inscripción.
+const PLAZO_MUSICA_DIAS = 10;
+
 function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;")
@@ -46,6 +50,23 @@ async function supaSelect(table, query) {
   });
   if (!res.ok)
     throw new Error(`Supabase ${table} ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function supaPatch(table, query, body) {
+  const url = `${process.env.SUPABASE_URL}/rest/v1/${table}?${query}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok)
+    throw new Error(`Supabase PATCH ${table} ${res.status}: ${await res.text()}`);
   return res.json();
 }
 
@@ -223,6 +244,47 @@ export default async function handler(req, res) {
       encodeURIComponent(checkUrl);
     const subj = "Inscripción JAM 2026 confirmada — " + codigo_legible;
 
+    // === MÚSICA (solo Sedes): link de carga + vencimiento sin recargo ===
+    let musicaHtml = "";
+    let musicaText = "";
+    if (ins.instancia === "reg" && ins.musica_estado !== "cargada") {
+      if (!ins.musica_token) {
+        console.warn(
+          `Inscripción ${ins.id} sin musica_token (revisar columna/default en Supabase)`,
+        );
+      } else {
+        let vencimientoMusica = ins.vencimiento_musica;
+        if (!vencimientoMusica) {
+          vencimientoMusica = new Date(
+            Date.now() + PLAZO_MUSICA_DIAS * 24 * 60 * 60 * 1000,
+          ).toISOString();
+          try {
+            await supaPatch("inscripciones", `id=eq.${ins.id}`, {
+              vencimiento_musica: vencimientoMusica,
+            });
+          } catch (e) {
+            console.warn("No se pudo guardar vencimiento_musica:", e.message);
+          }
+        }
+        const musicaUrl = SITE + "/musica?token=" + ins.musica_token;
+        const vencFecha = new Date(vencimientoMusica).toLocaleDateString(
+          "es-AR",
+          { day: "numeric", month: "long", year: "numeric" },
+        );
+        musicaHtml = `
+<div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0;text-align:center">
+  <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Subí tu música</div>
+  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">Todavía no cargaste la pista de tu presentación. Tenés hasta el <strong style="color:#F8F5EE">${esc(vencFecha)}</strong> para subirla sin cargo extra. Pasada esa fecha podés subirla igual, pero se te va a cobrar un recargo aparte.</p>
+  <a href="${musicaUrl}" style="background:#C9A84C;color:#0A0A0A;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block">Subir mi música →</a>
+</div>`;
+        musicaText =
+          "\n\nSUBÍ TU MÚSICA\nTodavía no cargaste la pista. Tenés hasta el " +
+          vencFecha +
+          " para subirla sin cargo extra (pasada esa fecha se puede subir igual, con recargo aparte).\n" +
+          musicaUrl;
+      }
+    }
+
     // === HTML MAIL PARTICIPANTE (SIN MONTO) ===
     const htmlParticipante = `
 <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">
@@ -246,6 +308,7 @@ export default async function handler(req, res) {
     <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:.5px">Modalidad</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right"><strong>${esc(ins.modalidad || "—")}</strong> <span style="color:#888;font-size:12px">(${ins.cant_personas || 1} pers.)</span></td></tr>
     <tr><td style="padding:8px 0;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:.5px">Fecha</td><td style="padding:8px 0;text-align:right">${esc(fecha)}</td></tr>
   </table>
+  ${musicaHtml}
   ${pagoHtml}
   <h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Tu código QR</h3>
   <p style="text-align:center"><img src="${qrUrl}" alt="QR" style="border:6px solid #fff;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1)" /></p>
@@ -320,6 +383,7 @@ export default async function handler(req, res) {
       catText +
       "\n\nResponsable: " +
       ins.nombre +
+      musicaText +
       pagoText +
       "\n\nVer: " +
       checkUrl;

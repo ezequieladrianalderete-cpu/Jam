@@ -337,6 +337,19 @@
           esc(msg) +
           "</div></div></div>";
       }
+      function vencimientoInfo(ins) {
+        if (!ins.vencimiento_musica) return null;
+        var venc = new Date(ins.vencimiento_musica);
+        if (isNaN(venc.getTime())) return null;
+        return {
+          vencido: Date.now() > venc.getTime(),
+          fechaTxt: venc.toLocaleDateString("es-AR", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          }),
+        };
+      }
 
       // === Estado ===
       var state = {
@@ -450,10 +463,14 @@
           "</div>";
 
         if (yaCargada) {
+          var fueraNota = ins.musica_fuera_termino
+            ? '<div class="alert alert-warn" style="margin-top:14px"><div>⚠ Esta música se subió fuera del plazo sin cargo. Se va a aplicar un recargo aparte; te contactaremos para coordinarlo.</div></div>'
+            : "";
           html +=
             '<div class="card">' +
             '<div class="section-title" style="margin-top:0">Música cargada</div>' +
             '<div class="status cargada">✓ Ya cargaste tu canción</div>' +
+            fueraNota +
             '<div style="margin-top:14px;padding:12px;background:#0e0e0e;border-radius:10px"><div style="font-size:13px;color:#F8F5EE;font-weight:600;margin-bottom:4px">' +
             esc(ins.musica_nombre || "archivo.mp3") +
             "</div></div>" +
@@ -464,9 +481,23 @@
             '<input id="reemplazar" type="file" accept="audio/*" class="file-input">' +
             "</div>";
         } else {
+          var venc = vencimientoInfo(ins);
+          var vencNota = "";
+          if (venc && venc.vencido) {
+            vencNota =
+              '<div class="alert alert-warn"><div>⚠ El plazo para subir sin cargo venció el <strong>' +
+              esc(venc.fechaTxt) +
+              "</strong>. Podés subir tu música igual, pero se te va a cobrar un recargo aparte.</div></div>";
+          } else if (venc) {
+            vencNota =
+              '<div class="status">Tenés hasta el <strong style="color:#F8F5EE">' +
+              esc(venc.fechaTxt) +
+              "</strong> para subir tu música sin cargo extra.</div>";
+          }
           html +=
             '<div class="card">' +
             '<div class="section-title" style="margin-top:0">Subí tu canción</div>' +
+            vencNota +
             '<div class="drop" id="drop"><div class="icon">♪</div><div class="label">Elegí o arrastrá un archivo</div><div class="hint">MP3, WAV, M4A · hasta ' +
             MAX_MB +
             " MB</div></div>" +
@@ -628,6 +659,14 @@
           if (txt) txt.textContent = "Asociando a tu inscripción…";
 
           // 2. PATCH a la inscripción (CRÍTICO - este es el fix)
+          var venc = vencimientoInfo(state.ins);
+          var patchBody = {
+            musica_url: publicUrl,
+            musica_nombre: file.name,
+            musica_estado: "cargada",
+          };
+          if (venc && venc.vencido) patchBody.musica_fuera_termino = true;
+
           var patchRes = await fetch(
             SB_URL + "/rest/v1/inscripciones?id=eq." + state.ins.id,
             {
@@ -638,11 +677,7 @@
                 "Content-Type": "application/json",
                 Prefer: "return=representation",
               },
-              body: JSON.stringify({
-                musica_url: publicUrl,
-                musica_nombre: file.name,
-                musica_estado: "cargada",
-              }),
+              body: JSON.stringify(patchBody),
             },
           );
 
@@ -668,6 +703,7 @@
           state.ins.musica_url = publicUrl;
           state.ins.musica_nombre = file.name;
           state.ins.musica_estado = "cargada";
+          if (venc && venc.vencido) state.ins.musica_fuera_termino = true;
 
           $("#progressBox").innerHTML = "";
           $("#msgBox").innerHTML =
