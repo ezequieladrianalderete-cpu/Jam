@@ -309,6 +309,10 @@
       function $(q, root) {
         return (root || document).querySelector(q);
       }
+      function setHtml(sel, html) {
+        var el = $(sel);
+        if (el) el.innerHTML = html;
+      }
       function esc(s) {
         return String(s == null ? "" : s)
           .replace(/&/g, "&amp;")
@@ -479,6 +483,9 @@
             '"></audio>' +
             '<button class="btn btn-secondary" onclick="document.getElementById(\'reemplazar\').click()">Reemplazar archivo</button>' +
             '<input id="reemplazar" type="file" accept="audio/*" class="file-input">' +
+            '<div id="pickedBox"></div>' +
+            '<div id="progressBox"></div>' +
+            '<div id="msgBox"></div>' +
             "</div>";
         } else {
           var venc = vencimientoInfo(ins);
@@ -555,34 +562,40 @@
 
       function pickFile(file) {
         if (!file) return;
+        var msgBox = $("#msgBox");
+        var pickedBox = $("#pickedBox");
+        var btnUp = $("#btnUpload");
         // Validar
         var mb = file.size / (1024 * 1024);
         if (mb > MAX_MB) {
-          $("#msgBox").innerHTML =
-            '<div class="alert alert-err">El archivo supera ' +
-            MAX_MB +
-            " MB (" +
-            mb.toFixed(1) +
-            " MB).</div>";
+          if (msgBox)
+            msgBox.innerHTML =
+              '<div class="alert alert-err">El archivo supera ' +
+              MAX_MB +
+              " MB (" +
+              mb.toFixed(1) +
+              " MB).</div>";
           return;
         }
         if (
           !file.type.startsWith("audio/") &&
           !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(file.name)
         ) {
-          $("#msgBox").innerHTML =
-            '<div class="alert alert-warn">El archivo no parece ser de audio. ¿Estás seguro?</div>';
-        } else {
-          $("#msgBox").innerHTML = "";
+          if (msgBox)
+            msgBox.innerHTML =
+              '<div class="alert alert-warn">El archivo no parece ser de audio. ¿Estás seguro?</div>';
+        } else if (msgBox) {
+          msgBox.innerHTML = "";
         }
         state.pickedFile = file;
-        $("#pickedBox").innerHTML =
-          '<div class="picked"><div style="color:#C9A84C;font-size:20px">♪</div><div class="fn">' +
-          esc(file.name) +
-          '</div><div class="sz">' +
-          fmtSize(file.size) +
-          "</div></div>";
-        $("#btnUpload").disabled = false;
+        if (pickedBox)
+          pickedBox.innerHTML =
+            '<div class="picked"><div style="color:#C9A84C;font-size:20px">♪</div><div class="fn">' +
+            esc(file.name) +
+            '</div><div class="sz">' +
+            fmtSize(file.size) +
+            "</div></div>";
+        if (btnUp) btnUp.disabled = false;
       }
 
       // === Upload + PATCH ===
@@ -594,9 +607,11 @@
           btn.disabled = true;
           btn.textContent = "SUBIENDO…";
         }
-        $("#progressBox").innerHTML =
-          '<div class="progress"><div class="bar" id="bar"></div></div><div class="progress-text" id="pctTxt">0%</div>';
-        $("#msgBox").innerHTML = "";
+        setHtml(
+          "#progressBox",
+          '<div class="progress"><div class="bar" id="bar"></div></div><div class="progress-text" id="pctTxt">0%</div>',
+        );
+        setHtml("#msgBox", "");
 
         try {
           // 1. Subir al bucket
@@ -705,20 +720,24 @@
           state.ins.musica_estado = "cargada";
           if (venc && venc.vencido) state.ins.musica_fuera_termino = true;
 
-          $("#progressBox").innerHTML = "";
-          $("#msgBox").innerHTML =
-            '<div class="alert alert-ok"><div><strong>¡Listo!</strong><br>Tu música quedó cargada correctamente.</div></div>';
+          setHtml("#progressBox", "");
+          setHtml(
+            "#msgBox",
+            '<div class="alert alert-ok"><div><strong>¡Listo!</strong><br>Tu música quedó cargada correctamente.</div></div>',
+          );
 
           // Re-render para mostrar estado "cargada"
           setTimeout(function () {
             render();
           }, 1800);
         } catch (e) {
-          $("#progressBox").innerHTML = "";
-          $("#msgBox").innerHTML =
+          setHtml("#progressBox", "");
+          setHtml(
+            "#msgBox",
             '<div class="alert alert-err"><div><strong>No se pudo subir</strong><br>' +
-            esc(e.message || "Error desconocido") +
-            "</div></div>";
+              esc(e.message || "Error desconocido") +
+              "</div></div>",
+          );
           if (btn) {
             btn.disabled = false;
             btn.textContent = "REINTENTAR";
