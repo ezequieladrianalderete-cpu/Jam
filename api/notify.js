@@ -27,8 +27,15 @@ const PAGO_PREX = {
 };
 
 // Días de margen para subir la música sin recargo (instancia Sedes),
-// contados desde el momento de la inscripción.
+// contados desde el momento de la inscripción. Solo se usa si
+// MUSICA_VENCIMIENTO_ACTIVO está en true.
 const PLAZO_MUSICA_DIAS = 10;
+
+// Por ahora Sedes NO tiene plazo límite para subir la música (decisión de
+// negocio, sin fecha definida). Toda la lógica de vencimiento/recargo queda
+// implementada y lista: para reactivarla en el futuro alcanza con poner
+// esto en `true` (no hace falta tocar musica.html ni admin.html).
+const MUSICA_VENCIMIENTO_ACTIVO = false;
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -244,15 +251,31 @@ export default async function handler(req, res) {
       encodeURIComponent(checkUrl);
     const subj = "Inscripción JAM 2026 confirmada — " + codigo_legible;
 
-    // === MÚSICA (solo Sedes): link de carga + vencimiento sin recargo ===
+    // === MÚSICA: link de carga/reemplazo para TODAS las instancias ===
+    // (Nacional/Repesca/Inter la cargan obligatoria al inscribirse; Sedes
+    // puede cargarla después. En cualquier caso, mandamos el link para que
+    // puedan reemplazarla más adelante si lo necesitan.)
     let musicaHtml = "";
     let musicaText = "";
-    if (ins.instancia === "reg" && ins.musica_estado !== "cargada") {
-      if (!ins.musica_token) {
-        console.warn(
-          `Inscripción ${ins.id} sin musica_token (revisar columna/default en Supabase)`,
-        );
-      } else {
+    if (!ins.musica_token) {
+      console.warn(
+        `Inscripción ${ins.id} sin musica_token (revisar columna/default en Supabase)`,
+      );
+    } else {
+      const musicaUrl = SITE + "/musica?token=" + ins.musica_token;
+      const yaCargada = ins.musica_estado === "cargada";
+
+      if (yaCargada) {
+        musicaHtml = `
+<div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:22px;margin:24px 0;text-align:center">
+  <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Tu música</div>
+  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">Ya tenemos cargada la pista de tu presentación. Si en algún momento necesitás reemplazarla por otra versión, podés hacerlo desde este link.</p>
+  <a href="${musicaUrl}" style="background:#2a2a2a;color:#F8F5EE;border:1px solid rgba(201,168,76,.4);padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block">Ver / reemplazar mi música →</a>
+</div>`;
+        musicaText =
+          "\n\nTU MÚSICA\nYa tenemos cargada tu pista. Si necesitás reemplazarla, podés hacerlo desde este link:\n" +
+          musicaUrl;
+      } else if (ins.instancia === "reg" && MUSICA_VENCIMIENTO_ACTIVO) {
         let vencimientoMusica = ins.vencimiento_musica;
         if (!vencimientoMusica) {
           vencimientoMusica = new Date(
@@ -266,7 +289,6 @@ export default async function handler(req, res) {
             console.warn("No se pudo guardar vencimiento_musica:", e.message);
           }
         }
-        const musicaUrl = SITE + "/musica?token=" + ins.musica_token;
         const vencFecha = new Date(vencimientoMusica).toLocaleDateString(
           "es-AR",
           { day: "numeric", month: "long", year: "numeric" },
@@ -281,6 +303,17 @@ export default async function handler(req, res) {
           "\n\nSUBÍ TU MÚSICA\nTodavía no cargaste la pista. Tenés hasta el " +
           vencFecha +
           " para subirla sin cargo extra (pasada esa fecha se puede subir igual, con recargo aparte).\n" +
+          musicaUrl;
+      } else {
+        // Sin plazo límite (o instancia distinta de Sedes): solo el link.
+        musicaHtml = `
+<div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0;text-align:center">
+  <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Subí tu música</div>
+  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">Todavía no cargaste la pista de tu presentación. Podés subirla cuando quieras desde este link.</p>
+  <a href="${musicaUrl}" style="background:#C9A84C;color:#0A0A0A;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block">Subir mi música →</a>
+</div>`;
+        musicaText =
+          "\n\nSUBÍ TU MÚSICA\nTodavía no cargaste la pista. Podés subirla cuando quieras desde este link:\n" +
           musicaUrl;
       }
     }
