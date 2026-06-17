@@ -7251,8 +7251,18 @@
           });
         }
 
+        function esSedeVirtual() {
+          return (
+            INST === "reg" &&
+            STATE.sede_idx != null &&
+            SEDES[STATE.sede_idx] &&
+            SEDES[STATE.sede_idx].tipo === "v"
+          );
+        }
+
         async function injectMusicaButton(email) {
           if (btnInjected) return;
+          if (!esSedeVirtual()) return;
           var anchor = document.getElementById("ok-musica-fecha");
           if (!anchor || !email) return;
           var q =
@@ -7271,24 +7281,19 @@
             return;
           }
           if (!row || !row.musica_token) return;
+          // Si ya cargó la música, del reemplazo se encarga el negocio:
+          // no le mostramos ningún link.
+          if (row.musica_estado === "cargada") return;
           btnInjected = true;
-          var alreadyUp = row.musica_estado === "cargada";
           var link = "/musica?token=" + row.musica_token;
           var wrap = document.createElement("div");
           wrap.id = "__jam_musica_btn";
           wrap.style.cssText =
             "margin:20px auto;padding:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
-          if (alreadyUp) {
-            wrap.innerHTML =
-              '<div style="font-size:14px;color:#4CAF7D;margin-bottom:8px">Tu música ya fue cargada</div><a href="' +
-              link +
-              '" target="_blank" style="color:#C9A84C;text-decoration:underline;font-size:13px">Cambiarla por otra</a>';
-          } else {
-            wrap.innerHTML =
-              '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' +
-              link +
-              '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subí tu canción</a><div style="font-size:11px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
-          }
+          wrap.innerHTML =
+            '<div style="font-size:14px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' +
+            link +
+            '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:15px">Subí tu canción</a><div style="font-size:11px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
           anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
         }
 
