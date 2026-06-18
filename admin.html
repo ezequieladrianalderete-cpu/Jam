@@ -598,6 +598,119 @@
         outline: none;
         border-color: #c9a84c;
       }
+      @media (max-width: 640px) {
+        .app {
+          padding: 12px;
+        }
+        .topbar {
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .topbar h1 {
+          font-size: 22px;
+          letter-spacing: 2px;
+        }
+        .logout {
+          padding: 6px 10px;
+          font-size: 11px;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+        .stat-value {
+          font-size: 22px;
+        }
+        .tabs {
+          gap: 0;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .tabs::-webkit-scrollbar {
+          display: none;
+        }
+        .tab {
+          padding: 10px 12px;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+        .filters {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .f-select {
+          min-width: 0;
+          width: 100%;
+        }
+        .search-box {
+          min-width: 0;
+        }
+        .f-count {
+          margin-left: 0;
+        }
+        .f-toggle {
+          width: 100%;
+          justify-content: center;
+        }
+        .toolbar {
+          flex-wrap: wrap;
+        }
+        .btn-primary,
+        .btn-secondary {
+          flex: 1;
+        }
+        .ins-row {
+          grid-template-columns: 1fr auto;
+          grid-template-areas:
+            "left  monto"
+            "mid   mid"
+            "acts  acts";
+          gap: 8px;
+        }
+        .ins-col-left {
+          grid-area: left;
+        }
+        .ins-col-mid {
+          grid-area: mid;
+        }
+        .ins-monto {
+          grid-area: monto;
+          align-self: start;
+          text-align: right;
+        }
+        .ins-actions {
+          grid-area: acts;
+          justify-content: flex-start;
+        }
+        .btn-icon {
+          padding: 6px 9px;
+          font-size: 11px;
+        }
+        #toast {
+          left: 12px;
+          right: 12px;
+          max-width: none;
+          top: 12px;
+        }
+        .modal {
+          padding: 0;
+          align-items: flex-end;
+        }
+        .modal-box {
+          border-radius: 14px 14px 0 0;
+          max-height: 90vh;
+          max-width: 100%;
+        }
+        .modal-foot {
+          flex-wrap: wrap;
+        }
+        .modal-foot .info {
+          width: 100%;
+          margin-bottom: 8px;
+        }
+      }
     </style>
   </head>
   <body>
