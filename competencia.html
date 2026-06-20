@@ -2333,11 +2333,13 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
           });
-          mediaRecorder = new MediaRecorder(stream);
+          const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+                           MediaRecorder.isTypeSupported('audio/ogg;codecs=opus') ? 'audio/ogg;codecs=opus' : 'audio/webm';
+          mediaRecorder = new MediaRecorder(stream, { mimeType });
           audioChunks = [];
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.onstop = () => {
-            audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/mp4" });
             const url = URL.createObjectURL(audioBlob);
             document.getElementById("j-audio-player").src = url;
             document.getElementById("j-audio-player").style.display = "block";
@@ -2383,7 +2385,7 @@
           const { error } = await db
             .schema("scoring")
             .from("puntajes")
-            .update({ audio_url: "data:audio/webm;base64," + b64 })
+            .update({ audio_url: "data:" + (audioBlob?.type || "audio/mp4") + ";base64," + b64 })
             .eq("sesion_id", miPuntaje.sesion_id)
             .eq("juez_num", miPuntaje.juez_num);
           if (error) { console.error("Audio save error:", error); toast("Error al guardar audio", "err"); }

@@ -99,43 +99,45 @@ module.exports = async function handler(req, res) {
       </tr>`;
     }
 
-    // 6. Email HTML
-    const html = `
-    <div style="background:#080808;color:#F8F5EE;font-family:'Segoe UI',Arial,sans-serif;padding:40px 20px;max-width:600px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:32px">
+    // 6. Email HTML (compatible con Gmail, Outlook, Apple Mail)
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background-color:#080808">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#080808"><tr><td align="center" style="padding:40px 20px">
+    <table width="600" cellpadding="0" cellspacing="0" style="font-family:'Segoe UI',Arial,sans-serif;color:#F8F5EE">
+      <tr><td align="center" style="padding-bottom:32px">
         <div style="font-size:36px;font-weight:700;letter-spacing:6px;color:#C9A84C">JAM</div>
-        <div style="font-size:11px;color:rgba(248,245,238,.4);letter-spacing:2px;text-transform:uppercase">${esc(instLabel)} · 2026</div>
-      </div>
-
-      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;margin-bottom:24px">
-        <div style="font-size:10px;color:rgba(201,168,76,.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">DEVOLUCIÓN DE EVALUACIÓN</div>
+        <div style="font-size:11px;color:#888888;letter-spacing:2px;text-transform:uppercase">${esc(instLabel)} &middot; 2026</div>
+      </td></tr>
+      <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:24px;margin-bottom:24px">
+        <div style="font-size:10px;color:#A08840;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">DEVOLUCI&Oacute;N DE EVALUACI&Oacute;N</div>
         <div style="font-size:13px;color:#C9A84C;margin-bottom:4px">${esc(sesion.codigo_id)}</div>
-        <div style="font-size:24px;font-weight:600;margin-bottom:4px">${esc(sesion.nombre_grupo)}</div>
-        <div style="font-size:13px;color:rgba(248,245,238,.5)">${esc(sesion.pais || "")} · ${esc(sesion.categoria || "")}</div>
-      </div>
-
-      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;margin-bottom:24px">
-        <div style="font-size:14px;font-weight:600;margin-bottom:16px">Puntajes por jurado</div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr>
-            <th style="padding:8px 14px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);border-bottom:1px solid #333">JURADO</th>
-            <th style="padding:8px 14px;text-align:left;font-size:11px;color:rgba(248,245,238,.4);border-bottom:1px solid #333">ÍTEMS</th>
-            <th style="padding:8px 14px;text-align:right;font-size:11px;color:rgba(248,245,238,.4);border-bottom:1px solid #333">SUBTOTAL</th>
-          </tr></thead>
-          <tbody>${tablaRows}</tbody>
+        <div style="font-size:24px;font-weight:600;color:#F8F5EE;margin-bottom:4px">${esc(sesion.nombre_grupo)}</div>
+        <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot; ${esc(sesion.categoria || "")}</div>
+      </td></tr>
+      <tr><td height="16"></td></tr>
+      <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:24px">
+        <div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:16px">Puntajes por jurado</div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+          <tr>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888888;border-bottom:1px solid #333333">JURADO</th>
+            <th style="padding:8px 14px;text-align:left;font-size:11px;color:#888888;border-bottom:1px solid #333333">&Iacute;TEMS</th>
+            <th style="padding:8px 14px;text-align:right;font-size:11px;color:#888888;border-bottom:1px solid #333333">SUBTOTAL</th>
+          </tr>
+          ${tablaRows}
         </table>
-        <div style="text-align:center;margin-top:20px;padding:16px;background:#1a1600;border:1px solid rgba(201,168,76,.2);border-radius:12px">
-          <div style="font-size:12px;color:rgba(248,245,238,.5)">Puntaje Total</div>
-          <div style="font-size:42px;font-weight:600;color:#C9A84C;line-height:1">${totalPts}</div>
-          <div style="font-size:13px;color:rgba(248,245,238,.4)">/ ${maxTotal} puntos</div>
-        </div>
-      </div>
-
-      <div style="text-align:center;padding:20px;font-size:12px;color:rgba(248,245,238,.3)">
-        JAM Producciones · Dance Competition 2026<br>
-        Este email fue generado automáticamente.
-      </div>
-    </div>`;
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px"><tr><td align="center" style="padding:16px;background-color:#1a1600;border:1px solid #4a3800;border-radius:12px">
+          <div style="font-size:12px;color:#999999">Puntaje Total</div>
+          <div style="font-size:42px;font-weight:600;color:#C9A84C;line-height:1.2">${totalPts}</div>
+          <div style="font-size:13px;color:#777777">/ ${maxTotal} puntos</div>
+        </td></tr></table>
+      </td></tr>
+      <tr><td height="16"></td></tr>
+      <tr><td align="center" style="padding:20px;font-size:12px;color:#555555">
+        JAM Producciones &middot; Dance Competition 2026<br>
+        Este email fue generado autom&aacute;ticamente.
+      </td></tr>
+    </table>
+    </td></tr></table>
+    </body></html>`;
 
     // 7. Generar certificado de participación PDF
     const PDFDocument = require("pdfkit");
@@ -196,25 +198,20 @@ module.exports = async function handler(req, res) {
       if (p.audio_url) {
         try {
           if (p.audio_url.startsWith("data:")) {
+            const mimeMatch = p.audio_url.match(/^data:(audio\/[^;]+);/);
+            const mime = mimeMatch ? mimeMatch[1] : "audio/mp4";
+            const ext = mime.includes("mp4") || mime.includes("m4a") ? "m4a" : mime.includes("ogg") ? "ogg" : "m4a";
             const b64 = p.audio_url.split(",")[1];
             if (b64 && b64.length > 100) {
-              attachments.push({
-                filename: `evaluacion-jurado-${p.juez_num}.webm`,
-                content: Buffer.from(b64, "base64"),
-              });
+              attachments.push({ filename: `evaluacion-jurado-${p.juez_num}.${ext}`, content: Buffer.from(b64, "base64") });
             }
           } else if (p.audio_url.startsWith("http")) {
-            // Audio almacenado como URL externa
             const audioRes = await fetch(p.audio_url);
             if (audioRes.ok) {
-              const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-              attachments.push({
-                filename: `evaluacion-jurado-${p.juez_num}.webm`,
-                content: audioBuffer,
-              });
+              attachments.push({ filename: `evaluacion-jurado-${p.juez_num}.m4a`, content: Buffer.from(await audioRes.arrayBuffer()) });
             }
           }
-        } catch(e) { console.warn("Error procesando audio jurado " + p.juez_num + ":", e); }
+        } catch(e) { console.warn("Audio jurado " + p.juez_num + ":", e); }
       }
     }
 
