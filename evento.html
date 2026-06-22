@@ -1941,6 +1941,7 @@
         await loadLineup();
         await loadDjData();
         await loadSesionActivaForProy();
+        await buildPfRanking();
         subscribeRealtimeEvento();
       }
 
@@ -2708,7 +2709,7 @@
           .schema("scoring")
           .from("v_totales")
           .select("*")
-          .order("subtotal_parcial", { ascending: false });
+          .order("subtotal_parcial", { ascending: false, nullsFirst: false });
         buildRankingRows("pf-rank-rows", data, true);
         buildRankingRows("pe-rank-rows", data, false);
       }
@@ -2744,6 +2745,13 @@
             { event: "*", schema: "scoring", table: "sesiones" },
             async () => {
               await loadSesionActivaForProy();
+              await buildPfRanking();
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "scoring", table: "puntajes" },
+            async () => {
               await buildPfRanking();
             },
           )
