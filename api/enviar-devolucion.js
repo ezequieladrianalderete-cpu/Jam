@@ -325,6 +325,8 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    const audioCount = attachments.length;
+
     // Agregar certificado PDF a attachments
     attachments.push({
       filename: `Certificado-JAM-2026-${sesion.codigo_id}.pdf`,
@@ -332,8 +334,8 @@ module.exports = async function handler(req, res) {
     });
 
     const audioNote =
-      attachments.length > 1
-        ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${attachments.length} audio(s) adjunto(s). Revisá los archivos de este email.</div></div>`
+      audioCount > 0
+        ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${audioCount} audio/s adjunto/s. Revisá los archivos de este email.</div></div>`
         : "";
 
     const sendResult = await resend.emails.send({
