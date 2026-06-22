@@ -5,7 +5,10 @@
 const SENDER = "JAM Producciones <info@jamcompetencia.com>";
 
 function esc(s) {
-  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 async function supaFetch(path, opts = {}) {
@@ -22,64 +25,77 @@ async function supaFetch(path, opts = {}) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "POST only" });
 
   try {
     const { sesion_id } = req.body;
-    if (!sesion_id) return res.status(400).json({ error: "sesion_id requerido" });
+    if (!sesion_id)
+      return res.status(400).json({ error: "sesion_id requerido" });
 
     // 1. Obtener sesión
-    const sesiones = await supaFetch(
-      `sesiones?id=eq.${sesion_id}&select=*`,
-      { headers: { "Accept-Profile": "scoring" } }
-    );
+    const sesiones = await supaFetch(`sesiones?id=eq.${sesion_id}&select=*`, {
+      headers: { "Accept-Profile": "scoring" },
+    });
     const sesion = sesiones[0];
     if (!sesion) return res.status(404).json({ error: "Sesión no encontrada" });
 
     // 2. Obtener puntajes de todos los jurados
     const puntajes = await supaFetch(
       `puntajes?sesion_id=eq.${sesion_id}&select=*&order=juez_num`,
-      { headers: { "Accept-Profile": "scoring" } }
+      { headers: { "Accept-Profile": "scoring" } },
     );
 
     // 3. Buscar email del participante (via lineup → inscripciones)
     const lineup = await supaFetch(
       `lineup?codigo_id=eq.${sesion.codigo_id}&select=inscripcion_id`,
-      { headers: { "Accept-Profile": "evento" } }
+      { headers: { "Accept-Profile": "evento" } },
     );
     const inscId = lineup[0]?.inscripcion_id;
     let email = null;
     let nombreResp = null;
     if (inscId) {
-      const inscrip = await supaFetch(`inscripciones?id=eq.${inscId}&select=email,nombre`);
+      const inscrip = await supaFetch(
+        `inscripciones?id=eq.${inscId}&select=email,nombre`,
+      );
       email = inscrip[0]?.email;
       nombreResp = inscrip[0]?.nombre;
     }
-    if (!email) return res.status(404).json({ error: "Email del participante no encontrado" });
+    if (!email)
+      return res
+        .status(404)
+        .json({ error: "Email del participante no encontrado" });
 
     // 4. Obtener nombres de ítems de cada jurado
-    const juradoNums = puntajes.map(p => p.juez_num);
+    const juradoNums = puntajes.map((p) => p.juez_num);
     let juradoItems = {};
     try {
       const jurados = await supaFetch(
         `usuarios?rol=eq.jurado&juez_num=in.(${juradoNums.join(",")})&select=juez_num,items`,
-        { headers: { "Accept-Profile": "personal" } }
+        { headers: { "Accept-Profile": "personal" } },
       );
       for (const j of jurados) {
         juradoItems[j.juez_num] = j.items || [];
       }
-    } catch(e) { console.warn("No se pudieron obtener items de jurados:", e); }
+    } catch (e) {
+      console.warn("No se pudieron obtener items de jurados:", e);
+    }
 
     // 5. Calcular totales
     const totalPts = puntajes.reduce((s, p) => s + (p.subtotal || 0), 0);
-    const maxPorJurado = puntajes.length > 0
-      ? Object.keys(puntajes[0].items || {}).length * 10
-      : 20;
+    const maxPorJurado =
+      puntajes.length > 0
+        ? Object.keys(puntajes[0].items || {}).length * 10
+        : 20;
     const maxTotal = puntajes.length * maxPorJurado;
 
     // 6. Construir tabla de puntajes con nombres reales
-    const instLabel = sesion.instancia === "int" || sesion.instancia === "inter"
-      ? "Inter América" : sesion.instancia === "nac" ? "Nacional" : "Regional";
+    const instLabel =
+      sesion.instancia === "int" || sesion.instancia === "inter"
+        ? "Inter América"
+        : sesion.instancia === "nac"
+          ? "Nacional"
+          : "Regional";
 
     let tablaRows = "";
     for (const p of puntajes) {
@@ -93,7 +109,7 @@ module.exports = async function handler(req, res) {
         .join(" · ");
       const hasAudio = p.audio_url && p.audio_url.length > 50;
       tablaRows += `<tr>
-        <td style="padding:10px 14px;border-bottom:1px solid #222;color:#C9A84C;font-weight:700">Jurado ${p.juez_num}${hasAudio ? ' 🎙' : ''}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #222;color:#C9A84C;font-weight:700">Jurado ${p.juez_num}${hasAudio ? " 🎙" : ""}</td>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#eee;font-size:13px">${itemsStr}</td>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#fff;font-weight:700;text-align:right">${p.subtotal}</td>
       </tr>`;
@@ -111,7 +127,14 @@ module.exports = async function handler(req, res) {
         <div style="font-size:10px;color:#A08840;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">DEVOLUCI&Oacute;N DE EVALUACI&Oacute;N</div>
         <div style="font-size:13px;color:#C9A84C;margin-bottom:4px">${esc(sesion.codigo_id)}</div>
         <div style="font-size:24px;font-weight:600;color:#F8F5EE;margin-bottom:4px">${esc(sesion.nombre_grupo)}</div>
-        <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot; ${esc(sesion.categoria || "")}</div>
+        <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot; 
+        ${esc(
+          sesion.categoria
+            ? JSON.parse(sesion.categoria)
+                .map((item) => `${item.c}: ${item.n}`)
+                .join(" - ")
+            : "",
+        )}</div>
       </td></tr>
       <tr><td height="16"></td></tr>
       <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:24px">
@@ -142,7 +165,11 @@ module.exports = async function handler(req, res) {
     // 7. Generar certificado de participación PDF
     const PDFDocument = require("pdfkit");
     const certBuffer = await new Promise((resolve) => {
-      const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 60 });
+      const doc = new PDFDocument({
+        size: "A4",
+        layout: "landscape",
+        margin: 60,
+      });
       const chunks = [];
       doc.on("data", (c) => chunks.push(c));
       doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -151,39 +178,109 @@ module.exports = async function handler(req, res) {
       doc.rect(0, 0, doc.page.width, doc.page.height).fill("#080808");
 
       // Borde dorado
-      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).lineWidth(2).stroke("#C9A84C");
-      doc.rect(38, 38, doc.page.width - 76, doc.page.height - 76).lineWidth(0.5).stroke("rgba(201,168,76,0.3)");
+      doc
+        .rect(30, 30, doc.page.width - 60, doc.page.height - 60)
+        .lineWidth(2)
+        .stroke("#C9A84C");
+      doc
+        .rect(38, 38, doc.page.width - 76, doc.page.height - 76)
+        .lineWidth(0.5)
+        .stroke("rgba(201,168,76,0.3)");
 
       // Header
-      doc.font("Helvetica-Bold").fontSize(42).fillColor("#C9A84C").text("JAM", 0, 80, { align: "center" });
-      doc.fontSize(14).fillColor("#888888").text("DANCE COMPETITION 2026", 0, 130, { align: "center" });
-      doc.fontSize(11).fillColor("#666666").text(instLabel.toUpperCase(), 0, 152, { align: "center" });
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(42)
+        .fillColor("#C9A84C")
+        .text("JAM", 0, 80, { align: "center" });
+      doc
+        .fontSize(14)
+        .fillColor("#888888")
+        .text("DANCE COMPETITION 2026", 0, 130, { align: "center" });
+      doc
+        .fontSize(11)
+        .fillColor("#666666")
+        .text(instLabel.toUpperCase(), 0, 152, { align: "center" });
 
       // Línea decorativa
-      doc.moveTo(doc.page.width / 2 - 80, 178).lineTo(doc.page.width / 2 + 80, 178).lineWidth(1).stroke("#C9A84C");
+      doc
+        .moveTo(doc.page.width / 2 - 80, 178)
+        .lineTo(doc.page.width / 2 + 80, 178)
+        .lineWidth(1)
+        .stroke("#C9A84C");
 
       // Certificado
-      doc.fontSize(16).fillColor("#AAAAAA").text("CERTIFICADO DE PARTICIPACIÓN", 0, 200, { align: "center" });
+      doc
+        .fontSize(16)
+        .fillColor("#AAAAAA")
+        .text("CERTIFICADO DE PARTICIPACIÓN", 0, 200, { align: "center" });
 
       // Nombre del participante
-      doc.fontSize(36).fillColor("#F8F5EE").text(sesion.nombre_grupo || "—", 0, 240, { align: "center" });
+      doc
+        .fontSize(36)
+        .fillColor("#F8F5EE")
+        .text(sesion.nombre_grupo || "—", 0, 240, { align: "center" });
 
       // Código y categoría
-      doc.fontSize(12).fillColor("#C9A84C").text(sesion.codigo_id + "  ·  " + (sesion.pais || ""), 0, 290, { align: "center" });
-      doc.fontSize(11).fillColor("#888888").text(sesion.categoria || "", 0, 310, { align: "center" });
+      doc
+        .fontSize(12)
+        .fillColor("#C9A84C")
+        .text(sesion.codigo_id + "  ·  " + (sesion.pais || ""), 0, 290, {
+          align: "center",
+        });
+
+      // Armamos el texto limpio de la categoría
+      const categoriaLimpia = sesion.categoria
+        ? JSON.parse(sesion.categoria)
+            .map((item) => `${item.c}: ${item.n}`)
+            .join(" - ")
+        : "";
+
+      doc
+        .fontSize(11)
+        .fillColor("#888888")
+        .text(categoriaLimpia, 0, 310, { align: "center" });
 
       // Puntaje
-      doc.moveTo(doc.page.width / 2 - 60, 340).lineTo(doc.page.width / 2 + 60, 340).lineWidth(0.5).stroke("#333333");
-      doc.fontSize(14).fillColor("#AAAAAA").text("Puntaje obtenido", 0, 355, { align: "center" });
-      doc.fontSize(48).fillColor("#C9A84C").text(String(totalPts), 0, 375, { align: "center" });
-      doc.fontSize(12).fillColor("#666666").text("/ " + maxTotal + " puntos", 0, 430, { align: "center" });
+      doc
+        .moveTo(doc.page.width / 2 - 60, 340)
+        .lineTo(doc.page.width / 2 + 60, 340)
+        .lineWidth(0.5)
+        .stroke("#333333");
+      doc
+        .fontSize(14)
+        .fillColor("#AAAAAA")
+        .text("Puntaje obtenido", 0, 355, { align: "center" });
+      doc
+        .fontSize(48)
+        .fillColor("#C9A84C")
+        .text(String(totalPts), 0, 375, { align: "center" });
+      doc
+        .fontSize(12)
+        .fillColor("#666666")
+        .text("/ " + maxTotal + " puntos", 0, 430, { align: "center" });
 
       // Fecha
-      const fecha = new Date().toLocaleDateString("es-AR", { year: "numeric", month: "long", day: "numeric" });
-      doc.fontSize(10).fillColor("#555555").text(fecha, 0, 470, { align: "center" });
+      const fecha = new Date().toLocaleDateString("es-AR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      doc
+        .fontSize(10)
+        .fillColor("#555555")
+        .text(fecha, 0, 470, { align: "center" });
 
       // Footer
-      doc.fontSize(8).fillColor("#444444").text("JAM Producciones · Palais Rouge · Buenos Aires, Argentina", 0, doc.page.height - 70, { align: "center" });
+      doc
+        .fontSize(8)
+        .fillColor("#444444")
+        .text(
+          "JAM Producciones · Palais Rouge · Buenos Aires, Argentina",
+          0,
+          doc.page.height - 70,
+          { align: "center" },
+        );
 
       doc.end();
     });
@@ -200,18 +297,31 @@ module.exports = async function handler(req, res) {
           if (p.audio_url.startsWith("data:")) {
             const mimeMatch = p.audio_url.match(/^data:(audio\/[^;]+);/);
             const mime = mimeMatch ? mimeMatch[1] : "audio/mp4";
-            const ext = mime.includes("mp4") || mime.includes("m4a") ? "m4a" : mime.includes("ogg") ? "ogg" : "m4a";
+            const ext =
+              mime.includes("mp4") || mime.includes("m4a")
+                ? "m4a"
+                : mime.includes("ogg")
+                  ? "ogg"
+                  : "m4a";
             const b64 = p.audio_url.split(",")[1];
             if (b64 && b64.length > 100) {
-              attachments.push({ filename: `evaluacion-jurado-${p.juez_num}.${ext}`, content: Buffer.from(b64, "base64") });
+              attachments.push({
+                filename: `evaluacion-jurado-${p.juez_num}.${ext}`,
+                content: Buffer.from(b64, "base64"),
+              });
             }
           } else if (p.audio_url.startsWith("http")) {
             const audioRes = await fetch(p.audio_url);
             if (audioRes.ok) {
-              attachments.push({ filename: `evaluacion-jurado-${p.juez_num}.m4a`, content: Buffer.from(await audioRes.arrayBuffer()) });
+              attachments.push({
+                filename: `evaluacion-jurado-${p.juez_num}.m4a`,
+                content: Buffer.from(await audioRes.arrayBuffer()),
+              });
             }
           }
-        } catch(e) { console.warn("Audio jurado " + p.juez_num + ":", e); }
+        } catch (e) {
+          console.warn("Audio jurado " + p.juez_num + ":", e);
+        }
       }
     }
 
@@ -221,15 +331,18 @@ module.exports = async function handler(req, res) {
       content: certBuffer,
     });
 
-    const audioNote = attachments.length > 1 
-      ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${attachments.length} audio(s) adjunto(s). Revisá los archivos de este email.</div></div>`
-      : "";
+    const audioNote =
+      attachments.length > 1
+        ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${attachments.length} audio(s) adjunto(s). Revisá los archivos de este email.</div></div>`
+        : "";
 
     const sendResult = await resend.emails.send({
       from: SENDER,
       to: [email],
       subject: `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`,
-      html: audioNote ? html.replace('JAM Producciones', audioNote + 'JAM Producciones') : html,
+      html: audioNote
+        ? html.replace("JAM Producciones", audioNote + "JAM Producciones")
+        : html,
       attachments: attachments.length > 0 ? attachments : undefined,
     });
 

@@ -1585,31 +1585,40 @@
       // INIT
       // ═══════════════════════════════════════════════════════════
       function parseCat(c) {
-        if (!c) return '';
+        if (!c) return "";
         try {
-          const arr = typeof c === 'string' ? JSON.parse(c) : c;
-          if (Array.isArray(arr)) return arr.map(x => x.n || x.name || x).join(', ');
+          const arr = typeof c === "string" ? JSON.parse(c) : c;
+
+          // Acá cambiamos la regla para que extraiga el código (c), el nombre (n) y use el guion
+          if (Array.isArray(arr))
+            return arr.map((x) => `${x.c}: ${x.n}`).join(" - ");
+
           return String(c);
-        } catch(e) { return String(c); }
+        } catch (e) {
+          return String(c);
+        }
       }
 
       async function init() {
         try {
-          const saved = sessionStorage.getItem('jam_user');
+          const saved = sessionStorage.getItem("jam_user");
           if (saved) {
             currentUser = JSON.parse(saved);
-            document.getElementById('loading-overlay').style.display = 'none';
-            if (currentUser.rol === 'director') {
-              document.getElementById('screen-director').style.display = 'block';
+            document.getElementById("loading-overlay").style.display = "none";
+            if (currentUser.rol === "director") {
+              document.getElementById("screen-director").style.display =
+                "block";
               initDirector();
             } else {
-              document.getElementById('screen-jurado').style.display = 'block';
+              document.getElementById("screen-jurado").style.display = "block";
               initJurado();
             }
             return;
           }
-        } catch(e) {}
-        try { await db.schema('evento').from('config').select('clave').limit(1); } catch(e) {}
+        } catch (e) {}
+        try {
+          await db.schema("evento").from("config").select("clave").limit(1);
+        } catch (e) {}
         document.getElementById("loading-overlay").style.display = "none";
         document.getElementById("screen-login").style.display = "flex";
       }
@@ -1637,7 +1646,7 @@
             return;
           }
           currentUser = data[0];
-          sessionStorage.setItem('jam_user', JSON.stringify(currentUser));
+          sessionStorage.setItem("jam_user", JSON.stringify(currentUser));
           document.getElementById("screen-login").style.display = "none";
           if (currentUser.rol === "director") {
             document.getElementById("screen-director").style.display = "block";
@@ -1658,7 +1667,7 @@
         sesionActiva = null;
         miPuntaje = null;
         jCerradoFlag = false;
-        sessionStorage.removeItem('jam_user');
+        sessionStorage.removeItem("jam_user");
         if (realtimeSub) {
           db.removeChannel(realtimeSub);
           realtimeSub = null;
@@ -1731,7 +1740,7 @@
         document.getElementById("j-info").textContent =
           s.pais +
           " · " +
-          (parseCat(s.categoria)) +
+          parseCat(s.categoria) +
           " · " +
           s.instancia.toUpperCase();
         document.getElementById("j-instancia-badge").textContent =
@@ -2105,10 +2114,13 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sesion_id: sesId }),
-        }).then(r => r.json()).then(r => {
-          if (r.ok) toast("Devolución enviada a " + r.to, "ok");
-          else console.warn("Email no enviado:", r.error);
-        }).catch(e => console.warn("Error email:", e));
+        })
+          .then((r) => r.json())
+          .then((r) => {
+            if (r.ok) toast("Devolución enviada a " + r.to, "ok");
+            else console.warn("Email no enviado:", r.error);
+          })
+          .catch((e) => console.warn("Error email:", e));
 
         sesionActiva = null;
         document.getElementById("d-nombre").textContent =
@@ -2333,13 +2345,18 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
           });
-          const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
-                           MediaRecorder.isTypeSupported('audio/ogg;codecs=opus') ? 'audio/ogg;codecs=opus' : 'audio/webm';
+          const mimeType = MediaRecorder.isTypeSupported("audio/mp4")
+            ? "audio/mp4"
+            : MediaRecorder.isTypeSupported("audio/ogg;codecs=opus")
+              ? "audio/ogg;codecs=opus"
+              : "audio/webm";
           mediaRecorder = new MediaRecorder(stream, { mimeType });
           audioChunks = [];
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.onstop = () => {
-            audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/mp4" });
+            audioBlob = new Blob(audioChunks, {
+              type: mediaRecorder.mimeType || "audio/mp4",
+            });
             const url = URL.createObjectURL(audioBlob);
             document.getElementById("j-audio-player").src = url;
             document.getElementById("j-audio-player").style.display = "block";
@@ -2385,11 +2402,18 @@
           const { error } = await db
             .schema("scoring")
             .from("puntajes")
-            .update({ audio_url: "data:" + (audioBlob?.type || "audio/mp4") + ";base64," + b64 })
+            .update({
+              audio_url:
+                "data:" + (audioBlob?.type || "audio/mp4") + ";base64," + b64,
+            })
             .eq("sesion_id", miPuntaje.sesion_id)
             .eq("juez_num", miPuntaje.juez_num);
-          if (error) { console.error("Audio save error:", error); toast("Error al guardar audio", "err"); }
-          else { toast("Audio guardado con la evaluación", "ok"); }
+          if (error) {
+            console.error("Audio save error:", error);
+            toast("Error al guardar audio", "err");
+          } else {
+            toast("Audio guardado con la evaluación", "ok");
+          }
         } catch (e) {
           console.error("jSubirAudio:", e);
           toast("Error al subir audio", "err");
