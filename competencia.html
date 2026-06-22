@@ -2250,7 +2250,7 @@
           .schema("scoring")
           .from("v_totales")
           .select("*")
-          .order("subtotal_parcial", { ascending: false });
+          .order("subtotal_parcial", { ascending: false, nullsFirst: false });
         const tbody = document.getElementById("d-rank-tbody");
         tbody.innerHTML = "";
         if (!data) return;
