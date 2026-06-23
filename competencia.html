@@ -1346,6 +1346,11 @@
               📺 Publicar en pantalla
             </button>
           </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+            <button class="btn bo bsm rank-filter-btn" data-inst="nac" onclick="setRankFilter('nac')"><svg width="14" height="10" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:4px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NAC</button>
+            <button class="btn bo bsm rank-filter-btn" data-inst="rep" onclick="setRankFilter('rep')">🔄 REP</button>
+            <button class="btn bo bsm rank-filter-btn" data-inst="inter" onclick="setRankFilter('inter')">🌎 INTER</button>
+          </div>
           <div class="card" style="overflow-x: auto">
             <table class="tabla">
               <thead>
@@ -1557,6 +1562,7 @@
       // ═══════════════════════════════════════════════════════════
       let currentUser = null;
       let sesionActiva = null;
+      let rankFilter = null;
       let miPuntaje = null;
       let jCerradoFlag = false;
       let realtimeSub = null;
@@ -2251,20 +2257,38 @@
           .from("v_totales")
           .select("*")
           .order("subtotal_parcial", { ascending: false, nullsFirst: false });
+        const normInst = (v) =>
+          v === "int" || v === "inter" ? "inter" : v || "nac";
+        const inst = normInst(
+          rankFilter ?? sesionActiva?.instancia ?? "nac",
+        );
+        document.querySelectorAll(".rank-filter-btn").forEach((btn) => {
+          const active = normInst(btn.dataset.inst) === inst;
+          btn.style.background = active ? "#C9A84C" : "";
+          btn.style.color = active ? "#000" : "";
+          btn.style.borderColor = active ? "#C9A84C" : "";
+        });
         const tbody = document.getElementById("d-rank-tbody");
         tbody.innerHTML = "";
         if (!data) return;
-        data.forEach((r, i) => {
-          const posStyle =
-            i === 0
-              ? "background:#C9A84C;color:#000;"
-              : i === 1
-                ? "background:#888;color:#000;"
-                : i === 2
-                  ? "background:#8B6D28;color:#000;"
-                  : "color:rgba(248,245,238,.4);";
-          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${r.instancia}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
-        });
+        data
+          .filter((r) => normInst(r.instancia) === inst)
+          .forEach((r, i) => {
+            const posStyle =
+              i === 0
+                ? "background:#C9A84C;color:#000;"
+                : i === 1
+                  ? "background:#888;color:#000;"
+                  : i === 2
+                    ? "background:#8B6D28;color:#000;"
+                    : "color:rgba(248,245,238,.4);";
+            tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${r.instancia?.toUpperCase()}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
+          });
+      }
+
+      function setRankFilter(inst) {
+        rankFilter = inst;
+        buildRankings();
       }
 
       async function loadStats() {

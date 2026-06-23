@@ -931,6 +931,11 @@
           >
             RANKING
           </div>
+          <div id="pf-rank-filters" style="display:flex;justify-content:center;gap:14px;margin-bottom:32px;flex-wrap:wrap">
+            <button class="pf-rank-filter-btn" data-inst="nac" onclick="setPfRankFilter('nac')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit"><svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NACIONAL</button>
+            <button class="pf-rank-filter-btn" data-inst="rep" onclick="setPfRankFilter('rep')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit">🔄 REPESCA</button>
+            <button class="pf-rank-filter-btn" data-inst="inter" onclick="setPfRankFilter('inter')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit">🌎 INTER</button>
+          </div>
           <div id="pf-rank-rows"></div>
         </div>
       </div>
@@ -1649,19 +1654,26 @@
             padding: 40px 24px;
           "
         >
-          <div
-            style="
-              font-family: &quot;Cormorant Garamond&quot;, serif;
-              font-size: clamp(28px, 6vw, 56px);
-              text-align: center;
-              margin-bottom: 28px;
-              color: #c9a84c;
-              font-weight: 600;
-            "
-          >
-            RANKING
+          <div style="max-width: 700px; margin: 0 auto">
+            <div
+              style="
+                font-family: &quot;Cormorant Garamond&quot;, serif;
+                font-size: clamp(28px, 6vw, 56px);
+                text-align: center;
+                margin-bottom: 24px;
+                color: #c9a84c;
+                font-weight: 600;
+              "
+            >
+              RANKING
+            </div>
+            <div id="pe-rank-filters" style="display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+              <button class="btn bo bsm pf-rank-filter-btn" data-inst="nac" onclick="setPfRankFilter('nac')"><svg width="14" height="10" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:5px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NAC</button>
+              <button class="btn bo bsm pf-rank-filter-btn" data-inst="rep" onclick="setPfRankFilter('rep')">🔄 REP</button>
+              <button class="btn bo bsm pf-rank-filter-btn" data-inst="inter" onclick="setPfRankFilter('inter')">🌎 INTER</button>
+            </div>
+            <div id="pe-rank-rows"></div>
           </div>
-          <div id="pe-rank-rows" style="max-width: 700px; margin: 0 auto"></div>
         </div>
         <div
           id="pe-espera-v"
@@ -1759,6 +1771,7 @@
       let luAgrupado = false;
       let importRows = [];
       let sesionActiva = null;
+      let pfRankFilter = null;
       let realtimeSub = null;
 
       const LU_DOT = {
@@ -2731,8 +2744,35 @@
           .from("v_totales")
           .select("*")
           .order("subtotal_parcial", { ascending: false, nullsFirst: false });
-        buildRankingRows("pf-rank-rows", data, true);
-        buildRankingRows("pe-rank-rows", data, false);
+        const normInst = (v) =>
+          v === "int" || v === "inter" ? "inter" : v || "nac";
+        const inst = normInst(
+          pfRankFilter ?? sesionActiva?.instancia ?? "nac",
+        );
+        ["pf-rank-filters", "pe-rank-filters"].forEach((cid) => {
+          const c = document.getElementById(cid);
+          if (!c) return;
+          c.querySelectorAll(".pf-rank-filter-btn").forEach((btn) => {
+            const active = normInst(btn.dataset.inst) === inst;
+            btn.style.background = active
+              ? "#C9A84C"
+              : "rgba(255,255,255,.06)";
+            btn.style.color = active ? "#000" : "rgba(255,255,255,.55)";
+            btn.style.borderColor = active
+              ? "#C9A84C"
+              : "rgba(255,255,255,.12)";
+          });
+        });
+        const filtered = data
+          ? data.filter((r) => normInst(r.instancia) === inst)
+          : [];
+        buildRankingRows("pf-rank-rows", filtered, true);
+        buildRankingRows("pe-rank-rows", filtered, false);
+      }
+
+      function setPfRankFilter(inst) {
+        pfRankFilter = inst;
+        buildPfRanking();
       }
 
       function buildRankingRows(contId, data, large) {
