@@ -1238,6 +1238,26 @@
           rgba(10, 5, 0, 0.75) 100%
         );
       }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 110vmin;
+        opacity: 0;
+      }
+      body.bg-nac::before {
+        background-image: url("/imgs/logo-nac.png");
+        opacity: 0.06;
+      }
+      body.bg-int::before {
+        background-image: url("/imgs/logo-int.png");
+        background-size: 115vmin;
+        opacity: 0.08;
+      }
       /* El header y el contenido quedan sobre el fondo */
       header,
       .wrap,
@@ -4448,6 +4468,8 @@
           document.getElementById("opt-" + i).className =
             "io" + (i === inst ? " s-" + i : "");
         });
+        document.body.className =
+          inst === "int" ? "bg-int" : inst === "rep" ? "" : "bg-nac";
         buildStepper();
         renderStep(1);
       }
