@@ -899,10 +899,36 @@
             —
           </div>
         </div>
-        <div id="pf-pista-empty" style="display:none;flex-direction:column;align-items:center;gap:20px;text-align:center">
-          <div style="font-size:clamp(40px,10vw,80px);opacity:.2">⏸</div>
-          <div style="font-size:clamp(16px,3.5vw,28px);color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase">Sin participante en pista</div>
-          <div style="font-size:clamp(11px,2vw,16px);color:rgba(255,255,255,.18);letter-spacing:1px">Esperando que se inicie una sesión</div>
+        <div
+          id="pf-pista-empty"
+          style="
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+          "
+        >
+          <div style="font-size: clamp(40px, 10vw, 80px); opacity: 0.2">⏸</div>
+          <div
+            style="
+              font-size: clamp(16px, 3.5vw, 28px);
+              color: rgba(255, 255, 255, 0.35);
+              letter-spacing: 3px;
+              text-transform: uppercase;
+            "
+          >
+            Sin participante en pista
+          </div>
+          <div
+            style="
+              font-size: clamp(11px, 2vw, 16px);
+              color: rgba(255, 255, 255, 0.18);
+              letter-spacing: 1px;
+            "
+          >
+            Esperando que se inicie una sesión
+          </div>
         </div>
       </div>
 
@@ -931,11 +957,97 @@
           >
             RANKING
           </div>
-          <div id="pf-rank-filters" style="display:flex;justify-content:center;gap:14px;margin-bottom:32px;flex-wrap:wrap">
-            <button class="pf-rank-filter-btn" data-inst="nac" onclick="setPfRankFilter('nac')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit"><svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NACIONAL</button>
-            <button class="pf-rank-filter-btn" data-inst="rep" onclick="setPfRankFilter('rep')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit">🔄 REPESCA</button>
-            <button class="pf-rank-filter-btn" data-inst="inter" onclick="setPfRankFilter('inter')" style="padding:10px 26px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit">🌎 INTER</button>
+          <div
+            id="pf-rank-filters"
+            style="
+              display: flex;
+              justify-content: center;
+              gap: 14px;
+              margin-bottom: 14px;
+              flex-wrap: wrap;
+            "
+          >
+            <button
+              class="pf-rank-filter-btn"
+              data-inst="nac"
+              onclick="setPfRankFilter('nac')"
+              style="
+                padding: 10px 26px;
+                border-radius: 30px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 12px;
+                letter-spacing: 3px;
+                cursor: pointer;
+                font-family: inherit;
+              "
+            >
+              <svg
+                width="16"
+                height="11"
+                viewBox="0 0 16 11"
+                xmlns="http://www.w3.org/2000/svg"
+                style="
+                  vertical-align: middle;
+                  border-radius: 2px;
+                  display: inline-block;
+                  margin-right: 7px;
+                "
+              >
+                <rect width="16" height="3.67" fill="#74ACDF" />
+                <rect width="16" height="3.67" y="3.67" fill="#fff" />
+                <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
+                <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
+              >NACIONAL
+            </button>
+            <button
+              class="pf-rank-filter-btn"
+              data-inst="rep"
+              onclick="setPfRankFilter('rep')"
+              style="
+                padding: 10px 26px;
+                border-radius: 30px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 12px;
+                letter-spacing: 3px;
+                cursor: pointer;
+                font-family: inherit;
+              "
+            >
+              🔄 REPESCA
+            </button>
+            <button
+              class="pf-rank-filter-btn"
+              data-inst="inter"
+              onclick="setPfRankFilter('inter')"
+              style="
+                padding: 10px 26px;
+                border-radius: 30px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 12px;
+                letter-spacing: 3px;
+                cursor: pointer;
+                font-family: inherit;
+              "
+            >
+              🌎 INTER
+            </button>
           </div>
+          <div
+            id="pf-rank-cat-filters"
+            style="
+              display: flex;
+              justify-content: center;
+              gap: 10px;
+              margin-bottom: 32px;
+              flex-wrap: wrap;
+            "
+          ></div>
           <div id="pf-rank-rows"></div>
         </div>
       </div>
@@ -1640,10 +1752,36 @@
               —
             </div>
           </div>
-          <div id="pe-pista-empty" style="display:none;flex-direction:column;align-items:center;gap:16px;text-align:center">
-            <div style="font-size:clamp(32px,8vw,60px);opacity:.2">⏸</div>
-            <div style="font-size:clamp(14px,3vw,22px);color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase">Sin participante en pista</div>
-            <div style="font-size:clamp(10px,1.8vw,14px);color:rgba(255,255,255,.18);letter-spacing:1px">Esperando que se inicie una sesión</div>
+          <div
+            id="pe-pista-empty"
+            style="
+              display: none;
+              flex-direction: column;
+              align-items: center;
+              gap: 16px;
+              text-align: center;
+            "
+          >
+            <div style="font-size: clamp(32px, 8vw, 60px); opacity: 0.2">⏸</div>
+            <div
+              style="
+                font-size: clamp(14px, 3vw, 22px);
+                color: rgba(255, 255, 255, 0.35);
+                letter-spacing: 3px;
+                text-transform: uppercase;
+              "
+            >
+              Sin participante en pista
+            </div>
+            <div
+              style="
+                font-size: clamp(10px, 1.8vw, 14px);
+                color: rgba(255, 255, 255, 0.18);
+                letter-spacing: 1px;
+              "
+            >
+              Esperando que se inicie una sesión
+            </div>
           </div>
         </div>
         <div
@@ -1667,11 +1805,64 @@
             >
               RANKING
             </div>
-            <div id="pe-rank-filters" style="display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap">
-              <button class="btn bo bsm pf-rank-filter-btn" data-inst="nac" onclick="setPfRankFilter('nac')"><svg width="14" height="10" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:5px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NAC</button>
-              <button class="btn bo bsm pf-rank-filter-btn" data-inst="rep" onclick="setPfRankFilter('rep')">🔄 REP</button>
-              <button class="btn bo bsm pf-rank-filter-btn" data-inst="inter" onclick="setPfRankFilter('inter')">🌎 INTER</button>
+            <div
+              id="pe-rank-filters"
+              style="
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+              "
+            >
+              <button
+                class="btn bo bsm pf-rank-filter-btn"
+                data-inst="nac"
+                onclick="setPfRankFilter('nac')"
+              >
+                <svg
+                  width="14"
+                  height="10"
+                  viewBox="0 0 16 11"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="
+                    vertical-align: middle;
+                    border-radius: 2px;
+                    display: inline-block;
+                    margin-right: 5px;
+                  "
+                >
+                  <rect width="16" height="3.67" fill="#74ACDF" />
+                  <rect width="16" height="3.67" y="3.67" fill="#fff" />
+                  <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
+                  <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
+                >NAC
+              </button>
+              <button
+                class="btn bo bsm pf-rank-filter-btn"
+                data-inst="rep"
+                onclick="setPfRankFilter('rep')"
+              >
+                🔄 REP
+              </button>
+              <button
+                class="btn bo bsm pf-rank-filter-btn"
+                data-inst="inter"
+                onclick="setPfRankFilter('inter')"
+              >
+                🌎 INTER
+              </button>
             </div>
+            <div
+              id="pe-rank-cat-filters"
+              style="
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                margin-bottom: 24px;
+                flex-wrap: wrap;
+              "
+            ></div>
             <div id="pe-rank-rows"></div>
           </div>
         </div>
@@ -1772,6 +1963,7 @@
       let importRows = [];
       let sesionActiva = null;
       let pfRankFilter = null;
+      let pfRankCatFilter = null;
       let realtimeSub = null;
 
       const LU_DOT = {
@@ -2738,40 +2930,125 @@
         });
       }
 
+      function dedupeScores(data) {
+        const map = new Map();
+        (data || []).forEach((r) => {
+          const existing = map.get(r.codigo_id);
+          const score = r.subtotal_parcial ?? -Infinity;
+          const existScore = existing?.subtotal_parcial ?? -Infinity;
+          if (!existing || score > existScore) map.set(r.codigo_id, r);
+        });
+        return [...map.values()];
+      }
+
+      function expandByCategory(data) {
+        const rows = [];
+        (data || []).forEach((r) => {
+          const raw = r.categoria;
+          try {
+            const arr = raw
+              ? typeof raw === "string"
+                ? JSON.parse(raw)
+                : raw
+              : null;
+            if (Array.isArray(arr) && arr.length > 0) {
+              arr.forEach((x) => rows.push({ ...r, _activeCat: x }));
+            } else {
+              rows.push({ ...r, _activeCat: null });
+            }
+          } catch (e) {
+            rows.push({ ...r, _activeCat: null });
+          }
+        });
+        return rows;
+      }
+
+      function catKey(x) {
+        return x ? x.c + ": " + x.n : null;
+      }
+
+      function extractRankCats(rows) {
+        const cats = new Set();
+        (rows || []).forEach((r) => {
+          if (r._activeCat?.n) cats.add(catKey(r._activeCat));
+        });
+        return [...cats].sort();
+      }
+
+      function matchesRankCat(r, cat) {
+        if (!cat) return true;
+        return catKey(r._activeCat) === cat;
+      }
+
       async function buildPfRanking() {
-        const { data } = await db
-          .schema("scoring")
-          .from("v_totales")
-          .select("*")
-          .order("subtotal_parcial", { ascending: false, nullsFirst: false });
+        const [{ data }, { data: lineupCats }] = await Promise.all([
+          db
+            .schema("scoring")
+            .from("v_totales")
+            .select("*")
+            .order("subtotal_parcial", { ascending: false, nullsFirst: false }),
+          db.schema("evento").from("lineup").select("codigo_id,categoria"),
+        ]);
+        const catMap = Object.fromEntries(
+          (lineupCats || []).map((p) => [p.codigo_id, p.categoria]),
+        );
+        const allData = (data || []).map((r) => ({
+          ...r,
+          categoria: catMap[r.codigo_id] ?? r.categoria,
+        }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(
-          pfRankFilter ?? sesionActiva?.instancia ?? "nac",
-        );
+        const inst = normInst(pfRankFilter ?? sesionActiva?.instancia ?? "nac");
         ["pf-rank-filters", "pe-rank-filters"].forEach((cid) => {
           const c = document.getElementById(cid);
           if (!c) return;
           c.querySelectorAll(".pf-rank-filter-btn").forEach((btn) => {
             const active = normInst(btn.dataset.inst) === inst;
-            btn.style.background = active
-              ? "#C9A84C"
-              : "rgba(255,255,255,.06)";
+            btn.style.background = active ? "#C9A84C" : "rgba(255,255,255,.06)";
             btn.style.color = active ? "#000" : "rgba(255,255,255,.55)";
             btn.style.borderColor = active
               ? "#C9A84C"
               : "rgba(255,255,255,.12)";
           });
         });
-        const filtered = data
-          ? data.filter((r) => normInst(r.instancia) === inst)
-          : [];
-        buildRankingRows("pf-rank-rows", filtered, true);
-        buildRankingRows("pe-rank-rows", filtered, false);
+        const instFiltered = allData.filter(
+          (r) => normInst(r.instancia) === inst,
+        );
+        const deduped = dedupeScores(instFiltered);
+        const allExpanded = expandByCategory(deduped);
+        const cats = extractRankCats(allExpanded);
+        ["pf-rank-cat-filters", "pe-rank-cat-filters"].forEach((cid) => {
+          const cont = document.getElementById(cid);
+          if (!cont) return;
+          cont.innerHTML = "";
+          if (cats.length === 0) return;
+          [
+            { label: "Todas", val: null },
+            ...cats.map((c) => ({ label: c, val: c })),
+          ].forEach(({ label, val }) => {
+            const btn = document.createElement("button");
+            const active = pfRankCatFilter === val;
+            btn.style.cssText = `padding:6px 18px;border-radius:30px;border:1px solid ${active ? "#C9A84C" : "rgba(255,255,255,.12)"};background:${active ? "#C9A84C" : "rgba(255,255,255,.06)"};color:${active ? "#000" : "rgba(255,255,255,.55)"};font-size:11px;letter-spacing:1px;cursor:pointer;font-family:inherit`;
+            btn.textContent = label;
+            btn.onclick = () => setPfRankCatFilter(val);
+            cont.appendChild(btn);
+          });
+        });
+        const toRender = pfRankCatFilter
+          ? allExpanded.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
+          : deduped;
+        buildRankingRows("pf-rank-rows", toRender, true);
+        buildRankingRows("pe-rank-rows", toRender, false);
       }
 
       function setPfRankFilter(inst) {
         pfRankFilter = inst;
+        pfRankCatFilter = null;
+        buildPfRanking();
+      }
+
+      function setPfRankCatFilter(cat) {
+        pfRankCatFilter = cat;
         buildPfRanking();
       }
 
@@ -2794,7 +3071,10 @@
               ? "background:#1e1800;border:1px solid rgba(201,168,76,.3)"
               : "background:#181818;border:1px solid rgba(255,255,255,.08)";
           const sz = large ? "clamp(16px,3vw,26px)" : "clamp(14px,2.5vw,20px)";
-          cont.innerHTML += `<div style="display:flex;align-items:center;gap:${large ? 20 : 16}px;padding:${large ? 18 : 14}px ${large ? 28 : 22}px;border-radius:${large ? 18 : 16}px;margin-bottom:${large ? 12 : 10}px;${rc}"><div style="${ps}border-radius:50%;width:${large ? 44 : 34}px;height:${large ? 44 : 34}px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,32px);font-weight:600;flex-shrink:0">${i + 1}</div><div style="flex:1"><div style="font-size:${sz};font-weight:700">${r.nombre_grupo}</div><div style="font-size:clamp(12px,${large ? "2vw" : "1.5vw"},18px);color:rgba(255,255,255,.5)">${r.instancia?.toUpperCase() || ""}</div></div><div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,${large ? 44 : 34}px);color:#C9A84C;font-weight:600">${r.subtotal_parcial || "—"}</div></div>`;
+          const catLabel = r._activeCat
+            ? r._activeCat.c + ": " + r._activeCat.n
+            : r.instancia?.toUpperCase() || "";
+          cont.innerHTML += `<div style="display:flex;align-items:center;gap:${large ? 20 : 16}px;padding:${large ? 18 : 14}px ${large ? 28 : 22}px;border-radius:${large ? 18 : 16}px;margin-bottom:${large ? 12 : 10}px;${rc}"><div style="${ps}border-radius:50%;width:${large ? 44 : 34}px;height:${large ? 44 : 34}px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,32px);font-weight:600;flex-shrink:0">${i + 1}</div><div style="flex:1"><div style="font-size:${sz};font-weight:700">${r.nombre_grupo}</div><div style="font-size:clamp(12px,${large ? "2vw" : "1.5vw"},18px);color:rgba(255,255,255,.5)">${catLabel}</div></div><div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,${large ? 44 : 34}px);color:#C9A84C;font-weight:600">${r.subtotal_parcial || "—"}</div></div>`;
         });
       }
 

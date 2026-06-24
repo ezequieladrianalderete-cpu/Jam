@@ -1346,11 +1346,61 @@
               📺 Publicar en pantalla
             </button>
           </div>
-          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-            <button class="btn bo bsm rank-filter-btn" data-inst="nac" onclick="setRankFilter('nac')"><svg width="14" height="10" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:4px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>NAC</button>
-            <button class="btn bo bsm rank-filter-btn" data-inst="rep" onclick="setRankFilter('rep')">🔄 REP</button>
-            <button class="btn bo bsm rank-filter-btn" data-inst="inter" onclick="setRankFilter('inter')">🌎 INTER</button>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              margin-bottom: 10px;
+              flex-wrap: wrap;
+            "
+          >
+            <button
+              class="btn bo bsm rank-filter-btn"
+              data-inst="nac"
+              onclick="setRankFilter('nac')"
+            >
+              <svg
+                width="14"
+                height="10"
+                viewBox="0 0 16 11"
+                xmlns="http://www.w3.org/2000/svg"
+                style="
+                  vertical-align: middle;
+                  border-radius: 2px;
+                  display: inline-block;
+                  margin-right: 4px;
+                "
+              >
+                <rect width="16" height="3.67" fill="#74ACDF" />
+                <rect width="16" height="3.67" y="3.67" fill="#fff" />
+                <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
+                <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
+              >NAC
+            </button>
+            <button
+              class="btn bo bsm rank-filter-btn"
+              data-inst="rep"
+              onclick="setRankFilter('rep')"
+            >
+              🔄 REP
+            </button>
+            <button
+              class="btn bo bsm rank-filter-btn"
+              data-inst="inter"
+              onclick="setRankFilter('inter')"
+            >
+              🌎 INTER
+            </button>
           </div>
+          <div
+            id="d-rank-cat-filters"
+            style="
+              display: flex;
+              gap: 6px;
+              margin-bottom: 16px;
+              flex-wrap: wrap;
+            "
+          ></div>
           <div class="card" style="overflow-x: auto">
             <table class="tabla">
               <thead>
@@ -1358,7 +1408,7 @@
                   <th>Pos.</th>
                   <th>Nº ID</th>
                   <th>Grupo</th>
-                  <th>Cat.</th>
+                  <th>Categoria</th>
                   <th>Puntaje</th>
                 </tr>
               </thead>
@@ -1562,7 +1612,9 @@
       // ═══════════════════════════════════════════════════════════
       let currentUser = null;
       let sesionActiva = null;
+      let lineupData = [];
       let rankFilter = null;
+      let rankCatFilter = null;
       let miPuntaje = null;
       let jCerradoFlag = false;
       let realtimeSub = null;
@@ -1999,8 +2051,13 @@
         setTema(s.instancia);
         document.getElementById("d-codigo").textContent = s.codigo_id;
         document.getElementById("d-nombre").textContent = s.nombre_grupo;
+        const catName =
+          s.categoria?.n ?? (s.categoria ? parseCat(s.categoria) : "");
         document.getElementById("d-info").textContent =
-          (s.pais || "") + " · " + (s.instancia || "").toUpperCase();
+          (s.pais || "") +
+          " · " +
+          (s.instancia || "").toUpperCase() +
+          (catName ? " · " + catName : "");
         const activos = juradosConfig.filter((j) => j.activo);
         const nJueces = activos.length || (s.instancia === "int" ? 3 : 5);
         const itemsPorJuez = activos[0]?.items?.length || 2;
@@ -2187,6 +2244,7 @@
         const data = (raw || []).filter(
           (p) => p.estado !== "pendiente" && p.estado !== "ausente",
         );
+        lineupData = data;
         const total = raw?.length || 0;
         const cont = document.getElementById("d-lineup-list");
         document.getElementById("d-lineup-count").textContent =
@@ -2202,30 +2260,55 @@
           div.className = "card";
           div.style.cssText =
             "padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px";
+          const cats = (() => {
+            try {
+              const c = p.categorias;
+              return Array.isArray(c) ? c : c ? JSON.parse(c) : [];
+            } catch (e) {
+              return [];
+            }
+          })();
+          const safeNombre = p.nombre_grupo.replace(/'/g, "\\'");
           const badge =
             p.estado === "pista"
               ? '<span class="bdg bdg-gold">En pista</span>'
               : p.estado === "listo"
                 ? '<span class="bdg bdg-green">✓ Evaluado</span>'
-                : '<button class="btn bgn bsm" onclick="dPonerEnPista(\'' +
-                  p.id +
-                  "','" +
-                  p.nombre_grupo +
-                  "','" +
-                  p.codigo_id +
-                  "','" +
-                  (p.instancia || "nac") +
-                  "')\">Poner en pista →</button>";
+                : cats.length > 1
+                  ? '<div style="display:flex;flex-direction:column;gap:4px">' +
+                    cats
+                      .map(
+                        (cat, i) =>
+                          `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}',${i})">En pista — ${cat.n} →</button>`,
+                      )
+                      .join("") +
+                    "</div>"
+                  : `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}',0)">Poner en pista →</button>`;
           const pgBdg =
             p.estado_pago === "confirmado"
               ? '<span class="bdg bdg-green text-xs">Pago ✓</span>'
               : '<span class="bdg bdg-amber text-xs">Pago pendiente</span>';
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categoria)} ${pgBdg}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categorias)} ${pgBdg}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
           cont.appendChild(div);
         });
       }
 
-      async function dPonerEnPista(lineupId, nombre, codigo, instancia) {
+      async function dPonerEnPista(
+        lineupId,
+        nombre,
+        codigo,
+        instancia,
+        catIdx,
+      ) {
+        const participant = lineupData.find((p) => p.id == lineupId);
+        let categoria = null;
+        if (participant) {
+          try {
+            const c = participant.categorias;
+            const arr = Array.isArray(c) ? c : c ? JSON.parse(c) : [];
+            categoria = arr[catIdx ?? 0] ?? null;
+          } catch (e) {}
+        }
         // Desactivar sesión actual
         await db
           .schema("scoring")
@@ -2241,6 +2324,7 @@
             nombre_grupo: nombre,
             instancia,
             activa: true,
+            categoria,
           })
           .select();
         if (data) {
@@ -2248,46 +2332,143 @@
           renderSesionDirector(sesionActiva);
           buildJuecesGrid([]);
         }
-        toast(nombre + " en pista", "ok");
+        toast(
+          nombre + (categoria ? " — " + categoria.n : "") + " en pista",
+          "ok",
+        );
+      }
+
+      function dedupeScores(data) {
+        const map = new Map();
+        (data || []).forEach((r) => {
+          const existing = map.get(r.codigo_id);
+          const score = r.subtotal_parcial ?? -Infinity;
+          const existScore = existing?.subtotal_parcial ?? -Infinity;
+          if (!existing || score > existScore) map.set(r.codigo_id, r);
+        });
+        return [...map.values()];
+      }
+
+      function expandByCategory(data) {
+        const rows = [];
+        (data || []).forEach((r) => {
+          const raw = r.categoria;
+          try {
+            const arr = raw
+              ? typeof raw === "string"
+                ? JSON.parse(raw)
+                : raw
+              : null;
+            if (Array.isArray(arr) && arr.length > 0) {
+              arr.forEach((x) => rows.push({ ...r, _activeCat: x }));
+            } else {
+              rows.push({ ...r, _activeCat: null });
+            }
+          } catch (e) {
+            rows.push({ ...r, _activeCat: null });
+          }
+        });
+        return rows;
+      }
+
+      function catKey(x) {
+        return x ? x.c + ": " + x.n : null;
+      }
+
+      function extractRankCats(rows) {
+        const cats = new Set();
+        (rows || []).forEach((r) => {
+          if (r._activeCat?.n) cats.add(catKey(r._activeCat));
+        });
+        return [...cats].sort();
+      }
+
+      function matchesRankCat(r, cat) {
+        if (!cat) return true;
+        return catKey(r._activeCat) === cat;
       }
 
       async function buildRankings() {
-        const { data } = await db
-          .schema("scoring")
-          .from("v_totales")
-          .select("*")
-          .order("subtotal_parcial", { ascending: false, nullsFirst: false });
+        const [{ data }, { data: lineupCats }] = await Promise.all([
+          db
+            .schema("scoring")
+            .from("v_totales")
+            .select("*")
+            .order("subtotal_parcial", { ascending: false, nullsFirst: false }),
+          db.schema("evento").from("lineup").select("codigo_id,categoria"),
+        ]);
+        const catMap = Object.fromEntries(
+          (lineupCats || []).map((p) => [p.codigo_id, p.categoria]),
+        );
+        const enriched = (data || []).map((r) => ({
+          ...r,
+          categoria: catMap[r.codigo_id] ?? r.categoria,
+        }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(
-          rankFilter ?? sesionActiva?.instancia ?? "nac",
-        );
+        const inst = normInst(rankFilter ?? sesionActiva?.instancia ?? "nac");
         document.querySelectorAll(".rank-filter-btn").forEach((btn) => {
           const active = normInst(btn.dataset.inst) === inst;
           btn.style.background = active ? "#C9A84C" : "";
           btn.style.color = active ? "#000" : "";
           btn.style.borderColor = active ? "#C9A84C" : "";
         });
+        const instFiltered = enriched.filter(
+          (r) => normInst(r.instancia) === inst,
+        );
+        const deduped = dedupeScores(instFiltered);
+        const allExpanded = expandByCategory(deduped);
+        const cats = extractRankCats(allExpanded);
+        const catCont = document.getElementById("d-rank-cat-filters");
+        if (catCont) {
+          catCont.innerHTML = "";
+          if (cats.length > 0) {
+            [
+              { label: "Todas", val: null },
+              ...cats.map((c) => ({ label: c, val: c })),
+            ].forEach(({ label, val }) => {
+              const btn = document.createElement("button");
+              btn.className = "btn bsm";
+              btn.textContent = label;
+              const active = rankCatFilter === val;
+              btn.style.cssText = active
+                ? "background:#C9A84C;color:#000;border:none;"
+                : "background:transparent;color:#f8f5ee;border:1px solid rgba(255,255,255,.2);";
+              btn.onclick = () => setRankCatFilter(val);
+              catCont.appendChild(btn);
+            });
+          }
+        }
+        const toRender = rankCatFilter
+          ? allExpanded.filter((r) => catKey(r._activeCat) === rankCatFilter)
+          : deduped;
         const tbody = document.getElementById("d-rank-tbody");
         tbody.innerHTML = "";
-        if (!data) return;
-        data
-          .filter((r) => normInst(r.instancia) === inst)
-          .forEach((r, i) => {
-            const posStyle =
-              i === 0
-                ? "background:#C9A84C;color:#000;"
-                : i === 1
-                  ? "background:#888;color:#000;"
-                  : i === 2
-                    ? "background:#8B6D28;color:#000;"
-                    : "color:rgba(248,245,238,.4);";
-            tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${r.instancia?.toUpperCase()}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
-          });
+        toRender.forEach((r, i) => {
+          const posStyle =
+            i === 0
+              ? "background:#C9A84C;color:#000;"
+              : i === 1
+                ? "background:#888;color:#000;"
+                : i === 2
+                  ? "background:#8B6D28;color:#000;"
+                  : "color:rgba(248,245,238,.4);";
+          const catDisplay =
+            rankCatFilter && r._activeCat
+              ? r._activeCat.c + ": " + r._activeCat.n
+              : parseCat(r.categoria);
+          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${catDisplay}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
+        });
       }
 
       function setRankFilter(inst) {
         rankFilter = inst;
+        rankCatFilter = null;
+        buildRankings();
+      }
+
+      function setRankCatFilter(cat) {
+        rankCatFilter = cat;
         buildRankings();
       }
 
