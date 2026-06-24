@@ -3079,6 +3079,9 @@
       }
 
       function subscribeRealtimeSesion() {
+        if (realtimeSub) {
+          try { db.removeChannel(realtimeSub); } catch(e){}
+        }
         realtimeSub = db
           .channel("sesion-evento")
           .on(
@@ -3096,11 +3099,19 @@
               await buildPfRanking();
             },
           )
-          .subscribe();
+          .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => subscribeRealtimeSesion(), 3000);
+            }
+          });
       }
 
       function subscribeRealtimeEvento() {
-        db.channel("lineup-realtime")
+        // Cleanup previous if exists
+        if (window._luChannel) {
+          try { db.removeChannel(window._luChannel); } catch(e){}
+        }
+        window._luChannel = db.channel("lineup-realtime")
           .on(
             "postgres_changes",
             { event: "UPDATE", schema: "evento", table: "lineup" },
@@ -3110,7 +3121,35 @@
               luRender();
             },
           )
-          .subscribe();
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "evento", table: "lineup" },
+            (payload) => {
+              // Nueva inscripción acreditada → aparece en el lineup
+              if (!luData.find((x) => x.id === payload.new.id)) {
+                luData.push(payload.new);
+                luRender();
+                if (typeof toast === "function") toast("Nueva inscripción: " + (payload.new.nombre_grupo || ""), "ok");
+              }
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "DELETE", schema: "evento", table: "lineup" },
+            (payload) => {
+              const idx = luData.findIndex((x) => x.id === payload.old.id);
+              if (idx >= 0) {
+                luData.splice(idx, 1);
+                luRender();
+              }
+            },
+          )
+          .subscribe((status) => {
+            // Reconexión automática si pierde conexión
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => subscribeRealtimeEvento(), 3000);
+            }
+          });
         subscribeRealtimeSesion();
       }
 

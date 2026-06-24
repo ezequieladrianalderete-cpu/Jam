@@ -1133,6 +1133,7 @@
         <div class="tab" onclick="dTab('rankings', this)">Rankings</div>
         <div class="tab" onclick="dTab('jurados-cfg', this)">⚙ Jurados</div>
         <div class="tab" onclick="dTab('mails', this)">Mails</div>
+        <div class="tab" onclick="dTab('admin', this)">🛡 Admin</div>
       </div>
 
       <div class="con">
@@ -1448,6 +1449,105 @@
               onclick="toast('Funcionalidad disponible en panel admin', 'warn')"
             >
               Enviar a todos los confirmados →
+            </button>
+          </div>
+        </div>
+
+        <!-- SUPER ADMIN -->
+        <div class="tp" id="d-admin">
+          <div class="fw7 mb4 mt3" style="font-size: 16px">🛡 Super Admin · Acciones globales</div>
+          
+          <!-- Estadísticas del sistema -->
+          <div class="g4 mb4">
+            <div class="card" style="padding:14px;text-align:center">
+              <div id="sa-stat-ins" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+              <div class="muted text-xs">Inscripciones</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center">
+              <div id="sa-stat-lineup" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+              <div class="muted text-xs">Lineup</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center">
+              <div id="sa-stat-ses" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+              <div class="muted text-xs">Sesiones scoring</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center">
+              <div id="sa-stat-pts" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+              <div class="muted text-xs">Puntajes</div>
+            </div>
+          </div>
+
+          <button class="btn bo bsm mb3" onclick="saRefreshStats()">↻ Actualizar estadísticas</button>
+
+          <!-- Estado del sistema (health) -->
+          <div class="card mb3">
+            <div class="fw6 mb2">📊 Estado del sistema</div>
+            <div id="sa-health" class="muted text-xs">Cargando…</div>
+            <button class="btn bo bsm mt3" onclick="saCheckHealth()">↻ Verificar /api/health</button>
+          </div>
+
+          <!-- Gestión de Usuarios (Jurados + Director) -->
+          <div class="card mb3">
+            <div class="sf mb2">
+              <div class="fw6">👥 Gestión de Usuarios (Jurados + Director)</div>
+              <button class="btn bo bsm" onclick="saLoadUsuarios()">↻</button>
+            </div>
+            <div class="muted text-xs mb3">
+              Renombrá jurados, reseteá contraseñas o activá/desactivá. Los cambios se reflejan inmediatamente en el sistema.
+            </div>
+            <div id="sa-usuarios-list">Cargando…</div>
+          </div>
+
+          <!-- Limpiar tablas scoring -->
+          <div class="card mb3" style="border-color:rgba(232,168,56,.3);background:#1a1400">
+            <div class="fw6 mb2" style="color:#E8A838">🧹 Limpiar tablas Scoring (resetear competencia)</div>
+            <div class="muted text-xs mb3">
+              Borra TODAS las sesiones y puntajes activos. Los participantes y el lineup quedan intactos. Útil para resetear entre instancias.
+            </div>
+            <button class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="saResetScoring()">
+              Borrar sesiones + puntajes
+            </button>
+          </div>
+
+          <!-- Limpiar lineup -->
+          <div class="card mb3" style="border-color:rgba(232,168,56,.3);background:#1a1400">
+            <div class="fw6 mb2" style="color:#E8A838">🔄 Resetear estados del lineup</div>
+            <div class="muted text-xs mb3">
+              Vuelve todos los participantes a estado "pendiente" (deja inscripciones intactas).
+            </div>
+            <button class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="saResetLineup()">
+              Resetear estados a "pendiente"
+            </button>
+          </div>
+
+          <!-- Resincronizar lineup -->
+          <div class="card mb3">
+            <div class="fw6 mb2">🔁 Resincronizar Lineup desde Inscripciones</div>
+            <div class="muted text-xs mb3">
+              Compara lineup con inscripciones. Recalcula los códigos y crea entradas faltantes. No borra nada.
+            </div>
+            <button class="btn bgn bfull" onclick="saResyncLineup()">Resincronizar</button>
+          </div>
+
+          <!-- Eliminar inscripción específica -->
+          <div class="card mb3">
+            <div class="fw6 mb2">🗑 Eliminar inscripción por código</div>
+            <div class="muted text-xs mb3">
+              Borra una inscripción específica. El CASCADE borra también su entrada en lineup.
+            </div>
+            <input id="sa-del-code" placeholder="JAM-INTER-1000" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;color:#F8F5EE;font-family:'JetBrains Mono',monospace;font-size:13px;margin-bottom:10px">
+            <button class="btn bo bfull" style="border-color:#E0524C;color:#E0524C" onclick="saDeleteInscripcion()">Eliminar</button>
+          </div>
+
+          <!-- ZONA PELIGROSA: Reset total -->
+          <div class="card" style="border-color:rgba(224,82,82,.4);background:#1a0000">
+            <div class="fw6 mb2" style="color:#E0524C">⚠️ ZONA PELIGROSA</div>
+            <div class="muted text-xs mb3">
+              Borra <strong style="color:#E0524C">TODO</strong>: inscripciones, lineup, sesiones, puntajes. Acción irreversible. Hay que escribir "BORRAR TODO" para confirmar.
+            </div>
+            <input id="sa-confirm-reset" placeholder='Escribí "BORRAR TODO" para habilitar' style="width:100%;background:#1e1e1e;border:1px solid rgba(224,82,82,.3);border-radius:10px;padding:10px 12px;color:#F8F5EE;font-family:inherit;font-size:13px;margin-bottom:10px" oninput="document.getElementById('sa-reset-btn').disabled = this.value !== 'BORRAR TODO'">
+            <button id="sa-reset-btn" class="btn bfull" disabled style="background:#E0524C;color:#fff;opacity:.4;cursor:not-allowed" onclick="saResetTotal()">
+              🗑 RESET TOTAL DEL SISTEMA
             </button>
           </div>
         </div>
@@ -1985,6 +2085,9 @@
       }
 
       function subscribeRealtimeJurado() {
+        if (realtimeSub) {
+          try { db.removeChannel(realtimeSub); } catch(e){}
+        }
         realtimeSub = db
           .channel("sesiones-jurado")
           .on(
@@ -2010,7 +2113,30 @@
               }
             },
           )
-          .subscribe();
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "scoring", table: "puntajes" },
+            async (payload) => {
+              // Reflejar cierre de mi propio puntaje (puede pasar por otro device)
+              if (
+                payload.new &&
+                sesionActiva &&
+                payload.new.sesion_id === sesionActiva.id &&
+                payload.new.juez_num === currentUser?.juez_num &&
+                payload.new.cerrado &&
+                !jCerradoFlag
+              ) {
+                jCerradoFlag = true;
+                miPuntaje = payload.new;
+                if (typeof mostrarCerrado === "function") mostrarCerrado();
+              }
+            },
+          )
+          .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => subscribeRealtimeJurado(), 3000);
+            }
+          });
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -2103,7 +2229,7 @@
             cerrados++;
           }
           div.innerHTML =
-            `<div class="jnum">J${i}</div><div class="jscore">${score}</div>` +
+            `<div class="jnum" title="${juradoNombre(i)}">J${i}</div><div class="jscore">${score}</div>` +
             (!p?.cerrado && p
               ? `<button class="jforzar" onclick="dForzar(${i})">Forzar</button>`
               : "");
@@ -2495,7 +2621,10 @@
       }
 
       function subscribeRealtimeDirector() {
-        db.channel("puntajes-director")
+        if (window._dirChannel) {
+          try { db.removeChannel(window._dirChannel); } catch(e){}
+        }
+        window._dirChannel = db.channel("director-realtime")
           .on(
             "postgres_changes",
             { event: "*", schema: "scoring", table: "puntajes" },
@@ -2503,7 +2632,46 @@
               await loadPuntajesDirector();
             },
           )
-          .subscribe();
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "scoring", table: "sesiones" },
+            async (payload) => {
+              // Si se activó una sesión desde otro lado (lineup pone en pista)
+              if (payload.new && payload.new.activa && (!sesionActiva || sesionActiva.id !== payload.new.id)) {
+                sesionActiva = payload.new;
+                if (typeof renderSesionDirector === "function") renderSesionDirector(sesionActiva);
+                if (typeof buildJuecesGrid === "function") buildJuecesGrid([]);
+                if (typeof toast === "function") toast("Sesión activa: " + payload.new.nombre_grupo, "ok");
+              }
+              // Si se cerró la sesión activa desde otro lado
+              if (payload.new && !payload.new.activa && sesionActiva && sesionActiva.id === payload.new.id) {
+                sesionActiva = null;
+                const nb = document.getElementById("d-nombre");
+                const cb = document.getElementById("d-codigo");
+                const eb = document.getElementById("d-estado");
+                if (nb) nb.textContent = "Listo para siguiente";
+                if (cb) cb.textContent = "—";
+                if (eb) { eb.textContent = "✓ Completado"; eb.className = "bdg bdg-green"; }
+                if (typeof buildJuecesGrid === "function") buildJuecesGrid([]);
+              }
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "lineup" },
+            async () => {
+              // Recargar lineup del director si está visible
+              const lineupTab = document.getElementById("d-lineup");
+              if (lineupTab && lineupTab.classList.contains("show")) {
+                if (typeof buildLineup === "function") await buildLineup();
+              }
+            },
+          )
+          .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => subscribeRealtimeDirector(), 3000);
+            }
+          });
       }
 
       function dTab(id, btn) {
@@ -2517,6 +2685,232 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
+        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // SUPER ADMIN (Director master)
+      // ═══════════════════════════════════════════════════════════
+      async function saRefreshStats() {
+        try {
+          const [ins, lu, ses, pts] = await Promise.all([
+            db.from("inscripciones").select("id", { count: "exact", head: true }),
+            db.schema("evento").from("lineup").select("id", { count: "exact", head: true }),
+            db.schema("scoring").from("sesiones").select("id", { count: "exact", head: true }),
+            db.schema("scoring").from("puntajes").select("id", { count: "exact", head: true }),
+          ]);
+          const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? "—"; };
+          set("sa-stat-ins", ins.count);
+          set("sa-stat-lineup", lu.count);
+          set("sa-stat-ses", ses.count);
+          set("sa-stat-pts", pts.count);
+        } catch (e) { toast("Error stats: " + e.message, "err"); }
+      }
+
+      async function saCheckHealth() {
+        const el = document.getElementById("sa-health");
+        if (!el) return;
+        el.innerHTML = "Consultando…";
+        try {
+          const r = await fetch("/api/health", { cache: "no-cache" });
+          const data = await r.json();
+          const statusColor = data.status === "HEALTHY" ? "#4CAF7D" : data.status === "WARNING" ? "#E8A838" : "#E0524C";
+          const checks = data.checks || {};
+          let rows = "";
+          for (const [k, v] of Object.entries(checks)) {
+            const ok = v && v.ok;
+            rows += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+              '<span style="color:' + (ok ? "#4CAF7D" : "#E0524C") + '">' + (ok ? "✓" : "✗") + " " + k + '</span>' +
+              '<span class="muted" style="font-size:11px">' + (v && v.total != null ? v.total : (v && v.msg ? v.msg.substring(0,30) : (ok ? "OK" : (v && v.error ? v.error.substring(0,30) : "—")))) + '</span></div>';
+          }
+          el.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700;color:' + statusColor + '">' + data.status + '</span><span class="muted">' + data.elapsed_ms + 'ms</span></div>' + rows;
+        } catch (e) {
+          el.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+        }
+      }
+
+      async function saResetScoring() {
+        if (!confirm("⚠️ Vas a borrar TODAS las sesiones y puntajes activos. Inscripciones y lineup quedan intactos.\n\n¿Continuar?")) return;
+        try {
+          await db.schema("scoring").from("puntajes").delete().neq("id", 0);
+          await db.schema("scoring").from("sesiones").delete().neq("id", 0);
+          toast("Scoring reseteado correctamente", "ok");
+          saRefreshStats();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saResetLineup() {
+        if (!confirm("Vas a poner TODOS los participantes en estado 'pendiente'. ¿Continuar?")) return;
+        try {
+          const { error } = await db.schema("evento").from("lineup").update({ estado: "pendiente" }).neq("id", 0);
+          if (error) throw error;
+          toast("Lineup reseteado a 'pendiente'", "ok");
+          saRefreshStats();
+          if (typeof loadLineup === "function") await loadLineup();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saResyncLineup() {
+        try {
+          // Obtener inscripciones que NO están en lineup
+          const { data: ins } = await db.from("inscripciones").select("id,instancia,nombre_grupo,nombre,pais,categorias,pago_estado,created_at").order("created_at");
+          const { data: lu } = await db.schema("evento").from("lineup").select("inscripcion_id");
+          const luIds = new Set((lu || []).map(l => l.inscripcion_id));
+          const faltantes = (ins || []).filter(i => !luIds.has(i.id));
+          if (faltantes.length === 0) {
+            toast("Lineup ya está sincronizado", "ok");
+            return;
+          }
+          // Insertar las faltantes (el trigger se encargará del código)
+          const prefMap = { nac: "JAM-NAC-", int: "JAM-INTER-", reg: "JAM-REG-", rep: "JAM-REP-" };
+          const offMap = { nac: 200, int: 1000, reg: 1, rep: 10 };
+          const { data: maxPos } = await db.schema("evento").from("lineup").select("posicion").order("posicion", { ascending: false }).limit(1);
+          let pos = (maxPos?.[0]?.posicion || 0) + 1;
+          const inscByInst = {};
+          for (const i of ins) {
+            inscByInst[i.instancia] = (inscByInst[i.instancia] || 0);
+            inscByInst[i.instancia]++;
+          }
+          const counters = {};
+          let inserted = 0;
+          for (const i of faltantes) {
+            counters[i.instancia] = (counters[i.instancia] || 0) + 1;
+            const codigo = (prefMap[i.instancia] || "JAM-") + String((offMap[i.instancia] || 1) + counters[i.instancia] - 1).padStart(4, "0");
+            const { error } = await db.schema("evento").from("lineup").insert({
+              inscripcion_id: i.id, codigo_id: codigo, nombre_grupo: i.nombre_grupo,
+              responsable: i.nombre, pais: i.pais || "Argentina", categoria: i.categorias,
+              instancia: i.instancia, estado_pago: i.pago_estado || "sin_pago", posicion: pos++
+            });
+            if (!error) inserted++;
+          }
+          toast("Resincronizadas " + inserted + " entradas", "ok");
+          saRefreshStats();
+          if (typeof loadLineup === "function") await loadLineup();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saDeleteInscripcion() {
+        const codigo = document.getElementById("sa-del-code").value.trim();
+        if (!codigo) { toast("Ingresá un código", "err"); return; }
+        if (!confirm("Eliminar inscripción con código " + codigo + "? Esta acción borra también su entrada en lineup (CASCADE).")) return;
+        try {
+          const { data: lu } = await db.schema("evento").from("lineup").select("inscripcion_id").eq("codigo_id", codigo);
+          if (!lu || lu.length === 0) { toast("Código no encontrado", "err"); return; }
+          const insId = lu[0].inscripcion_id;
+          const { error } = await db.from("inscripciones").delete().eq("id", insId);
+          if (error) throw error;
+          toast("Inscripción " + codigo + " eliminada", "ok");
+          document.getElementById("sa-del-code").value = "";
+          saRefreshStats();
+          if (typeof loadLineup === "function") await loadLineup();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saResetTotal() {
+        const txt = document.getElementById("sa-confirm-reset").value;
+        if (txt !== "BORRAR TODO") return;
+        if (!confirm("⚠️ ÚLTIMA CONFIRMACIÓN ⚠️\n\nVas a borrar:\n- Todas las inscripciones\n- Todo el lineup\n- Todas las sesiones\n- Todos los puntajes\n\n¿Estás 100% seguro?")) return;
+        try {
+          await db.schema("scoring").from("puntajes").delete().neq("id", 0);
+          await db.schema("scoring").from("sesiones").delete().neq("id", 0);
+          await db.from("inscripciones").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          // El CASCADE borra el lineup
+          toast("Sistema reseteado completamente", "ok");
+          document.getElementById("sa-confirm-reset").value = "";
+          document.getElementById("sa-reset-btn").disabled = true;
+          document.getElementById("sa-reset-btn").style.opacity = ".4";
+          saRefreshStats();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      // Gestión de usuarios (renombrar, reset pass, activar)
+      async function saLoadUsuarios() {
+        const el = document.getElementById("sa-usuarios-list");
+        if (!el) return;
+        el.innerHTML = "Cargando…";
+        try {
+          const { data, error } = await db.rpc("listar_usuarios");
+          if (error) throw error;
+          if (!data || data.length === 0) { el.innerHTML = '<div class="muted text-xs">No hay usuarios.</div>'; return; }
+          let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+            '<th style="text-align:left;padding:6px 4px;color:#999">USUARIO</th>' +
+            '<th style="text-align:left;padding:6px 4px;color:#999">ROL</th>' +
+            '<th style="text-align:left;padding:6px 4px;color:#999">NOMBRE DISPLAY</th>' +
+            '<th style="text-align:center;padding:6px 4px;color:#999">ESTADO</th>' +
+            '<th style="text-align:right;padding:6px 4px;color:#999">ACCIONES</th>' +
+            '</tr></thead><tbody>';
+          for (const u of data) {
+            const display = u.nombre_display || "";
+            const rolBdg = u.rol === "director" ? "bdg-gold" : u.rol === "jurado" ? "bdg-green" : "bdg-gray";
+            const esCriticoDir = u.rol === "director";
+            html += '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">' +
+              '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' + u.username + (u.juez_num ? '<span class="muted text-xs"> (J' + u.juez_num + ')</span>' : '') + '</td>' +
+              '<td style="padding:8px 4px"><span class="bdg ' + rolBdg + '" style="font-size:10px">' + u.rol + '</span></td>' +
+              '<td style="padding:8px 4px"><input id="sa-name-' + u.username + '" value="' + display.replace(/"/g, "&quot;") + '" placeholder="(sin nombre)" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;color:#F8F5EE;font-size:12px"></td>' +
+              '<td style="padding:8px 4px;text-align:center">' +
+                (esCriticoDir
+                  ? '<span class="bdg bdg-gold" style="font-size:10px">always-on</span>'
+                  : '<span class="bdg ' + (u.activo ? "bdg-green" : "bdg-gray") + '" style="cursor:pointer;font-size:10px" onclick="saToggleActivo(\'' + u.username + '\',' + (!u.activo) + ')">' + (u.activo ? "✓" : "✗") + '</span>') +
+              '</td>' +
+              '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
+                '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="saSaveNombre(\'' + u.username + '\')">💾</button>' +
+                '<button class="btn bo" style="font-size:10px;padding:4px 8px;border-color:#E8A838;color:#E8A838" onclick="saResetPass(\'' + u.username + '\')">🔑</button>' +
+              '</td>' +
+              '</tr>';
+          }
+          html += '</tbody></table>';
+          el.innerHTML = html;
+        } catch (e) {
+          el.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+        }
+      }
+
+      async function saSaveNombre(username) {
+        const inp = document.getElementById("sa-name-" + username);
+        if (!inp) return;
+        const nombre = inp.value.trim();
+        try {
+          const { data, error } = await db.rpc("actualizar_nombre_jurado", { p_username: username, p_nombre: nombre });
+          if (error) throw error;
+          if (data?.ok) {
+            toast("Nombre actualizado: " + (nombre || "(sin nombre)"), "ok");
+            // Recargar config del director si es jurado
+            if (typeof dCargarJurados === "function") await dCargarJurados();
+          } else {
+            toast("Error: " + (data?.error || "desconocido"), "err");
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saResetPass(username) {
+        const newPass = prompt("Nueva contraseña para " + username + ":", "");
+        if (!newPass) return;
+        if (newPass.length < 4) { toast("La contraseña debe tener al menos 4 caracteres", "err"); return; }
+        if (!confirm("¿Confirmás resetear la contraseña de '" + username + "'?")) return;
+        try {
+          const { data, error } = await db.rpc("resetear_password", { p_username: username, p_new_password: newPass });
+          if (error) throw error;
+          if (data?.ok) {
+            toast("Contraseña reseteada para " + username, "ok");
+          } else {
+            toast("Error: " + (data?.error || "desconocido"), "err");
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saToggleActivo(username, nuevoEstado) {
+        if (!confirm((nuevoEstado ? "Activar" : "Desactivar") + " usuario '" + username + "'?")) return;
+        try {
+          const { data, error } = await db.rpc("toggle_usuario_activo", { p_username: username, p_activo: nuevoEstado });
+          if (error) throw error;
+          if (data?.ok) {
+            toast(username + " " + (nuevoEstado ? "activado" : "desactivado"), "ok");
+            saLoadUsuarios();
+            if (typeof dCargarJurados === "function") await dCargarJurados();
+          } else {
+            toast("Error: " + (data?.error || "desconocido"), "err");
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -2645,7 +3039,26 @@
       async function dCargarJurados() {
         const { data } = await db.rpc("obtener_jurados");
         juradosConfig = data || [];
+        // Enriquecer con nombre_display desde listar_usuarios
+        try {
+          const { data: users } = await db.rpc("listar_usuarios");
+          if (Array.isArray(users)) {
+            const nameMap = {};
+            users.filter(u => u.rol === "jurado").forEach(u => {
+              if (u.nombre_display) nameMap[u.juez_num] = u.nombre_display;
+            });
+            juradosConfig.forEach(j => {
+              j.nombre_display = nameMap[j.juez_num] || null;
+            });
+          }
+        } catch(e) { /* nombre_display puede no existir aún */ }
         renderJuradosGrid();
+      }
+
+      // Helper: nombre del jurado para mostrar
+      function juradoNombre(juez_num) {
+        const cfg = juradosConfig.find(j => j.juez_num === juez_num);
+        return (cfg && cfg.nombre_display) ? cfg.nombre_display : ("Jurado " + juez_num);
       }
 
       function renderJuradosGrid() {
@@ -2659,10 +3072,11 @@
           const cfg = juradosConfig.find((j) => j.juez_num === i);
           const items = cfg?.items || [];
           const activo = cfg?.activo !== false;
+          const displayName = cfg?.nombre_display ? cfg.nombre_display : ("Jurado " + i);
           cont.innerHTML += `
     <div class="card mb2" style="padding:14px" id="jcfg-${i}">
       <div class="sf mb2">
-        <div class="fw6" style="color:${activo ? "#C9A84C" : "rgba(248,245,238,.3)"}">Jurado ${i} <span class="muted text-xs">(jurado${i} / 1234)</span></div>
+        <div class="fw6" style="color:${activo ? "#C9A84C" : "rgba(248,245,238,.3)"}">${displayName} <span class="muted text-xs">(jurado${i} / 1234)</span></div>
         <span class="bdg ${activo ? "bdg-green" : "bdg-gray"}" style="cursor:pointer" onclick="dToggleJurado(${i})" id="jcfg-estado-${i}">${activo ? "✓ Activo" : "Inactivo"}</span>
       </div>
       <div class="text-xs muted mb2">Ítems asignados (click para agregar/quitar):</div>
