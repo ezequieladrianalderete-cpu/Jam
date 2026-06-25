@@ -2009,7 +2009,54 @@
           return String(c || "");
         }
       }
+      // ═══════════════════════════════════════════════════════════
+      // CONFIG DINÁMICA (cargada desde evento.config)
+      // ═══════════════════════════════════════════════════════════
+      window._CFG = {
+        nombre_evento: "JAM 2026",
+        proyeccion: {
+          titulo_principal: "JAM 2026",
+          subtitulo: "DANCE COMPETITION",
+          mensaje_esperando: "Esperando próximo participante...",
+          branding_color: "#C9A84C",
+        },
+      };
+
+      async function cargarConfigGlobal() {
+        try {
+          const { data } = await db.rpc("obtener_config");
+          if (Array.isArray(data)) {
+            data.forEach(c => {
+              if (c.valor_json) window._CFG[c.clave] = c.valor_json;
+              else if (c.valor != null) window._CFG[c.clave] = c.valor;
+            });
+            aplicarConfigUI();
+          }
+        } catch(e) { console.warn("config:", e); }
+      }
+
+      function aplicarConfigUI() {
+        const proy = window._CFG.proyeccion || {};
+        // Logo área en proyección
+        const logoArea = document.getElementById("pf-logo-area");
+        if (logoArea && proy.titulo_principal) logoArea.textContent = proy.titulo_principal;
+        // Mensaje esperando
+        const empty = document.getElementById("pf-pista-empty");
+        if (empty && proy.mensaje_esperando) {
+          const txt = empty.querySelector("[data-cfg='mensaje_esperando']") || empty;
+          if (txt && txt.textContent.includes("Esperando")) txt.textContent = proy.mensaje_esperando;
+        }
+        // Color de branding
+        if (proy.branding_color) {
+          document.documentElement.style.setProperty("--brand-gold", proy.branding_color);
+        }
+        // Título de la página
+        const nombre = window._CFG.nombre_evento;
+        if (nombre) document.title = "Evento — " + nombre;
+      }
+
       async function init() {
+        await cargarConfigGlobal();
         try {
           const saved = sessionStorage.getItem("jam_evento");
           if (saved) {
