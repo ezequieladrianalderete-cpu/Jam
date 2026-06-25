@@ -737,7 +737,7 @@
       const SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
       const SB_ANON =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg";
-      const ADMIN_PWD = "jam2026admin";
+      // ADMIN_PWD removido: ahora se valida bcrypt server-side vía RPC verificar_login
       const INSTANCIAS = {
         reg: { label: "Sedes", code: "JAM-REG", offset: 1 },
         rep: { label: "Repechaje", code: "JAM-REP", offset: 10 },
@@ -766,9 +766,38 @@
         x.style.display = "block";
         setTimeout(() => (x.style.display = "none"), 3500);
       }
-      function tryLogin() {
-        if ($("loginPwd").value === ADMIN_PWD) initApp();
-        else toast("err", "Clave incorrecta");
+      async function tryLogin() {
+        const pwd = $("loginPwd").value;
+        if (!pwd) { toast("err", "Ingresá la contraseña"); return; }
+        try {
+          // Acepta dos usuarios: 'admin' (clásico) o 'director'
+          // Detecta cuál username usar según contraseña ingresada
+          const usernames = ["admin", "director"];
+          let authenticated = false;
+          for (const u of usernames) {
+            const r = await fetch(SB_URL + "/rest/v1/rpc/verificar_login", {
+              method: "POST",
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ p_user: u, p_pass: pwd }),
+            });
+            if (r.ok) {
+              const data = await r.json();
+              if (Array.isArray(data) && data.length > 0) {
+                authenticated = true;
+                sessionStorage.setItem("jam_admin_user", u);
+                break;
+              }
+            }
+          }
+          if (authenticated) initApp();
+          else toast("err", "Clave incorrecta");
+        } catch (e) {
+          toast("err", "Error de conexión: " + e.message);
+        }
       }
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && document.activeElement === $("loginPwd"))
