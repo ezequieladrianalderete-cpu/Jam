@@ -923,6 +923,22 @@
         position: relative;
         z-index: 1;
       }
+      .cfg-input {
+        width: 100%;
+        background: #1e1e1e;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 9px 12px;
+        color: #F8F5EE;
+        font-family: inherit;
+        font-size: 13px;
+        margin-top: 4px;
+        box-sizing: border-box;
+      }
+      .cfg-input:focus {
+        outline: none;
+        border-color: #C9A84C;
+      }
     </style>
   </head>
   <body>
@@ -1134,6 +1150,7 @@
         <div class="tab" onclick="dTab('jurados-cfg', this)">⚙ Jurados</div>
         <div class="tab" onclick="dTab('mails', this)">Mails</div>
         <div class="tab" onclick="dTab('admin', this)">🛡 Admin</div>
+        <div class="tab" onclick="dTab('config', this)">⚙️ Config</div>
       </div>
 
       <div class="con">
@@ -1552,6 +1569,156 @@
           </div>
         </div>
 
+        <!-- CONFIGURACIÓN DINÁMICA (Gastón edita todo) -->
+        <div class="tp" id="d-config">
+          <div class="fw7 mb2 mt3" style="font-size: 16px">⚙️ Configuración del Evento</div>
+          <div class="muted text-xs mb4">Editá cualquier configuración sin tocar código. Los cambios se aplican inmediatamente.</div>
+
+          <!-- INFO EVENTO -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">📅 Información del Evento</div>
+            <div class="mb3">
+              <label class="text-xs muted">Nombre del evento</label>
+              <input id="cfg-nombre_evento" class="cfg-input" placeholder="JAM 2026">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Fecha del evento (texto libre)</label>
+              <input id="cfg-fecha_evento" class="cfg-input" placeholder="Octubre 2026">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Lugar del evento</label>
+              <input id="cfg-lugar_evento" class="cfg-input" placeholder="Palais Rouge · Buenos Aires">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">PIN del portal /evento (Staff/Lineup/DJ/etc)</label>
+              <input id="cfg-pin_evento" class="cfg-input" placeholder="1234" maxlength="6">
+            </div>
+            <button class="btn bgn bfull" onclick="cfgGuardarEvento()">💾 Guardar info del evento</button>
+          </div>
+
+          <!-- DATOS BANCARIOS -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">🏦 Datos Bancarios / MercadoPago</div>
+            <div class="mb3">
+              <label class="text-xs muted">Alias bancario</label>
+              <input id="cfg-bank-alias" class="cfg-input" placeholder="JAM.PRODUCCIONES">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">CBU</label>
+              <input id="cfg-bank-cbu" class="cfg-input" placeholder="0000000000000000000000">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Banco</label>
+              <input id="cfg-bank-banco" class="cfg-input" placeholder="Banco Galicia">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Titular</label>
+              <input id="cfg-bank-titular" class="cfg-input" placeholder="JAM Producciones SRL">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Link MercadoPago</label>
+              <input id="cfg-bank-mp_link" class="cfg-input" placeholder="https://mpago.la/...">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Alias MercadoPago</label>
+              <input id="cfg-bank-mp_alias" class="cfg-input" placeholder="jam.mp">
+            </div>
+            <button class="btn bgn bfull" onclick="cfgGuardarBancarios()">💾 Guardar datos bancarios</button>
+          </div>
+
+          <!-- EMAILS -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">📧 Templates de Email</div>
+            <div class="muted text-xs mb3">Estos textos aparecen en los emails que envía el sistema automáticamente.</div>
+            <div class="mb2"><strong style="font-size:11px;color:#C9A84C">Email de Inscripción</strong></div>
+            <div class="mb3">
+              <label class="text-xs muted">Asunto</label>
+              <input id="cfg-mail-asunto_inscripcion" class="cfg-input">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Saludo inicial</label>
+              <input id="cfg-mail-saludo_inscripcion" class="cfg-input">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Cierre / despedida</label>
+              <input id="cfg-mail-cierre_inscripcion" class="cfg-input">
+            </div>
+            <div class="mb2 mt3"><strong style="font-size:11px;color:#C9A84C">Email de Devolución (puntaje)</strong></div>
+            <div class="mb3">
+              <label class="text-xs muted">Asunto</label>
+              <input id="cfg-mail-asunto_devolucion" class="cfg-input">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Saludo</label>
+              <input id="cfg-mail-saludo_devolucion" class="cfg-input">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Cierre</label>
+              <input id="cfg-mail-cierre_devolucion" class="cfg-input">
+            </div>
+            <button class="btn bgn bfull" onclick="cfgGuardarEmails()">💾 Guardar templates email</button>
+          </div>
+
+          <!-- PROYECCIÓN -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">📺 Pantalla de Proyección</div>
+            <div class="mb3">
+              <label class="text-xs muted">Título principal</label>
+              <input id="cfg-proy-titulo_principal" class="cfg-input" placeholder="JAM 2026">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Subtítulo</label>
+              <input id="cfg-proy-subtitulo" class="cfg-input" placeholder="DANCE COMPETITION">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Mensaje cuando no hay sesión activa</label>
+              <input id="cfg-proy-mensaje_esperando" class="cfg-input" placeholder="Esperando próximo participante...">
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Color de marca (hex)</label>
+              <input id="cfg-proy-branding_color" class="cfg-input" placeholder="#C9A84C" style="font-family:monospace">
+            </div>
+            <button class="btn bgn bfull" onclick="cfgGuardarProyeccion()">💾 Guardar proyección</button>
+          </div>
+
+          <!-- MODO COMPETENCIA -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">🏆 Modo Competencia</div>
+            <div class="mb3">
+              <label class="text-xs muted">Ítems disponibles para los jurados (uno por línea)</label>
+              <textarea id="cfg-comp-items" class="cfg-input" rows="10" style="font-family:monospace;font-size:12px;resize:vertical" placeholder="Técnica&#10;Proyección&#10;Coreografía"></textarea>
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted">Cantidad de jurados por instancia</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <label class="text-xs muted" style="font-size:10px">Final Nacional</label>
+                  <input id="cfg-comp-jur-nac" class="cfg-input" type="number" min="1" max="10">
+                </div>
+                <div>
+                  <label class="text-xs muted" style="font-size:10px">Final Internacional</label>
+                  <input id="cfg-comp-jur-int" class="cfg-input" type="number" min="1" max="10">
+                </div>
+                <div>
+                  <label class="text-xs muted" style="font-size:10px">Sedes / Regional</label>
+                  <input id="cfg-comp-jur-reg" class="cfg-input" type="number" min="1" max="10">
+                </div>
+                <div>
+                  <label class="text-xs muted" style="font-size:10px">Repesca</label>
+                  <input id="cfg-comp-jur-rep" class="cfg-input" type="number" min="1" max="10">
+                </div>
+              </div>
+            </div>
+            <button class="btn bgn bfull" onclick="cfgGuardarCompetencia()">💾 Guardar modo competencia</button>
+          </div>
+
+          <div class="card" style="background:#0a1e0a;border-color:rgba(76,175,125,.3)">
+            <div class="text-xs" style="color:#7DD09B">
+              ✓ Los cambios se aplican automáticamente a todo el sistema al guardar. No hace falta refrescar.
+            </div>
+          </div>
+        </div>
+
         <!-- CONFIGURAR JURADOS -->
         <div class="tp" id="d-jurados-cfg">
           <div class="sf mb4 mt3">
@@ -1757,7 +1924,24 @@
         }
       }
 
+      // Config dinámica global
+      window._CFG = {};
+      async function cargarConfigGlobal() {
+        try {
+          const { data } = await db.rpc("obtener_config");
+          if (Array.isArray(data)) {
+            data.forEach(c => {
+              if (c.valor_json) window._CFG[c.clave] = c.valor_json;
+              else if (c.valor != null) window._CFG[c.clave] = c.valor;
+            });
+            // Actualizar título de la página si hay nombre
+            if (window._CFG.nombre_evento) document.title = "Competencia — " + window._CFG.nombre_evento;
+          }
+        } catch(e) { console.warn("config:", e); }
+      }
+
       async function init() {
+        await cargarConfigGlobal();
         try {
           const saved = sessionStorage.getItem("jam_user");
           if (saved) {
@@ -2686,6 +2870,7 @@
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
         if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); }
+        if (id === "config") { cfgCargar(); }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -2911,6 +3096,142 @@
             toast("Error: " + (data?.error || "desconocido"), "err");
           }
         } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // CONFIGURACIÓN DINÁMICA (Tab ⚙️ Config)
+      // ═══════════════════════════════════════════════════════════
+      window._configCache = {};
+
+      async function cfgCargar() {
+        try {
+          const { data, error } = await db.rpc("obtener_config");
+          if (error) throw error;
+          const map = {};
+          (data || []).forEach(c => { map[c.clave] = c; });
+          window._configCache = map;
+
+          // Info evento (valor TEXT)
+          const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ""; };
+          setVal("cfg-nombre_evento", map.nombre_evento?.valor);
+          setVal("cfg-fecha_evento", map.fecha_evento?.valor);
+          setVal("cfg-lugar_evento", map.lugar_evento?.valor);
+          setVal("cfg-pin_evento", map.pin_evento?.valor);
+
+          // Datos bancarios (JSON)
+          const bank = map.datos_bancarios?.valor_json || {};
+          setVal("cfg-bank-alias", bank.alias);
+          setVal("cfg-bank-cbu", bank.cbu);
+          setVal("cfg-bank-banco", bank.banco);
+          setVal("cfg-bank-titular", bank.titular);
+          setVal("cfg-bank-mp_link", bank.mp_link);
+          setVal("cfg-bank-mp_alias", bank.mp_alias);
+
+          // Emails (JSON)
+          const mails = map.email_templates?.valor_json || {};
+          setVal("cfg-mail-asunto_inscripcion", mails.asunto_inscripcion);
+          setVal("cfg-mail-saludo_inscripcion", mails.saludo_inscripcion);
+          setVal("cfg-mail-cierre_inscripcion", mails.cierre_inscripcion);
+          setVal("cfg-mail-asunto_devolucion", mails.asunto_devolucion);
+          setVal("cfg-mail-saludo_devolucion", mails.saludo_devolucion);
+          setVal("cfg-mail-cierre_devolucion", mails.cierre_devolucion);
+
+          // Proyección (JSON)
+          const proy = map.proyeccion?.valor_json || {};
+          setVal("cfg-proy-titulo_principal", proy.titulo_principal);
+          setVal("cfg-proy-subtitulo", proy.subtitulo);
+          setVal("cfg-proy-mensaje_esperando", proy.mensaje_esperando);
+          setVal("cfg-proy-branding_color", proy.branding_color);
+
+          // Modo competencia (JSON)
+          const mc = map.modo_competencia?.valor_json || {};
+          setVal("cfg-comp-items", (mc.items_disponibles || []).join("\n"));
+          const jur = mc.cantidad_jurados || {};
+          setVal("cfg-comp-jur-nac", jur.nac ?? 5);
+          setVal("cfg-comp-jur-int", jur.int ?? 3);
+          setVal("cfg-comp-jur-reg", jur.reg ?? 5);
+          setVal("cfg-comp-jur-rep", jur.rep ?? 3);
+        } catch (e) {
+          toast("Error cargando config: " + e.message, "err");
+        }
+      }
+
+      async function cfgGuardar(clave, payload) {
+        try {
+          const { data, error } = await db.rpc("actualizar_config", payload);
+          if (error) throw error;
+          if (data?.ok) {
+            toast("✓ " + clave + " guardado", "ok");
+            return true;
+          } else {
+            toast("Error: " + (data?.error || "desconocido"), "err");
+            return false;
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+          return false;
+        }
+      }
+
+      async function cfgGuardarEvento() {
+        const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+        const ok1 = await cfgGuardar("Nombre", { p_clave: "nombre_evento", p_valor: getVal("cfg-nombre_evento") });
+        if (!ok1) return;
+        await cfgGuardar("Fecha", { p_clave: "fecha_evento", p_valor: getVal("cfg-fecha_evento") });
+        await cfgGuardar("Lugar", { p_clave: "lugar_evento", p_valor: getVal("cfg-lugar_evento") });
+        await cfgGuardar("PIN", { p_clave: "pin_evento", p_valor: getVal("cfg-pin_evento") });
+      }
+
+      async function cfgGuardarBancarios() {
+        const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+        const payload = {
+          alias: getVal("cfg-bank-alias"),
+          cbu: getVal("cfg-bank-cbu"),
+          banco: getVal("cfg-bank-banco"),
+          titular: getVal("cfg-bank-titular"),
+          mp_link: getVal("cfg-bank-mp_link"),
+          mp_alias: getVal("cfg-bank-mp_alias"),
+        };
+        await cfgGuardar("Datos bancarios", { p_clave: "datos_bancarios", p_valor_json: payload });
+      }
+
+      async function cfgGuardarEmails() {
+        const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+        const payload = {
+          asunto_inscripcion: getVal("cfg-mail-asunto_inscripcion"),
+          saludo_inscripcion: getVal("cfg-mail-saludo_inscripcion"),
+          cierre_inscripcion: getVal("cfg-mail-cierre_inscripcion"),
+          asunto_devolucion: getVal("cfg-mail-asunto_devolucion"),
+          saludo_devolucion: getVal("cfg-mail-saludo_devolucion"),
+          cierre_devolucion: getVal("cfg-mail-cierre_devolucion"),
+        };
+        await cfgGuardar("Templates email", { p_clave: "email_templates", p_valor_json: payload });
+      }
+
+      async function cfgGuardarProyeccion() {
+        const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+        const payload = {
+          titulo_principal: getVal("cfg-proy-titulo_principal"),
+          subtitulo: getVal("cfg-proy-subtitulo"),
+          mensaje_esperando: getVal("cfg-proy-mensaje_esperando"),
+          branding_color: getVal("cfg-proy-branding_color"),
+        };
+        await cfgGuardar("Proyección", { p_clave: "proyeccion", p_valor_json: payload });
+      }
+
+      async function cfgGuardarCompetencia() {
+        const items = document.getElementById("cfg-comp-items")?.value
+          .split("\n").map(x => x.trim()).filter(Boolean);
+        const payload = {
+          items_disponibles: items,
+          cantidad_jurados: {
+            nac: parseInt(document.getElementById("cfg-comp-jur-nac")?.value) || 5,
+            int: parseInt(document.getElementById("cfg-comp-jur-int")?.value) || 3,
+            reg: parseInt(document.getElementById("cfg-comp-jur-reg")?.value) || 5,
+            rep: parseInt(document.getElementById("cfg-comp-jur-rep")?.value) || 3,
+          },
+        };
+        await cfgGuardar("Modo competencia", { p_clave: "modo_competencia", p_valor_json: payload });
       }
 
       // ═══════════════════════════════════════════════════════════
