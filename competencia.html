@@ -1473,6 +1473,28 @@
         <!-- SUPER ADMIN -->
         <div class="tp" id="d-admin">
           <div class="fw7 mb4 mt3" style="font-size: 16px">🛡 Super Admin · Acciones globales</div>
+
+          <!-- MODO SIMULACIÓN -->
+          <div class="card mb3" style="background:linear-gradient(135deg,#1a1500 0%,#251c00 100%);border-color:#E8A838">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#E8A838">🧪 Modo Simulación</div>
+                <div class="muted text-xs">Probar el sistema con datos ficticios sin afectar producción</div>
+              </div>
+              <span id="sim-badge" class="bdg" style="font-size:11px;background:#444;color:#aaa">DESACTIVADO</span>
+            </div>
+            <div id="sim-info" class="text-xs muted mb3" style="line-height:1.6">
+              Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.
+            </div>
+            <div class="sf" style="gap:8px;flex-wrap:wrap">
+              <button id="sim-toggle-btn" class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="simToggle()">
+                ▶ Activar simulación
+              </button>
+              <button class="btn bo bfull" onclick="simResetSeed()" style="border-color:rgba(232,168,56,.4)">
+                🔄 Resetear datos de simulación (15 participantes)
+              </button>
+            </div>
+          </div>
           
           <!-- Estadísticas del sistema -->
           <div class="g4 mb4">
@@ -1501,6 +1523,22 @@
             <div class="fw6 mb2">📊 Estado del sistema</div>
             <div id="sa-health" class="muted text-xs">Cargando…</div>
             <button class="btn bo bsm mt3" onclick="saCheckHealth()">↻ Verificar /api/health</button>
+          </div>
+
+          <!-- Control de Categoría Activa (lo que ve el Ayudante de Line Up) -->
+          <div class="card mb3" style="border-color:rgba(76,175,125,.3);background:#0a1e0a">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#4CAF7D">🎯 Categoría EN VIVO</div>
+                <div class="muted text-xs">Define qué categoría está pasando en este momento. Lo ven Encargado y Ayudante de Line Up.</div>
+              </div>
+              <button class="btn bo bsm" onclick="saCargarCategorias()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
+            </div>
+            <div id="sa-cat-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
+              Ninguna categoría activa
+            </div>
+            <div id="sa-cat-lista" class="muted text-xs">Cargando categorías...</div>
+            <button class="btn bo bfull mt3" style="border-color:#E0524C;color:#E0524C;font-size:11px" onclick="saDesactivarCategoria()">⏸ Desactivar categoría actual</button>
           </div>
 
           <!-- Gestión de Usuarios (Jurados + Director) -->
@@ -1872,7 +1910,48 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg"; // ← pegar desde Supabase > Settings > API
 
       const { createClient } = supabase;
-      const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+      const _dbReal = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+      // ═══════════════════════════════════════════════════════════
+      // PROXY DE DB: redirige evento/scoring → sim cuando modo simulación activo
+      // ═══════════════════════════════════════════════════════════
+      window.SIM_MODE = false;
+      const SIM_REDIRECT = { evento: "sim", scoring: "sim" };
+      const db = new Proxy(_dbReal, {
+        get(target, prop) {
+          if (prop === "schema") {
+            return (schemaName) => {
+              if (window.SIM_MODE && SIM_REDIRECT[schemaName]) {
+                return target.schema(SIM_REDIRECT[schemaName]);
+              }
+              return target.schema(schemaName);
+            };
+          }
+          if (prop === "from") {
+            return (tableName) => {
+              // Tabla pública 'inscripciones' → en sim usa schema sim
+              if (window.SIM_MODE && tableName === "inscripciones") {
+                return target.schema("sim").from("inscripciones");
+              }
+              return target.from(tableName);
+            };
+          }
+          if (prop === "channel") {
+            return (name) => {
+              const ch = target.channel(name);
+              const origOn = ch.on.bind(ch);
+              ch.on = (event, opts, cb) => {
+                if (window.SIM_MODE && opts?.schema && SIM_REDIRECT[opts.schema]) {
+                  opts = { ...opts, schema: SIM_REDIRECT[opts.schema] };
+                }
+                return origOn(event, opts, cb);
+              };
+              return ch;
+            };
+          }
+          return target[prop];
+        }
+      });
 
       // ═══════════════════════════════════════════════════════════
       // ESTADO LOCAL
@@ -1934,10 +2013,27 @@
               if (c.valor_json) window._CFG[c.clave] = c.valor_json;
               else if (c.valor != null) window._CFG[c.clave] = c.valor;
             });
-            // Actualizar título de la página si hay nombre
-            if (window._CFG.nombre_evento) document.title = "Competencia — " + window._CFG.nombre_evento;
+            // Aplicar todas las configs al UI
+            aplicarConfigUI();
           }
         } catch(e) { console.warn("config:", e); }
+      }
+      
+      function aplicarConfigUI() {
+        const nombre = window._CFG.nombre_evento;
+        if (nombre) {
+          document.title = "Competencia — " + nombre;
+          document.querySelectorAll("[data-cfg='nombre_evento']").forEach(el => el.textContent = nombre);
+        }
+        const fecha = window._CFG.fecha_evento;
+        if (fecha) document.querySelectorAll("[data-cfg='fecha_evento']").forEach(el => el.textContent = fecha);
+        const lugar = window._CFG.lugar_evento;
+        if (lugar) document.querySelectorAll("[data-cfg='lugar_evento']").forEach(el => el.textContent = lugar);
+        // Color marca
+        const proy = window._CFG.proyeccion || {};
+        if (proy.branding_color) {
+          document.documentElement.style.setProperty("--brand-gold", proy.branding_color);
+        }
       }
 
       async function init() {
@@ -2327,6 +2423,21 @@
       // DIRECTOR
       // ═══════════════════════════════════════════════════════════
       async function initDirector() {
+        // Restaurar estado de modo simulación si quedó activo de antes
+        try {
+          const { data: simData } = await db.rpc("sim_estado");
+          if (simData?.[0]?.activo) {
+            window.SIM_MODE = true;
+            // Banner global persistente
+            const banner = document.createElement("div");
+            banner.id = "sim-banner-global";
+            banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
+            banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
+            document.body.insertBefore(banner, document.body.firstChild);
+            document.body.style.paddingTop = "32px";
+          }
+        } catch(e) { /* sim no instalada */ }
+        
         await dCargarJurados();
         await loadSesionDirector();
         await buildLineup();
@@ -2869,7 +2980,7 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
-        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); }
+        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); saCargarCategorias(); simRefreshUI(); }
         if (id === "config") { cfgCargar(); }
       }
 
@@ -3005,6 +3116,195 @@
           document.getElementById("sa-reset-btn").disabled = true;
           document.getElementById("sa-reset-btn").style.opacity = ".4";
           saRefreshStats();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // MODO SIMULACIÓN
+      // ═══════════════════════════════════════════════════════════
+      async function simEstadoActual() {
+        try {
+          const { data } = await db.rpc("sim_estado");
+          return (data && data[0]) || { activo: false };
+        } catch (e) {
+          return { activo: false };
+        }
+      }
+
+      async function simRefreshUI() {
+        const estado = await simEstadoActual();
+        const badge = document.getElementById("sim-badge");
+        const btn = document.getElementById("sim-toggle-btn");
+        const info = document.getElementById("sim-info");
+        if (estado.activo) {
+          window.SIM_MODE = true;
+          if (badge) { badge.textContent = "ACTIVO"; badge.style.background = "#E8A838"; badge.style.color = "#000"; }
+          if (btn) { btn.innerHTML = "⏸ Desactivar simulación"; btn.style.background = "#E0524C"; btn.style.color = "#fff"; btn.style.borderColor = "#E0524C"; }
+          if (info) info.innerHTML = '<strong style="color:#E8A838">🧪 Simulación ACTIVA</strong> — Todas las acciones (lineup, scoring, rankings) trabajan con datos ficticios. Los datos reales están protegidos.';
+          // Banner global persistente
+          simMostrarBanner(true);
+        } else {
+          window.SIM_MODE = false;
+          if (badge) { badge.textContent = "DESACTIVADO"; badge.style.background = "#444"; badge.style.color = "#aaa"; }
+          if (btn) { btn.innerHTML = "▶ Activar simulación"; btn.style.background = ""; btn.style.color = "#E8A838"; btn.style.borderColor = "#E8A838"; }
+          if (info) info.innerHTML = "Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.";
+          simMostrarBanner(false);
+        }
+      }
+
+      function simMostrarBanner(mostrar) {
+        let banner = document.getElementById("sim-banner-global");
+        if (mostrar) {
+          if (!banner) {
+            banner = document.createElement("div");
+            banner.id = "sim-banner-global";
+            banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
+            banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
+            document.body.insertBefore(banner, document.body.firstChild);
+            document.body.style.paddingTop = "32px";
+          }
+        } else {
+          if (banner) {
+            banner.remove();
+            document.body.style.paddingTop = "";
+          }
+        }
+      }
+
+      async function simToggle() {
+        try {
+          const estado = await simEstadoActual();
+          const nuevoEstado = !estado.activo;
+          
+          if (nuevoEstado) {
+            // Activar — preguntar si quiere seed automático
+            const confirmar = confirm(
+              "¿Activar Modo Simulación?\n\n" +
+              "• El sistema cambiará a 15 participantes de prueba\n" +
+              "• Los datos reales NO se tocan\n" +
+              "• Podés volver a la vista real desactivándolo en cualquier momento\n\n" +
+              "¿Continuar?"
+            );
+            if (!confirmar) return;
+          } else {
+            if (!confirm("¿Volver a vista normal? (Los datos de simulación quedan guardados por si querés reactivar)")) return;
+          }
+
+          const { data, error } = await db.rpc("sim_toggle", { 
+            p_activo: nuevoEstado, 
+            p_user: currentUser?.username || "director" 
+          });
+          if (error) throw error;
+          if (data?.ok) {
+            toast(nuevoEstado ? "🧪 Modo simulación ACTIVADO" : "✓ Modo normal restaurado", "ok");
+            await simRefreshUI();
+            // Recargar datos para que la nueva fuente (sim o real) se aplique
+            if (typeof loadPuntajesDirector === "function") await loadPuntajesDirector();
+            if (typeof buildRankings === "function") await buildRankings();
+            if (typeof buildLineup === "function") await buildLineup();
+            saRefreshStats();
+          } else {
+            toast("Error: " + (data?.error || "desconocido"), "err");
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+      }
+
+      async function simResetSeed() {
+        if (!confirm(
+          "¿Resetear datos de simulación?\n\n" +
+          "• Se borran todos los datos de simulación actuales\n" +
+          "• Se cargan 15 participantes de prueba frescos\n" +
+          "• Los datos REALES NO se tocan\n\n" +
+          "¿Continuar?"
+        )) return;
+        try {
+          toast("Generando 15 participantes de prueba...", "ok");
+          const { data, error } = await db.rpc("sim_reset_y_seed");
+          if (error) throw error;
+          if (data?.ok) {
+            toast("✓ Simulación reseteada con " + data.participantes + " participantes", "ok");
+            // Si está activo el modo, recargar datos visibles
+            if (window.SIM_MODE) {
+              if (typeof loadPuntajesDirector === "function") await loadPuntajesDirector();
+              if (typeof buildRankings === "function") await buildRankings();
+              if (typeof buildLineup === "function") await buildLineup();
+              saRefreshStats();
+            }
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+      }
+
+      // Control de Categorías Activas (qué categoría se muestra al Ayudante)
+      async function saCargarCategorias() {
+        const lista = document.getElementById("sa-cat-lista");
+        const display = document.getElementById("sa-cat-activa-display");
+        if (!lista) return;
+        lista.innerHTML = "Cargando...";
+        try {
+          // Obtener categoría activa actual
+          const { data: actData } = await db.rpc("obtener_categoria_activa");
+          const act = (actData && actData[0]) || null;
+          if (act?.categoria_key) {
+            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 ' + (act.categoria_label || act.categoria_key) + '</span>';
+          } else {
+            display.innerHTML = '<span class="muted">Ninguna categoría activa</span>';
+          }
+
+          // Listar todas las categorías del lineup
+          const { data: cats, error } = await db.rpc("listar_categorias_lineup");
+          if (error) throw error;
+          if (!cats || cats.length === 0) {
+            lista.innerHTML = '<div class="muted text-xs">No hay categorías en el lineup todavía.</div>';
+            return;
+          }
+          let html = '<div style="display:flex;flex-direction:column;gap:6px">';
+          for (const c of cats) {
+            const esActiva = act?.categoria_key === c.categoria_key;
+            html += '<button class="btn ' + (esActiva ? 'bgn' : 'bo') + ' bfull" style="font-size:11px;text-align:left;padding:8px 10px;' +
+              (esActiva ? '' : 'border-color:rgba(76,175,125,.2);color:#aaa') + '" onclick="saActivarCategoria(' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.categoria_label).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.instancia).replace(/"/g, '&quot;') + ')">' +
+              (esActiva ? '🔴 ' : '▶ ') + c.categoria_label +
+              ' <span class="muted" style="font-size:9px;margin-left:6px">(' + c.presentes + '/' + c.cantidad + ' presentes)</span>' +
+              '</button>';
+          }
+          html += '</div>';
+          lista.innerHTML = html;
+        } catch (e) {
+          lista.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+        }
+      }
+
+      async function saActivarCategoria(catKey, catLabel, instancia) {
+        try {
+          const { data, error } = await db.rpc("activar_categoria", {
+            p_categoria_key: catKey,
+            p_categoria_label: catLabel,
+            p_instancia: instancia,
+            p_user: currentUser?.username || "director"
+          });
+          if (error) throw error;
+          if (data?.ok) {
+            toast("🔴 Categoría activada: " + catLabel, "ok");
+            saCargarCategorias();
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function saDesactivarCategoria() {
+        if (!confirm("Desactivar la categoría actual? El Ayudante y el Encargado verán todas las categorías sin destacar ninguna.")) return;
+        try {
+          const { data, error } = await db.rpc("activar_categoria", {
+            p_categoria_key: null,
+            p_categoria_label: null,
+            p_instancia: null,
+            p_user: currentUser?.username || "director"
+          });
+          if (error) throw error;
+          toast("Categoría desactivada", "ok");
+          saCargarCategorias();
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 

@@ -14,6 +14,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
       html,
       body {
@@ -1140,6 +1141,7 @@
             <select id="e-rol">
               <option value="staff">📝 Staff</option>
               <option value="lineup">📋 Line Up</option>
+              <option value="ayudante_lineup">👥 Ayudante de Line Up</option>
               <option value="acreditacion">📷 Acreditación</option>
               <option value="dj">🎧 DJ</option>
               <option value="presentador">🎤 Presentador</option>
@@ -1442,6 +1444,39 @@
       </div>
 
       <!-- ACREDITACIÓN -->
+      <div class="tp" id="tp-categorias">
+        <div class="con">
+          <div class="sf mt3 mb3">
+            <div>
+              <div class="fw7" style="font-size: 16px">🎯 Vista por Categorías</div>
+              <div class="muted text-xs mt2" id="cat-stats">Cargando categorías...</div>
+            </div>
+            <button class="btn bo bsm" id="cat-btn-refresh" onclick="catCargar()">↻ Refrescar</button>
+          </div>
+
+          <!-- Banner de categoría EN VIVO -->
+          <div id="cat-activa-banner" class="card mb3" style="display:none;background:linear-gradient(135deg,#0a1e0a 0%,#0e2a14 100%);border-color:#4CAF7D">
+            <div class="sf">
+              <div>
+                <div class="text-xs muted">🔴 CATEGORÍA EN VIVO</div>
+                <div class="fw7" style="font-size:18px;color:#4CAF7D" id="cat-activa-label">—</div>
+              </div>
+              <button class="btn bsm" style="background:#4CAF7D;color:#fff" onclick="catScrollToActiva()">Ver ↓</button>
+            </div>
+          </div>
+
+          <!-- Lista de categorías -->
+          <div id="cat-lista"></div>
+
+          <!-- Nota para Ayudante -->
+          <div id="cat-nota-ayudante" class="card mt3" style="background:#1a1500;border-color:rgba(232,168,56,.3);display:none">
+            <div class="text-xs" style="color:#E8A838">
+              👁 <strong>Modo solo lectura</strong> · Como Ayudante de Line Up, ves los presentes en tiempo real. Avisá al Encargado de Line Up cualquier participante presente que necesite ser puesto en pista.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="tp" id="tp-acreditacion">
         <div class="con" style="max-width: 540px">
           <div id="acr-scan" class="mt3">
@@ -1454,6 +1489,7 @@
                 El participante muestra el QR desde su celular
               </div>
               <button
+                id="acr-btn-camara"
                 class="btn bg bfull"
                 style="max-width: 280px; margin: 0 auto"
                 onclick="acrEscanear()"
@@ -1461,6 +1497,18 @@
                 Abrir cámara y escanear
               </button>
             </div>
+
+            <!-- Contenedor de cámara (oculto hasta activar) -->
+            <div id="acr-camera-wrap" class="card mt3" style="display:none;padding:0;overflow:hidden;background:#000">
+              <div id="acr-qr-reader" style="width:100%;min-height:300px"></div>
+              <div style="padding:14px;text-align:center;background:#111">
+                <div class="muted text-xs mb2">Apuntá la cámara al QR del participante</div>
+                <button class="btn bo" onclick="acrCerrarCamara()" style="border-color:#E0524C;color:#E0524C">
+                  ✕ Cerrar cámara
+                </button>
+              </div>
+            </div>
+
             <div class="card mt3">
               <div class="fw6 mb3">Búsqueda manual</div>
               <div style="display: flex; gap: 8px">
@@ -1938,7 +1986,8 @@
       // ═══════════════════════════════════════════════════════════
       const ROL_TABS = {
         staff: ["staff", "acreditacion", "proyeccion"],
-        lineup: ["lineup"],
+        lineup: ["lineup", "categorias"],
+        ayudante_lineup: ["categorias"],
         acreditacion: ["acreditacion"],
         dj: ["dj", "proyeccion"],
         presentador: ["presentador", "proyeccion"],
@@ -1947,6 +1996,8 @@
       const TAB_INFO = {
         staff: { label: "📝 Staff" },
         lineup: { label: "📋 Line Up" },
+        ayudante_lineup: { label: "👥 Ayudante" },
+        categorias: { label: "🎯 Categorías" },
         acreditacion: { label: "📷 Acreditación" },
         dj: { label: "🎧 DJ" },
         presentador: { label: "🎤 Presentador" },
@@ -2037,22 +2088,56 @@
 
       function aplicarConfigUI() {
         const proy = window._CFG.proyeccion || {};
-        // Logo área en proyección
+        // Logo área en proyección (título principal)
         const logoArea = document.getElementById("pf-logo-area");
         if (logoArea && proy.titulo_principal) logoArea.textContent = proy.titulo_principal;
-        // Mensaje esperando
+        
+        // Mensaje esperando (cuando no hay sesión activa)
         const empty = document.getElementById("pf-pista-empty");
         if (empty && proy.mensaje_esperando) {
-          const txt = empty.querySelector("[data-cfg='mensaje_esperando']") || empty;
-          if (txt && txt.textContent.includes("Esperando")) txt.textContent = proy.mensaje_esperando;
+          // Buscar nodos de texto que contengan "Esperando" y reemplazarlos
+          const walker = document.createTreeWalker(empty, NodeFilter.SHOW_TEXT);
+          let n;
+          while ((n = walker.nextNode())) {
+            if (n.textContent.includes("Esperando") || n.textContent.includes("próximo participante")) {
+              n.textContent = proy.mensaje_esperando;
+              break;
+            }
+          }
         }
-        // Color de branding
+        
+        // Subtítulo
+        if (proy.subtitulo) {
+          const subEls = document.querySelectorAll("[data-cfg='subtitulo']");
+          subEls.forEach(el => el.textContent = proy.subtitulo);
+        }
+        
+        // Color de marca (variable CSS global)
         if (proy.branding_color) {
           document.documentElement.style.setProperty("--brand-gold", proy.branding_color);
+          document.documentElement.style.setProperty("--C9A84C", proy.branding_color);
         }
-        // Título de la página
+        
+        // Nombre evento (título de la página + headers)
         const nombre = window._CFG.nombre_evento;
-        if (nombre) document.title = "Evento — " + nombre;
+        if (nombre) {
+          document.title = "Evento — " + nombre;
+          // Reemplazar en headers visibles
+          const nombreEls = document.querySelectorAll("[data-cfg='nombre_evento']");
+          nombreEls.forEach(el => el.textContent = nombre);
+        }
+        
+        // Fecha y lugar (banners informativos)
+        const fecha = window._CFG.fecha_evento;
+        if (fecha) {
+          const fechaEls = document.querySelectorAll("[data-cfg='fecha_evento']");
+          fechaEls.forEach(el => el.textContent = fecha);
+        }
+        const lugar = window._CFG.lugar_evento;
+        if (lugar) {
+          const lugarEls = document.querySelectorAll("[data-cfg='lugar_evento']");
+          lugarEls.forEach(el => el.textContent = lugar);
+        }
       }
 
       async function init() {
@@ -2074,6 +2159,7 @@
               const labels = {
                 staff: "📝 Staff",
                 lineup: "📋 Line Up",
+                ayudante_lineup: "👥 Ayudante de Line Up",
                 acreditacion: "📷 Acreditación",
                 dj: "🎧 DJ",
                 presentador: "🎤 Presentador",
@@ -2155,6 +2241,7 @@
         const labels = {
           staff: "📝 Staff",
           lineup: "📋 Line Up",
+          ayudante_lineup: "👥 Ayudante de Line Up",
           acreditacion: "📷 Acreditación",
           dj: "🎧 DJ",
           presentador: "🎤 Presentador",
@@ -2205,6 +2292,7 @@
         await loadSesionActivaForProy();
         await buildPfRanking();
         subscribeRealtimeEvento();
+        subscribeRealtimeCategorias();
       }
 
       function eTab(id, btn) {
@@ -2218,6 +2306,7 @@
         btn.classList.add("on");
         if (id === "lineup") luRender();
         if (id === "dj") buildDjLista();
+        if (id === "categorias") catCargar();
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -2685,11 +2774,147 @@
       // ═══════════════════════════════════════════════════════════
       // ACREDITACIÓN
       // ═══════════════════════════════════════════════════════════
-      function acrEscanear() {
-        toast("Escaneando QR...", "ok");
-        setTimeout(() => {
-          toast("Cámara QR disponible solo en dispositivo real", "warn");
-        }, 1200);
+      // ═══════════════════════════════════════════════════════════
+      // SCANNER QR (cámara real)
+      // ═══════════════════════════════════════════════════════════
+      window._acrScanner = null;
+
+      async function acrEscanear() {
+        try {
+          // Verificar que la librería esté cargada
+          if (typeof Html5Qrcode === "undefined") {
+            toast("Librería QR no cargada. Recargá la página.", "err");
+            return;
+          }
+          // Verificar HTTPS (cámara solo funciona en https o localhost)
+          const isSecure = window.location.protocol === "https:" || 
+                          window.location.hostname === "localhost" || 
+                          window.location.hostname === "127.0.0.1";
+          if (!isSecure) {
+            toast("La cámara requiere HTTPS. Usá la URL de producción.", "err");
+            return;
+          }
+
+          // Mostrar contenedor de cámara, ocultar botón
+          document.getElementById("acr-camera-wrap").style.display = "block";
+          document.getElementById("acr-btn-camara").style.display = "none";
+
+          // Crear instancia del scanner
+          if (window._acrScanner) {
+            try { await window._acrScanner.stop(); } catch (e) {}
+          }
+          window._acrScanner = new Html5Qrcode("acr-qr-reader");
+
+          // Configuración del scanner
+          const config = {
+            fps: 10,
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const qrboxSize = Math.floor(minEdge * 0.7);
+              return { width: qrboxSize, height: qrboxSize };
+            },
+            aspectRatio: 1.0
+          };
+
+          // Callback de éxito
+          const onScanSuccess = async (decodedText) => {
+            // Apenas detecta, frenar el scanner y procesar
+            try { await window._acrScanner.stop(); } catch (e) {}
+            window._acrScanner = null;
+            
+            // Vibrar si está disponible (feedback táctil en móvil)
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            // Procesar el código escaneado
+            acrProcesarCodigo(decodedText);
+          };
+
+          // Callback de error (silencioso, se llama mucho por cada frame sin QR)
+          const onScanError = (errorMessage) => { /* silencio */ };
+
+          // Intentar arrancar con cámara trasera primero
+          try {
+            await window._acrScanner.start(
+              { facingMode: "environment" },
+              config,
+              onScanSuccess,
+              onScanError
+            );
+          } catch (e) {
+            // Si falla, intentar con cámara frontal
+            try {
+              await window._acrScanner.start(
+                { facingMode: "user" },
+                config,
+                onScanSuccess,
+                onScanError
+              );
+            } catch (e2) {
+              throw new Error("No se pudo acceder a ninguna cámara: " + e2.message);
+            }
+          }
+          toast("Cámara activa. Apuntá al QR.", "ok");
+        } catch (e) {
+          console.error("Error scanner:", e);
+          acrCerrarCamara();
+          let msg = "Error al abrir cámara: " + e.message;
+          if (e.name === "NotAllowedError" || /permission|denied/i.test(e.message)) {
+            msg = "Permiso de cámara denegado. Autorizá en la configuración del navegador.";
+          } else if (e.name === "NotFoundError" || /not found/i.test(e.message)) {
+            msg = "No se encontró ninguna cámara en este dispositivo.";
+          }
+          toast(msg, "err");
+        }
+      }
+
+      async function acrCerrarCamara() {
+        if (window._acrScanner) {
+          try { await window._acrScanner.stop(); } catch (e) {}
+          try { window._acrScanner.clear(); } catch (e) {}
+          window._acrScanner = null;
+        }
+        const wrap = document.getElementById("acr-camera-wrap");
+        if (wrap) wrap.style.display = "none";
+        const btn = document.getElementById("acr-btn-camara");
+        if (btn) btn.style.display = "";
+      }
+
+      function acrProcesarCodigo(decodedText) {
+        // El QR puede ser:
+        // 1) URL tipo https://jam-inscripciones.vercel.app/check?id=<UUID>
+        // 2) Solo el código JAM-INTER-1000
+        // 3) Solo el UUID
+        let codigo = decodedText.trim();
+        let inscripcionId = null;
+        
+        // Intentar extraer UUID desde URL /check?id=
+        const matchId = codigo.match(/[?&]id=([a-f0-9-]{36})/i);
+        if (matchId) {
+          inscripcionId = matchId[1].toLowerCase();
+        } else {
+          // Intentar extraer código JAM
+          const matchCodigo = codigo.match(/JAM-(INTER|INT|NAC|REG|REP)-\d+/i);
+          if (matchCodigo) codigo = matchCodigo[0].toUpperCase();
+        }
+        
+        // Buscar en lineup
+        let p = null;
+        if (inscripcionId) {
+          p = luData.find((x) => x.inscripcion_id === inscripcionId);
+        }
+        if (!p) {
+          p = luData.find((x) => x.codigo_id?.toUpperCase() === codigo.toUpperCase());
+        }
+        
+        if (!p) {
+          toast("QR no reconocido. Reintentando...", "err");
+          setTimeout(() => acrEscanear(), 1500);
+          return;
+        }
+        // Cerrar la cámara y mostrar resultado
+        acrCerrarCamara();
+        document.getElementById("acr-input").value = p.codigo_id || "";
+        acrBuscar();
       }
 
       async function acrBuscar() {
@@ -2763,10 +2988,158 @@
       }
 
       function acrReset() {
+        acrCerrarCamara();
         document.getElementById("acr-scan").style.display = "block";
         document.getElementById("acr-res").style.display = "none";
         document.getElementById("acr-ok").style.display = "none";
         document.getElementById("acr-input").value = "";
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // TAB CATEGORÍAS (Ayudante y Encargado de Line Up)
+      // ═══════════════════════════════════════════════════════════
+      window._catActiva = null;
+
+      async function catCargar() {
+        const stats = document.getElementById("cat-stats");
+        const lista = document.getElementById("cat-lista");
+        const banner = document.getElementById("cat-activa-banner");
+        const notaAy = document.getElementById("cat-nota-ayudante");
+        if (notaAy) notaAy.style.display = currentRol === "ayudante_lineup" ? "block" : "none";
+
+        try {
+          // 1. Cargar lineup (siempre lo necesitamos)
+          if (typeof loadLineup === "function" && (!luData || luData.length === 0)) {
+            await loadLineup();
+          }
+
+          // 2. Cargar categoría activa
+          const { data: catData } = await db.rpc("obtener_categoria_activa");
+          window._catActiva = (catData && catData[0]) || null;
+
+          if (window._catActiva && window._catActiva.categoria_key) {
+            banner.style.display = "block";
+            document.getElementById("cat-activa-label").textContent = window._catActiva.categoria_label || window._catActiva.categoria_key;
+          } else {
+            banner.style.display = "none";
+          }
+
+          // 3. Agrupar lineup por categoría (expandido: cada categoría aparece como una sola tabla)
+          const porCat = {};
+          (luData || []).forEach(p => {
+            // categoria puede ser array, object o string
+            let cats = [];
+            try {
+              const c = typeof p.categoria === "string" ? JSON.parse(p.categoria) : p.categoria;
+              if (Array.isArray(c)) cats = c;
+              else if (c && typeof c === "object") cats = [c];
+            } catch (e) { cats = []; }
+            
+            if (cats.length === 0) {
+              const key = "sin-categoria|Sin categoría";
+              porCat[key] = porCat[key] || { label: "Sin categoría", items: [], instancia: p.instancia };
+              porCat[key].items.push(p);
+              return;
+            }
+
+            cats.forEach(cat => {
+              const g = cat.g || "—";
+              const n = cat.n || "Sin nombre";
+              const key = g + "|" + n;
+              const label = n + " (" + g + ")";
+              porCat[key] = porCat[key] || { label, items: [], instancia: p.instancia };
+              porCat[key].items.push(p);
+            });
+          });
+
+          const catKeys = Object.keys(porCat).sort();
+          if (catKeys.length === 0) {
+            lista.innerHTML = '<div class="card" style="text-align:center;padding:24px"><div class="muted">No hay categorías cargadas todavía.</div></div>';
+            stats.textContent = "0 categorías";
+            return;
+          }
+
+          stats.textContent = catKeys.length + " categorías · " + (luData?.length || 0) + " inscriptos";
+
+          const esAyudante = currentRol === "ayudante_lineup";
+          const esEncargado = currentRol === "lineup";
+
+          let html = "";
+          for (const key of catKeys) {
+            const grupo = porCat[key];
+            const esActiva = window._catActiva?.categoria_key === key;
+            const presentes = grupo.items.filter(p => p.estado === "presente").length;
+            const total = grupo.items.length;
+
+            html += '<div class="card mb3" id="cat-' + encodeURIComponent(key) + '" style="' +
+              (esActiva ? 'border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)' : '') + '">' +
+              '<div class="sf mb2">' +
+                '<div>' +
+                  '<div class="fw7" style="font-size:14px;color:' + (esActiva ? '#4CAF7D' : '#C9A84C') + '">' +
+                    (esActiva ? '🔴 EN VIVO · ' : '') + grupo.label +
+                  '</div>' +
+                  '<div class="muted text-xs mt2">' + presentes + '/' + total + ' presentes · ' + (grupo.instancia || '').toUpperCase() + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+              '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Estado</th>' +
+                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Código</th>' +
+                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Grupo</th>' +
+                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">País</th>' +
+              '</tr></thead><tbody>';
+            
+            for (const p of grupo.items) {
+              const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
+              const enPista = p.estado === "en_pista";
+              const completado = p.estado === "completado";
+              const estadoBdg = completado ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
+                : enPista ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
+                : presente ? '<span class="bdg bdg-green" style="font-size:10px">✓ Presente</span>'
+                : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
+              html += '<tr style="border-bottom:1px solid rgba(255,255,255,.05);' + (presente ? 'background:rgba(76,175,125,.05)' : '') + '">' +
+                '<td style="padding:8px 4px">' + estadoBdg + '</td>' +
+                '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' + (p.codigo_id || '—') + '</td>' +
+                '<td style="padding:8px 4px">' + (p.nombre_grupo || '—') + '</td>' +
+                '<td style="padding:8px 4px" class="muted">' + (p.pais || '—') + '</td>' +
+              '</tr>';
+            }
+            html += '</tbody></table></div></div>';
+          }
+          lista.innerHTML = html;
+        } catch (e) {
+          lista.innerHTML = '<div class="card" style="background:#1a0000;border-color:#E0524C"><div style="color:#E0524C">Error: ' + e.message + '</div></div>';
+        }
+      }
+
+      function catScrollToActiva() {
+        if (!window._catActiva?.categoria_key) return;
+        const el = document.getElementById("cat-" + encodeURIComponent(window._catActiva.categoria_key));
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // Realtime para categoria_activa y lineup → recargar tab si está visible
+      function subscribeRealtimeCategorias() {
+        if (window._catChannel) {
+          try { db.removeChannel(window._catChannel); } catch(e) {}
+        }
+        window._catChannel = db.channel("categorias-realtime")
+          .on("postgres_changes", { event: "*", schema: "evento", table: "categoria_activa" }, async () => {
+            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
+            if (visible) await catCargar();
+          })
+          .on("postgres_changes", { event: "*", schema: "evento", table: "lineup" }, async () => {
+            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
+            if (visible) {
+              if (typeof loadLineup === "function") await loadLineup();
+              await catCargar();
+            }
+          })
+          .subscribe((status) => {
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              setTimeout(() => subscribeRealtimeCategorias(), 3000);
+            }
+          });
       }
 
       // ═══════════════════════════════════════════════════════════
