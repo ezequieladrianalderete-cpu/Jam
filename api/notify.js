@@ -77,6 +77,36 @@ async function supaPatch(table, query, body) {
   return res.json();
 }
 
+// === Cargar configuración dinámica desde evento.config ===
+// Devuelve un objeto con todas las claves. Si alguna no existe, no incluye esa key.
+// Resiliente: si falla la llamada (Supabase down), devuelve {} y el sistema usa defaults.
+async function cargarConfig() {
+  try {
+    const url = `${process.env.SUPABASE_URL}/rest/v1/rpc/obtener_config`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    const cfg = {};
+    if (Array.isArray(data)) {
+      data.forEach((c) => {
+        if (c.valor_json) cfg[c.clave] = c.valor_json;
+        else if (c.valor != null) cfg[c.clave] = c.valor;
+      });
+    }
+    return cfg;
+  } catch (e) {
+    return {};
+  }
+}
+
 // === Resend HTTP API (sin SDK) ===
 async function sendMail({ from, to, subject, html, text, idempotencyKey }) {
   const headers = {
@@ -114,6 +144,21 @@ export default async function handler(req, res) {
   try {
     const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: "id required" });
+
+    // 0) Cargar config dinámica (nombres, textos email, etc.) - no crítica, sigue si falla
+    const eventoCfg = await cargarConfig();
+    const nombreEvento = eventoCfg.nombre_evento || "JAM 2026";
+    const emailT = eventoCfg.email_templates || {};
+    // Datos bancarios: si están configurados en panel, sobreescriben los hardcoded
+    const bankCfg = eventoCfg.datos_bancarios || {};
+    const datosBancarios = {
+      alias: bankCfg.alias || PAGO_VIAMONTE.alias,
+      cbu: bankCfg.cbu || PAGO_VIAMONTE.cbu,
+      titular: bankCfg.titular || PAGO_VIAMONTE.titular,
+      banco: bankCfg.banco || "",
+      mp_link: bankCfg.mp_link || "",
+      mp_alias: bankCfg.mp_alias || "",
+    };
 
     // 1) Buscar inscripción
     const insArr = await supaSelect("inscripciones", `id=eq.${id}&select=*`);
@@ -231,15 +276,15 @@ export default async function handler(req, res) {
   <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;text-align:center">Datos para pagar (transferencia)</div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Alias</div>
-    <div style="font-family:'Courier New',monospace;font-size:18px;color:#F8F5EE;font-weight:700">${PAGO_VIAMONTE.alias}</div>
+    <div style="font-family:'Courier New',monospace;font-size:18px;color:#F8F5EE;font-weight:700">${datosBancarios.alias}</div>
   </div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">CBU</div>
-    <div style="font-family:'Courier New',monospace;font-size:14px;color:#F8F5EE">${PAGO_VIAMONTE.cbu}</div>
+    <div style="font-family:'Courier New',monospace;font-size:14px;color:#F8F5EE">${datosBancarios.cbu}</div>
   </div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Titular</div>
-    <div style="font-family:Georgia,serif;font-size:15px;color:#F8F5EE">${PAGO_VIAMONTE.titular}</div>
+    <div style="font-family:Georgia,serif;font-size:15px;color:#F8F5EE">${datosBancarios.titular}</div>
   </div>
   <div style="font-size:12px;color:rgba(248,245,238,.6);text-align:center;margin-top:14px;line-height:1.5">El total se calcula según la tabla publicada en el portal. Podés pagar la totalidad o el 50% como seña.</div>
 </div>`;
@@ -249,7 +294,7 @@ export default async function handler(req, res) {
     const qrUrl =
       "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
       encodeURIComponent(checkUrl);
-    const subj = "Inscripción JAM 2026 confirmada — " + codigo_legible;
+    const subj = (emailT.asunto_inscripcion || ("Inscripción " + nombreEvento + " confirmada")) + " — " + codigo_legible;
 
     // === MÚSICA: link de carga, SOLO para Sedes virtuales sin música cargada ===
     // Nacional/Repesca/Inter la cargan obligatoria al inscribirse y nunca ven
@@ -331,7 +376,7 @@ export default async function handler(req, res) {
   <div style="color:rgba(248,245,238,.5);font-size:12px;margin-top:4px">${esc(cfg.label)} · ${esc(ins.pais || "Argentina")}${ins.sede_nombre ? " · Sede " + esc(ins.sede_nombre) : ""}</div>
 </div>
 <div style="padding:24px">
-  <p style="margin:0 0 16px;color:#444">Hola <strong>${esc(ins.nombre || nombre_grupo)}</strong>, tu inscripción a <strong>${esc(cfg.label)}</strong> fue recibida correctamente.</p>
+  <p style="margin:0 0 16px;color:#444">${emailT.saludo_inscripcion ? esc(emailT.saludo_inscripcion) + " " : ""}Hola <strong>${esc(ins.nombre || nombre_grupo)}</strong>, tu inscripción a <strong>${esc(cfg.label)}</strong> fue recibida correctamente.</p>
   ${integrantes.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Integrantes (' + integrantes.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + intHtml + "</table>" : ""}
   ${categorias.length ? '<h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Categorías (' + categorias.length + ')</h3><table style="width:100%;border-collapse:separate;border-spacing:0 6px;margin-bottom:20px">' + catHtml + "</table>" : ""}
   <h3 style="font-family:Georgia,serif;color:#C9A84C;font-size:18px;margin:24px 0 12px;border-bottom:1px solid #eee;padding-bottom:8px">Datos</h3>
@@ -398,14 +443,14 @@ export default async function handler(req, res) {
           PAGO_PREX.titular +
           "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)"
         : "\n\nDatos para pagar (transferencia)\nAlias: " +
-          PAGO_VIAMONTE.alias +
+          datosBancarios.alias +
           "\nCBU: " +
-          PAGO_VIAMONTE.cbu +
+          datosBancarios.cbu +
           "\nTitular: " +
-          PAGO_VIAMONTE.titular +
+          datosBancarios.titular +
           "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)";
     const textParticipante =
-      "JAM 2026\nInscripción confirmada\nCódigo: " +
+      nombreEvento + "\nInscripción confirmada\nCódigo: " +
       codigo_legible +
       "\n" +
       nombre_grupo +
