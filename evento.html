@@ -3008,7 +3008,7 @@
         if (notaAy) notaAy.style.display = currentRol === "ayudante_lineup" ? "block" : "none";
 
         try {
-          // 1. Cargar lineup (siempre lo necesitamos)
+          // 1. Cargar lineup
           if (typeof loadLineup === "function" && (!luData || luData.length === 0)) {
             await loadLineup();
           }
@@ -3024,85 +3024,109 @@
             banner.style.display = "none";
           }
 
-          // 3. Agrupar lineup por categoría (expandido: cada categoría aparece como una sola tabla)
-          const porCat = {};
-          (luData || []).forEach(p => {
-            // categoria puede ser array, object o string
-            let cats = [];
-            try {
-              const c = typeof p.categoria === "string" ? JSON.parse(p.categoria) : p.categoria;
-              if (Array.isArray(c)) cats = c;
-              else if (c && typeof c === "object") cats = [c];
-            } catch (e) { cats = []; }
-            
-            if (cats.length === 0) {
-              const key = "sin-categoria|Sin categoría";
-              porCat[key] = porCat[key] || { label: "Sin categoría", items: [], instancia: p.instancia };
-              porCat[key].items.push(p);
-              return;
-            }
-
-            cats.forEach(cat => {
-              const g = cat.g || "—";
-              const n = cat.n || "Sin nombre";
-              const key = g + "|" + n;
-              const label = n + " (" + g + ")";
-              porCat[key] = porCat[key] || { label, items: [], instancia: p.instancia };
-              porCat[key].items.push(p);
-            });
-          });
-
-          const catKeys = Object.keys(porCat).sort();
-          if (catKeys.length === 0) {
+          // 3. Obtener cronograma del director (orden + estado de cada categoría)
+          let cronograma = [];
+          try {
+            const { data: cron } = await db.rpc("cronograma_listar");
+            cronograma = cron || [];
+          } catch(e) { /* si no hay cronograma, sigue como antes */ }
+          
+          // Si NO hay cronograma armado, caer en listado simple por listar_categorias_lineup
+          let usarCronograma = cronograma.length > 0;
+          let catList;
+          if (usarCronograma) {
+            catList = cronograma.map(c => ({
+              categoria_key: c.categoria_key, categoria_label: c.categoria_label,
+              instancia: c.instancia, cantidad: c.cantidad, presentes: c.presentes,
+              estado_cron: c.estado, posicion_cron: c.posicion
+            }));
+          } else {
+            const { data, error } = await db.rpc("listar_categorias_lineup");
+            if (error) throw error;
+            catList = (data || []).map(c => ({...c, estado_cron: 'pendiente'}));
+          }
+          
+          if (!catList || catList.length === 0) {
             lista.innerHTML = '<div class="card" style="text-align:center;padding:24px"><div class="muted">No hay categorías cargadas todavía.</div></div>';
             stats.textContent = "0 categorías";
             return;
           }
-
-          stats.textContent = catKeys.length + " categorías · " + (luData?.length || 0) + " inscriptos";
-
+          
+          stats.textContent = catList.length + " categorías · " + (luData?.length || 0) + " inscriptos" + (usarCronograma ? ' · 📅 ordenadas por cronograma' : '');
+          
           const esAyudante = currentRol === "ayudante_lineup";
           const esEncargado = currentRol === "lineup";
-
+          
+          // Si hay cronograma: separar en 3 grupos (EN VIVO, próximas, completadas)
+          let categoriasAMostrar = catList;
+          if (usarCronograma) {
+            const enVivo = catList.filter(c => c.estado_cron === 'en_vivo');
+            const pendientes = catList.filter(c => c.estado_cron === 'pendiente');
+            const completadas = catList.filter(c => c.estado_cron === 'completada');
+            categoriasAMostrar = [...enVivo, ...pendientes, ...completadas];
+          }
+          
+          // 4. Para cada categoría, obtener sus pasadas ordenadas del backend
           let html = "";
-          for (const key of catKeys) {
-            const grupo = porCat[key];
-            const esActiva = window._catActiva?.categoria_key === key;
-            const presentes = grupo.items.filter(p => p.estado === "presente").length;
-            const total = grupo.items.length;
-
-            html += '<div class="card mb3" id="cat-' + encodeURIComponent(key) + '" style="' +
-              (esActiva ? 'border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)' : '') + '">' +
+          for (const cat of categoriasAMostrar) {
+            const esActiva = cat.estado_cron === 'en_vivo' || window._catActiva?.categoria_key === cat.categoria_key;
+            const esCompletada = cat.estado_cron === 'completada';
+            const { data: pasadas } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: cat.categoria_key });
+            const items = pasadas || [];
+            
+            const cardStyle = esActiva ? 'border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)' 
+              : esCompletada ? 'opacity:.5;border-color:rgba(255,255,255,.05)' : '';
+            const headerColor = esActiva ? '#4CAF7D' : esCompletada ? '#888' : '#C9A84C';
+            const headerIcon = esActiva ? '🔴 EN VIVO · ' : esCompletada ? '✓ Completada · ' : (cat.posicion_cron ? '#' + cat.posicion_cron + ' · ' : '');
+            
+            html += '<div class="card mb3" id="cat-' + encodeURIComponent(cat.categoria_key) + '" style="' + cardStyle + '">' +
               '<div class="sf mb2">' +
                 '<div>' +
-                  '<div class="fw7" style="font-size:14px;color:' + (esActiva ? '#4CAF7D' : '#C9A84C') + '">' +
-                    (esActiva ? '🔴 EN VIVO · ' : '') + grupo.label +
+                  '<div class="fw7" style="font-size:14px;color:' + headerColor + '">' +
+                    headerIcon + cat.categoria_label +
                   '</div>' +
-                  '<div class="muted text-xs mt2">' + presentes + '/' + total + ' presentes · ' + (grupo.instancia || '').toUpperCase() + '</div>' +
+                  '<div class="muted text-xs mt2">' + cat.presentes + '/' + cat.cantidad + ' presentes · ' + (cat.instancia || '').toUpperCase() + '</div>' +
                 '</div>' +
               '</div>' +
               '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
               '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+                '<th style="text-align:center;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase;width:36px">#</th>' +
                 '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Estado</th>' +
                 '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Código</th>' +
                 '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Grupo</th>' +
                 '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">País</th>' +
+                (esEncargado ? '<th style="text-align:right;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Acciones</th>' : '') +
               '</tr></thead><tbody>';
             
-            for (const p of grupo.items) {
+            for (let i = 0; i < items.length; i++) {
+              const p = items[i];
               const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
               const enPista = p.estado === "en_pista";
               const completado = p.estado === "completado";
+              const puedeIrAPista = presente && !enPista && !completado;
               const estadoBdg = completado ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
                 : enPista ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
                 : presente ? '<span class="bdg bdg-green" style="font-size:10px">✓ Presente</span>'
                 : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
+              const posMostrar = p.posicion === 999 ? '—' : p.posicion;
+              const catKeyEsc = JSON.stringify(cat.categoria_key);
+              const idEsc = JSON.stringify(p.lineup_id);
+              
               html += '<tr style="border-bottom:1px solid rgba(255,255,255,.05);' + (presente ? 'background:rgba(76,175,125,.05)' : '') + '">' +
+                '<td style="padding:8px 4px;text-align:center;font-weight:700;color:#C9A84C">' + posMostrar + '</td>' +
                 '<td style="padding:8px 4px">' + estadoBdg + '</td>' +
                 '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' + (p.codigo_id || '—') + '</td>' +
                 '<td style="padding:8px 4px">' + (p.nombre_grupo || '—') + '</td>' +
-                '<td style="padding:8px 4px" class="muted">' + (p.pais || '—') + '</td>' +
-              '</tr>';
+                '<td style="padding:8px 4px" class="muted">' + (p.pais || '—') + '</td>';
+              
+              if (esEncargado) {
+                html += '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
+                  (i > 0 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;arriba&quot;)">↑</button>' : '') +
+                  (i < items.length - 1 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;abajo&quot;)">↓</button>' : '') +
+                  (puedeIrAPista ? '<button class="btn" style="background:#E0524C;color:#fff;font-size:10px;padding:4px 10px;font-weight:700" onclick="catPonerEnPista(' + idEsc + ')">⚡ PISTA</button>' : '') +
+                  '</td>';
+              }
+              html += '</tr>';
             }
             html += '</tbody></table></div></div>';
           }
@@ -3110,6 +3134,38 @@
         } catch (e) {
           lista.innerHTML = '<div class="card" style="background:#1a0000;border-color:#E0524C"><div style="color:#E0524C">Error: ' + e.message + '</div></div>';
         }
+      }
+
+      async function catMover(lineupId, catKey, direccion) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada", {
+            p_lineup_id: lineupId,
+            p_categoria_key: catKey,
+            p_direccion: direccion
+          });
+          if (error) throw error;
+          if (data?.ok) {
+            // Refrescar la tab sin avisar (cambio rápido visual)
+            await catCargar();
+          } else {
+            toast(data?.error || "No se pudo mover", "warn");
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function catPonerEnPista(lineupId) {
+        if (!confirm("Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente")) return;
+        try {
+          const { data, error } = await db.rpc("poner_en_pista", { p_lineup_id: lineupId });
+          if (error) throw error;
+          if (data?.ok) {
+            toast("⚡ Participante puesto en pista · Sesión #" + data.sesion_id, "ok");
+            await loadLineup();
+            await catCargar();
+          } else {
+            toast(data?.error || "No se pudo poner en pista", "err");
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
       function catScrollToActiva() {
@@ -3128,12 +3184,20 @@
             const visible = document.getElementById("tp-categorias")?.classList.contains("show");
             if (visible) await catCargar();
           })
+          .on("postgres_changes", { event: "*", schema: "evento", table: "cronograma_categorias" }, async () => {
+            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
+            if (visible) await catCargar();
+          })
           .on("postgres_changes", { event: "*", schema: "evento", table: "lineup" }, async () => {
             const visible = document.getElementById("tp-categorias")?.classList.contains("show");
             if (visible) {
               if (typeof loadLineup === "function") await loadLineup();
               await catCargar();
             }
+          })
+          .on("postgres_changes", { event: "*", schema: "evento", table: "config" }, async () => {
+            // Recargar config global y aplicar a la UI (textos proyección, etc) sin refresh
+            try { await cargarConfigGlobal(); } catch(e) {}
           })
           .subscribe((status) => {
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {

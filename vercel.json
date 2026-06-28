@@ -18,6 +18,7 @@
     { "source": "/competencia", "destination": "/competencia.html" },
     { "source": "/api/notify", "destination": "/api/notify.js" },
     { "source": "/api/enviar-devolucion", "destination": "/api/enviar-devolucion.js" },
-    { "source": "/api/health", "destination": "/api/health.js" }
+    { "source": "/api/health", "destination": "/api/health.js" },
+    { "source": "/api/reenviar-qr", "destination": "/api/reenviar-qr.js" }
   ]
 }

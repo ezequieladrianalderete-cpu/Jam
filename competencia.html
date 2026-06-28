@@ -1525,20 +1525,53 @@
             <button class="btn bo bsm mt3" onclick="saCheckHealth()">↻ Verificar /api/health</button>
           </div>
 
-          <!-- Control de Categoría Activa (lo que ve el Ayudante de Line Up) -->
+          <!-- 📅 CRONOGRAMA del DÍA (orden de pasada de categorías) -->
           <div class="card mb3" style="border-color:rgba(76,175,125,.3);background:#0a1e0a">
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#4CAF7D">🎯 Categoría EN VIVO</div>
-                <div class="muted text-xs">Define qué categoría está pasando en este momento. Lo ven Encargado y Ayudante de Line Up.</div>
+                <div class="fw6" style="color:#4CAF7D">📅 Cronograma del Día</div>
+                <div class="muted text-xs">Orden de pasada de categorías. Lo ven Encargado y Ayudante de Line Up en tiempo real.</div>
               </div>
-              <button class="btn bo bsm" onclick="saCargarCategorias()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
+              <button class="btn bo bsm" onclick="cronCargar()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
             </div>
-            <div id="sa-cat-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
-              Ninguna categoría activa
+            <div id="cron-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
+              Cargando…
             </div>
-            <div id="sa-cat-lista" class="muted text-xs">Cargando categorías...</div>
-            <button class="btn bo bfull mt3" style="border-color:#E0524C;color:#E0524C;font-size:11px" onclick="saDesactivarCategoria()">⏸ Desactivar categoría actual</button>
+            <div id="cron-lista" class="muted text-xs">Cargando cronograma…</div>
+            <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn bo bsm" style="border-color:#C9A84C;color:#C9A84C;font-size:11px;flex:1;min-width:140px" onclick="cronInicializar()">
+                🔄 Generar desde lineup
+              </button>
+              <button class="btn bo bsm" style="border-color:rgba(255,255,255,.2);font-size:11px;flex:1;min-width:140px" onclick="cronMostrarAgregar()">
+                + Agregar categoría
+              </button>
+            </div>
+            <div id="cron-agregar-wrap" style="display:none;margin-top:10px;padding:10px;background:#1a1500;border:1px solid rgba(232,168,56,.3);border-radius:6px">
+              <div class="text-xs muted mb2">Seleccioná una categoría del lineup que no esté en el cronograma:</div>
+              <select id="cron-agregar-select" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px;color:#F8F5EE;font-size:12px;margin-bottom:8px">
+                <option value="">— elegí —</option>
+              </select>
+              <div style="display:flex;gap:6px">
+                <button class="btn bgn bsm" style="font-size:11px;flex:1" onclick="cronAgregar()">+ Agregar</button>
+                <button class="btn bo bsm" style="font-size:11px" onclick="document.getElementById('cron-agregar-wrap').style.display='none'">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✏️ EDITAR INSCRIPCIONES (cambiar integrantes, datos, reenviar QR) -->
+          <div class="card mb3" style="border-color:rgba(201,168,76,.3)">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#C9A84C">✏️ Editar Inscripciones</div>
+                <div class="muted text-xs">Modificá nombre, contacto, integrantes o reenviá el QR al grupo.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:10px">
+              <input id="edit-buscar-input" placeholder="Código (JAM-INTER-1000) o nombre del grupo" style="flex:1;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px;color:#F8F5EE;font-size:12px" onkeydown="if(event.key==='Enter') editBuscar()">
+              <button class="btn bo bsm" style="font-size:11px" onclick="editBuscar()">🔍 Buscar</button>
+            </div>
+            <div id="edit-resultados" style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px"></div>
+            <div id="edit-formulario" style="display:none"></div>
           </div>
 
           <!-- Gestión de Usuarios (Jurados + Director) -->
@@ -1551,6 +1584,38 @@
               Renombrá jurados, reseteá contraseñas o activá/desactivá. Los cambios se reflejan inmediatamente en el sistema.
             </div>
             <div id="sa-usuarios-list">Cargando…</div>
+          </div>
+
+          <!-- 📋 Auditoría / Logs -->
+          <div class="card mb3" style="border-color:rgba(76,175,125,.2)">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#4CAF7D">📋 Auditoría · Quién hizo qué</div>
+                <div class="muted text-xs">Historial completo de acciones del sistema (los últimos 100).</div>
+              </div>
+              <button class="btn bo bsm" onclick="auditCargar()">↻</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+              <input id="audit-filtro-usuario" placeholder="Usuario (vacío = todos)" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
+              <select id="audit-filtro-accion" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
+                <option value="">Todas las acciones</option>
+                <option value="login">Login</option>
+                <option value="cronograma_iniciar">Iniciar categoría</option>
+                <option value="cronograma_mover">Mover categoría</option>
+                <option value="cronograma_completar">Completar categoría</option>
+                <option value="poner_en_pista">Poner en pista</option>
+                <option value="mover_pasada">Mover participante</option>
+                <option value="quitar_de_pasada">Quitar de categoría</option>
+                <option value="agregar_a_pasada">Agregar a categoría</option>
+                <option value="editar_inscripcion">Editar inscripción</option>
+                <option value="reenviar_qr">Reenviar QR</option>
+                <option value="actualizar_config">Cambiar configuración</option>
+                <option value="reset_password">Reset password</option>
+                <option value="sim_toggle">Modo simulación</option>
+              </select>
+              <button class="btn bo bsm" onclick="auditCargar()" style="font-size:11px">🔍 Filtrar</button>
+            </div>
+            <div id="audit-lista" style="max-height:380px;overflow-y:auto;font-size:11px">Cargando…</div>
           </div>
 
           <!-- Limpiar tablas scoring -->
@@ -2980,7 +3045,7 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
-        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); saCargarCategorias(); simRefreshUI(); }
+        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); cronCargar(); simRefreshUI(); auditCargar(); }
         if (id === "config") { cfgCargar(); }
       }
 
@@ -3238,37 +3303,62 @@
         }
       }
 
-      // Control de Categorías Activas (qué categoría se muestra al Ayudante)
-      async function saCargarCategorias() {
-        const lista = document.getElementById("sa-cat-lista");
-        const display = document.getElementById("sa-cat-activa-display");
-        if (!lista) return;
-        lista.innerHTML = "Cargando...";
-        try {
-          // Obtener categoría activa actual
-          const { data: actData } = await db.rpc("obtener_categoria_activa");
-          const act = (actData && actData[0]) || null;
-          if (act?.categoria_key) {
-            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 ' + (act.categoria_label || act.categoria_key) + '</span>';
-          } else {
-            display.innerHTML = '<span class="muted">Ninguna categoría activa</span>';
-          }
+      // ═══════════════════════════════════════════════════════════
+      // CRONOGRAMA DEL DÍA (orden de pasada de categorías)
+      // ═══════════════════════════════════════════════════════════
+      window._cronCache = [];
 
-          // Listar todas las categorías del lineup
-          const { data: cats, error } = await db.rpc("listar_categorias_lineup");
+      async function cronCargar() {
+        const lista = document.getElementById("cron-lista");
+        const display = document.getElementById("cron-activa-display");
+        if (!lista) return;
+        lista.innerHTML = "Cargando…";
+        try {
+          const { data, error } = await db.rpc("cronograma_listar");
           if (error) throw error;
-          if (!cats || cats.length === 0) {
-            lista.innerHTML = '<div class="muted text-xs">No hay categorías en el lineup todavía.</div>';
+          window._cronCache = data || [];
+          
+          const enVivo = window._cronCache.find(c => c.estado === "en_vivo");
+          if (enVivo) {
+            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 EN VIVO · ' + enVivo.categoria_label + '</span>';
+          } else {
+            const pendientes = window._cronCache.filter(c => c.estado === "pendiente").length;
+            display.innerHTML = '<span class="muted">Nada en vivo · ' + pendientes + ' categorías pendientes</span>';
+          }
+          
+          if (window._cronCache.length === 0) {
+            lista.innerHTML = '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
             return;
           }
-          let html = '<div style="display:flex;flex-direction:column;gap:6px">';
-          for (const c of cats) {
-            const esActiva = act?.categoria_key === c.categoria_key;
-            html += '<button class="btn ' + (esActiva ? 'bgn' : 'bo') + ' bfull" style="font-size:11px;text-align:left;padding:8px 10px;' +
-              (esActiva ? '' : 'border-color:rgba(76,175,125,.2);color:#aaa') + '" onclick="saActivarCategoria(' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.categoria_label).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.instancia).replace(/"/g, '&quot;') + ')">' +
-              (esActiva ? '🔴 ' : '▶ ') + c.categoria_label +
-              ' <span class="muted" style="font-size:9px;margin-left:6px">(' + c.presentes + '/' + c.cantidad + ' presentes)</span>' +
-              '</button>';
+          
+          let html = '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
+          for (let i = 0; i < window._cronCache.length; i++) {
+            const c = window._cronCache[i];
+            const isVivo = c.estado === "en_vivo";
+            const isComp = c.estado === "completada";
+            const borderC = isVivo ? "#4CAF7D" : isComp ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.1)";
+            const bgC = isVivo ? "rgba(76,175,125,.08)" : isComp ? "rgba(0,0,0,.2)" : "transparent";
+            const opacity = isComp ? ".5" : "1";
+            const ic = isVivo ? "🔴" : isComp ? "✓" : "⏸";
+            
+            html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' + borderC + ';background:' + bgC + ';border-radius:6px;opacity:' + opacity + '">' +
+              '<span style="font-weight:700;color:#C9A84C;min-width:24px">' + (i+1) + '.</span>' +
+              '<span style="min-width:18px">' + ic + '</span>' +
+              '<div style="flex:1;min-width:0">' +
+                '<div style="font-size:11px;font-weight:600;color:' + (isVivo ? "#4CAF7D" : "#F8F5EE") + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c.categoria_label + '</div>' +
+                '<div class="muted" style="font-size:9px">' + (c.instancia || '').toUpperCase() + ' · ' + c.presentes + '/' + c.cantidad + ' presentes</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:2px;flex-shrink:0">' +
+              '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' + c.id + ',' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ')">👁</button>' +
+              (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;arriba&quot;)">↑</button>' : '') +
+              (i < window._cronCache.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;abajo&quot;)">↓</button>' : '') +
+              (!isVivo ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' + c.id + ')">▶</button>' : '') +
+              (isVivo ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' + c.id + ')">✓</button>' : '') +
+              (isComp ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' + c.id + ')">↺</button>' : '') +
+              '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' + c.id + ')">✕</button>' +
+              '</div>' +
+              '</div>' +
+              '<div id="cron-detalle-' + c.id + '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
           }
           html += '</div>';
           lista.innerHTML = html;
@@ -3277,36 +3367,445 @@
         }
       }
 
-      async function saActivarCategoria(catKey, catLabel, instancia) {
+      async function cronMover(id, dir) {
         try {
-          const { data, error } = await db.rpc("activar_categoria", {
-            p_categoria_key: catKey,
-            p_categoria_label: catLabel,
-            p_instancia: instancia,
-            p_user: currentUser?.username || "director"
-          });
+          const { data, error } = await db.rpc("cronograma_mover", { p_id: id, p_direccion: dir });
+          if (error) throw error;
+          if (data?.ok) { auditLog("cronograma_mover","cronograma",id,{direccion:dir}); await cronCargar(); }
+          else toast(data?.error || "No se pudo mover", "warn");
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronIniciar(id) {
+        const c = window._cronCache.find(x => x.id === id);
+        if (!c) return;
+        if (!confirm("Iniciar categoría: " + c.categoria_label + "?\n\nLa categoría anterior (si había) se marcará como completada.")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_iniciar", { p_id: id, p_user: currentUser?.username || "director" });
+          if (error) throw error;
+          if (data?.ok) { toast("🔴 EN VIVO: " + c.categoria_label, "ok"); auditLog("cronograma_iniciar","categoria",c.categoria_key,{label:c.categoria_label}); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronCompletar(id) {
+        if (!confirm("Marcar categoría como completada?")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_completar", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) { auditLog("cronograma_completar","cronograma",id); toast("✓ Completada", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronResetEstado(id) {
+        try {
+          const { data, error } = await db.rpc("cronograma_reset_estado", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) await cronCargar();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronQuitar(id) {
+        const c = window._cronCache.find(x => x.id === id);
+        if (!c) return;
+        if (!confirm("Quitar '" + c.categoria_label + "' del cronograma?\n\nSe puede volver a agregar después.")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_quitar", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) { auditLog("cronograma_quitar","cronograma",id,{categoria:c.categoria_label}); toast("Quitada del cronograma", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronInicializar() {
+        if (!confirm("Generar cronograma con TODAS las categorías del lineup?\n\n• No reemplaza las que ya están\n• Las nuevas se agregan al final\n• Podés reordenar después")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_inicializar_desde_lineup");
+          if (error) throw error;
+          if (data?.ok) { toast("Se agregaron " + (data.agregadas || 0) + " categorías", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronMostrarAgregar() {
+        const wrap = document.getElementById("cron-agregar-wrap");
+        const sel = document.getElementById("cron-agregar-select");
+        if (!wrap || !sel) return;
+        try {
+          // Categorías del lineup que NO están en el cronograma
+          const { data: cats } = await db.rpc("listar_categorias_lineup");
+          const yaEstan = new Set(window._cronCache.map(c => c.categoria_key));
+          const faltantes = (cats || []).filter(c => !yaEstan.has(c.categoria_key));
+          if (faltantes.length === 0) {
+            toast("Todas las categorías del lineup ya están en el cronograma", "ok");
+            return;
+          }
+          sel.innerHTML = '<option value="">— elegí —</option>' + 
+            faltantes.map(c => '<option value="' + c.categoria_key.replace(/"/g,'&quot;') + '">' + c.categoria_label + ' (' + c.cantidad + ' inscriptos)</option>').join("");
+          wrap.style.display = "block";
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronAgregar() {
+        const sel = document.getElementById("cron-agregar-select");
+        const key = sel?.value;
+        if (!key) { toast("Elegí una categoría", "warn"); return; }
+        try {
+          const { data, error } = await db.rpc("cronograma_agregar", { p_categoria_key: key });
           if (error) throw error;
           if (data?.ok) {
-            toast("🔴 Categoría activada: " + catLabel, "ok");
-            saCargarCategorias();
+            toast("Agregada al final del cronograma", "ok");
+            document.getElementById("cron-agregar-wrap").style.display = "none";
+            await cronCargar();
           }
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
-      async function saDesactivarCategoria() {
-        if (!confirm("Desactivar la categoría actual? El Ayudante y el Encargado verán todas las categorías sin destacar ninguna.")) return;
+      // === Inscriptos dentro de una categoría (control total de Gastón) ===
+      async function cronVerInscriptos(cronId, catKey) {
+        const det = document.getElementById("cron-detalle-" + cronId);
+        if (!det) return;
+        if (det.style.display !== "none") { det.style.display = "none"; det.innerHTML = ""; return; }
+        det.style.display = "block";
+        det.innerHTML = '<div class="muted text-xs">Cargando inscriptos…</div>';
         try {
-          const { data, error } = await db.rpc("activar_categoria", {
-            p_categoria_key: null,
-            p_categoria_label: null,
-            p_instancia: null,
-            p_user: currentUser?.username || "director"
-          });
+          const { data: items, error } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: catKey });
           if (error) throw error;
-          toast("Categoría desactivada", "ok");
-          saCargarCategorias();
+          const list = items || [];
+          let html = '<div class="text-xs muted mb2" style="font-weight:600;color:#C9A84C">📋 Inscriptos en esta categoría (' + list.length + ')</div>';
+          if (list.length === 0) {
+            html += '<div class="muted text-xs">Sin inscriptos.</div>';
+          } else {
+            html += '<div style="display:flex;flex-direction:column;gap:3px">';
+            for (let i = 0; i < list.length; i++) {
+              const p = list[i];
+              const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
+              const idEsc = JSON.stringify(p.lineup_id).replace(/"/g, '&quot;');
+              const ckEsc = JSON.stringify(catKey).replace(/"/g, '&quot;');
+              const posMostrar = p.posicion === 999 ? "—" : p.posicion;
+              html += '<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px">' +
+                '<span style="font-weight:700;color:#C9A84C;min-width:22px">' + posMostrar + '</span>' +
+                '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' + (p.codigo_id||'—') + '</span>' +
+                '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (p.nombre_grupo||'—') + '</span>' +
+                '<span style="font-size:9px;color:' + (presente ? '#4CAF7D' : '#888') + '">' + (presente ? '✓' : '○') + '</span>' +
+                '<div style="display:flex;gap:2px">' +
+                (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;arriba&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↑</button>' : '') +
+                (i < list.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;abajo&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↓</button>' : '') +
+                '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrQuitar(' + idEsc + ',' + ckEsc + ',' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">✕</button>' +
+                '</div>' +
+                '</div>';
+            }
+            html += '</div>';
+          }
+          // Sección agregar
+          html += '<div style="margin-top:10px;padding:8px;border-top:1px solid rgba(255,255,255,.1)">' +
+            '<div class="text-xs muted mb2">+ Agregar participante del lineup que NO esté:</div>' +
+            '<select id="cron-add-select-' + cronId + '" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px;color:#F8F5EE;font-size:11px;margin-bottom:6px">' +
+              '<option value="">Cargando…</option>' +
+            '</select>' +
+            '<button class="btn bgn bsm bfull" style="font-size:11px" onclick="cronInscrAgregar(' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">+ Agregar a esta categoría</button>' +
+            '</div>';
+          det.innerHTML = html;
+          // Cargar select disponibles
+          const sel = document.getElementById("cron-add-select-" + cronId);
+          try {
+            const { data: dispo } = await db.rpc("lineup_no_en_categoria", { p_categoria_key: catKey });
+            const opts = (dispo || []).map(d => '<option value="' + d.lineup_id + '">' + d.codigo_id + ' · ' + (d.nombre_grupo||'—') + ' (' + (d.pais||'') + ')</option>').join("");
+            sel.innerHTML = opts ? ('<option value="">— elegí —</option>' + opts) : '<option value="">No hay inscriptos disponibles</option>';
+          } catch (e) { sel.innerHTML = '<option value="">Error: ' + e.message + '</option>'; }
+        } catch (e) {
+          det.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+        }
+      }
+
+      async function cronInscrMover(lineupId, catKey, dir, cronId, catKeyOrig) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey, p_direccion: dir });
+          if (error) throw error;
+          if (data?.ok) { await cronVerInscriptos(cronId, catKeyOrig); await cronVerInscriptos(cronId, catKeyOrig); /* trick: cerrar+abrir refresca */
+            // Forzar abierto
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det && det.style.display === "none") await cronVerInscriptos(cronId, catKeyOrig);
+          } else toast(data?.error || "No se pudo mover", "warn");
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
+
+      async function cronInscrQuitar(lineupId, catKey, cronId, catKeyOrig) {
+        if (!confirm("Quitar este participante de la categoría?\n\nNO afecta su inscripción ni el pago. Solo no aparecerá en el orden de esta categoría.")) return;
+        try {
+          const { data, error } = await db.rpc("quitar_de_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey });
+          if (error) throw error;
+          if (data?.ok) { 
+            auditLog("quitar_de_pasada","lineup",lineupId,{categoria:catKey}); toast("Quitado de la categoría", "ok"); 
+            // Refrescar tanto el cronograma (conteo) como el detalle
+            await cronCargar();
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKeyOrig); }
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronInscrAgregar(cronId, catKey) {
+        const sel = document.getElementById("cron-add-select-" + cronId);
+        const lid = sel?.value;
+        if (!lid) { toast("Elegí un participante", "warn"); return; }
+        try {
+          const { data, error } = await db.rpc("agregar_a_pasada", { p_lineup_id: lid, p_categoria_key: catKey });
+          if (error) throw error;
+          if (data?.ok) {
+            auditLog("agregar_a_pasada","lineup",lid,{categoria:catKey,posicion:data.posicion}); toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
+            await cronCargar();
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKey); }
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // EDITAR INSCRIPCIONES (Gastón puede modificar todo)
+      // ═══════════════════════════════════════════════════════════
+      window._editSeleccionada = null;
+
+      async function editBuscar() {
+        const q = (document.getElementById("edit-buscar-input")?.value || "").trim();
+        const res = document.getElementById("edit-resultados");
+        const form = document.getElementById("edit-formulario");
+        if (!q) { toast("Escribí algo para buscar", "warn"); return; }
+        res.innerHTML = '<div class="muted text-xs">Buscando…</div>';
+        form.style.display = "none";
+        try {
+          // Buscar en lineup (que tiene código + nombre_grupo + inscripcion_id)
+          const { data: lu, error } = await db.schema("evento").from("lineup")
+            .select("id,codigo_id,nombre_grupo,inscripcion_id,instancia,pais")
+            .or(`codigo_id.ilike.%${q}%,nombre_grupo.ilike.%${q}%`)
+            .limit(20);
+          if (error) throw error;
+          if (!lu || lu.length === 0) {
+            res.innerHTML = '<div class="muted text-xs" style="padding:8px;text-align:center">Sin resultados</div>';
+            return;
+          }
+          let html = '';
+          for (const l of lu) {
+            html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px;cursor:pointer" onclick="editAbrir(' + JSON.stringify(l.inscripcion_id).replace(/"/g,'&quot;') + ',' + JSON.stringify(l.codigo_id||'').replace(/"/g,'&quot;') + ')">' +
+              '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' + (l.codigo_id||'—') + '</span>' +
+              '<span style="flex:1">' + (l.nombre_grupo||'—') + '</span>' +
+              '<span class="muted" style="font-size:10px">' + (l.instancia||'').toUpperCase() + ' · ' + (l.pais||'') + '</span>' +
+              '<span style="color:#C9A84C">→</span>' +
+              '</div>';
+          }
+          res.innerHTML = html;
+        } catch (e) {
+          res.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+        }
+      }
+
+      async function editAbrir(inscripcionId, codigo) {
+        const form = document.getElementById("edit-formulario");
+        const res = document.getElementById("edit-resultados");
+        if (!inscripcionId) { toast("Esta entrada no tiene inscripción asociada", "warn"); return; }
+        form.style.display = "block";
+        form.innerHTML = '<div class="muted text-xs">Cargando datos…</div>';
+        try {
+          const { data: insArr, error } = await db.from("inscripciones").select("*").eq("id", inscripcionId);
+          if (error) throw error;
+          const ins = insArr && insArr[0];
+          if (!ins) { form.innerHTML = '<div style="color:#E0524C">No se encontró la inscripción</div>'; return; }
+          window._editSeleccionada = ins;
+          
+          let integrantes = [];
+          try {
+            integrantes = Array.isArray(ins.integrantes) ? ins.integrantes
+              : (typeof ins.integrantes === "string" ? JSON.parse(ins.integrantes) : []);
+          } catch { integrantes = []; }
+          
+          res.innerHTML = '';
+          let html = '<div style="padding:14px;background:#0a0e14;border:1px solid rgba(201,168,76,.3);border-radius:8px">' +
+            '<div class="sf mb3"><div class="fw6" style="color:#C9A84C">📝 ' + (codigo || '—') + '</div>' +
+            '<button class="btn bo bsm" style="font-size:10px" onclick="editCerrar()">✕ Cerrar</button></div>' +
+            '<div class="muted text-xs mb3">Los cambios se guardan inmediatamente al hacer click en "💾 Guardar". El reenvío de QR es independiente.</div>' +
+            
+            '<div style="display:flex;flex-direction:column;gap:8px">' +
+              '<div><label class="text-xs muted">Nombre del grupo / participante</label><input id="edit-nombre_grupo" class="cfg-input" value="' + (ins.nombre_grupo||'').replace(/"/g,'&quot;') + '"></div>' +
+              '<div><label class="text-xs muted">Responsable (nombre)</label><input id="edit-nombre" class="cfg-input" value="' + (ins.nombre||'').replace(/"/g,'&quot;') + '"></div>' +
+              '<div><label class="text-xs muted">Email responsable</label><input id="edit-email" class="cfg-input" type="email" value="' + (ins.email||'').replace(/"/g,'&quot;') + '"></div>' +
+              '<div><label class="text-xs muted">Teléfono / Celular</label><input id="edit-cel" class="cfg-input" value="' + (ins.cel||'').replace(/"/g,'&quot;') + '"></div>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+                '<div><label class="text-xs muted">País</label><input id="edit-pais" class="cfg-input" value="' + (ins.pais||'').replace(/"/g,'&quot;') + '"></div>' +
+                '<div><label class="text-xs muted">Ciudad</label><input id="edit-ciudad" class="cfg-input" value="' + (ins.ciudad||'').replace(/"/g,'&quot;') + '"></div>' +
+              '</div>' +
+              
+              '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
+                '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' + integrantes.length + ')</div>' +
+                '<button class="btn bo bsm" style="font-size:10px" onclick="editAgregarIntegrante()">+ Agregar</button></div>' +
+                '<div id="edit-integrantes-list" style="display:flex;flex-direction:column;gap:6px"></div>' +
+              '</div>' +
+            '</div>' +
+            
+            '<div style="display:flex;gap:6px;margin-top:14px">' +
+              '<button class="btn bgn bfull" style="font-size:12px" onclick="editGuardar()">💾 Guardar cambios</button>' +
+              '<button class="btn bo bfull" style="font-size:12px;border-color:#C9A84C;color:#C9A84C" onclick="editReenviarQR()">📨 Reenviar QR al grupo</button>' +
+            '</div>' +
+          '</div>';
+          form.innerHTML = html;
+          editRenderIntegrantes(integrantes);
+        } catch (e) {
+          form.innerHTML = '<div style="color:#E0524C">Error: ' + e.message + '</div>';
+        }
+      }
+
+      function editRenderIntegrantes(integrantes) {
+        const cont = document.getElementById("edit-integrantes-list");
+        if (!cont) return;
+        if (!integrantes || integrantes.length === 0) {
+          cont.innerHTML = '<div class="muted text-xs">Sin integrantes cargados</div>';
+          return;
+        }
+        let html = '';
+        for (let i = 0; i < integrantes.length; i++) {
+          const it = integrantes[i] || {};
+          html += '<div style="padding:8px;background:rgba(0,0,0,.3);border-radius:4px;border:1px solid rgba(255,255,255,.05)">' +
+            '<div class="sf mb2"><div style="font-size:10px;color:#C9A84C;font-weight:600">Integrante #' + (i+1) + '</div>' +
+            '<button style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="editQuitarIntegrante(' + i + ')">✕ Quitar</button></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">' +
+              '<input data-int-idx="' + i + '" data-int-field="nombre" placeholder="Nombre completo" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.nombre||'').replace(/"/g,'&quot;') + '">' +
+              '<input data-int-idx="' + i + '" data-int-field="dni" placeholder="DNI / ID" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.dni||'').replace(/"/g,'&quot;') + '">' +
+              '<input data-int-idx="' + i + '" data-int-field="email" placeholder="Email" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.email||'').replace(/"/g,'&quot;') + '">' +
+              '<input data-int-idx="' + i + '" data-int-field="cel" placeholder="Celular" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.cel||'').replace(/"/g,'&quot;') + '">' +
+            '</div>' +
+            '</div>';
+        }
+        cont.innerHTML = html;
+      }
+
+      function editRecogerIntegrantes() {
+        // Recoge los integrantes desde el DOM
+        const inputs = document.querySelectorAll('#edit-integrantes-list input[data-int-idx]');
+        const map = {};
+        inputs.forEach(inp => {
+          const idx = parseInt(inp.dataset.intIdx);
+          const field = inp.dataset.intField;
+          if (!map[idx]) map[idx] = {};
+          map[idx][field] = inp.value || "";
+        });
+        return Object.keys(map).sort((a,b) => a-b).map(k => map[k]);
+      }
+
+      function editAgregarIntegrante() {
+        const actuales = editRecogerIntegrantes();
+        actuales.push({ nombre: "", dni: "", email: "", cel: "" });
+        editRenderIntegrantes(actuales);
+      }
+
+      function editQuitarIntegrante(idx) {
+        const actuales = editRecogerIntegrantes();
+        actuales.splice(idx, 1);
+        editRenderIntegrantes(actuales);
+      }
+
+      async function editGuardar() {
+        const ins = window._editSeleccionada;
+        if (!ins) return;
+        if (!confirm("Guardar cambios en esta inscripción?")) return;
+        try {
+          const integrantes = editRecogerIntegrantes();
+          const updates = {
+            nombre_grupo: document.getElementById("edit-nombre_grupo")?.value || null,
+            nombre: document.getElementById("edit-nombre")?.value || null,
+            email: document.getElementById("edit-email")?.value || null,
+            cel: document.getElementById("edit-cel")?.value || null,
+            pais: document.getElementById("edit-pais")?.value || null,
+            ciudad: document.getElementById("edit-ciudad")?.value || null,
+            integrantes: integrantes,
+          };
+          const { error } = await db.from("inscripciones").update(updates).eq("id", ins.id);
+          if (error) throw error;
+          
+          // También actualizar nombre_grupo en lineup si cambió
+          if (updates.nombre_grupo && updates.nombre_grupo !== ins.nombre_grupo) {
+            await db.schema("evento").from("lineup").update({ nombre_grupo: updates.nombre_grupo, responsable: updates.nombre })
+              .eq("inscripcion_id", ins.id);
+          }
+          
+          auditLog("editar_inscripcion","inscripcion",ins.id,{cambios:Object.keys(updates)}); toast("✓ Cambios guardados", "ok");
+          window._editSeleccionada = { ...ins, ...updates };
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function editReenviarQR() {
+        const ins = window._editSeleccionada;
+        if (!ins) return;
+        if (!confirm("Reenviar el QR al responsable y a todos los integrantes con email?")) return;
+        try {
+          const r = await fetch("/api/reenviar-qr", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: ins.id }),
+          });
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || "Error en API");
+          auditLog("reenviar_qr","inscripcion",ins.id,{enviados:data.enviados,total:data.total}); toast("📨 Enviado a " + (data.enviados || 0) + " de " + (data.total || 0) + " emails", "ok");
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      function editCerrar() {
+        const form = document.getElementById("edit-formulario");
+        if (form) { form.style.display = "none"; form.innerHTML = ""; }
+        window._editSeleccionada = null;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // AUDITORÍA (logs de quién hizo qué)
+      // ═══════════════════════════════════════════════════════════
+      async function auditLog(accion, entidad, entidadId, detalle) {
+        // Fire-and-forget: no bloquea ni interrumpe si falla
+        try {
+          await db.rpc("log_evento", {
+            p_usuario: currentUser?.username || "(anon)",
+            p_rol: currentUser?.rol || null,
+            p_accion: accion,
+            p_entidad: entidad || null,
+            p_entidad_id: entidadId ? String(entidadId) : null,
+            p_detalle: detalle || null,
+          });
+        } catch (e) { /* silencio: nunca interrumpir UX */ }
+      }
+
+      async function auditCargar() {
+        const cont = document.getElementById("audit-lista");
+        if (!cont) return;
+        cont.innerHTML = "Cargando…";
+        try {
+          const usuario = document.getElementById("audit-filtro-usuario")?.value?.trim() || null;
+          const accion = document.getElementById("audit-filtro-accion")?.value || null;
+          const { data, error } = await db.rpc("audit_listar", { p_limit: 100, p_usuario: usuario, p_accion: accion });
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            cont.innerHTML = '<div class="muted text-xs" style="padding:14px;text-align:center">Sin eventos para los filtros aplicados</div>';
+            return;
+          }
+          let html = '<div style="display:flex;flex-direction:column;gap:3px">';
+          for (const l of data) {
+            const d = new Date(l.ts);
+            const hora = d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            const detTxt = l.detalle ? (typeof l.detalle === "string" ? l.detalle : JSON.stringify(l.detalle)) : "";
+            html += '<div style="display:flex;gap:6px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;align-items:center">' +
+              '<span style="font-family:monospace;color:#888;font-size:9px;min-width:95px">' + hora + '</span>' +
+              '<span style="background:rgba(76,175,125,.15);color:#7DD09B;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;min-width:90px;text-align:center">' + (l.usuario || '—') + '</span>' +
+              '<span style="color:#C9A84C;font-size:10px;min-width:140px">' + (l.accion || '') + '</span>' +
+              '<span style="flex:1;color:#aaa;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + detTxt.replace(/"/g,'&quot;') + '">' +
+                (l.entidad ? '[' + l.entidad + (l.entidad_id ? ':' + l.entidad_id.substring(0,8) : '') + '] ' : '') +
+                detTxt.substring(0, 80) +
+              '</span>' +
+              '</div>';
+          }
+          html += '</div>';
+          cont.innerHTML = html;
+        } catch (e) {
+          cont.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+        }
+      }
+
+      // === Wrappers de compatibilidad (las funciones viejas siguen siendo llamadas en algún lugar) ===
+      async function saCargarCategorias() { return cronCargar(); }
+      async function saActivarCategoria() { /* deprecated */ }
+      async function saDesactivarCategoria() { /* deprecated */ }
 
       // Gestión de usuarios (renombrar, reset pass, activar)
       async function saLoadUsuarios() {
@@ -3643,7 +4142,8 @@
       // ═══════════════════════════════════════════════════════════
       // CONFIGURAR JURADOS
       // ═══════════════════════════════════════════════════════════
-      const TODOS_ITEMS = [
+      // TODOS_ITEMS arranca con defaults pero se sobreescribe desde evento.config (modo_competencia.items_disponibles)
+      let TODOS_ITEMS = [
         "Técnica",
         "Proyección",
         "Coreografía",
@@ -3655,9 +4155,23 @@
         "Tiempo",
         "Edición Musical",
       ];
+      
+      // Hook: cuando se carga config global, sincronizar items
+      async function sincronizarItemsDesdeConfig() {
+        try {
+          const { data } = await db.rpc("obtener_config", { p_clave: "modo_competencia" });
+          const cfg = data && data[0];
+          const items = cfg?.valor_json?.items_disponibles;
+          if (Array.isArray(items) && items.length > 0) {
+            TODOS_ITEMS = items;
+          }
+        } catch(e) { /* fallback a defaults */ }
+      }
+      
       let juradosConfig = [];
 
       async function dCargarJurados() {
+        await sincronizarItemsDesdeConfig();
         const { data } = await db.rpc("obtener_jurados");
         juradosConfig = data || [];
         // Enriquecer con nombre_display desde listar_usuarios
