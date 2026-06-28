@@ -1586,6 +1586,38 @@
             <div id="sa-usuarios-list">Cargando…</div>
           </div>
 
+          <!-- 📋 Auditoría / Logs -->
+          <div class="card mb3" style="border-color:rgba(76,175,125,.2)">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#4CAF7D">📋 Auditoría · Quién hizo qué</div>
+                <div class="muted text-xs">Historial completo de acciones del sistema (los últimos 100).</div>
+              </div>
+              <button class="btn bo bsm" onclick="auditCargar()">↻</button>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+              <input id="audit-filtro-usuario" placeholder="Usuario (vacío = todos)" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
+              <select id="audit-filtro-accion" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
+                <option value="">Todas las acciones</option>
+                <option value="login">Login</option>
+                <option value="cronograma_iniciar">Iniciar categoría</option>
+                <option value="cronograma_mover">Mover categoría</option>
+                <option value="cronograma_completar">Completar categoría</option>
+                <option value="poner_en_pista">Poner en pista</option>
+                <option value="mover_pasada">Mover participante</option>
+                <option value="quitar_de_pasada">Quitar de categoría</option>
+                <option value="agregar_a_pasada">Agregar a categoría</option>
+                <option value="editar_inscripcion">Editar inscripción</option>
+                <option value="reenviar_qr">Reenviar QR</option>
+                <option value="actualizar_config">Cambiar configuración</option>
+                <option value="reset_password">Reset password</option>
+                <option value="sim_toggle">Modo simulación</option>
+              </select>
+              <button class="btn bo bsm" onclick="auditCargar()" style="font-size:11px">🔍 Filtrar</button>
+            </div>
+            <div id="audit-lista" style="max-height:380px;overflow-y:auto;font-size:11px">Cargando…</div>
+          </div>
+
           <!-- Limpiar tablas scoring -->
           <div class="card mb3" style="border-color:rgba(232,168,56,.3);background:#1a1400">
             <div class="fw6 mb2" style="color:#E8A838">🧹 Limpiar tablas Scoring (resetear competencia)</div>
@@ -3013,7 +3045,7 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
-        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); cronCargar(); simRefreshUI(); }
+        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); cronCargar(); simRefreshUI(); auditCargar(); }
         if (id === "config") { cfgCargar(); }
       }
 
@@ -3339,7 +3371,7 @@
         try {
           const { data, error } = await db.rpc("cronograma_mover", { p_id: id, p_direccion: dir });
           if (error) throw error;
-          if (data?.ok) await cronCargar();
+          if (data?.ok) { auditLog("cronograma_mover","cronograma",id,{direccion:dir}); await cronCargar(); }
           else toast(data?.error || "No se pudo mover", "warn");
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
@@ -3351,7 +3383,7 @@
         try {
           const { data, error } = await db.rpc("cronograma_iniciar", { p_id: id, p_user: currentUser?.username || "director" });
           if (error) throw error;
-          if (data?.ok) { toast("🔴 EN VIVO: " + c.categoria_label, "ok"); await cronCargar(); }
+          if (data?.ok) { toast("🔴 EN VIVO: " + c.categoria_label, "ok"); auditLog("cronograma_iniciar","categoria",c.categoria_key,{label:c.categoria_label}); await cronCargar(); }
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
@@ -3360,7 +3392,7 @@
         try {
           const { data, error } = await db.rpc("cronograma_completar", { p_id: id });
           if (error) throw error;
-          if (data?.ok) { toast("✓ Completada", "ok"); await cronCargar(); }
+          if (data?.ok) { auditLog("cronograma_completar","cronograma",id); toast("✓ Completada", "ok"); await cronCargar(); }
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
@@ -3379,7 +3411,7 @@
         try {
           const { data, error } = await db.rpc("cronograma_quitar", { p_id: id });
           if (error) throw error;
-          if (data?.ok) { toast("Quitada del cronograma", "ok"); await cronCargar(); }
+          if (data?.ok) { auditLog("cronograma_quitar","cronograma",id,{categoria:c.categoria_label}); toast("Quitada del cronograma", "ok"); await cronCargar(); }
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
@@ -3501,7 +3533,7 @@
           const { data, error } = await db.rpc("quitar_de_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey });
           if (error) throw error;
           if (data?.ok) { 
-            toast("Quitado de la categoría", "ok"); 
+            auditLog("quitar_de_pasada","lineup",lineupId,{categoria:catKey}); toast("Quitado de la categoría", "ok"); 
             // Refrescar tanto el cronograma (conteo) como el detalle
             await cronCargar();
             const det = document.getElementById("cron-detalle-" + cronId);
@@ -3518,7 +3550,7 @@
           const { data, error } = await db.rpc("agregar_a_pasada", { p_lineup_id: lid, p_categoria_key: catKey });
           if (error) throw error;
           if (data?.ok) {
-            toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
+            auditLog("agregar_a_pasada","lineup",lid,{categoria:catKey,posicion:data.posicion}); toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
             await cronCargar();
             const det = document.getElementById("cron-detalle-" + cronId);
             if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKey); }
@@ -3691,7 +3723,7 @@
               .eq("inscripcion_id", ins.id);
           }
           
-          toast("✓ Cambios guardados", "ok");
+          auditLog("editar_inscripcion","inscripcion",ins.id,{cambios:Object.keys(updates)}); toast("✓ Cambios guardados", "ok");
           window._editSeleccionada = { ...ins, ...updates };
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
@@ -3708,7 +3740,7 @@
           });
           const data = await r.json();
           if (!r.ok) throw new Error(data.error || "Error en API");
-          toast("📨 Enviado a " + (data.enviados || 0) + " de " + (data.total || 0) + " emails", "ok");
+          auditLog("reenviar_qr","inscripcion",ins.id,{enviados:data.enviados,total:data.total}); toast("📨 Enviado a " + (data.enviados || 0) + " de " + (data.total || 0) + " emails", "ok");
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
@@ -3716,6 +3748,58 @@
         const form = document.getElementById("edit-formulario");
         if (form) { form.style.display = "none"; form.innerHTML = ""; }
         window._editSeleccionada = null;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // AUDITORÍA (logs de quién hizo qué)
+      // ═══════════════════════════════════════════════════════════
+      async function auditLog(accion, entidad, entidadId, detalle) {
+        // Fire-and-forget: no bloquea ni interrumpe si falla
+        try {
+          await db.rpc("log_evento", {
+            p_usuario: currentUser?.username || "(anon)",
+            p_rol: currentUser?.rol || null,
+            p_accion: accion,
+            p_entidad: entidad || null,
+            p_entidad_id: entidadId ? String(entidadId) : null,
+            p_detalle: detalle || null,
+          });
+        } catch (e) { /* silencio: nunca interrumpir UX */ }
+      }
+
+      async function auditCargar() {
+        const cont = document.getElementById("audit-lista");
+        if (!cont) return;
+        cont.innerHTML = "Cargando…";
+        try {
+          const usuario = document.getElementById("audit-filtro-usuario")?.value?.trim() || null;
+          const accion = document.getElementById("audit-filtro-accion")?.value || null;
+          const { data, error } = await db.rpc("audit_listar", { p_limit: 100, p_usuario: usuario, p_accion: accion });
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            cont.innerHTML = '<div class="muted text-xs" style="padding:14px;text-align:center">Sin eventos para los filtros aplicados</div>';
+            return;
+          }
+          let html = '<div style="display:flex;flex-direction:column;gap:3px">';
+          for (const l of data) {
+            const d = new Date(l.ts);
+            const hora = d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            const detTxt = l.detalle ? (typeof l.detalle === "string" ? l.detalle : JSON.stringify(l.detalle)) : "";
+            html += '<div style="display:flex;gap:6px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;align-items:center">' +
+              '<span style="font-family:monospace;color:#888;font-size:9px;min-width:95px">' + hora + '</span>' +
+              '<span style="background:rgba(76,175,125,.15);color:#7DD09B;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;min-width:90px;text-align:center">' + (l.usuario || '—') + '</span>' +
+              '<span style="color:#C9A84C;font-size:10px;min-width:140px">' + (l.accion || '') + '</span>' +
+              '<span style="flex:1;color:#aaa;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + detTxt.replace(/"/g,'&quot;') + '">' +
+                (l.entidad ? '[' + l.entidad + (l.entidad_id ? ':' + l.entidad_id.substring(0,8) : '') + '] ' : '') +
+                detTxt.substring(0, 80) +
+              '</span>' +
+              '</div>';
+          }
+          html += '</div>';
+          cont.innerHTML = html;
+        } catch (e) {
+          cont.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+        }
       }
 
       // === Wrappers de compatibilidad (las funciones viejas siguen siendo llamadas en algún lugar) ===
@@ -4058,7 +4142,8 @@
       // ═══════════════════════════════════════════════════════════
       // CONFIGURAR JURADOS
       // ═══════════════════════════════════════════════════════════
-      const TODOS_ITEMS = [
+      // TODOS_ITEMS arranca con defaults pero se sobreescribe desde evento.config (modo_competencia.items_disponibles)
+      let TODOS_ITEMS = [
         "Técnica",
         "Proyección",
         "Coreografía",
@@ -4070,9 +4155,23 @@
         "Tiempo",
         "Edición Musical",
       ];
+      
+      // Hook: cuando se carga config global, sincronizar items
+      async function sincronizarItemsDesdeConfig() {
+        try {
+          const { data } = await db.rpc("obtener_config", { p_clave: "modo_competencia" });
+          const cfg = data && data[0];
+          const items = cfg?.valor_json?.items_disponibles;
+          if (Array.isArray(items) && items.length > 0) {
+            TODOS_ITEMS = items;
+          }
+        } catch(e) { /* fallback a defaults */ }
+      }
+      
       let juradosConfig = [];
 
       async function dCargarJurados() {
+        await sincronizarItemsDesdeConfig();
         const { data } = await db.rpc("obtener_jurados");
         juradosConfig = data || [];
         // Enriquecer con nombre_display desde listar_usuarios

@@ -3195,6 +3195,10 @@
               await catCargar();
             }
           })
+          .on("postgres_changes", { event: "*", schema: "evento", table: "config" }, async () => {
+            // Recargar config global y aplicar a la UI (textos proyección, etc) sin refresh
+            try { await cargarConfigGlobal(); } catch(e) {}
+          })
           .subscribe((status) => {
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
               setTimeout(() => subscribeRealtimeCategorias(), 3000);
