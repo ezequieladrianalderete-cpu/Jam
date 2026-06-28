@@ -105,7 +105,7 @@
       }
       .fld label {
         display: block;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
         color: rgba(248, 245, 238, 0.5);
         margin-bottom: 6px;
@@ -120,7 +120,7 @@
         padding: 12px 14px;
         color: #f8f5ee;
         font-family: "Outfit", sans-serif;
-        font-size: 16px;
+        font-size: 15px;
         transition: all 0.2s;
         -webkit-appearance: none;
       }
@@ -158,7 +158,7 @@
         padding: 11px 20px;
         border-radius: 12px;
         font-family: "Outfit", sans-serif;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
@@ -212,7 +212,7 @@
       .bfull {
         width: 100%;
         padding: 13px;
-        font-size: 17px;
+        font-size: 15px;
         border-radius: 14px;
       }
       .bsm {
@@ -1525,20 +1525,37 @@
             <button class="btn bo bsm mt3" onclick="saCheckHealth()">↻ Verificar /api/health</button>
           </div>
 
-          <!-- Control de Categoría Activa (lo que ve el Ayudante de Line Up) -->
+          <!-- 📅 CRONOGRAMA del DÍA (orden de pasada de categorías) -->
           <div class="card mb3" style="border-color:rgba(76,175,125,.3);background:#0a1e0a">
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#4CAF7D">🎯 Categoría EN VIVO</div>
-                <div class="muted text-xs">Define qué categoría está pasando en este momento. Lo ven Encargado y Ayudante de Line Up.</div>
+                <div class="fw6" style="color:#4CAF7D">📅 Cronograma del Día</div>
+                <div class="muted text-xs">Orden de pasada de categorías. Lo ven Encargado y Ayudante de Line Up en tiempo real.</div>
               </div>
-              <button class="btn bo bsm" onclick="saCargarCategorias()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
+              <button class="btn bo bsm" onclick="cronCargar()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
             </div>
-            <div id="sa-cat-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
-              Ninguna categoría activa
+            <div id="cron-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
+              Cargando…
             </div>
-            <div id="sa-cat-lista" class="muted text-xs">Cargando categorías...</div>
-            <button class="btn bo bfull mt3" style="border-color:#E0524C;color:#E0524C;font-size:11px" onclick="saDesactivarCategoria()">⏸ Desactivar categoría actual</button>
+            <div id="cron-lista" class="muted text-xs">Cargando cronograma…</div>
+            <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn bo bsm" style="border-color:#C9A84C;color:#C9A84C;font-size:11px;flex:1;min-width:140px" onclick="cronInicializar()">
+                🔄 Generar desde lineup
+              </button>
+              <button class="btn bo bsm" style="border-color:rgba(255,255,255,.2);font-size:11px;flex:1;min-width:140px" onclick="cronMostrarAgregar()">
+                + Agregar categoría
+              </button>
+            </div>
+            <div id="cron-agregar-wrap" style="display:none;margin-top:10px;padding:10px;background:#1a1500;border:1px solid rgba(232,168,56,.3);border-radius:6px">
+              <div class="text-xs muted mb2">Seleccioná una categoría del lineup que no esté en el cronograma:</div>
+              <select id="cron-agregar-select" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px;color:#F8F5EE;font-size:12px;margin-bottom:8px">
+                <option value="">— elegí —</option>
+              </select>
+              <div style="display:flex;gap:6px">
+                <button class="btn bgn bsm" style="font-size:11px;flex:1" onclick="cronAgregar()">+ Agregar</button>
+                <button class="btn bo bsm" style="font-size:11px" onclick="document.getElementById('cron-agregar-wrap').style.display='none'">Cancelar</button>
+              </div>
+            </div>
           </div>
 
           <!-- Gestión de Usuarios (Jurados + Director) -->
@@ -2980,7 +2997,7 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
-        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); saCargarCategorias(); simRefreshUI(); }
+        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); cronCargar(); simRefreshUI(); }
         if (id === "config") { cfgCargar(); }
       }
 
@@ -3238,37 +3255,62 @@
         }
       }
 
-      // Control de Categorías Activas (qué categoría se muestra al Ayudante)
-      async function saCargarCategorias() {
-        const lista = document.getElementById("sa-cat-lista");
-        const display = document.getElementById("sa-cat-activa-display");
-        if (!lista) return;
-        lista.innerHTML = "Cargando...";
-        try {
-          // Obtener categoría activa actual
-          const { data: actData } = await db.rpc("obtener_categoria_activa");
-          const act = (actData && actData[0]) || null;
-          if (act?.categoria_key) {
-            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 ' + (act.categoria_label || act.categoria_key) + '</span>';
-          } else {
-            display.innerHTML = '<span class="muted">Ninguna categoría activa</span>';
-          }
+      // ═══════════════════════════════════════════════════════════
+      // CRONOGRAMA DEL DÍA (orden de pasada de categorías)
+      // ═══════════════════════════════════════════════════════════
+      window._cronCache = [];
 
-          // Listar todas las categorías del lineup
-          const { data: cats, error } = await db.rpc("listar_categorias_lineup");
+      async function cronCargar() {
+        const lista = document.getElementById("cron-lista");
+        const display = document.getElementById("cron-activa-display");
+        if (!lista) return;
+        lista.innerHTML = "Cargando…";
+        try {
+          const { data, error } = await db.rpc("cronograma_listar");
           if (error) throw error;
-          if (!cats || cats.length === 0) {
-            lista.innerHTML = '<div class="muted text-xs">No hay categorías en el lineup todavía.</div>';
+          window._cronCache = data || [];
+          
+          const enVivo = window._cronCache.find(c => c.estado === "en_vivo");
+          if (enVivo) {
+            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 EN VIVO · ' + enVivo.categoria_label + '</span>';
+          } else {
+            const pendientes = window._cronCache.filter(c => c.estado === "pendiente").length;
+            display.innerHTML = '<span class="muted">Nada en vivo · ' + pendientes + ' categorías pendientes</span>';
+          }
+          
+          if (window._cronCache.length === 0) {
+            lista.innerHTML = '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
             return;
           }
-          let html = '<div style="display:flex;flex-direction:column;gap:6px">';
-          for (const c of cats) {
-            const esActiva = act?.categoria_key === c.categoria_key;
-            html += '<button class="btn ' + (esActiva ? 'bgn' : 'bo') + ' bfull" style="font-size:11px;text-align:left;padding:8px 10px;' +
-              (esActiva ? '' : 'border-color:rgba(76,175,125,.2);color:#aaa') + '" onclick="saActivarCategoria(' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.categoria_label).replace(/"/g, '&quot;') + ',' + JSON.stringify(c.instancia).replace(/"/g, '&quot;') + ')">' +
-              (esActiva ? '🔴 ' : '▶ ') + c.categoria_label +
-              ' <span class="muted" style="font-size:9px;margin-left:6px">(' + c.presentes + '/' + c.cantidad + ' presentes)</span>' +
-              '</button>';
+          
+          let html = '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
+          for (let i = 0; i < window._cronCache.length; i++) {
+            const c = window._cronCache[i];
+            const isVivo = c.estado === "en_vivo";
+            const isComp = c.estado === "completada";
+            const borderC = isVivo ? "#4CAF7D" : isComp ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.1)";
+            const bgC = isVivo ? "rgba(76,175,125,.08)" : isComp ? "rgba(0,0,0,.2)" : "transparent";
+            const opacity = isComp ? ".5" : "1";
+            const ic = isVivo ? "🔴" : isComp ? "✓" : "⏸";
+            
+            html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' + borderC + ';background:' + bgC + ';border-radius:6px;opacity:' + opacity + '">' +
+              '<span style="font-weight:700;color:#C9A84C;min-width:24px">' + (i+1) + '.</span>' +
+              '<span style="min-width:18px">' + ic + '</span>' +
+              '<div style="flex:1;min-width:0">' +
+                '<div style="font-size:11px;font-weight:600;color:' + (isVivo ? "#4CAF7D" : "#F8F5EE") + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c.categoria_label + '</div>' +
+                '<div class="muted" style="font-size:9px">' + (c.instancia || '').toUpperCase() + ' · ' + c.presentes + '/' + c.cantidad + ' presentes</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:2px;flex-shrink:0">' +
+              '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' + c.id + ',' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ')">👁</button>' +
+              (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;arriba&quot;)">↑</button>' : '') +
+              (i < window._cronCache.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;abajo&quot;)">↓</button>' : '') +
+              (!isVivo ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' + c.id + ')">▶</button>' : '') +
+              (isVivo ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' + c.id + ')">✓</button>' : '') +
+              (isComp ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' + c.id + ')">↺</button>' : '') +
+              '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' + c.id + ')">✕</button>' +
+              '</div>' +
+              '</div>' +
+              '<div id="cron-detalle-' + c.id + '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
           }
           html += '</div>';
           lista.innerHTML = html;
@@ -3277,36 +3319,201 @@
         }
       }
 
-      async function saActivarCategoria(catKey, catLabel, instancia) {
+      async function cronMover(id, dir) {
         try {
-          const { data, error } = await db.rpc("activar_categoria", {
-            p_categoria_key: catKey,
-            p_categoria_label: catLabel,
-            p_instancia: instancia,
-            p_user: currentUser?.username || "director"
-          });
+          const { data, error } = await db.rpc("cronograma_mover", { p_id: id, p_direccion: dir });
+          if (error) throw error;
+          if (data?.ok) await cronCargar();
+          else toast(data?.error || "No se pudo mover", "warn");
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronIniciar(id) {
+        const c = window._cronCache.find(x => x.id === id);
+        if (!c) return;
+        if (!confirm("Iniciar categoría: " + c.categoria_label + "?\n\nLa categoría anterior (si había) se marcará como completada.")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_iniciar", { p_id: id, p_user: currentUser?.username || "director" });
+          if (error) throw error;
+          if (data?.ok) { toast("🔴 EN VIVO: " + c.categoria_label, "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronCompletar(id) {
+        if (!confirm("Marcar categoría como completada?")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_completar", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) { toast("✓ Completada", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronResetEstado(id) {
+        try {
+          const { data, error } = await db.rpc("cronograma_reset_estado", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) await cronCargar();
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronQuitar(id) {
+        const c = window._cronCache.find(x => x.id === id);
+        if (!c) return;
+        if (!confirm("Quitar '" + c.categoria_label + "' del cronograma?\n\nSe puede volver a agregar después.")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_quitar", { p_id: id });
+          if (error) throw error;
+          if (data?.ok) { toast("Quitada del cronograma", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronInicializar() {
+        if (!confirm("Generar cronograma con TODAS las categorías del lineup?\n\n• No reemplaza las que ya están\n• Las nuevas se agregan al final\n• Podés reordenar después")) return;
+        try {
+          const { data, error } = await db.rpc("cronograma_inicializar_desde_lineup");
+          if (error) throw error;
+          if (data?.ok) { toast("Se agregaron " + (data.agregadas || 0) + " categorías", "ok"); await cronCargar(); }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronMostrarAgregar() {
+        const wrap = document.getElementById("cron-agregar-wrap");
+        const sel = document.getElementById("cron-agregar-select");
+        if (!wrap || !sel) return;
+        try {
+          // Categorías del lineup que NO están en el cronograma
+          const { data: cats } = await db.rpc("listar_categorias_lineup");
+          const yaEstan = new Set(window._cronCache.map(c => c.categoria_key));
+          const faltantes = (cats || []).filter(c => !yaEstan.has(c.categoria_key));
+          if (faltantes.length === 0) {
+            toast("Todas las categorías del lineup ya están en el cronograma", "ok");
+            return;
+          }
+          sel.innerHTML = '<option value="">— elegí —</option>' + 
+            faltantes.map(c => '<option value="' + c.categoria_key.replace(/"/g,'&quot;') + '">' + c.categoria_label + ' (' + c.cantidad + ' inscriptos)</option>').join("");
+          wrap.style.display = "block";
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronAgregar() {
+        const sel = document.getElementById("cron-agregar-select");
+        const key = sel?.value;
+        if (!key) { toast("Elegí una categoría", "warn"); return; }
+        try {
+          const { data, error } = await db.rpc("cronograma_agregar", { p_categoria_key: key });
           if (error) throw error;
           if (data?.ok) {
-            toast("🔴 Categoría activada: " + catLabel, "ok");
-            saCargarCategorias();
+            toast("Agregada al final del cronograma", "ok");
+            document.getElementById("cron-agregar-wrap").style.display = "none";
+            await cronCargar();
           }
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
-      async function saDesactivarCategoria() {
-        if (!confirm("Desactivar la categoría actual? El Ayudante y el Encargado verán todas las categorías sin destacar ninguna.")) return;
+      // === Inscriptos dentro de una categoría (control total de Gastón) ===
+      async function cronVerInscriptos(cronId, catKey) {
+        const det = document.getElementById("cron-detalle-" + cronId);
+        if (!det) return;
+        if (det.style.display !== "none") { det.style.display = "none"; det.innerHTML = ""; return; }
+        det.style.display = "block";
+        det.innerHTML = '<div class="muted text-xs">Cargando inscriptos…</div>';
         try {
-          const { data, error } = await db.rpc("activar_categoria", {
-            p_categoria_key: null,
-            p_categoria_label: null,
-            p_instancia: null,
-            p_user: currentUser?.username || "director"
-          });
+          const { data: items, error } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: catKey });
           if (error) throw error;
-          toast("Categoría desactivada", "ok");
-          saCargarCategorias();
+          const list = items || [];
+          let html = '<div class="text-xs muted mb2" style="font-weight:600;color:#C9A84C">📋 Inscriptos en esta categoría (' + list.length + ')</div>';
+          if (list.length === 0) {
+            html += '<div class="muted text-xs">Sin inscriptos.</div>';
+          } else {
+            html += '<div style="display:flex;flex-direction:column;gap:3px">';
+            for (let i = 0; i < list.length; i++) {
+              const p = list[i];
+              const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
+              const idEsc = JSON.stringify(p.lineup_id).replace(/"/g, '&quot;');
+              const ckEsc = JSON.stringify(catKey).replace(/"/g, '&quot;');
+              const posMostrar = p.posicion === 999 ? "—" : p.posicion;
+              html += '<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px">' +
+                '<span style="font-weight:700;color:#C9A84C;min-width:22px">' + posMostrar + '</span>' +
+                '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' + (p.codigo_id||'—') + '</span>' +
+                '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (p.nombre_grupo||'—') + '</span>' +
+                '<span style="font-size:9px;color:' + (presente ? '#4CAF7D' : '#888') + '">' + (presente ? '✓' : '○') + '</span>' +
+                '<div style="display:flex;gap:2px">' +
+                (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;arriba&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↑</button>' : '') +
+                (i < list.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;abajo&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↓</button>' : '') +
+                '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrQuitar(' + idEsc + ',' + ckEsc + ',' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">✕</button>' +
+                '</div>' +
+                '</div>';
+            }
+            html += '</div>';
+          }
+          // Sección agregar
+          html += '<div style="margin-top:10px;padding:8px;border-top:1px solid rgba(255,255,255,.1)">' +
+            '<div class="text-xs muted mb2">+ Agregar participante del lineup que NO esté:</div>' +
+            '<select id="cron-add-select-' + cronId + '" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px;color:#F8F5EE;font-size:11px;margin-bottom:6px">' +
+              '<option value="">Cargando…</option>' +
+            '</select>' +
+            '<button class="btn bgn bsm bfull" style="font-size:11px" onclick="cronInscrAgregar(' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">+ Agregar a esta categoría</button>' +
+            '</div>';
+          det.innerHTML = html;
+          // Cargar select disponibles
+          const sel = document.getElementById("cron-add-select-" + cronId);
+          try {
+            const { data: dispo } = await db.rpc("lineup_no_en_categoria", { p_categoria_key: catKey });
+            const opts = (dispo || []).map(d => '<option value="' + d.lineup_id + '">' + d.codigo_id + ' · ' + (d.nombre_grupo||'—') + ' (' + (d.pais||'') + ')</option>').join("");
+            sel.innerHTML = opts ? ('<option value="">— elegí —</option>' + opts) : '<option value="">No hay inscriptos disponibles</option>';
+          } catch (e) { sel.innerHTML = '<option value="">Error: ' + e.message + '</option>'; }
+        } catch (e) {
+          det.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+        }
+      }
+
+      async function cronInscrMover(lineupId, catKey, dir, cronId, catKeyOrig) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey, p_direccion: dir });
+          if (error) throw error;
+          if (data?.ok) { await cronVerInscriptos(cronId, catKeyOrig); await cronVerInscriptos(cronId, catKeyOrig); /* trick: cerrar+abrir refresca */
+            // Forzar abierto
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det && det.style.display === "none") await cronVerInscriptos(cronId, catKeyOrig);
+          } else toast(data?.error || "No se pudo mover", "warn");
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
+
+      async function cronInscrQuitar(lineupId, catKey, cronId, catKeyOrig) {
+        if (!confirm("Quitar este participante de la categoría?\n\nNO afecta su inscripción ni el pago. Solo no aparecerá en el orden de esta categoría.")) return;
+        try {
+          const { data, error } = await db.rpc("quitar_de_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey });
+          if (error) throw error;
+          if (data?.ok) { 
+            toast("Quitado de la categoría", "ok"); 
+            // Refrescar tanto el cronograma (conteo) como el detalle
+            await cronCargar();
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKeyOrig); }
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      async function cronInscrAgregar(cronId, catKey) {
+        const sel = document.getElementById("cron-add-select-" + cronId);
+        const lid = sel?.value;
+        if (!lid) { toast("Elegí un participante", "warn"); return; }
+        try {
+          const { data, error } = await db.rpc("agregar_a_pasada", { p_lineup_id: lid, p_categoria_key: catKey });
+          if (error) throw error;
+          if (data?.ok) {
+            toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
+            await cronCargar();
+            const det = document.getElementById("cron-detalle-" + cronId);
+            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKey); }
+          }
+        } catch (e) { toast("Error: " + e.message, "err"); }
+      }
+
+      // === Wrappers de compatibilidad (las funciones viejas siguen siendo llamadas en algún lugar) ===
+      async function saCargarCategorias() { return cronCargar(); }
+      async function saActivarCategoria() { /* deprecated */ }
+      async function saDesactivarCategoria() { /* deprecated */ }
 
       // Gestión de usuarios (renombrar, reset pass, activar)
       async function saLoadUsuarios() {
