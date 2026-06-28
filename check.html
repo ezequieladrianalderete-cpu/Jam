@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="es" style="background: #080808">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
     />
-    <meta name="theme-color" content="#080808" />
+    <meta name="theme-color" content="#fdf9f0" />
     <title>Mi Inscripción — JAM 2026</title>
     <link rel="icon" type="image/png" href="/imgs/logo-int.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,8 +17,8 @@
     <style>
       html,
       body {
-        background: #080808 !important;
-        color: #f8f5ee;
+        background: #fae8b1 !important;
+        color: #1c1c16;
         margin: 0;
         padding: 0;
         font-family: "Outfit", sans-serif;
@@ -47,18 +47,18 @@
         font-size: 48px;
         font-weight: 700;
         letter-spacing: 6px;
-        color: #c9a84c;
+        color: #d97706;
         margin-bottom: 4px;
       }
       .sub {
         font-size: 11px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         letter-spacing: 2px;
         text-transform: uppercase;
       }
       .tarjeta {
-        background: linear-gradient(135deg, #111, #1a1800);
-        border: 1px solid rgba(201, 168, 76, 0.2);
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(217, 119, 6, 0.2);
         border-radius: 20px;
         padding: 28px;
         position: relative;
@@ -75,7 +75,7 @@
         border-radius: 50%;
         background: radial-gradient(
           circle,
-          rgba(201, 168, 76, 0.1),
+          rgba(217, 119, 6, 0.1),
           transparent 70%
         );
       }
@@ -83,7 +83,7 @@
         font-size: 10px;
         font-weight: 700;
         letter-spacing: 3px;
-        color: rgba(201, 168, 76, 0.6);
+        color: #b45309;
         text-transform: uppercase;
         display: flex;
         align-items: center;
@@ -95,7 +95,7 @@
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background: #4caf7d;
+        background: #16a34a;
         animation: bl 1.5s infinite;
         flex-shrink: 0;
       }
@@ -111,7 +111,7 @@
       .codigo-grande {
         font-family: "JetBrains Mono", monospace;
         font-size: clamp(18px, 4.5vw, 26px);
-        color: #c9a84c;
+        color: #d97706;
         letter-spacing: 2px;
         margin-bottom: 14px;
         font-weight: 500;
@@ -121,14 +121,14 @@
         font-family: "Cormorant Garamond", serif;
         font-size: clamp(28px, 7vw, 40px);
         font-weight: 600;
-        color: #f8f5ee;
+        color: #1c1c16;
         margin-bottom: 6px;
         line-height: 1.1;
         position: relative;
       }
       .info-base {
         font-size: 14px;
-        color: rgba(248, 245, 238, 0.85);
+        color: rgba(28, 28, 22, 0.85);
         position: relative;
       }
       .badges {
@@ -148,38 +148,38 @@
         font-weight: 600;
       }
       .bdg-gold {
-        background: #2a2000;
-        border: 1px solid rgba(201, 168, 76, 0.3);
-        color: #c9a84c;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(217, 119, 6, 0.28);
+        color: #d97706;
       }
       .bdg-green {
-        background: #001a0a;
-        border: 1px solid rgba(76, 175, 125, 0.3);
-        color: #4caf7d;
+        background: rgba(22, 163, 74, 0.08);
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        color: #16a34a;
       }
       .bdg-blue {
-        background: #001020;
-        border: 1px solid rgba(75, 150, 216, 0.3);
-        color: #4b96d8;
+        background: rgba(37, 99, 235, 0.06);
+        border: 1px solid rgba(37, 99, 235, 0.25);
+        color: #2563eb;
       }
       .bdg-red {
-        background: #1a0000;
-        border: 1px solid rgba(224, 82, 82, 0.3);
-        color: #e05252;
+        background: rgba(186, 26, 26, 0.06);
+        border: 1px solid rgba(186, 26, 26, 0.25);
+        color: #ba1a1a;
       }
       .bdg-amber {
-        background: #1a1000;
-        border: 1px solid rgba(232, 168, 56, 0.3);
-        color: #e8a838;
+        background: rgba(217, 119, 6, 0.08);
+        border: 1px solid rgba(217, 119, 6, 0.25);
+        color: #d97706;
       }
       .bdg-gray {
-        background: #1a1a1a;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: rgba(248, 245, 238, 0.8);
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        color: rgba(28, 28, 22, 0.8);
       }
       .card {
-        background: #141414;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 18px;
         padding: 22px;
         margin-bottom: 14px;
@@ -187,7 +187,7 @@
       .card-title {
         font-size: 11px;
         font-weight: 700;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         text-transform: uppercase;
         letter-spacing: 1.5px;
         margin-bottom: 14px;
@@ -199,7 +199,7 @@
         content: "";
         width: 3px;
         height: 14px;
-        background: #c9a84c;
+        background: #d97706;
         border-radius: 2px;
       }
       .row {
@@ -207,7 +207,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 10px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         font-size: 14px;
         gap: 12px;
       }
@@ -215,7 +215,7 @@
         border-bottom: none;
       }
       .row .k {
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.4px;
@@ -223,14 +223,14 @@
         flex-shrink: 0;
       }
       .row .v {
-        color: #f8f5ee;
+        color: #1c1c16;
         font-weight: 500;
         text-align: right;
         word-break: break-word;
       }
       .cat-item {
-        background: #1a1600;
-        border: 1px solid rgba(201, 168, 76, 0.25);
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(217, 119, 6, 0.25);
         border-radius: 14px;
         padding: 14px;
         margin-bottom: 10px;
@@ -247,16 +247,16 @@
       .cat-num {
         font-family: "JetBrains Mono", monospace;
         font-size: 13px;
-        color: #c9a84c;
-        background: #2a2000;
-        border: 1px solid rgba(201, 168, 76, 0.3);
+        color: #d97706;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(217, 119, 6, 0.28);
         padding: 3px 9px;
         border-radius: 8px;
         font-weight: 500;
       }
       .cat-genero {
         font-size: 11px;
-        color: #c9a84c;
+        color: #d97706;
         text-transform: uppercase;
         letter-spacing: 1px;
         font-weight: 600;
@@ -264,20 +264,20 @@
       .cat-nombre {
         font-family: "Cormorant Garamond", serif;
         font-size: 19px;
-        color: #f8f5ee;
+        color: #1c1c16;
         font-weight: 600;
         line-height: 1.3;
       }
       .no-cats {
-        color: rgba(248, 245, 238, 0.65);
+        color: rgba(28, 28, 22, 0.65);
         font-style: italic;
         font-size: 13px;
         text-align: center;
         padding: 20px 0;
       }
       .int-item {
-        background: #181818;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 12px;
         padding: 14px 16px;
         margin-bottom: 8px;
@@ -291,9 +291,9 @@
       .int-num {
         font-family: "JetBrains Mono", monospace;
         font-size: 11px;
-        color: #c9a84c;
-        background: #2a2000;
-        border: 1px solid rgba(201, 168, 76, 0.3);
+        color: #d97706;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(217, 119, 6, 0.28);
         padding: 5px 10px;
         border-radius: 8px;
         font-weight: 500;
@@ -309,25 +309,25 @@
         font-family: "Cormorant Garamond", serif;
         font-size: 18px;
         font-weight: 600;
-        color: #f8f5ee;
+        color: #1c1c16;
         line-height: 1.2;
       }
       .int-grupo {
         font-size: 11px;
-        color: rgba(248, 245, 238, 0.8);
+        color: rgba(28, 28, 22, 0.8);
         margin-top: 2px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
       .pago-box {
-        background: #1a1600;
-        border: 2px solid rgba(201, 168, 76, 0.4);
+        background: rgba(212, 175, 55, 0.1);
+        border: 2px solid rgba(217, 119, 6, 0.38);
         border-radius: 14px;
         padding: 20px;
       }
       .pago-label {
         font-size: 10px;
-        color: #c9a84c;
+        color: #d97706;
         text-transform: uppercase;
         letter-spacing: 2px;
         font-weight: 700;
@@ -335,8 +335,8 @@
         text-align: center;
       }
       .pago-field {
-        background: #0a0a0a;
-        border: 1px dashed rgba(201, 168, 76, 0.4);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px dashed rgba(217, 119, 6, 0.38);
         padding: 12px 14px;
         border-radius: 10px;
         margin-bottom: 8px;
@@ -346,7 +346,7 @@
       }
       .pago-k {
         font-size: 10px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         text-transform: uppercase;
         letter-spacing: 1.5px;
         margin-bottom: 4px;
@@ -354,7 +354,7 @@
       .pago-v {
         font-family: "JetBrains Mono", monospace;
         font-size: 16px;
-        color: #f8f5ee;
+        color: #1c1c16;
         font-weight: 600;
         letter-spacing: 1px;
         word-break: break-all;
@@ -366,7 +366,7 @@
       }
       .pago-foot {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.85);
+        color: rgba(28, 28, 22, 0.85);
         text-align: center;
         margin-top: 12px;
         line-height: 1.5;
@@ -384,21 +384,21 @@
       }
       .qr-text {
         text-align: center;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         font-size: 11px;
         margin-top: 8px;
       }
       .loading {
         text-align: center;
         padding: 80px 20px;
-        color: rgba(248, 245, 238, 0.8);
+        color: rgba(28, 28, 22, 0.8);
       }
       .spinner {
         display: inline-block;
         width: 50px;
         height: 50px;
-        border: 3px solid rgba(201, 168, 76, 0.15);
-        border-top-color: #c9a84c;
+        border: 3px solid rgba(217, 119, 6, 0.15);
+        border-top-color: #d97706;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
@@ -409,8 +409,8 @@
       }
       .alert-err {
         background: rgba(224, 82, 82, 0.1);
-        border-left: 3px solid #e05252;
-        color: #e0524c;
+        border-left: 3px solid #ba1a1a;
+        color: #ba1a1a;
         padding: 16px;
         border-radius: 10px;
         font-size: 14px;
@@ -419,18 +419,18 @@
       .footer {
         text-align: center;
         margin-top: 32px;
-        color: rgba(248, 245, 238, 0.6);
+        color: rgba(28, 28, 22, 0.6);
         font-size: 11px;
         line-height: 1.8;
         padding-bottom: 24px;
       }
       .footer strong {
-        color: rgba(248, 245, 238, 0.8);
+        color: rgba(28, 28, 22, 0.8);
       }
       .divider {
         width: 60px;
         height: 2px;
-        background: #c9a84c;
+        background: #d97706;
         margin: 24px auto;
         opacity: 0.4;
       }
@@ -590,7 +590,7 @@
 
       function showErr(title, msg) {
         document.getElementById("content").innerHTML =
-          '<div class="card"><h2 style="color:#E05252;margin-bottom:14px;font-size:17px;font-family:\'Cormorant Garamond\',serif;font-weight:600">' +
+          '<div class="card"><h2 style="color:#ba1a1a;margin-bottom:14px;font-size:17px;font-family:\'Cormorant Garamond\',serif;font-weight:600">' +
           esc(title) +
           '</h2><div class="alert-err">' +
           esc(msg) +
@@ -694,7 +694,7 @@
               esc(codigoLegible + "-" + (i + 1)) +
               "</div>" +
               '<div class="int-data">' +
-              '<div class="int-nombre" style="color:rgba(248,245,238,.4);font-style:italic">Integrante ' +
+              '<div class="int-nombre" style="color:rgba(28,28,22,.40);font-style:italic">Integrante ' +
               (i + 1) +
               "</div>" +
               '<div class="int-grupo">Datos no cargados</div>' +
@@ -762,7 +762,7 @@
             : "") +
           row(
             "Monto",
-            '<span style="color:#C9A84C;font-weight:600">' +
+            '<span style="color:#d97706;font-weight:600">' +
               (ins.moneda || "ARS") +
               " " +
               (+(ins.monto_total || 0)).toLocaleString("es-AR") +
@@ -795,9 +795,9 @@
               '<div class="pago-box">' +
               '<div class="pago-label">Pago exclusivo vía Prex</div>' +
               '<div class="pago-field"><div class="pago-k">Plataforma</div><div class="pago-v serif">Prex</div></div>' +
-              '<div class="pago-field"><div class="pago-k">Cuenta / Alias Prex</div><div class="pago-v" style="color:#E8A838;font-size:15px">35722990</div></div>' +
-              '<div class="pago-field"><div class="pago-k">Titular responsable</div><div class="pago-v serif" style="color:#E8A838;font-size:16px">Nelson Gastón Vidarte</div></div>' +
-              '<div class="pago-foot">La instancia Inter América se abona <strong style="color:#C9A84C">exclusivamente</strong> vía Prex. Contactá a la organización para recibir los datos de cuenta.</div>' +
+              '<div class="pago-field"><div class="pago-k">Cuenta / Alias Prex</div><div class="pago-v" style="color:#d97706;font-size:15px">35722990</div></div>' +
+              '<div class="pago-field"><div class="pago-k">Titular responsable</div><div class="pago-v serif" style="color:#d97706;font-size:16px">Nelson Gastón Vidarte</div></div>' +
+              '<div class="pago-foot">La instancia Inter América se abona <strong style="color:#d97706">exclusivamente</strong> vía Prex. Contactá a la organización para recibir los datos de cuenta.</div>' +
               "</div>" +
               "</div>";
           }

@@ -1,5 +1,5 @@
-﻿<!doctype html>
-<html lang="es" style="background: #0a0a0a">
+<!doctype html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -16,8 +16,8 @@
     <style>
       html,
       body {
-        background: #0a0a0a !important;
-        color: #f8f5ee;
+        background: #f7e2a3 !important;
+        color: #1c1c16;
         margin: 0;
         padding: 0;
         font-family: "Outfit", sans-serif;
@@ -32,14 +32,14 @@
         -webkit-font-smoothing: antialiased;
       }
       .hdr {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         padding: 13px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         position: sticky;
         top: 0;
-        background: rgba(8, 8, 8, 0.98);
+        background: rgba(255, 255, 255, 0.4);
         backdrop-filter: blur(20px);
         z-index: 100;
       }
@@ -48,11 +48,11 @@
         font-weight: 700;
         font-size: 22px;
         letter-spacing: 4px;
-        color: #c9a84c;
+        color: #d97706;
       }
       .logo-sub {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         letter-spacing: 0.5px;
         margin-top: 1px;
       }
@@ -60,9 +60,9 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        background: rgba(76, 175, 125, 0.12);
-        border: 1px solid rgba(76, 175, 125, 0.3);
-        color: #4caf7d;
+        background: rgba(22, 163, 74, 0.1);
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        color: #16a34a;
         border-radius: 100px;
         padding: 4px 12px;
         font-size: 13px;
@@ -73,7 +73,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #4caf7d;
+        background: #16a34a;
         animation: bl 2s infinite;
       }
       @keyframes bl {
@@ -147,32 +147,32 @@
         }
       }
       .io {
-        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        border: 1.5px solid rgba(0, 0, 0, 0.1);
         border-radius: 12px;
         padding: 10px 6px;
         cursor: pointer;
         transition: all 0.2s;
         text-align: center;
-        background: #1a1a1a;
+        background: rgba(255, 255, 255, 0.75);
         font-family: "Outfit", sans-serif;
-        color: #f8f5ee;
+        color: #1c1c16;
         width: 100%;
       }
       .io.s-reg {
-        border-color: #4caf7d;
-        background: #001a0a;
+        border-color: #16a34a;
+        background: rgba(22, 163, 74, 0.08);
       }
       .io.s-nac {
-        border-color: #c9a84c;
-        background: #1a1600;
+        border-color: #d97706;
+        background: rgba(212, 175, 55, 0.1);
       }
       .io.s-int {
-        border-color: #4b96d8;
-        background: #001020;
+        border-color: #0d9488;
+        background: rgba(13, 148, 136, 0.06);
       }
       .io.s-rep {
-        border-color: #e8a838;
-        background: #1a1200;
+        border-color: #d97706;
+        background: rgba(217, 119, 6, 0.08);
       }
       .ii {
         font-size: 18px;
@@ -182,11 +182,11 @@
         font-weight: 700;
         font-size: 14px;
         line-height: 1.2;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .if {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         margin-top: 2px;
         line-height: 1.3;
       }
@@ -220,89 +220,89 @@
         justify-content: center;
         font-size: 13px;
         font-weight: 700;
-        border: 1.5px solid rgba(255, 255, 255, 0.12);
-        color: rgba(248, 245, 238, 0.7);
-        background: #1a1a1a;
+        border: 1.5px solid rgba(0, 0, 0, 0.1);
+        color: rgba(28, 28, 22, 0.7);
+        background: rgba(255, 255, 255, 0.75);
         transition: all 0.3s;
       }
       .snum.dn {
-        background: #2a2000;
-        border-color: #c9a84c;
-        color: #c9a84c;
+        background: rgba(212, 175, 55, 0.15);
+        border-color: #d97706;
+        color: #d97706;
       }
       .snum.on-reg {
-        background: #001a0a;
-        border-color: #4caf7d;
-        color: #4caf7d;
-        box-shadow: 0 0 0 3px rgba(76, 175, 125, 0.1);
+        background: rgba(22, 163, 74, 0.08);
+        border-color: #16a34a;
+        color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
       }
       .snum.on-nac {
-        background: #1e1a00;
-        border-color: #c9a84c;
-        color: #c9a84c;
-        box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+        background: rgba(212, 175, 55, 0.12);
+        border-color: #d97706;
+        color: #d97706;
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
       }
       .snum.on-int {
-        background: #001528;
-        border-color: #4b96d8;
-        color: #4b96d8;
-        box-shadow: 0 0 0 3px rgba(75, 150, 216, 0.08);
+        background: rgba(13, 148, 136, 0.08);
+        border-color: #0d9488;
+        color: #0d9488;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
       }
       .snum.on-rep {
-        background: #1a1200;
-        border-color: #e8a838;
-        color: #e8a838;
+        background: rgba(217, 119, 6, 0.08);
+        border-color: #d97706;
+        color: #d97706;
       }
       .slbl {
         font-size: 13px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         white-space: nowrap;
         transition: color 0.3s;
       }
       .slbl.dn {
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
       }
       .slbl.on-reg {
-        color: #4caf7d;
+        color: #16a34a;
       }
       .slbl.on-nac {
-        color: #c9a84c;
+        color: #d97706;
       }
       .slbl.on-int {
-        color: #4b96d8;
+        color: #0d9488;
       }
       .slbl.on-rep {
-        color: #e8a838;
+        color: #d97706;
       }
       .stline {
         flex: 1;
         height: 1px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.08);
         margin: 0 2px;
         position: relative;
         top: -6px;
         transition: background 0.3s;
       }
       .stline.dn {
-        background: #2a2000;
+        background: rgba(212, 175, 55, 0.15);
       }
       /* Cards */
       .card {
-        background: #141414;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 18px;
         padding: 20px;
         margin-bottom: 15px;
       }
       .cg {
-        background: #1a1600;
-        border: 1px solid rgba(201, 168, 76, 0.25);
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(217, 119, 6, 0.25);
         border-radius: 13px;
         padding: 13px;
       }
       .cb {
-        background: #001020;
-        border: 1px solid rgba(75, 150, 216, 0.25);
+        background: rgba(13, 148, 136, 0.06);
+        border: 1px solid rgba(13, 148, 136, 0.2);
         border-radius: 13px;
         padding: 13px;
         margin-bottom: 15px;
@@ -313,14 +313,14 @@
         display: none;
       }
       .cw {
-        background: #1a1000;
-        border: 1px solid rgba(232, 168, 56, 0.3);
+        background: rgba(217, 119, 6, 0.08);
+        border: 1px solid rgba(217, 119, 6, 0.25);
         border-radius: 13px;
         padding: 13px;
       }
       .cgn {
-        background: #001a0a;
-        border: 1px solid rgba(76, 175, 125, 0.25);
+        background: rgba(22, 163, 74, 0.08);
+        border: 1px solid rgba(22, 163, 74, 0.2);
         border-radius: 13px;
         padding: 13px;
       }
@@ -332,7 +332,7 @@
         display: block;
         font-size: 13px;
         font-weight: 600;
-        color: rgba(248, 245, 238, 0.8);
+        color: rgba(28, 28, 22, 0.8);
         margin-bottom: 6px;
         text-transform: uppercase;
         letter-spacing: 0.7px;
@@ -341,11 +341,11 @@
       .fld select,
       .fld textarea {
         width: 100%;
-        background: #1e1e1e;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         border-radius: 11px;
         padding: 10px 13px;
-        color: #f8f5ee;
+        color: #1c1c16;
         font-family: "Outfit", sans-serif;
         font-size: 16px;
         transition: all 0.2s;
@@ -355,11 +355,11 @@
       .fld input:focus,
       .fld select:focus {
         outline: none;
-        border-color: #c9a84c;
-        background: #1c1800;
+        border-color: #d97706;
+        background: rgba(255, 255, 255, 1);
       }
       .fld input::placeholder {
-        color: rgba(248, 245, 238, 0.5);
+        color: rgba(28, 28, 22, 0.5);
       }
       .fld select {
         cursor: pointer;
@@ -368,13 +368,13 @@
         background-position: right 12px center;
       }
       .fld select option {
-        background: #1e1e1e;
-        color: #f8f5ee;
+        background: rgba(255, 255, 255, 0.85);
+        color: #1c1c16;
       }
       .fld input.err,
       .fld select.err {
-        border-color: #e05252;
-        background: #1a0000;
+        border-color: #ba1a1a;
+        background: rgba(186, 26, 26, 0.06);
       }
       .g2 {
         display: grid;
@@ -403,32 +403,32 @@
         white-space: nowrap;
       }
       .bg {
-        background: #c9a84c;
-        color: #0a0a0a;
+        background: #d97706;
+        color: #ffffff;
       }
       .bg:hover {
-        background: #e8c97a;
+        background: #b45309;
         transform: translateY(-1px);
       }
       .bgn {
-        background: #4caf7d;
-        color: #000;
+        background: #16a34a;
+        color: #ffffff;
       }
       .bd {
-        background: #4b96d8;
+        background: #0d9488;
         color: #fff;
       }
       .bam {
-        background: #e8a838;
-        color: #000;
+        background: #d97706;
+        color: #ffffff;
       }
       .bo {
         background: transparent;
-        color: #f8f5ee;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #1c1c16;
+        border: 1px solid rgba(0, 0, 0, 0.15);
       }
       .bo:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.04);
       }
       .bfull {
         width: 100%;
@@ -460,17 +460,17 @@
         font-weight: 600;
         letter-spacing: 0.3px;
         margin-bottom: 3px;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .ss {
         font-size: 15px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         line-height: 1.5;
       }
       /* Integrante box */
       .ibox {
-        background: #181818;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 13px;
         padding: 14px;
         margin-bottom: 9px;
@@ -478,7 +478,7 @@
       .itag {
         font-size: 13px;
         font-weight: 700;
-        color: #c9a84c;
+        color: #d97706;
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin-bottom: 10px;
@@ -490,11 +490,11 @@
       }
       .csrch input {
         width: 100%;
-        background: #1e1e1e;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         border-radius: 11px;
         padding: 9px 14px 9px 36px;
-        color: #f8f5ee;
+        color: #1c1c16;
         font-family: "Outfit", sans-serif;
         font-size: 15px;
         transition: border 0.2s;
@@ -502,7 +502,7 @@
       }
       .csrch input:focus {
         outline: none;
-        border-color: #c9a84c;
+        border-color: #d97706;
       }
       .csrch::before {
         content: "🔍";
@@ -525,39 +525,39 @@
         font-size: 13px;
         font-weight: 500;
         cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: rgba(248, 245, 238, 0.75);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: rgba(28, 28, 22, 0.75);
         background: transparent;
         font-family: "Outfit", sans-serif;
         transition: all 0.15s;
       }
       .chip:hover {
-        color: #f8f5ee;
-        border-color: rgba(255, 255, 255, 0.25);
+        color: #1c1c16;
+        border-color: rgba(0, 0, 0, 0.18);
       }
       .chip.on {
-        background: #1e1a00;
-        border-color: #c9a84c;
-        color: #c9a84c;
+        background: rgba(212, 175, 55, 0.12);
+        border-color: #d97706;
+        color: #d97706;
       }
       .chip.oi {
-        background: #001528;
-        border-color: #4b96d8;
-        color: #4b96d8;
+        background: rgba(13, 148, 136, 0.08);
+        border-color: #0d9488;
+        color: #0d9488;
       }
       .clist {
         max-height: 250px;
         overflow-y: auto;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.07);
         border-radius: 13px;
         scrollbar-width: thin;
-        scrollbar-color: #2a2000 transparent;
+        scrollbar-color: rgba(212, 175, 55, 0.35) transparent;
       }
       .clist::-webkit-scrollbar {
         width: 4px;
       }
       .clist::-webkit-scrollbar-thumb {
-        background: #2a2000;
+        background: rgba(212, 175, 55, 0.15);
         border-radius: 2px;
       }
       .crow {
@@ -565,7 +565,7 @@
         align-items: center;
         padding: 9px 13px;
         cursor: pointer;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
         transition: background 0.12s;
         background: transparent;
         width: 100%;
@@ -573,7 +573,7 @@
         border-right: none;
         border-top: none;
         font-family: "Outfit", sans-serif;
-        color: #f8f5ee;
+        color: #1c1c16;
         text-align: left;
         gap: 7px;
       }
@@ -581,34 +581,34 @@
         border-bottom: none;
       }
       .crow:hover {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(0, 0, 0, 0.02);
       }
       .crow.sn {
-        background: #1e1a00;
+        background: rgba(212, 175, 55, 0.12);
       }
       .crow.si {
-        background: rgba(75, 150, 216, 0.07);
+        background: rgba(13, 148, 136, 0.07);
       }
       .ccode {
         font-family: "JetBrains Mono", monospace;
         font-size: 13px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         width: 27px;
         flex-shrink: 0;
       }
       .crow.sn .ccode,
       .crow.si .ccode {
-        color: #c9a84c;
+        color: #d97706;
       }
       .cname {
         flex: 1;
         font-size: 15px;
         min-width: 0;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .cgen {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         flex-shrink: 0;
       }
       .cprice {
@@ -616,38 +616,38 @@
         display: none;
         font-size: 13px;
         font-weight: 600;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         flex-shrink: 0;
         min-width: 60px;
         text-align: right;
         line-height: 1.4;
       }
       .crow.sn .cprice {
-        color: #c9a84c;
+        color: #d97706;
       }
       .crow.si .cprice {
-        color: #4b96d8;
+        color: #0d9488;
       }
       .cchk {
         width: 16px;
         height: 16px;
         border-radius: 4px;
-        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border: 1.5px solid rgba(0, 0, 0, 0.15);
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.15s;
-        background: #1e1e1e;
+        background: rgba(255, 255, 255, 0.85);
       }
       .crow.sn .cchk,
       .crow.si .cchk {
-        background: #c9a84c;
-        border-color: #c9a84c;
+        background: #d97706;
+        border-color: #d97706;
       }
       .crow.si .cchk {
-        background: #4b96d8;
-        border-color: #4b96d8;
+        background: #0d9488;
+        border-color: #0d9488;
       }
       .crow.sn .cchk::after,
       .crow.si .cchk::after {
@@ -659,12 +659,12 @@
       .crow.si .cchk::before {
         content: "✓";
         font-size: 10px;
-        color: #000;
+        color: #ffffff;
         font-weight: 700;
       }
       .tbox {
-        background: #1e1a00;
-        border: 1px solid rgba(201, 168, 76, 0.3);
+        background: rgba(212, 175, 55, 0.12);
+        border: 1px solid rgba(217, 119, 6, 0.28);
         border-radius: 12px;
         padding: 12px 16px;
         display: flex;
@@ -678,41 +678,41 @@
         gap: 6px;
       }
       .tbox.i {
-        background: #001020;
-        border-color: rgba(75, 150, 216, 0.3);
+        background: rgba(13, 148, 136, 0.06);
+        border-color: rgba(13, 148, 136, 0.25);
       }
       .tlbl {
         font-size: 14px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
       }
       .tcnt {
         font-size: 13px;
-        color: rgba(248, 245, 238, 0.55);
+        color: rgba(28, 28, 22, 0.55);
         margin-top: 2px;
       }
       .tval {
         font-family: "Cormorant Garamond", serif;
         font-size: 28px;
         font-weight: 600;
-        color: #c9a84c;
+        color: #d97706;
       }
       .tval.list {
         font-family: "Outfit", sans-serif;
         font-size: 15px;
         font-weight: 500;
         line-height: 1.5;
-        color: #f8f5ee;
+        color: #1c1c16;
         text-align: left;
         white-space: pre-line;
         word-break: break-word;
       }
       .tval.i {
-        color: #4b96d8;
+        color: #0d9488;
       }
       /* Música */
       .mslot {
-        background: #181818;
-        border: 1px dashed rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px dashed rgba(0, 0, 0, 0.08);
         border-radius: 11px;
         padding: 12px;
         margin-bottom: 7px;
@@ -722,19 +722,19 @@
         cursor: pointer;
       }
       .mslot.click:hover {
-        border-color: rgba(201, 168, 76, 0.4);
-        background: #1e1a00;
+        border-color: rgba(217, 119, 6, 0.38);
+        background: rgba(212, 175, 55, 0.12);
       }
       .mslot.upl {
         border-style: solid;
-        border-color: rgba(76, 175, 125, 0.3);
-        background: #001a0a;
+        border-color: rgba(22, 163, 74, 0.25);
+        background: rgba(22, 163, 74, 0.08);
       }
       .opt-bdg {
         display: inline-block;
-        background: #001528;
-        border: 1px solid rgba(75, 150, 216, 0.25);
-        color: #4b96d8;
+        background: rgba(13, 148, 136, 0.08);
+        border: 1px solid rgba(13, 148, 136, 0.2);
+        color: #0d9488;
         border-radius: 100px;
         font-size: 12px;
         font-weight: 600;
@@ -743,9 +743,9 @@
       }
       .req-bdg {
         display: inline-block;
-        background: #1a0800;
-        border: 1px solid rgba(232, 100, 56, 0.4);
-        color: #e86438;
+        background: rgba(217, 119, 6, 0.06);
+        border: 1px solid rgba(217, 119, 6, 0.35);
+        color: #ea580c;
         border-radius: 100px;
         font-size: 12px;
         font-weight: 600;
@@ -754,15 +754,15 @@
       }
       /* Transferencia */
       .trbox {
-        background: #1a1600;
-        border: 1px solid rgba(201, 168, 76, 0.2);
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(217, 119, 6, 0.2);
         border-radius: 13px;
         padding: 14px;
       }
       .trtit {
         font-size: 13px;
         font-weight: 700;
-        color: #c9a84c;
+        color: #d97706;
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin-bottom: 8px;
@@ -772,7 +772,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 6px 0;
-        border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+        border-bottom: 1px solid rgba(217, 119, 6, 0.1);
         font-size: 15px;
         gap: 8px;
       }
@@ -780,7 +780,7 @@
         border-bottom: none;
       }
       .trk {
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         font-size: 14px;
         flex-shrink: 0;
       }
@@ -788,14 +788,14 @@
         font-family: "JetBrains Mono", monospace;
         font-size: 13px;
         font-weight: 600;
-        color: #c9a84c;
+        color: #d97706;
         word-break: break-all;
         text-align: right;
       }
       .cpybtn {
-        background: #2a2000;
-        border: 1px solid rgba(201, 168, 76, 0.25);
-        color: #c9a84c;
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid rgba(217, 119, 6, 0.25);
+        color: #d97706;
         border-radius: 6px;
         padding: 2px 7px;
         font-size: 10px;
@@ -813,40 +813,40 @@
         margin-bottom: 10px;
       }
       .mopt {
-        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        border: 1.5px solid rgba(0, 0, 0, 0.1);
         border-radius: 11px;
         padding: 10px 7px;
         cursor: pointer;
         transition: all 0.15s;
         text-align: center;
-        background: #1a1a1a;
+        background: rgba(255, 255, 255, 0.75);
         font-family: "Outfit", sans-serif;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .mopt:hover {
-        border-color: rgba(255, 255, 255, 0.25);
+        border-color: rgba(0, 0, 0, 0.18);
       }
       .mopt.sel {
-        border-color: #c9a84c;
-        background: #1e1a00;
+        border-color: #d97706;
+        background: rgba(212, 175, 55, 0.12);
       }
       .mol {
         font-size: 14px;
         font-weight: 600;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .mod {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         margin-top: 2px;
         line-height: 1.3;
       }
       .mopt.sel .mol {
-        color: #c9a84c;
+        color: #d97706;
       }
       .dbox {
-        background: #1a1200;
-        border: 1px solid rgba(232, 168, 56, 0.2);
+        background: rgba(217, 119, 6, 0.08);
+        border: 1px solid rgba(217, 119, 6, 0.18);
         border-radius: 11px;
         padding: 10px 13px;
       }
@@ -855,15 +855,15 @@
         justify-content: space-between;
         font-size: 15px;
         padding: 3px 0;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .dsal {
         font-weight: 700;
-        color: #e8a838;
+        color: #d97706;
       }
       .uzone {
-        background: #181818;
-        border: 1px dashed rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px dashed rgba(0, 0, 0, 0.1);
         border-radius: 11px;
         padding: 17px;
         text-align: center;
@@ -871,17 +871,17 @@
         transition: all 0.2s;
       }
       .uzone:hover {
-        border-color: rgba(201, 168, 76, 0.4);
-        background: #1e1a00;
+        border-color: rgba(217, 119, 6, 0.38);
+        background: rgba(212, 175, 55, 0.12);
       }
       .uzone.done {
         border-style: solid;
-        border-color: rgba(76, 175, 125, 0.35);
-        background: #001a0a;
+        border-color: rgba(22, 163, 74, 0.3);
+        background: rgba(22, 163, 74, 0.08);
         cursor: default;
       }
       .uzone.req {
-        border-color: rgba(232, 168, 56, 0.4);
+        border-color: rgba(217, 119, 6, 0.35);
       }
       /* Resumen */
       .rrow {
@@ -889,7 +889,7 @@
         align-items: flex-start;
         justify-content: space-between;
         padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         font-size: 15px;
         gap: 12px;
       }
@@ -897,13 +897,13 @@
         border-bottom: none;
       }
       .rk {
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         flex-shrink: 0;
       }
       .rv {
         font-weight: 500;
         text-align: right;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .rtot {
         display: flex;
@@ -913,13 +913,13 @@
       }
       .rtotl {
         font-size: 15px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
       }
       .rtotv {
         font-family: "Cormorant Garamond", serif;
         font-size: 28px;
         font-weight: 600;
-        color: #c9a84c;
+        color: #d97706;
       }
       .rsald {
         display: flex;
@@ -929,11 +929,11 @@
         font-size: 15px;
       }
       .rsaldl {
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
       }
       .rsaldv {
         font-weight: 700;
-        color: #e8a838;
+        color: #d97706;
       }
       /* TC */
       .tc-s {
@@ -942,7 +942,7 @@
       .tc-s h3 {
         font-size: 15px;
         font-weight: 700;
-        color: #f8f5ee;
+        color: #1c1c16;
         margin-bottom: 5px;
       }
       .tc-s ul {
@@ -951,7 +951,7 @@
       }
       .tc-s ul li {
         font-size: 14px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         padding: 2px 0 2px 12px;
         line-height: 1.5;
         position: relative;
@@ -960,7 +960,7 @@
         content: "·";
         position: absolute;
         left: 0;
-        color: #c9a84c;
+        color: #d97706;
       }
       /* Checkbox */
       .cklbl {
@@ -969,7 +969,7 @@
         gap: 10px;
         cursor: pointer;
         font-size: 15px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         line-height: 1.5;
         padding: 10px 0;
       }
@@ -980,27 +980,27 @@
         width: 20px;
         height: 20px;
         border-radius: 6px;
-        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border: 1.5px solid rgba(0, 0, 0, 0.15);
         flex-shrink: 0;
         margin-top: 1px;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.18s;
-        background: #1a1a1a;
+        background: rgba(255, 255, 255, 0.75);
       }
       .cklbl input:checked ~ .ckbox {
-        background: #c9a84c;
-        border-color: #c9a84c;
+        background: #d97706;
+        border-color: #d97706;
       }
       .cklbl input:checked ~ .ckbox::after {
         content: "\2713";
         font-size: 11px;
         font-weight: 700;
-        color: #000;
+        color: #ffffff;
       }
       a {
-        color: #c9a84c;
+        color: #d97706;
         text-decoration: none;
       }
       a:hover {
@@ -1027,13 +1027,13 @@
         font-family: "Cormorant Garamond", serif;
         font-size: 32px;
         font-weight: 600;
-        color: #c9a84c;
+        color: #d97706;
         letter-spacing: 0.8px;
         margin-bottom: 4px;
       }
       .osub {
         font-size: 15px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         margin-bottom: 20px;
       }
       .creds-wrap {
@@ -1044,8 +1044,8 @@
         margin-bottom: 22px;
       }
       .credcard {
-        background: #141414;
-        border: 1px solid rgba(201, 168, 76, 0.2);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(217, 119, 6, 0.2);
         border-radius: 18px;
         padding: 20px;
         width: 100%;
@@ -1063,7 +1063,7 @@
         border-radius: 50%;
         background: radial-gradient(
           circle,
-          rgba(201, 168, 76, 0.12),
+          rgba(217, 119, 6, 0.12),
           transparent 70%
         );
       }
@@ -1071,7 +1071,7 @@
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 2px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         text-transform: uppercase;
         margin-bottom: 6px;
       }
@@ -1079,12 +1079,12 @@
         font-family: "JetBrains Mono", monospace;
         font-size: 18px;
         font-weight: 700;
-        color: #c9a84c;
+        color: #d97706;
         margin-bottom: 3px;
       }
       .cgrupo {
         font-size: 13px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         margin-bottom: 2px;
       }
       .cnom {
@@ -1092,11 +1092,11 @@
         font-size: 20px;
         font-weight: 600;
         margin-bottom: 2px;
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .csede {
         font-size: 14px;
-        color: rgba(248, 245, 238, 0.7);
+        color: rgba(28, 28, 22, 0.7);
         margin-bottom: 15px;
       }
       .qrsvg {
@@ -1110,7 +1110,7 @@
       }
       .chint {
         font-size: 12px;
-        color: rgba(248, 245, 238, 0.55);
+        color: rgba(28, 28, 22, 0.55);
         margin-top: 8px;
       }
       .sbdg {
@@ -1124,18 +1124,18 @@
         margin-bottom: 12px;
       }
       .sbdg-ok {
-        background: #001a0a;
-        border: 1px solid rgba(76, 175, 125, 0.3);
-        color: #4caf7d;
+        background: rgba(22, 163, 74, 0.08);
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        color: #16a34a;
       }
       .sbdg-pd {
-        background: #1a1200;
-        border: 1px solid rgba(232, 168, 56, 0.3);
-        color: #e8a838;
+        background: rgba(217, 119, 6, 0.08);
+        border: 1px solid rgba(217, 119, 6, 0.25);
+        color: #d97706;
       }
       .oinfobox {
-        background: #1a1600;
-        border: 1px solid rgba(201, 168, 76, 0.18);
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(217, 119, 6, 0.18);
         border-radius: 13px;
         padding: 12px 16px;
         text-align: left;
@@ -1147,21 +1147,21 @@
         gap: 8px;
         font-size: 15px;
         padding: 4px 0;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
       }
       .oir strong {
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       hr {
         border: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
         margin: 13px 0;
       }
       ::-webkit-scrollbar {
         width: 4px;
       }
       ::-webkit-scrollbar-thumb {
-        background: #2a2000;
+        background: rgba(212, 175, 55, 0.15);
         border-radius: 2px;
       }
       .mt2 {
@@ -1171,8 +1171,8 @@
         margin-top: 12px;
       }
       .planilla-block {
-        background: linear-gradient(135deg, #1a0a00, #0d0500);
-        border: 1.5px solid #c9a84c;
+        background: rgba(255, 248, 220, 0.92);
+        border: 1.5px solid #d97706;
         border-radius: 14px;
         padding: 20px;
         text-align: center;
@@ -1182,22 +1182,22 @@
       .planilla-title {
         font-size: 17px;
         font-weight: 700;
-        color: #c9a84c;
+        color: #d97706;
         margin-bottom: 10px;
       }
       .planilla-desc {
         font-size: 15px;
-        color: rgba(248, 245, 238, 0.95);
+        color: rgba(28, 28, 22, 0.95);
         line-height: 1.6;
         margin-bottom: 16px;
       }
       .planilla-desc strong {
-        color: #f8f5ee;
+        color: #1c1c16;
       }
       .planilla-btn {
         display: inline-block;
-        background: #c9a84c;
-        color: #000;
+        background: #d97706;
+        color: #ffffff;
         font-size: 16px;
         font-weight: 700;
         padding: 13px 24px;
@@ -1207,13 +1207,13 @@
       }
       .planilla-hint {
         font-size: 11px;
-        color: rgba(248, 245, 238, 0.75);
+        color: rgba(28, 28, 22, 0.75);
         margin-top: 10px;
       }
 
       /* ── FONDOS POR INSTANCIA ──────────────────────── */
       body {
-        background-color: #0a0a0a;
+        background-color: #ffffff;
         background-image: none;
         background-size: cover;
         background-position: center top;
@@ -1250,7 +1250,7 @@
         opacity: 0;
       }
       body.bg-nac::before {
-        background-image: url("/imgs/logo-nac.png");
+        background-image: url("/imgs/logo-nac-golden.png");
         opacity: 0.06;
       }
       body.bg-int::before {
@@ -1285,11 +1285,7 @@
       <div style="text-align: right">
         <div class="blv">Inscripciones abiertas</div>
         <div
-          style="
-            font-size: 12px;
-            color: rgba(248, 245, 238, 0.7);
-            margin-top: 4px;
-          "
+          style="font-size: 12px; color: rgba(28, 28, 22, 0.7); margin-top: 4px"
         >
           2, 3 y 4 de Octubre &middot; Palais Rouge &middot; Jerónimo Salguero
           1441, CABA
@@ -1304,7 +1300,10 @@
             <div class="ii">&#127972;</div>
             <div class="in">Inscripción Sedes</div>
             <div class="if">Sin costo online</div>
-            <div class="io-pr" style="background: #001a0a; color: #4caf7d">
+            <div
+              class="io-pr"
+              style="background: rgba(22, 163, 74, 0.08); color: #16a34a"
+            >
               Pre-registro
             </div>
           </button>
@@ -1331,7 +1330,7 @@
             <div class="if">S&#225;b. 3 de Octubre<br />Precios en ARS</div>
             <div
               class="io-pr"
-              style="background: #1e1a00; color: #c9a84c"
+              style="background: rgba(212, 175, 55, 0.12); color: #d97706"
               id="nac-pr"
             ></div>
           </button>
@@ -1341,7 +1340,7 @@
             <div class="if">S&#225;b. 3 (tarde)<br />Precios en USD</div>
             <div
               class="io-pr"
-              style="background: #001020; color: #4b96d8"
+              style="background: rgba(13, 148, 136, 0.06); color: #0d9488"
             ></div>
           </button>
           <button class="io" id="opt-rep" onclick="selI('rep')">
@@ -1353,7 +1352,7 @@
             </div>
             <div
               class="io-pr"
-              style="background: #1a1200; color: #e8a838"
+              style="background: rgba(217, 119, 6, 0.08); color: #d97706"
             ></div>
           </button>
         </div>
@@ -1370,7 +1369,7 @@
       <div id="sok">
         <img
           id="ok-logo"
-          src="/imgs/logo-nac.png"
+          src="/imgs/logo-nac-golden.png"
           alt="logo"
           style="
             width: 250px;
@@ -1425,7 +1424,7 @@
             style="
               font-size: 17px;
               font-weight: 700;
-              color: #4caf7d;
+              color: #16a34a;
               margin-bottom: 8px;
             "
           >
@@ -1434,7 +1433,7 @@
           <p
             style="
               font-size: 15px;
-              color: rgba(248, 245, 238, 0.95);
+              color: rgba(28, 28, 22, 0.95);
               line-height: 1.5;
               margin: 0 0 10px;
             "
@@ -1447,12 +1446,12 @@
             octubre del 2026, donde vivirá una experiencia única e inolvidable.
             <strong>¡Éxitos!</strong>
           </p>
-          <hr style="border-color: rgba(255, 255, 255, 0.06); margin: 10px 0" />
+          <hr style="border-color: rgba(0, 0, 0, 0.05); margin: 10px 0" />
           <div
             style="
               font-size: 17px;
               font-weight: 700;
-              color: #4b96d8;
+              color: #0d9488;
               margin-bottom: 8px;
             "
           >
@@ -1461,7 +1460,7 @@
           <p
             style="
               font-size: 15px;
-              color: rgba(248, 245, 238, 0.95);
+              color: rgba(28, 28, 22, 0.95);
               line-height: 1.5;
               margin: 0;
             "
@@ -1490,7 +1489,7 @@
             style="
               font-size: 17px;
               font-weight: 700;
-              color: #4caf7d;
+              color: #16a34a;
               margin-bottom: 8px;
             "
           >
@@ -1499,7 +1498,7 @@
           <p
             style="
               font-size: 15px;
-              color: rgba(248, 245, 238, 0.95);
+              color: rgba(28, 28, 22, 0.95);
               line-height: 1.5;
               margin: 0;
             "
@@ -1529,7 +1528,7 @@
       <div id="sok-regional">
         <img
           id="ok-logo-reg"
-          src="/imgs/logo-nac.png"
+          src="/imgs/logo-nac-golden.png"
           alt="logo"
           style="
             width: 250px;
@@ -1539,7 +1538,7 @@
             border-radius: 15px;
           "
         />
-        <div class="otit" style="color: #4caf7d">&#161;Felicitaciones!</div>
+        <div class="otit" style="color: #16a34a">&#161;Felicitaciones!</div>
         <div class="osub">Tu pre-registro fue realizado correctamente.</div>
         <div
           class="cgn"
@@ -1554,7 +1553,7 @@
             style="
               font-size: 16px;
               font-weight: 600;
-              color: #4caf7d;
+              color: #16a34a;
               margin-bottom: 8px;
             "
           >
@@ -1563,24 +1562,24 @@
           <p
             style="
               font-size: 15px;
-              color: rgba(248, 245, 238, 0.95);
+              color: rgba(28, 28, 22, 0.95);
               line-height: 1.6;
               margin-bottom: 10px;
             "
           >
             📞 El
-            <strong style="color: #f8f5ee">organizador de tu sede</strong> se
+            <strong style="color: #1c1c16">organizador de tu sede</strong> se
             pondrá en contacto con vos para coordinar el
-            <strong style="color: #4caf7d">pago</strong> de tu inscripción.
+            <strong style="color: #16a34a">pago</strong> de tu inscripción.
           </p>
           <p
             style="
               font-size: 15px;
-              color: #f0c040;
+              color: #92400e;
               line-height: 1.6;
               font-weight: 600;
-              background: rgba(240, 192, 64, 0.08);
-              border: 1px solid rgba(240, 192, 64, 0.3);
+              background: rgba(217, 119, 6, 0.08);
+              border: 1px solid rgba(217, 119, 6, 0.28);
               border-radius: 8px;
               padding: 10px 12px;
               margin-bottom: 0;
@@ -1595,7 +1594,7 @@
           <p
             style="
               font-size: 14px;
-              color: #4b96d8;
+              color: #0d9488;
               margin-top: 10px;
               line-height: 1.5;
               font-weight: 600;
@@ -1608,21 +1607,21 @@
           <p
             style="
               font-size: 14px;
-              color: rgba(248, 245, 238, 0.85);
+              color: rgba(28, 28, 22, 0.85);
               margin-top: 8px;
               line-height: 1.5;
             "
           >
             &#127925; Música: La música debe entregarse
             <strong>30 días antes</strong>. Multa:
-            <strong style="color: #e8a838">ARS $25.000 por pista</strong>.
+            <strong style="color: #d97706">ARS $25.000 por pista</strong>.
             Modificar pista ya enviada:
-            <strong style="color: #e8a838">ARS $25.000</strong>.
+            <strong style="color: #d97706">ARS $25.000</strong>.
           </p>
           <p
             style="
               font-size: 14px;
-              color: rgba(248, 245, 238, 0.75);
+              color: rgba(28, 28, 22, 0.75);
               margin-top: 8px;
               line-height: 1.5;
             "
@@ -1647,7 +1646,7 @@
             style="
               font-size: 17px;
               font-weight: 700;
-              color: #4caf7d;
+              color: #16a34a;
               margin-bottom: 8px;
             "
           >
@@ -1656,7 +1655,7 @@
           <p
             style="
               font-size: 15px;
-              color: rgba(248, 245, 238, 0.95);
+              color: rgba(28, 28, 22, 0.95);
               line-height: 1.5;
               margin: 0;
             "
@@ -1693,19 +1692,15 @@
     <!-- /wrap -->
     <footer
       style="
-        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
         padding: 14px 20px;
         text-align: center;
         margin-top: 40px;
-        background: #0a0a0a;
+        background: rgba(255, 255, 255, 0.92);
       "
     >
       <p
-        style="
-          font-size: 13px;
-          color: rgba(248, 245, 238, 0.55);
-          line-height: 1.6;
-        "
+        style="font-size: 13px; color: rgba(28, 28, 22, 0.55); line-height: 1.6"
       >
         JAM Dance Competition 2026 &middot; Cierre Nacional: 8 Sep &middot;
         Cierre Inter: 30 Ago<br />&#128222; +54 11 7101-4000 &middot; &#128231;
@@ -4338,7 +4333,7 @@
         return parseInt(STATE.cant || "1") || 1;
       }
       function fP(v, m) {
-        if (m === "GRATIS") return '<span style="color:#4CAF7D">GRATIS</span>';
+        if (m === "GRATIS") return '<span style="color:#16a34a">GRATIS</span>';
         if (m === "USD") return "U$S " + v;
         return "ARS $" + v.toLocaleString("es-AR");
       }
@@ -4419,7 +4414,7 @@
             '<option value="' +
             i +
             '"' +
-            (s.tipo === "v" ? ' style="color:#C9A84C"' : "") +
+            (s.tipo === "v" ? ' style="color:#d97706"' : "") +
             ">" +
             s.n +
             " — " +
@@ -4679,7 +4674,7 @@
         ct.innerHTML = "";
         if (!lista.length) {
           ct.innerHTML =
-            '<div style="padding:18px;text-align:center;color:rgba(248,245,238,.3);font-size:15px">Sin resultados</div></div>';
+            '<div style="padding:18px;text-align:center;color:rgba(28,28,22,.30);font-size:15px">Sin resultados</div></div>';
           return;
         }
         var isInt = INST === "int";
@@ -4879,38 +4874,38 @@
           var rows = periods
             .map(function (pd) {
               var act = pd.i === p;
-              var bg = act ? "background:#001020" : "";
-              var cl = act ? "color:#4B96D8" : "color:rgba(248,245,238,.45)";
+              var bg = act ? "background:rgba(13, 148, 136, 0.06)" : "";
+              var cl = act ? "color:#0d9488" : "color:rgba(28,28,22,.45)";
               var badge = act
-                ? '<span style="background:#4B96D8;color:#fff;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">ACTUAL</span>'
+                ? '<span style="background:#0d9488;color:#fff;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">ACTUAL</span>'
                 : "";
               return (
                 '<tr style="' +
                 bg +
                 '"><td style="padding:6px 10px;font-size:14px;' +
                 cl +
-                ';border-bottom:1px solid rgba(255,255,255,.06)">' +
+                ';border-bottom:1px solid rgba(0,0,0,.05)">' +
                 pd.l +
                 badge +
                 "</td>" +
                 '<td style="padding:6px 10px;font-size:14px;font-weight:700;text-align:center;' +
                 cl +
-                ';border-bottom:1px solid rgba(255,255,255,.06)">$' +
+                ';border-bottom:1px solid rgba(0,0,0,.05)">$' +
                 pd.sol +
                 "</td>" +
                 '<td style="padding:6px 10px;font-size:14px;font-weight:700;text-align:center;' +
                 cl +
-                ';border-bottom:1px solid rgba(255,255,255,.06)">$' +
+                ';border-bottom:1px solid rgba(0,0,0,.05)">$' +
                 pd.par +
                 "</td>" +
                 '<td style="padding:6px 10px;font-size:14px;font-weight:700;text-align:center;' +
                 cl +
-                ';border-bottom:1px solid rgba(255,255,255,.06)">$' +
+                ';border-bottom:1px solid rgba(0,0,0,.05)">$' +
                 pd.gr +
                 "/p</td>" +
                 '<td style="padding:6px 10px;font-size:14px;font-weight:700;text-align:center;' +
                 cl +
-                ';border-bottom:1px solid rgba(255,255,255,.06)">$' +
+                ';border-bottom:1px solid rgba(0,0,0,.05)">$' +
                 pd.extra +
                 "</td>" +
                 "</tr>"
@@ -4918,19 +4913,19 @@
             })
             .join("");
           box.innerHTML =
-            '<div class="cb"><div style="font-size:14px;font-weight:700;color:#4B96D8;margin-bottom:9px">PRECIOS INTER AMÉRICA 2026 (USD)</div>' +
+            '<div class="cb"><div style="font-size:14px;font-weight:700;color:#0d9488;margin-bottom:9px">PRECIOS INTER AMÉRICA 2026 (USD)</div>' +
             '<table style="width:100%;border-collapse:collapse">' +
-            '<tr style="border-bottom:1px solid rgba(75,150,216,.2)">' +
-            '<th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:left;font-weight:600">Período</th>' +
-            '<th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Solista</th>' +
-            '<th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Pareja/Trío</th>' +
-            '<th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Grupo/p *</th>' +
-            '<th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:center;font-weight:600">Extra</th>' +
+            '<tr style="border-bottom:1px solid rgba(13,148,136,.2)">' +
+            '<th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:left;font-weight:600">Período</th>' +
+            '<th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:center;font-weight:600">Solista</th>' +
+            '<th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:center;font-weight:600">Pareja/Trío</th>' +
+            '<th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:center;font-weight:600">Grupo/p *</th>' +
+            '<th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:center;font-weight:600">Extra</th>' +
             "</tr>" +
             rows +
             "</table>" +
-            '<div style="font-size:13px;color:rgba(248,245,238,.45);margin-top:7px">Full Pass: <strong style="color:#4B96D8">U$S 100</strong> (3 talleres internacionales + acceso completo)</div>' +
-            '<div style="font-size:13px;color:rgba(248,245,238,.45);margin-top:7px">* Grupo: el precio indicado es <b>por participante</b></div>' +
+            '<div style="font-size:13px;color:rgba(28,28,22,.45);margin-top:7px">Full Pass: <strong style="color:#0d9488">U$S 100</strong> (3 talleres internacionales + acceso completo)</div>' +
+            '<div style="font-size:13px;color:rgba(28,28,22,.45);margin-top:7px">* Grupo: el precio indicado es <b>por participante</b></div>' +
             "</div>";
           return;
         }
@@ -4944,34 +4939,34 @@
         ]
           .map(function (r) {
             var act = r.i === p2;
-            var bg = act ? "background:#1e1a00" : "";
-            var cl = act ? "color:#C9A84C" : "color:rgba(248,245,238,.45)";
+            var bg = act ? "background:rgba(212, 175, 55, 0.12)" : "";
+            var cl = act ? "color:#d97706" : "color:rgba(28,28,22,.45)";
             var badge = act
-              ? '<span style="background:#C9A84C;color:#000;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">ACTUAL</span>'
+              ? '<span style="background:#d97706;color:#000;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">ACTUAL</span>'
               : "";
             return (
               '<tr style="' +
               bg +
               '"><td style="padding:7px 10px;font-size:14px;' +
               cl +
-              ';border-bottom:1px solid rgba(255,255,255,.06)">' +
+              ';border-bottom:1px solid rgba(0,0,0,.05)">' +
               r.l +
               badge +
               "</td>" +
               '<td style="padding:7px 10px;font-size:14px;font-weight:700;' +
               cl +
-              ';text-align:right;border-bottom:1px solid rgba(255,255,255,.06)">ARS ' +
+              ';text-align:right;border-bottom:1px solid rgba(0,0,0,.05)">ARS ' +
               r.v +
               "</td></tr>"
             );
           })
           .join("");
         box.innerHTML =
-          '<div class="cg"><div style="font-size:14px;font-weight:700;color:#C9A84C;margin-bottom:9px">VALOR INSCRIPCIÓN FINAL NACIONAL</div>' +
+          '<div class="cg"><div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:9px">VALOR INSCRIPCIÓN FINAL NACIONAL</div>' +
           '<table style="width:100%;border-collapse:collapse">' +
           rows2 +
           "</table>" +
-          '<div style="font-size:13px;color:rgba(248,245,238,.45);margin-top:7px">Saldo: <strong style="color:#F8F5EE">5 sep</strong> · Cierre: <strong style="color:#F8F5EE">8 sep 2026</strong></div></div>';
+          '<div style="font-size:13px;color:rgba(28,28,22,.45);margin-top:7px">Saldo: <strong style="color:#1c1c16">5 sep</strong> · Cierre: <strong style="color:#1c1c16">8 sep 2026</strong></div></div>';
       }
 
       // ── INTEGRANTES ──────────────────────────────────────────────────
@@ -5220,7 +5215,7 @@
         } catch (e) {}
         btn.textContent = "\u2713";
         btn.style.background = "rgba(76,175,125,.2)";
-        btn.style.color = "#4CAF7D";
+        btn.style.color = "#16a34a";
         setTimeout(function () {
           btn.textContent = "Copiar";
           btn.style.background = "";
@@ -5248,7 +5243,7 @@
           .filter(Boolean);
         if (!cats.length) {
           c.innerHTML =
-            '<p style="font-size:15px;color:rgba(248,245,238,.3);padding:6px 0">Seleccion\u00e1 una categor\u00eda para ver los slots de m\u00fasica.</p>';
+            '<p style="font-size:15px;color:rgba(28,28,22,.30);padding:6px 0">Seleccion\u00e1 una categor\u00eda para ver los slots de m\u00fasica.</p>';
           return;
         }
         c.innerHTML = "";
@@ -5259,21 +5254,19 @@
             '<div style="display:flex;align-items:center;gap:10px">' +
             '<div style="font-size:19px;flex-shrink:0">&#127925;</div>' +
             '<div style="flex:1">' +
-            '<div style="font-size:13px;font-weight:600;color:rgba(248,245,238,.45);text-transform:uppercase;letter-spacing:.5px">Cat. ' +
+            '<div style="font-size:13px;font-weight:600;color:rgba(28,28,22,.65);text-transform:uppercase;letter-spacing:.5px">Cat. ' +
             cat.c +
             " \u2014 " +
             cat.n +
             "</div>" +
-            '<div class="mf" style="font-size:15px;color:rgba(248,245,238,.25);margin-top:1px">Tocar para subir MP3</div>' +
-            '<div class="ms" style="font-size:13px;color:rgba(248,245,238,.25);margin-top:1px">' +
+            '<div class="mf" style="font-size:15px;color:rgba(28,28,22,.60);margin-top:1px">Tocar para subir MP3</div>' +
             (INST === "nac" ||
             INST === "int" ||
             INST === "rep" ||
             INST === "reg"
-              ? "Obligatorio \u2014 sub\u00ed el MP3 ahora"
-              : "Opcional \u2014 pod\u00e9s subirla despu\u00e9s") +
-            "</div>" +
-            '</div><div class="mx" style="font-size:18px;color:rgba(248,245,238,.25)">+</div></div>';
+              ? '<div class="ms" style="font-size:13px;color:#b45309;font-weight:600;margin-top:1px">Obligatorio \u2014 sub\u00ed el MP3 ahora</div>'
+              : '<div class="ms" style="font-size:13px;color:rgba(28,28,22,.50);margin-top:1px">Opcional \u2014 pod\u00e9s subirla despu\u00e9s</div>') +
+            '</div><div class="mx" style="font-size:18px;color:rgba(28,28,22,.45)">+</div></div>';
           c.appendChild(s);
         });
         // Nota de límites de duración por instancia
@@ -5282,26 +5275,26 @@
           note.className = "card";
           note.style.marginTop = "12px";
           note.innerHTML =
-            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(248,245,238,.95)">' +
+            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(28,28,22,.95)">' +
             "<li>Solistas: hasta 2:00 minutos</li>" +
             "<li>Parejas / Dúos: hasta 2:30 minutos</li>" +
             "<li>Grupos: hasta 3:00 minutos</li>" +
             "</ul>" +
-            '<div style="font-size:15px;color:rgba(248,245,238,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
+            '<div style="font-size:15px;color:rgba(28,28,22,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
           c.appendChild(note);
         } else if (INST === "reg" || INST === "nac" || INST === "rep") {
           var note2 = document.createElement("div");
           note2.className = "card";
           note2.style.marginTop = "12px";
           note2.innerHTML =
-            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(248,245,238,.95)">' +
+            '<ul style="margin:8px 0 6px;padding-left:18px;color:rgba(28,28,22,.95)">' +
             "<li>Se permiten mezclas y efectos especiales en todas las categorías.</li>" +
             "<li>Solistas: hasta 2:00 minutos</li>" +
             "<li>Parejas / Dúos: hasta 2:30 minutos</li>" +
             "<li>Grupos: hasta 3:00 minutos</li>" +
             "<li>Improvisaciones y duelos: 2:00</li>" +
             "</ul>" +
-            '<div style="font-size:15px;color:rgba(248,245,238,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
+            '<div style="font-size:15px;color:rgba(28,28,22,.85);margin-top:6px">El exceso de tiempo será penalizado.</div>';
           c.appendChild(note2);
         }
       }
@@ -5349,12 +5342,12 @@
         var dp = document.getElementById("d-p");
         if (dp) {
           dp.textContent = f(pag);
-          dp.style.color = "#4CAF7D";
+          dp.style.color = "#16a34a";
         }
         var ds = document.getElementById("d-s");
         if (ds) {
           ds.textContent = sal > 0 ? f(sal) : "Sin saldo \u2713";
-          ds.style.color = sal > 0 ? "#E8A838" : "#4CAF7D";
+          ds.style.color = sal > 0 ? "#d97706" : "#16a34a";
         }
       }
 
@@ -5366,9 +5359,9 @@
           '<div style="display:flex;align-items:center;gap:10px">' +
           '<div style="font-size:19px">&#127925;</div>' +
           '<div style="flex:1">' +
-          '<div style="font-size:15px;color:#F8F5EE">pista_sedes.mp3 · subida</div>' +
-          '<div style="font-size:13px;color:#4CAF7D;margin-top:2px">✓ Subida correctamente</div>' +
-          '</div><div style="color:#4CAF7D">✓</div></div>';
+          '<div style="font-size:15px;color:#1c1c16">pista_sedes.mp3 · subida</div>' +
+          '<div style="font-size:13px;color:#16a34a;margin-top:2px">✓ Subida correctamente</div>' +
+          '</div><div style="color:#16a34a">✓</div></div>';
         el.onclick = null;
       }
       function subirClasif(input) {
@@ -5377,16 +5370,16 @@
         var file = input.files[0];
         STATE.clasif_file = file;
         el.style.borderStyle = "solid";
-        el.style.borderColor = "rgba(76,175,125,.35)";
-        el.style.background = "#001a0a";
+        el.style.borderColor = "rgba(22,163,74,.30)";
+        el.style.background = "rgba(22, 163, 74, 0.08)";
         el.dataset.uploaded = "1";
         el.onclick = function () {
           input.click();
         };
         el.innerHTML =
-          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#4CAF7D">' +
+          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#16a34a">' +
           file.name +
-          '</div><div style="font-size:13px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
+          '</div><div style="font-size:13px;color:rgba(28,28,22,.35);margin-top:3px">Clic para cambiar</div>';
       }
       function subirComp(input) {
         var z = document.getElementById("uzone");
@@ -5398,15 +5391,15 @@
           input.click();
         };
         z.innerHTML =
-          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#4CAF7D">' +
+          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#16a34a">' +
           file.name +
-          '</div><div style="font-size:13px;color:rgba(248,245,238,.35);margin-top:3px">Clic para cambiar</div>';
+          '</div><div style="font-size:13px;color:rgba(28,28,22,.35);margin-top:3px">Clic para cambiar</div>';
       }
 
       // ── TÉRMINOS Y CONDICIONES NACIONAL ──────────────────────────────
       function tcNac() {
         return (
-          '<div style="font-size:15px;font-weight:700;color:#F8F5EE;margin-bottom:12px">T\u00c9RMINOS Y CONDICIONES \u2014 FINAL NACIONAL</div>' +
+          '<div style="font-size:15px;font-weight:700;color:#1c1c16;margin-bottom:12px">T\u00c9RMINOS Y CONDICIONES \u2014 FINAL NACIONAL</div>' +
           '<div class="tc-s"><h3>1. Participaci\u00f3n</h3><ul><li>La inscripci\u00f3n es personal e intransferible.</li><li>Datos deben coincidir con DNI.</li></ul></div>' +
           '<div class="tc-s"><h3>2. Categor\u00edas y niveles</h3><ul><li>La organizaci\u00f3n puede reubicar participantes en la categor\u00eda correcta.</li></ul></div>' +
           '<div class="tc-s"><h3>3. Inscripci\u00f3n y pagos</h3><ul><li>V\u00e1lida solo con pago completo. Sin reembolsos.</li><li>Modificar integrantes: $25.000 por participante.</li><li>Modificar pista ya enviada: ARS $25.000.</li></ul></div>' +
@@ -5499,7 +5492,7 @@
               '<div class="fld" style="margin-bottom:0"><label>Ciudad / Procedencia</label>' +
               '<input type="text" id="f-ciudad" placeholder="Ciudad de donde venís"></div>' +
               "</div>" +
-              '<div class="cgn mt3"><p style="font-size:16px;color:rgba(248,245,238,.8)">El pre-registro no requiere pago online. Tu sede coordinará todo directamente.</p></div>' +
+              '<div class="cgn mt3"><p style="font-size:16px;color:rgba(28,28,22,.80)">El pre-registro no requiere pago online. Tu sede coordinará todo directamente.</p></div>' +
               '<div class="sf"><div></div><button class="btn bgn" onclick="goTo(2)">Continuar →</button></div>';
             w.appendChild(d);
           },
@@ -5534,12 +5527,12 @@
               '<div class="chips" id="reg-chips"></div>' +
               '<div class="clist" id="clist"></div></div>' +
               '<div class="card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">Opcional</span></div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">Opcional</span></div>' +
               '<div id="reg-mslot" class="mslot click" onclick="regSubirMusica(this)">' +
               '<div style="display:flex;align-items:center;gap:10px">' +
               '<div style="font-size:19px">&#127925;</div>' +
-              '<div style="flex:1"><div style="font-size:15px;color:rgba(248,245,238,.25)">Tocar para subir MP3 (opcional)</div></div>' +
-              '<div style="font-size:18px;color:rgba(248,245,238,.25)">+</div></div></div>' +
+              '<div style="flex:1"><div style="font-size:15px;color:rgba(28,28,22,.60)">Tocar para subir MP3 (opcional)</div></div>' +
+              '<div style="font-size:18px;color:rgba(28,28,22,.45)">+</div></div></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">← Atrás</button>' +
               '<button class="btn bgn" onclick="goTo(4)">Continuar →</button></div>';
@@ -5612,11 +5605,11 @@
               tcNac() +
               "</div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
-              '<span><strong style="color:#F8F5EE">SÍ, ESTOY DE ACUERDO.</strong> Acepto los Términos y Condiciones del evento y entiendo que debo presentar este documento firmado el día del evento.</span></label>' +
-              '<div class="cw mt2 mb3"><p style="font-size:14px;color:#4B96D8;font-weight:600">Recordá que, en caso de clasificar a la Final Nacional, tendrás <strong>48 horas</strong> para realizar tu inscripción. Pasado ese plazo se aplicará una multa económica.</p></div>' +
+              '<span><strong style="color:#1c1c16">SÍ, ESTOY DE ACUERDO.</strong> Acepto los Términos y Condiciones del evento y entiendo que debo presentar este documento firmado el día del evento.</span></label>' +
+              '<div class="cw mt2 mb3"><p style="font-size:14px;color:#0d9488;font-weight:600">Recordá que, en caso de clasificar a la Final Nacional, tendrás <strong>48 horas</strong> para realizar tu inscripción. Pasado ese plazo se aplicará una multa económica.</p></div>' +
               '<div style="background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.3);border-radius:10px;padding:12px 14px;margin:14px 0 8px">' +
               '<p style="font-size:15px;color:#F0C040;font-weight:600;margin:0">📋 Declaración Jurada</p>' +
-              '<p style="font-size:14px;color:rgba(248,245,238,.75);line-height:1.5;margin:4px 0 0">Debés imprimir la planilla, completarla a puño y letra y presentarla el día de la sede. La podrás descargar en la próxima pantalla.</p>' +
+              '<p style="font-size:14px;color:rgba(28,28,22,.75);line-height:1.5;margin:4px 0 0">Debés imprimir la planilla, completarla a puño y letra y presentarla el día de la sede. La podrás descargar en la próxima pantalla.</p>' +
               "</div>" +
               '<div class="sf" style="margin-top:6px"><button class="btn bo" onclick="goTo(3)">← Atrás</button>' +
               '<button class="btn bgn" style="padding:13px 24px;font-size:17px" onclick="confirmarReg()">Enviar pre-registro →</button></div>';
@@ -5644,7 +5637,7 @@
               sedesVirtualesOpts() +
               "</select></div>" +
               "</div>" +
-              '<div class="cg mt3"><p style="font-size:14px;color:rgba(248,245,238,.6)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#C9A84C">$25.000 por participante</strong>.</p></div>' +
+              '<div class="cg mt3"><p style="font-size:14px;color:rgba(28,28,22,.60)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#d97706">$25.000 por participante</strong>.</p></div>' +
               '<div class="sf"><div></div><button class="btn bg" onclick="goTo(2)">Continuar \u2192</button></div>';
             w.appendChild(d);
           },
@@ -5686,19 +5679,19 @@
               // '<button class="chip" onclick="chipN(&apos;grupo&apos;,this)">Grupos</button>' +
               '<button class="chip" onclick="chipG(&apos;open&apos;,this)">Latin JAM</button>' +
               "</div>" +
-              '<div style="font-size:14px;color:rgba(248,245,238,.6);margin:8px 0 2px">Final Nacional: 2da coreografia 10% OFF, 3ra o mas 20% OFF.</div>' +
+              '<div style="font-size:14px;color:rgba(28,28,22,.60);margin:8px 0 2px">Final Nacional: 2da coreografia 10% OFF, 3ra o mas 20% OFF.</div>' +
               '<div class="clist" id="clist"></div>' +
               '<div class="tbox" id="tbox" style="display:none">' +
               '<div><div class="tlbl">Total</div><div class="tcnt" id="tcnt"></div></div>' +
               '<div class="tval" id="tval">0</div></div></div>' +
               '<div class="card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:10px">Comprobante de clasificaci\u00f3n de la sede ' +
-              '<span style="font-size:13px;background:#1a1000;border:1px solid rgba(232,168,56,.3);color:#E8A838;border-radius:100px;padding:2px 8px;margin-left:7px;font-weight:600">OBLIGATORIO</span></div>' +
-              '<p style="font-size:14px;color:rgba(248,245,238,.5);margin-bottom:10px;line-height:1.5">Para inscribirse a la Final Nacional deb\u00e9s adjuntar el comprobante que acredita tu clasificaci\u00f3n desde una sede regional.</p>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:10px">Comprobante de clasificaci\u00f3n de la sede ' +
+              '<span style="font-size:13px;background:rgba(217, 119, 6, 0.08);border:1px solid rgba(217,119,6,.25);color:#d97706;border-radius:100px;padding:2px 8px;margin-left:7px;font-weight:600">OBLIGATORIO</span></div>' +
+              '<p style="font-size:14px;color:rgba(28,28,22,.50);margin-bottom:10px;line-height:1.5">Para inscribirse a la Final Nacional deb\u00e9s adjuntar el comprobante que acredita tu clasificaci\u00f3n desde una sede regional.</p>' +
               '<div class="uzone req" id="comp-clasif" onclick="document.getElementById(\'clasif-file\').click()">' +
               '<div style="font-size:26px;margin-bottom:6px">&#128196;</div>' +
-              '<div style="font-size:15px;color:rgba(248,245,238,.45)">Subir comprobante de clasificaci\u00f3n</div>' +
-              '<div style="font-size:13px;color:rgba(248,245,238,.25);margin-top:3px">JPG, PNG o PDF</div></div>' +
+              '<div style="font-size:15px;color:rgba(28,28,22,.45)">Subir comprobante de clasificaci\u00f3n</div>' +
+              '<div style="font-size:13px;color:rgba(28,28,22,.25);margin-top:3px">JPG, PNG o PDF</div></div>' +
               '<input type="file" id="clasif-file" accept="image/*,.pdf" style="display:none" onchange="subirClasif(this)"></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bg" onclick="goTo(4)">Continuar \u2192</button></div>';
@@ -5716,18 +5709,18 @@
               '<div class="ss">La m\u00fasica es obligatoria. El pago es solo por transferencia bancaria.</div></div>' +
               '<div class="card mb3">' +
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:7px">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
-              '<div style="font-size:13px;color:rgba(248,245,238,.45)">Solo <strong style="color:#C9A84C">MP3</strong></div></div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
+              '<div style="font-size:13px;color:rgba(28,28,22,.45)">Solo <strong style="color:#d97706">MP3</strong></div></div>' +
               '<div id="mslots"></div>' +
               "</div></div></div></div>" +
               '<div class="card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
               '<div id="tr-datos"></div>' +
               '<div class="cw mt3 mb3"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:14px;font-weight:700;color:#E8A838;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
-              '<p style="font-size:14px;color:rgba(248,245,238,.55)">Debe mostrar <strong style="color:#F8F5EE">FECHA, HORA y TITULAR</strong>.</p>' +
+              '<div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
+              '<p style="font-size:14px;color:rgba(28,28,22,.55)">Debe mostrar <strong style="color:#1c1c16">FECHA, HORA y TITULAR</strong>.</p>' +
               "</div></div></div>" +
-              '<div style="font-size:15px;font-weight:600;color:rgba(248,245,238,.5);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
+              '<div style="font-size:15px;font-weight:600;color:rgba(28,28,22,.50);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
               '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total: - </div><div class="mod" id="mo-tv">' +
               // fT +
@@ -5742,17 +5735,17 @@
               // '<label>Monto (<span id="mcur">ARS</span>)</label>' +
               // '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
               // '<div class="dbox mt2" id="dbox" style="display:none">' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div>' +
-              // '<div style="font-size:11px;color:rgba(248,245,238,.25);margin-top:6px">Saldo: vence el <strong style="color:#F8F5EE">5 de septiembre 2026</strong>.</div></div>' +
-              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#F8F5EE;margin-bottom:11px">Subir comprobante de pago</div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div>' +
+              // '<div style="font-size:11px;color:rgba(28,28,22,.25);margin-top:6px">Saldo: vence el <strong style="color:#1c1c16">5 de septiembre 2026</strong>.</div></div>' +
+              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#1c1c16;margin-bottom:11px">Subir comprobante de pago</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:26px;margin-bottom:6px">&#128206;</div>' +
-              '<div style="font-size:15px;color:rgba(248,245,238,.45)">Subir captura o PDF</div>' +
-              '<div style="font-size:13px;color:rgba(248,245,238,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
+              '<div style="font-size:15px;color:rgba(28,28,22,.45)">Subir captura o PDF</div>' +
+              '<div style="font-size:13px;color:rgba(28,28,22,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
               '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
-              '<div class="cg mt3"><p style="font-size:13px;color:rgba(248,245,238,.55)">El staff revisar\u00e1 el comprobante dentro de las 48hs h\u00e1biles.</p></div>' +
+              '<div class="cg mt3"><p style="font-size:13px;color:rgba(28,28,22,.55)">El staff revisar\u00e1 el comprobante dentro de las 48hs h\u00e1biles.</p></div>' +
               "</div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bg" onclick="goTo(5)">Continuar \u2192</button></div>';
@@ -5823,8 +5816,8 @@
               tcNac() +
               "</div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
-              '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 Final Nacional y presentar\u00e9 el formulario <strong style="color:#F8F5EE">impreso y firmado</strong>.</span></label>' +
-              '<div class="cw mt2 mb3"><p style="font-size:14px;color:rgba(248,245,238,.55)">Sin el formulario impreso y firmado no podr\u00e1s acceder al escenario.</p></div>' +
+              '<span><strong style="color:#1c1c16">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 Final Nacional y presentar\u00e9 el formulario <strong style="color:#1c1c16">impreso y firmado</strong>.</span></label>' +
+              '<div class="cw mt2 mb3"><p style="font-size:14px;color:rgba(28,28,22,.55)">Sin el formulario impreso y firmado no podr\u00e1s acceder al escenario.</p></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bg bfull" style="max-width:240px;font-size:17px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
             w.appendChild(d);
@@ -5906,17 +5899,17 @@
             d.innerHTML =
               '<div class="sh"><div class="st">M\u00fasica y pago</div></div>' +
               '<div class="card mb3">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127925; Pistas musicales <span class="req-bdg">OBLIGATORIO</span></div>' +
               '<div id="mslots"></div>' +
               "</div></div></div></div>" +
               '<div class="card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127970; Datos para la transferencia</div>' +
               '<div id="tr-datos"></div>' +
               '<div class="cw mt3 mb3"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:14px;font-weight:700;color:#E8A838;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
-              '<p style="font-size:14px;color:rgba(248,245,238,.55)">Debe mostrar <strong style="color:#F8F5EE">FECHA, HORA y TITULAR</strong>.</p>' +
+              '<div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
+              '<p style="font-size:14px;color:rgba(28,28,22,.55)">Debe mostrar <strong style="color:#1c1c16">FECHA, HORA y TITULAR</strong>.</p>' +
               "</div></div></div>" +
-              '<div style="font-size:15px;font-weight:600;color:rgba(248,245,238,.5);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
+              '<div style="font-size:15px;font-weight:600;color:rgba(28,28,22,.50);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
               '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total</div><div class="mod" id="mo-tv">' +
               // fT +
@@ -5930,13 +5923,13 @@
               // '<label>Monto (<span id="mcur">USD</span>)</label>' +
               // '<input type="number" id="cv" placeholder="0" min="0" oninput="calcD()"></div></div>' +
               // '<div class="dbox mt2" id="dbox" style="display:none">' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div></div>' +
-              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#F8F5EE;margin-bottom:11px">Subir comprobante</div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Saldo pendiente</span><span class="dsal" id="d-s"></span></div></div>' +
+              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#1c1c16;margin-bottom:11px">Subir comprobante</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()">' +
               '<div style="font-size:26px;margin-bottom:6px">&#128206;</div>' +
-              '<div style="font-size:15px;color:rgba(248,245,238,.45)">Subir captura o PDF del comprobante</div></div>' +
+              '<div style="font-size:15px;color:rgba(28,28,22,.45)">Subir captura o PDF del comprobante</div></div>' +
               '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
               "</div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
@@ -5991,7 +5984,7 @@
                   );
                 })
                 .join("") +
-              '<div class="rtot"><span class="rtotl">Total: - </span><span class="rtotv" style="color:#4B96D8">' +
+              '<div class="rtot"><span class="rtotl">Total: - </span><span class="rtotv" style="color:#0d9488">' +
               // fT +
               "</span></div>" +
               // (sal > 0
@@ -6001,7 +5994,7 @@
               //   : "") +
               "</div></div>" +
               '<label class="cklbl"><input type="checkbox" id="chk"><div class="ckbox"></div>' +
-              '<span><strong style="color:#F8F5EE">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
+              '<span><strong style="color:#1c1c16">S\u00cd, ESTOY DE ACUERDO.</strong> Acepto los T\u00e9rminos y Condiciones \u2014 INTER AMÉRICA.</span></label>' +
               '<div class="sf mt2"><button class="btn bo" onclick="goTo(4)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bd bfull" style="max-width:240px;font-size:17px" onclick="confirmar()">Confirmar inscripci\u00f3n \u2192</button></div>';
             var tcCard = document.createElement("div");
@@ -6020,7 +6013,7 @@
             d.className = "step show";
             d.innerHTML =
               '<div class="sh"><div class="st">Repesca \u2014 Contacto</div>' +
-              '<div class="ss">La repesca se realiza el Viernes 2 de Octubre a las 20hs en Hipólito Yrigoyen 3140, Lanús. Costo fijo: ARS $50.000. La inscripci\u00f3n queda <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong>.</div></div>' +
+              '<div class="ss">La repesca se realiza el Viernes 2 de Octubre a las 20hs en Hipólito Yrigoyen 3140, Lanús. Costo fijo: ARS $50.000. La inscripci\u00f3n queda <strong style="color:#d97706">pendiente de aprobaci\u00f3n</strong>.</div></div>' +
               '<div class="card">' +
               '<div class="fld"><label>Nombre completo *</label><input type="text" id="f-nombre" placeholder="Nombre y apellido"></div>' +
               '<div class="fld"><label>Email *</label><input type="email" id="f-email" placeholder="tu@email.com"></div>' +
@@ -6033,7 +6026,7 @@
               sedesVirtualesOpts() +
               "</select></div>" +
               "</div>" +
-              '<div class="cw mt3"><p style="font-size:16px;color:rgba(248,245,238,.6)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
+              '<div class="cw mt3"><p style="font-size:16px;color:rgba(28,28,22,.60)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
               '<div class="sf"><div></div><button class="btn bam" onclick="goTo(2)">Continuar \u2192</button></div>';
             w.appendChild(d);
           },
@@ -6062,12 +6055,12 @@
             d.innerHTML =
               '<div class="sh"><div class="st">Categor\u00eda y m\u00fasica</div>' +
               '<div class="ss">Seleccion\u00e1 la categor\u00eda en la que compet\u00eds.</div></div>' +
-              '<div class="cw" style="margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:#E8A838;margin-bottom:8px">REPESCA \u2014 VALOR DE INSCRIPCI\u00d3N</div>' +
+              '<div class="cw" style="margin-bottom:12px"><div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:8px">REPESCA \u2014 VALOR DE INSCRIPCI\u00d3N</div>' +
               '<table style="width:100%;border-collapse:collapse">' +
-              '<tr style="border-bottom:1px solid rgba(232,168,56,.2)"><th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:left;font-weight:600">Modalidad</th><th style="padding:4px 10px;font-size:12px;color:rgba(248,245,238,.35);text-align:right;font-weight:600">Valor</th></tr>' +
-              '<tr><td style="padding:7px 10px;font-size:14px;color:#F8F5EE;border-bottom:1px solid rgba(255,255,255,.06)">Todas las categor\u00edas</td><td style="padding:7px 10px;font-size:15px;font-weight:700;color:#E8A838;text-align:right;border-bottom:1px solid rgba(255,255,255,.06)">ARS $50.000</td></tr>' +
+              '<tr style="border-bottom:1px solid rgba(217,119,6,.18)"><th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:left;font-weight:600">Modalidad</th><th style="padding:4px 10px;font-size:12px;color:rgba(28,28,22,.35);text-align:right;font-weight:600">Valor</th></tr>' +
+              '<tr><td style="padding:7px 10px;font-size:14px;color:#1c1c16;border-bottom:1px solid rgba(0,0,0,.05)">Todas las categor\u00edas</td><td style="padding:7px 10px;font-size:15px;font-weight:700;color:#d97706;text-align:right;border-bottom:1px solid rgba(0,0,0,.05)">ARS $50.000</td></tr>' +
               "</table>" +
-              '<div style="font-size:13px;color:rgba(248,245,238,.45);margin-top:7px">Costo fijo \u00fanico \u00b7 Viernes 2 de Octubre \u00b7 Hip\u00f3lito Yrigoyen 3140, Lan\u00fas</div></div>' +
+              '<div style="font-size:13px;color:rgba(28,28,22,.45);margin-top:7px">Costo fijo \u00fanico \u00b7 Viernes 2 de Octubre \u00b7 Hip\u00f3lito Yrigoyen 3140, Lan\u00fas</div></div>' +
               '<div class="card mb3">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar categor\u00eda..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
@@ -6081,10 +6074,10 @@
               '<div class="clist" id="clist"></div>' +
               '<div class="tbox" id="tbox" style="display:none">' +
               '<div style="flex:1"><div class="tlbl">Categor\u00eda</div><div class="tcnt" id="tcnt"></div>' +
-              '<div id="rep-precio-desc" style="font-size:12px;color:#E8A838;margin-top:3px;display:none"></div></div>' +
+              '<div id="rep-precio-desc" style="font-size:12px;color:#d97706;margin-top:3px;display:none"></div></div>' +
               '<div class="tval" id="tval">ARS $50.000</div></div></div>' +
               '<div class="card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">&#127925; Pista musical <span class="req-bdg">OBLIGATORIO</span></div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127925; Pista musical <span class="req-bdg">OBLIGATORIO</span></div>' +
               '<div id="mslots"></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
@@ -6128,12 +6121,12 @@
               titular +
               "</span></div>";
             // '<div class="trrow" style="border-bottom:none"><span class="trk">Total</span>' +
-            // '<span class="trv" style="font-size:14px;color:#E8A838">' +
+            // '<span class="trv" style="font-size:14px;color:#d97706">' +
             // fT4 +
             // "</span></div>";
             d.innerHTML =
               '<div class="sh"><div class="st">Pago de la repesca</div>' +
-              // '<div class="ss"><strong style="color:#E8A838">ARS $50.000 \u00d7 ' +
+              // '<div class="ss"><strong style="color:#d97706">ARS $50.000 \u00d7 ' +
               // np4 +
               // " integrante" +
               // (np4 > 1 ? "s" : "") +
@@ -6142,13 +6135,13 @@
               // "</strong></div></div>" +
               "</div>" +
               '<div class="card" id="rp4-card">' +
-              '<div style="font-size:16px;font-weight:600;color:#F8F5EE;margin-bottom:12px">Datos para la transferencia</div>' +
+              '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">Datos para la transferencia</div>' +
               "</div>" +
               '<div class="cw mb3" style="margin-top:0"><div style="display:flex;gap:8px"><span>&#9888;&#65039;</span><div>' +
-              '<div style="font-size:14px;font-weight:700;color:#E8A838;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
-              '<p style="font-size:14px;color:rgba(248,245,238,.55)">Debe mostrar <strong style="color:#F8F5EE">FECHA, HORA y TITULAR</strong>.</p>' +
+              '<div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:2px">COMPROBANTE OBLIGATORIO</div>' +
+              '<p style="font-size:14px;color:rgba(28,28,22,.55)">Debe mostrar <strong style="color:#1c1c16">FECHA, HORA y TITULAR</strong>.</p>' +
               "</div></div></div>" +
-              '<div style="font-size:15px;font-weight:600;color:rgba(248,245,238,.5);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
+              '<div style="font-size:15px;font-weight:600;color:rgba(28,28,22,.50);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
               '<button class="mopt" id="mo-t"><div class="mol">Total</div><div class="mod">' +
               // fT4 +
@@ -6163,17 +6156,17 @@
               // "<label>Monto a abonar (ARS)</label>" +
               // '<input type="number" id="cv" placeholder="0" min="0"></div></div>' +
               // '<div class="dbox mt2" id="dbox" style="display:none">' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600">' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Total</span><span id="d-t" style="font-weight:600">' +
               // fT4 +
               // "</span></div>" +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="color:#4CAF7D;font-weight:600"></span></div>' +
-              // '<div class="drow"><span style="color:rgba(248,245,238,.45);font-size:12px">Saldo</span><span class="dsal" id="d-s"></span></div></div>' +
-              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#F8F5EE;margin-bottom:11px">Subir comprobante de pago</div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Abon\u00e1s ahora</span><span id="d-p" style="color:#16a34a;font-weight:600"></span></div>' +
+              // '<div class="drow"><span style="color:rgba(28,28,22,.45);font-size:12px">Saldo</span><span class="dsal" id="d-s"></span></div></div>' +
+              '<hr style="margin-bottom: 15px; margin-top: 20px"><div style="font-size:15px;font-weight:600;color:#1c1c16;margin-bottom:11px">Subir comprobante de pago</div>' +
               '<div class="uzone" id="uzone" onclick="document.getElementById(\'uzone-file\').click()"><div style="font-size:26px;margin-bottom:6px">&#128206;</div>' +
-              '<div style="font-size:15px;color:rgba(248,245,238,.45)">Subir captura o PDF</div>' +
-              '<div style="font-size:13px;color:rgba(248,245,238,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
+              '<div style="font-size:15px;color:rgba(28,28,22,.45)">Subir captura o PDF</div>' +
+              '<div style="font-size:13px;color:rgba(28,28,22,.25);margin-top:3px">Debe mostrar fecha, hora y titular</div></div>' +
               '<input type="file" id="uzone-file" accept="image/*,.pdf" style="display:none" onchange="subirComp(this)">' +
-              '<div class="cgn mt3"><p style="font-size:13px;color:rgba(248,245,238,.55)">Tu inscripci\u00f3n quedar\u00e1 <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong> hasta que el staff confirme tu pago.</p></div>' +
+              '<div class="cgn mt3"><p style="font-size:13px;color:rgba(28,28,22,.55)">Tu inscripci\u00f3n quedar\u00e1 <strong style="color:#d97706">pendiente de aprobaci\u00f3n</strong> hasta que el staff confirme tu pago.</p></div>' +
               '<div class="sf"><button class="btn bo" onclick="goTo(3)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bam" onclick="goTo(5)">Continuar \u2192</button></div>';
             w.appendChild(d);
@@ -6228,7 +6221,7 @@
             d.className = "step show";
             d.innerHTML =
               '<div class="sh"><div class="st">Confirm\u00e1 tu repesca</div>' +
-              '<div class="ss">La inscripci\u00f3n queda <strong style="color:#E8A838">pendiente de aprobaci\u00f3n</strong>.</div></div>' +
+              '<div class="ss">La inscripci\u00f3n queda <strong style="color:#d97706">pendiente de aprobaci\u00f3n</strong>.</div></div>' +
               '<div class="card mb3">' +
               '<div class="rrow"><span class="rk">Instancia</span><span class="rv">Repesca \u2014 Vier. 2 de Octubre</span></div>' +
               '<div class="rrow"><span class="rk">Nombre / Grupo</span><span class="rv">' +
@@ -6250,10 +6243,10 @@
               '<div class="rrow" style="border-bottom:none"><span class="rk">Categor\u00eda</span><span class="rv" style="font-size:14px">' +
               stateCatsText() +
               "</span></div>" +
-              '<div class="rtot"><span class="rtotl">Total a pagar</span><span class="rtotv" style="color:#E8A838">ARS $' +
+              '<div class="rtot"><span class="rtotl">Total a pagar</span><span class="rtotv" style="color:#d97706">ARS $' +
               getTotal().v.toLocaleString("es-AR") +
               "</span></div>" +
-              // '<div class="rsald"><span class="rsaldl">Estado</span><span class="rsaldv" style="color:#E8A838">Pendiente de aprobaci\u00f3n</span></div>' +
+              // '<div class="rsald"><span class="rsaldl">Estado</span><span class="rsaldv" style="color:#d97706">Pendiente de aprobaci\u00f3n</span></div>' +
               "</div>" +
               '<div class="card mb3" style="text-align:center">' +
               tcNac() +
@@ -6353,7 +6346,7 @@
           pwr.appendChild(buildPlanillaBlock());
         }
         var okLogoReg = document.getElementById("ok-logo-reg");
-        if (okLogoReg) okLogoReg.src = "/imgs/logo-nac.png";
+        if (okLogoReg) okLogoReg.src = "/imgs/logo-nac-golden.png";
         document.getElementById("sform").style.display = "none";
         var regMsg = document.getElementById("ok-reg-message");
         if (regMsg) regMsg.style.display = "block";
@@ -6591,10 +6584,10 @@
           el.style.cssText =
             "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px";
           el.innerHTML =
-            '<div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#C9A84C;border-radius:50%;animation:spin 1s linear infinite"></div>' +
-            '<div style="color:#F8F5EE;font-size:17px;font-weight:600" id="saving-label">Guardando inscripción...</div>' +
-            '<div style="color:rgba(248,245,238,.4);font-size:14px" id="saving-step"></div>' +
-            '<button onclick="cancelSaving()" style="margin-top:20px;background:transparent;border:1px solid rgba(255,255,255,.2);border-radius:8px;color:rgba(248,245,238,.5);padding:8px 20px;cursor:pointer;font-size:15px">Cancelar y reintentar</button>';
+            '<div style="width:44px;height:44px;border:4px solid rgba(0,0,0,.16);border-top-color:#d97706;border-radius:50%;animation:spin 1s linear infinite"></div>' +
+            '<div style="color:#1c1c16;font-size:17px;font-weight:600" id="saving-label">Guardando inscripción...</div>' +
+            '<div style="color:rgba(28,28,22,.40);font-size:14px" id="saving-step"></div>' +
+            '<button onclick="cancelSaving()" style="margin-top:20px;background:transparent;border:1px solid rgba(0,0,0,.16);border-radius:8px;color:rgba(28,28,22,.50);padding:8px 20px;cursor:pointer;font-size:15px">Cancelar y reintentar</button>';
           document.body.appendChild(el);
         }
         el.style.display = visible ? "flex" : "none";
@@ -6643,7 +6636,7 @@
         var okLogo = document.getElementById("ok-logo");
         var okLogoReg = document.getElementById("ok-logo-reg");
         var logoSrc =
-          INST === "int" ? "/imgs/logo-int.png" : "/imgs/logo-nac.png";
+          INST === "int" ? "/imgs/logo-int.png" : "/imgs/logo-nac-golden.png";
         if (okLogo) okLogo.src = logoSrc;
         if (okLogoReg) okLogoReg.src = logoSrc;
         var nacWarn = document.getElementById("ok-nac-warning");
@@ -6723,13 +6716,13 @@
                 ? "Términos y Condiciones — REPESCA 2026"
                 : "Términos y Condiciones — NACIONAL 2026";
         return (
-          '<p style="font-size:14px;color:rgba(248,245,238,.55);margin:0 0 16px;line-height:1.6">' +
+          '<p style="font-size:14px;color:rgba(28,28,22,.55);margin:0 0 16px;line-height:1.6">' +
           "Descargá el documento, leélo, completá con tu nombre, DNI y firma, y presentálo el día del evento." +
           "</p>" +
           '<a href="' +
           pdf +
           '" download style="display:inline-flex;align-items:center;gap:10px;' +
-          "background:#1a1600;border:1px solid rgba(201,168,76,.4);color:#C9A84C;" +
+          "background:rgba(212, 175, 55, 0.10);border:1px solid rgba(217,119,6,.38);color:#d97706;" +
           'padding:13px 22px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600">' +
           '<span style="font-size:22px">&#128196;</span><span>' +
           titulo +
@@ -6770,9 +6763,9 @@
         var t = document.getElementById("toast");
         var el = document.createElement("div");
         var c =
-          tipo === "ok" ? "#4CAF7D" : tipo === "err" ? "#E05252" : "#E8A838";
+          tipo === "ok" ? "#16a34a" : tipo === "err" ? "#ba1a1a" : "#d97706";
         el.style.cssText =
-          "background:#1a1a1a;border:1px solid " +
+          "background:rgba(255, 255, 255, 0.75);border:1px solid " +
           c +
           ";border-radius:100px;padding:10px 18px;font-size:15px;font-weight:500;white-space:nowrap;color:" +
           c +
@@ -6801,8 +6794,8 @@
           }
           if (nacPr) {
             nacPr.textContent = "Próximamente";
-            nacPr.style.background = "#121212";
-            nacPr.style.color = "rgba(248,245,238,.75)";
+            nacPr.style.background = "rgba(217, 119, 6, 0.10)";
+            nacPr.style.color = "#b45309";
             nacPr.style.fontWeight = 500;
           }
         }
@@ -7062,11 +7055,11 @@
               '<div style="display:flex;align-items:center;gap:10px">' +
               '<div style="font-size:19px">&#127925;</div>' +
               '<div style="flex:1">' +
-              '<div style="font-size:15px;color:#F8F5EE">' +
+              '<div style="font-size:15px;color:#1c1c16">' +
               fileName +
               "</div>" +
-              '<div style="font-size:13px;color:#4CAF7D;margin-top:2px">\u2713 Subida correctamente</div>' +
-              '</div><div style="color:#4CAF7D">\u2713</div></div>';
+              '<div style="font-size:13px;color:#16a34a;margin-top:2px">\u2713 Subida correctamente</div>' +
+              '</div><div style="color:#16a34a">\u2713</div></div>';
             slotEl.onclick = function () {
               pendingSlotEl = slotEl;
               $audioInput().click();
@@ -7078,15 +7071,15 @@
           var mx = slotEl.querySelector(".mx");
           if (mf) {
             mf.textContent = fileName;
-            mf.style.color = "#F8F5EE";
+            mf.style.color = "#1c1c16";
           }
           if (ms) {
             ms.textContent = "\u2713 Subida correctamente";
-            ms.style.color = "#4CAF7D";
+            ms.style.color = "#16a34a";
           }
           if (mx) {
             mx.textContent = "\u2713";
-            mx.style.color = "#4CAF7D";
+            mx.style.color = "#16a34a";
           }
         }
 
@@ -7235,9 +7228,9 @@
           wrap.innerHTML =
             '<a href="' +
             pdfFile +
-            '" download target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:rgba(201,168,76,0.12);color:#C9A84C;border:1.5px solid rgba(201,168,76,0.45);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:16px;letter-spacing:.3px;transition:all .2s"><span style="font-size:20px">📄</span>Descargar Términos y Condiciones (PDF · ' +
+            '" download target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,119,6,0.12);color:#d97706;border:1.5px solid rgba(217,119,6,0.42);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:600;font-size:16px;letter-spacing:.3px;transition:all .2s"><span style="font-size:20px">📄</span>Descargar Términos y Condiciones (PDF · ' +
             instLabel +
-            ')</a><div style="margin-top:6px;font-size:13px;color:rgba(248,245,238,.45)">Es obligatorio presentar este documento firmado el día del evento.</div>';
+            ')</a><div style="margin-top:6px;font-size:13px;color:rgba(28,28,22,.45)">Es obligatorio presentar este documento firmado el día del evento.</div>';
           anchor.parentElement.insertBefore(wrap, anchor);
         }
 
@@ -7311,11 +7304,11 @@
           var wrap = document.createElement("div");
           wrap.id = "__jam_musica_btn";
           wrap.style.cssText =
-            "margin:20px auto;padding:16px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
+            "margin:20px auto;padding:16px;background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.28);border-radius:10px;text-align:center;max-width:480px;font-family:inherit";
           wrap.innerHTML =
             '<div style="font-size:16px;color:#fff;margin-bottom:12px;font-weight:600">¿Cargar tu música ahora?</div><a href="' +
             link +
-            '" target="_blank" style="background:#C9A84C;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:17px">Subí tu canción</a><div style="font-size:13px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
+            '" target="_blank" style="background:#d97706;color:#0A0A0A;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;font-size:17px">Subí tu canción</a><div style="font-size:13px;color:#888;margin-top:10px">También te enviamos el link por mail.</div>';
           anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
         }
 
