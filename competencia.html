@@ -1411,6 +1411,15 @@
             </button>
           </div>
           <div
+            id="d-rank-niv-filters"
+            style="
+              display: flex;
+              gap: 6px;
+              margin-bottom: 8px;
+              flex-wrap: wrap;
+            "
+          ></div>
+          <div
             id="d-rank-cat-filters"
             style="
               display: flex;
@@ -2026,6 +2035,7 @@
       let lineupData = [];
       let rankFilter = null;
       let rankCatFilter = null;
+      let rankNivFilter = null;
       let miPuntaje = null;
       let jCerradoFlag = false;
       let realtimeSub = null;
@@ -2869,6 +2879,13 @@
         return [...cats].sort();
       }
 
+      function extractRankNivs(rows) {
+        const ORDER = ["profesional","semipro","proam","open","amateur","master","junior","kids"];
+        const found = new Set();
+        (rows || []).forEach(r => { if (r._activeCat?.niv) found.add(r._activeCat.niv); });
+        return ORDER.filter(n => found.has(n));
+      }
+
       function matchesRankCat(r, cat) {
         if (!cat) return true;
         return catKey(r._activeCat) === cat;
@@ -2904,11 +2921,34 @@
         );
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
-        const cats = extractRankCats(allExpanded);
+        const NIV_LABELS = {profesional:"Profesional",semipro:"Semipro",proam:"Pro-Am",open:"Open",amateur:"Amateur",master:"Master",junior:"Junior",kids:"Kids"};
+        const nivCont = document.getElementById("d-rank-niv-filters");
+        const allNivs = extractRankNivs(allExpanded);
+        if (nivCont) {
+          nivCont.innerHTML = "";
+          if (allNivs.length > 0) {
+            [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: NIV_LABELS[n] || n, val: n }))].forEach(({ label, val }) => {
+              const btn = document.createElement("button");
+              btn.className = "btn bsm";
+              btn.textContent = label;
+              const active = rankNivFilter === val;
+              btn.style.cssText = active
+                ? "background:#C9A84C;color:#000;border:none;"
+                : "background:transparent;color:#f8f5ee;border:1px solid rgba(255,255,255,.2);";
+              btn.onclick = () => setRankNivFilter(val);
+              nivCont.appendChild(btn);
+            });
+          }
+        }
+        const nivFiltered = rankNivFilter
+          ? allExpanded.filter(r => r._activeCat?.niv === rankNivFilter)
+          : allExpanded;
+        const cats = extractRankCats(nivFiltered);
         const catCont = document.getElementById("d-rank-cat-filters");
         if (catCont) {
           catCont.innerHTML = "";
-          if (cats.length > 0) {
+          catCont.style.display = rankNivFilter ? "flex" : "none";
+          if (rankNivFilter && cats.length > 0) {
             [
               { label: "Todas", val: null },
               ...cats.map((c) => ({ label: c, val: c })),
@@ -2926,8 +2966,10 @@
           }
         }
         const toRender = rankCatFilter
-          ? allExpanded.filter((r) => catKey(r._activeCat) === rankCatFilter)
-          : deduped;
+          ? nivFiltered.filter((r) => catKey(r._activeCat) === rankCatFilter)
+          : rankNivFilter
+            ? nivFiltered
+            : deduped;
         const tbody = document.getElementById("d-rank-tbody");
         tbody.innerHTML = "";
         toRender.forEach((r, i) => {
@@ -2940,7 +2982,7 @@
                   ? "background:#8B6D28;color:#000;"
                   : "color:rgba(248,245,238,.4);";
           const catDisplay =
-            rankCatFilter && r._activeCat
+            (rankCatFilter || rankNivFilter) && r._activeCat
               ? r._activeCat.c + ": " + r._activeCat.n
               : parseCat(r.categoria);
           tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${catDisplay}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
@@ -2949,6 +2991,13 @@
 
       function setRankFilter(inst) {
         rankFilter = inst;
+        rankCatFilter = null;
+        rankNivFilter = null;
+        buildRankings();
+      }
+
+      function setRankNivFilter(niv) {
+        rankNivFilter = niv;
         rankCatFilter = null;
         buildRankings();
       }

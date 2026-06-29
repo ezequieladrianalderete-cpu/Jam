@@ -6468,7 +6468,7 @@
               ? x.c === id && x.inst === "int"
               : x.c === id && x.inst !== "int";
           });
-          return c ? { c: c.c, n: c.n, g: c.g } : { c: id };
+          return c ? { c: c.c, n: c.n, g: c.g, niv: c.niv } : { c: id };
         });
 
         // Integrantes

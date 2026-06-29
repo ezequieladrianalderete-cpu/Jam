@@ -1040,6 +1040,16 @@
             </button>
           </div>
           <div
+            id="pf-rank-niv-filters"
+            style="
+              display: flex;
+              justify-content: center;
+              gap: 10px;
+              margin-bottom: 12px;
+              flex-wrap: wrap;
+            "
+          ></div>
+          <div
             id="pf-rank-cat-filters"
             style="
               display: flex;
@@ -1902,6 +1912,16 @@
               </button>
             </div>
             <div
+              id="pe-rank-niv-filters"
+              style="
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+                margin-bottom: 8px;
+                flex-wrap: wrap;
+              "
+            ></div>
+            <div
               id="pe-rank-cat-filters"
               style="
                 display: flex;
@@ -2015,6 +2035,7 @@
       let sesionActiva = null;
       let pfRankFilter = null;
       let pfRankCatFilter = null;
+      let pfRankNivFilter = null;
       let realtimeSub = null;
 
       const LU_DOT = {
@@ -3459,6 +3480,13 @@
         return [...cats].sort();
       }
 
+      function extractRankNivs(rows) {
+        const ORDER = ["profesional","semipro","proam","open","amateur","master","junior","kids"];
+        const found = new Set();
+        (rows || []).forEach(r => { if (r._activeCat?.niv) found.add(r._activeCat.niv); });
+        return ORDER.filter(n => found.has(n));
+      }
+
       function matchesRankCat(r, cat) {
         if (!cat) return true;
         return catKey(r._activeCat) === cat;
@@ -3500,12 +3528,32 @@
         );
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
-        const cats = extractRankCats(allExpanded);
+        const NIV_LABELS = {profesional:"Profesional",semipro:"Semipro",proam:"Pro-Am",open:"Open",amateur:"Amateur",master:"Master",junior:"Junior",kids:"Kids"};
+        const allNivs = extractRankNivs(allExpanded);
+        ["pf-rank-niv-filters", "pe-rank-niv-filters"].forEach((cid) => {
+          const cont = document.getElementById(cid);
+          if (!cont) return;
+          cont.innerHTML = "";
+          if (allNivs.length === 0) return;
+          [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: NIV_LABELS[n] || n, val: n }))].forEach(({ label, val }) => {
+            const btn = document.createElement("button");
+            const active = pfRankNivFilter === val;
+            btn.style.cssText = `padding:6px 18px;border-radius:30px;border:1px solid ${active ? "#C9A84C" : "rgba(255,255,255,.12)"};background:${active ? "#C9A84C" : "rgba(255,255,255,.06)"};color:${active ? "#000" : "rgba(255,255,255,.55)"};font-size:11px;letter-spacing:1px;cursor:pointer;font-family:inherit`;
+            btn.textContent = label;
+            btn.onclick = () => setPfRankNivFilter(val);
+            cont.appendChild(btn);
+          });
+        });
+        const nivFiltered = pfRankNivFilter
+          ? allExpanded.filter(r => r._activeCat?.niv === pfRankNivFilter)
+          : allExpanded;
+        const cats = extractRankCats(nivFiltered);
         ["pf-rank-cat-filters", "pe-rank-cat-filters"].forEach((cid) => {
           const cont = document.getElementById(cid);
           if (!cont) return;
           cont.innerHTML = "";
-          if (cats.length === 0) return;
+          cont.style.display = pfRankNivFilter ? "flex" : "none";
+          if (!pfRankNivFilter || cats.length === 0) return;
           [
             { label: "Todas", val: null },
             ...cats.map((c) => ({ label: c, val: c })),
@@ -3519,14 +3567,23 @@
           });
         });
         const toRender = pfRankCatFilter
-          ? allExpanded.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
-          : deduped;
+          ? nivFiltered.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
+          : pfRankNivFilter
+            ? nivFiltered
+            : deduped;
         buildRankingRows("pf-rank-rows", toRender, true);
         buildRankingRows("pe-rank-rows", toRender, false);
       }
 
       function setPfRankFilter(inst) {
         pfRankFilter = inst;
+        pfRankCatFilter = null;
+        pfRankNivFilter = null;
+        buildPfRanking();
+      }
+
+      function setPfRankNivFilter(niv) {
+        pfRankNivFilter = niv;
         pfRankCatFilter = null;
         buildPfRanking();
       }
