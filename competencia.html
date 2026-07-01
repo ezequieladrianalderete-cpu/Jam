@@ -1365,52 +1365,7 @@
               📺 Publicar en pantalla
             </button>
           </div>
-          <div
-            style="
-              display: flex;
-              gap: 8px;
-              margin-bottom: 10px;
-              flex-wrap: wrap;
-            "
-          >
-            <button
-              class="btn bo bsm rank-filter-btn"
-              data-inst="nac"
-              onclick="setRankFilter('nac')"
-            >
-              <svg
-                width="14"
-                height="10"
-                viewBox="0 0 16 11"
-                xmlns="http://www.w3.org/2000/svg"
-                style="
-                  vertical-align: middle;
-                  border-radius: 2px;
-                  display: inline-block;
-                  margin-right: 4px;
-                "
-              >
-                <rect width="16" height="3.67" fill="#74ACDF" />
-                <rect width="16" height="3.67" y="3.67" fill="#fff" />
-                <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
-                <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
-              >NAC
-            </button>
-            <button
-              class="btn bo bsm rank-filter-btn"
-              data-inst="rep"
-              onclick="setRankFilter('rep')"
-            >
-              🔄 REP
-            </button>
-            <button
-              class="btn bo bsm rank-filter-btn"
-              data-inst="inter"
-              onclick="setRankFilter('inter')"
-            >
-              🌎 INTER
-            </button>
-          </div>
+          <div id="d-rank-inst-filters" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
           <div
             id="d-rank-niv-filters"
             style="
@@ -1437,7 +1392,7 @@
                   <th>Nº ID</th>
                   <th>Grupo</th>
                   <th>Categoria</th>
-                  <th>Puntaje</th>
+                  <th id="d-rank-score-th">Puntaje</th>
                 </tr>
               </thead>
               <tbody id="d-rank-tbody"></tbody>
@@ -1848,6 +1803,43 @@
               </div>
             </div>
             <button class="btn bgn bfull" onclick="cfgGuardarCompetencia()">💾 Guardar modo competencia</button>
+          </div>
+
+          <!-- RANKING -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color:#C9A84C">🏅 Ranking / Filtros</div>
+            <div class="muted text-xs mb3">Configurá los filtros que aparecen en el ranking. Los cambios se aplican al guardar.</div>
+
+            <div class="mb3">
+              <div class="fw6 text-xs mb1" style="color:rgba(201,168,76,.8)">Instancias disponibles</div>
+              <div class="muted text-xs mb2">Cada instancia es un botón de filtro en el ranking (ej: Final Nacional, Repechaje, Inter). La clave (key) debe coincidir con el valor del campo <span style="font-family:monospace">instancia</span> en la base de datos.</div>
+              <div id="cfg-rank-inst-list" style="display:flex;flex-direction:column;gap:6px"></div>
+              <button class="btn bo bsm mt2" style="width:100%;margin-top:8px" onclick="cfgRankAgregarInstancia()">+ Agregar instancia</button>
+            </div>
+
+            <div class="mb3">
+              <div class="fw6 text-xs mb2" style="color:rgba(201,168,76,.8)">Filtros activos</div>
+              <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer">
+                <input type="checkbox" id="cfg-rank-mostrar_niv">
+                <span class="text-xs">Mostrar filtro por nivel (Semipro, Amateur, etc.)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer">
+                <input type="checkbox" id="cfg-rank-mostrar_categoria">
+                <span class="text-xs">Mostrar filtro por categoría específica</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="cfg-rank-mostrar_puntaje">
+                <span class="text-xs">Mostrar el puntaje numérico en el ranking</span>
+              </label>
+            </div>
+
+            <div class="mb3">
+              <div class="fw6 text-xs mb1" style="color:rgba(201,168,76,.8)">Labels para niveles (niv)</div>
+              <div class="muted text-xs mb2">Personalizá cómo se llama cada nivel en la interfaz.</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="cfg-rank-niv-labels"></div>
+            </div>
+
+            <button class="btn bgn bfull" onclick="cfgGuardarRanking()">💾 Guardar config de ranking</button>
           </div>
 
           <div class="card" style="background:#0a1e0a;border-color:rgba(76,175,125,.3)">
@@ -2912,12 +2904,126 @@
         return ORDER.filter(n => found.has(n));
       }
 
+      // ═══════════════════════════════════════════════════════════
+      // RANKING CONFIG
+      // ═══════════════════════════════════════════════════════════
+      const DEFAULT_RANKING_CFG = {
+        instancias: [
+          { key: "nac",   label: "NAC",   icono: '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>', enabled: true },
+          { key: "rep",   label: "REP",   icono: "🔄", enabled: true },
+          { key: "inter", label: "INTER", icono: "🌎", enabled: true }
+        ],
+        mostrar_niv: true,
+        niv_labels: {
+          profesional: "Profesional", semipro: "Semipro", proam: "Pro-Am",
+          open: "Open", amateur: "Amateur", master: "Master",
+          junior: "Junior", kids: "Kids", especial: "Especial"
+        },
+        mostrar_categoria: true,
+        mostrar_puntaje: true
+      };
+
+      function getRankingCfg() {
+        const saved = window._CFG?.ranking_config || {};
+        return {
+          instancias: (saved.instancias || DEFAULT_RANKING_CFG.instancias).filter(x => x.enabled !== false),
+          allInstancias: saved.instancias || DEFAULT_RANKING_CFG.instancias,
+          mostrar_niv: saved.mostrar_niv !== false,
+          niv_labels: Object.assign({}, DEFAULT_RANKING_CFG.niv_labels, saved.niv_labels || {}),
+          mostrar_categoria: saved.mostrar_categoria !== false,
+          mostrar_puntaje: saved.mostrar_puntaje !== false
+        };
+      }
+
+      // Config UI state
+      window._cfgRankInstancias = null;
+
+      function cfgRankRenderInstancias() {
+        const cont = document.getElementById("cfg-rank-inst-list");
+        if (!cont) return;
+        const list = window._cfgRankInstancias || [];
+        cont.innerHTML = "";
+        list.forEach((inst, i) => {
+          const row = document.createElement("div");
+          row.style.cssText = "display:grid;grid-template-columns:44px 90px 1fr auto auto;gap:6px;align-items:center";
+          row.innerHTML = `
+            <input id="cri-ico-${i}" class="cfg-input" placeholder="emoji / SVG" style="text-align:center;font-size:16px;padding:6px 4px">
+            <input id="cri-key-${i}" class="cfg-input" value="${(inst.key||'').replace(/"/g,'&quot;')}" placeholder="nac" style="font-family:monospace;font-size:11px">
+            <input id="cri-lbl-${i}" class="cfg-input" value="${(inst.label||'').replace(/"/g,'&quot;')}" placeholder="Nacional">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;white-space:nowrap">
+              <input type="checkbox" id="cri-on-${i}" ${inst.enabled!==false?'checked':''}> Activo
+            </label>
+            <button class="btn bo bsm" style="color:#E05252;padding:5px 9px" onclick="cfgRankQuitarInstancia(${i})">✕</button>`;
+          cont.appendChild(row);
+          // Set icono value after DOM insertion — SVG strings contain " < > that break HTML attribute parsing
+          const icoEl = document.getElementById("cri-ico-"+i);
+          if (icoEl) icoEl.value = inst.icono || "";
+        });
+      }
+
+      function cfgRankReadInstancias() {
+        const list = window._cfgRankInstancias || [];
+        return list.map((_, i) => ({
+          key:     (document.getElementById("cri-key-"+i)?.value||"").trim(),
+          label:   (document.getElementById("cri-lbl-"+i)?.value||"").trim(),
+          icono:   (document.getElementById("cri-ico-"+i)?.value||"").trim(),
+          enabled: document.getElementById("cri-on-"+i)?.checked !== false
+        })).filter(x => x.key);
+      }
+
+      function cfgRankAgregarInstancia() {
+        if (!window._cfgRankInstancias) window._cfgRankInstancias = [...DEFAULT_RANKING_CFG.instancias];
+        window._cfgRankInstancias = cfgRankReadInstancias();
+        window._cfgRankInstancias.push({ key: "", label: "", icono: "", enabled: true });
+        cfgRankRenderInstancias();
+      }
+
+      function cfgRankQuitarInstancia(i) {
+        window._cfgRankInstancias = cfgRankReadInstancias();
+        window._cfgRankInstancias.splice(i, 1);
+        cfgRankRenderInstancias();
+      }
+
+      function cfgRankRenderNivLabels() {
+        const cont = document.getElementById("cfg-rank-niv-labels");
+        if (!cont) return;
+        const saved = window._CFG?.ranking_config?.niv_labels || {};
+        cont.innerHTML = Object.keys(DEFAULT_RANKING_CFG.niv_labels).map(k =>
+          `<div>
+            <label class="text-xs muted" style="display:block;margin-bottom:3px">${k}</label>
+            <input id="cfg-rank-niv-${k}" class="cfg-input" value="${saved[k]||DEFAULT_RANKING_CFG.niv_labels[k]}">
+          </div>`
+        ).join("");
+      }
+
+      async function cfgGuardarRanking() {
+        const instancias = cfgRankReadInstancias();
+        const nivLabels = {};
+        Object.keys(DEFAULT_RANKING_CFG.niv_labels).forEach(k => {
+          const el = document.getElementById("cfg-rank-niv-" + k);
+          if (el) nivLabels[k] = el.value.trim() || DEFAULT_RANKING_CFG.niv_labels[k];
+        });
+        const payload = {
+          instancias,
+          mostrar_niv: document.getElementById("cfg-rank-mostrar_niv")?.checked !== false,
+          niv_labels: nivLabels,
+          mostrar_categoria: document.getElementById("cfg-rank-mostrar_categoria")?.checked !== false,
+          mostrar_puntaje: document.getElementById("cfg-rank-mostrar_puntaje")?.checked !== false
+        };
+        const ok = await cfgGuardar("Ranking", { p_clave: "ranking_config", p_valor_json: payload });
+        if (ok) {
+          window._CFG.ranking_config = payload;
+          buildRankings();
+        }
+      }
+
       function matchesRankCat(r, cat) {
         if (!cat) return true;
         return catKey(r._activeCat) === cat;
       }
 
       async function buildRankings() {
+        const cfg = getRankingCfg();
         const [{ data }, { data: lineupCats }] = await Promise.all([
           db
             .schema("scoring")
@@ -2935,46 +3041,64 @@
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(rankFilter ?? sesionActiva?.instancia ?? "nac");
-        document.querySelectorAll(".rank-filter-btn").forEach((btn) => {
-          const active = normInst(btn.dataset.inst) === inst;
-          btn.style.background = active ? "#C9A84C" : "";
-          btn.style.color = active ? "#000" : "";
-          btn.style.borderColor = active ? "#C9A84C" : "";
-        });
+        const inst = normInst(rankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"));
+
+        // Render instancia buttons from config
+        const instCont = document.getElementById("d-rank-inst-filters");
+        if (instCont) {
+          instCont.innerHTML = "";
+          cfg.instancias.forEach(({ key, label, icono }) => {
+            const btn = document.createElement("button");
+            btn.className = "btn bo bsm";
+            const escTxt = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            btn.innerHTML = (icono || "") + escTxt(label);
+            const active = normInst(key) === inst;
+            btn.style.background = active ? "#C9A84C" : "";
+            btn.style.color = active ? "#000" : "";
+            btn.style.borderColor = active ? "#C9A84C" : "";
+            btn.onclick = () => setRankFilter(key);
+            instCont.appendChild(btn);
+          });
+        }
+
         const instFiltered = enriched.filter(
           (r) => normInst(r.instancia) === inst,
         );
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
-        const NIV_LABELS = {profesional:"Profesional",semipro:"Semipro",proam:"Pro-Am",open:"Open",amateur:"Amateur",master:"Master",junior:"Junior",kids:"Kids"};
+
         const nivCont = document.getElementById("d-rank-niv-filters");
-        const allNivs = extractRankNivs(allExpanded);
         if (nivCont) {
           nivCont.innerHTML = "";
-          if (allNivs.length > 0) {
-            [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: NIV_LABELS[n] || n, val: n }))].forEach(({ label, val }) => {
-              const btn = document.createElement("button");
-              btn.className = "btn bsm";
-              btn.textContent = label;
-              const active = rankNivFilter === val;
-              btn.style.cssText = active
-                ? "background:#C9A84C;color:#000;border:none;"
-                : "background:transparent;color:#f8f5ee;border:1px solid rgba(255,255,255,.2);";
-              btn.onclick = () => setRankNivFilter(val);
-              nivCont.appendChild(btn);
-            });
+          nivCont.style.display = cfg.mostrar_niv ? "" : "none";
+          if (cfg.mostrar_niv) {
+            const allNivs = extractRankNivs(allExpanded);
+            if (allNivs.length > 0) {
+              [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: cfg.niv_labels[n] || n, val: n }))].forEach(({ label, val }) => {
+                const btn = document.createElement("button");
+                btn.className = "btn bsm";
+                btn.textContent = label;
+                const active = rankNivFilter === val;
+                btn.style.cssText = active
+                  ? "background:#C9A84C;color:#000;border:none;"
+                  : "background:transparent;color:#f8f5ee;border:1px solid rgba(255,255,255,.2);";
+                btn.onclick = () => setRankNivFilter(val);
+                nivCont.appendChild(btn);
+              });
+            }
           }
         }
-        const nivFiltered = rankNivFilter
+
+        const nivFiltered = (cfg.mostrar_niv && rankNivFilter)
           ? allExpanded.filter(r => r._activeCat?.niv === rankNivFilter)
           : allExpanded;
         const cats = extractRankCats(nivFiltered);
         const catCont = document.getElementById("d-rank-cat-filters");
         if (catCont) {
           catCont.innerHTML = "";
-          catCont.style.display = rankNivFilter ? "flex" : "none";
-          if (rankNivFilter && cats.length > 0) {
+          const showCatRow = cfg.mostrar_categoria && cfg.mostrar_niv && rankNivFilter;
+          catCont.style.display = showCatRow ? "flex" : "none";
+          if (showCatRow && cats.length > 0) {
             [
               { label: "Todas", val: null },
               ...cats.map((c) => ({ label: c, val: c })),
@@ -2991,13 +3115,22 @@
             });
           }
         }
+
         const toRender = rankCatFilter
           ? nivFiltered.filter((r) => catKey(r._activeCat) === rankCatFilter)
-          : rankNivFilter
+          : (cfg.mostrar_niv && rankNivFilter)
             ? nivFiltered
             : deduped;
+
+        const scoreTh = document.getElementById("d-rank-score-th");
+        if (scoreTh) scoreTh.style.display = cfg.mostrar_puntaje ? "" : "none";
+
         const tbody = document.getElementById("d-rank-tbody");
         tbody.innerHTML = "";
+        if (toRender.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px 0;color:rgba(248,245,238,.35);font-size:13px">No se han evaluado participantes aún</td></tr>`;
+          return;
+        }
         toRender.forEach((r, i) => {
           const posStyle =
             i === 0
@@ -3011,7 +3144,10 @@
             (rankCatFilter || rankNivFilter) && r._activeCat
               ? r._activeCat.c + ": " + r._activeCat.n
               : parseCat(r.categoria);
-          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${catDisplay}</td><td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td></tr>`;
+          const scoreCell = cfg.mostrar_puntaje
+            ? `<td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td>`
+            : "";
+          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${catDisplay}</td>${scoreCell}</tr>`;
         });
       }
 
@@ -4196,6 +4332,16 @@
           setVal("cfg-comp-jur-int", jur.int ?? 3);
           setVal("cfg-comp-jur-reg", jur.reg ?? 5);
           setVal("cfg-comp-jur-rep", jur.rep ?? 3);
+
+          // Ranking config (JSON)
+          const rank = map.ranking_config?.valor_json || {};
+          window._cfgRankInstancias = rank.instancias ? JSON.parse(JSON.stringify(rank.instancias)) : JSON.parse(JSON.stringify(DEFAULT_RANKING_CFG.instancias));
+          cfgRankRenderInstancias();
+          const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val !== false; };
+          chk("cfg-rank-mostrar_niv", rank.mostrar_niv);
+          chk("cfg-rank-mostrar_categoria", rank.mostrar_categoria);
+          chk("cfg-rank-mostrar_puntaje", rank.mostrar_puntaje);
+          cfgRankRenderNivLabels();
         } catch (e) {
           toast("Error cargando config: " + e.message, "err");
         }

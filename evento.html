@@ -967,78 +967,7 @@
               margin-bottom: 14px;
               flex-wrap: wrap;
             "
-          >
-            <button
-              class="pf-rank-filter-btn"
-              data-inst="nac"
-              onclick="setPfRankFilter('nac')"
-              style="
-                padding: 10px 26px;
-                border-radius: 30px;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                background: rgba(255, 255, 255, 0.06);
-                color: rgba(255, 255, 255, 0.55);
-                font-size: 12px;
-                letter-spacing: 3px;
-                cursor: pointer;
-                font-family: inherit;
-              "
-            >
-              <svg
-                width="16"
-                height="11"
-                viewBox="0 0 16 11"
-                xmlns="http://www.w3.org/2000/svg"
-                style="
-                  vertical-align: middle;
-                  border-radius: 2px;
-                  display: inline-block;
-                  margin-right: 7px;
-                "
-              >
-                <rect width="16" height="3.67" fill="#74ACDF" />
-                <rect width="16" height="3.67" y="3.67" fill="#fff" />
-                <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
-                <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
-              >NACIONAL
-            </button>
-            <button
-              class="pf-rank-filter-btn"
-              data-inst="rep"
-              onclick="setPfRankFilter('rep')"
-              style="
-                padding: 10px 26px;
-                border-radius: 30px;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                background: rgba(255, 255, 255, 0.06);
-                color: rgba(255, 255, 255, 0.55);
-                font-size: 12px;
-                letter-spacing: 3px;
-                cursor: pointer;
-                font-family: inherit;
-              "
-            >
-              🔄 REPESCA
-            </button>
-            <button
-              class="pf-rank-filter-btn"
-              data-inst="inter"
-              onclick="setPfRankFilter('inter')"
-              style="
-                padding: 10px 26px;
-                border-radius: 30px;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                background: rgba(255, 255, 255, 0.06);
-                color: rgba(255, 255, 255, 0.55);
-                font-size: 12px;
-                letter-spacing: 3px;
-                cursor: pointer;
-                font-family: inherit;
-              "
-            >
-              🌎 INTER
-            </button>
-          </div>
+          ></div>
           <div
             id="pf-rank-niv-filters"
             style="
@@ -1872,45 +1801,7 @@
                 margin-bottom: 10px;
                 flex-wrap: wrap;
               "
-            >
-              <button
-                class="btn bo bsm pf-rank-filter-btn"
-                data-inst="nac"
-                onclick="setPfRankFilter('nac')"
-              >
-                <svg
-                  width="14"
-                  height="10"
-                  viewBox="0 0 16 11"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style="
-                    vertical-align: middle;
-                    border-radius: 2px;
-                    display: inline-block;
-                    margin-right: 5px;
-                  "
-                >
-                  <rect width="16" height="3.67" fill="#74ACDF" />
-                  <rect width="16" height="3.67" y="3.67" fill="#fff" />
-                  <rect width="16" height="3.67" y="7.33" fill="#74ACDF" />
-                  <circle cx="8" cy="5.5" r="1.6" fill="#F6B40E" /></svg
-                >NAC
-              </button>
-              <button
-                class="btn bo bsm pf-rank-filter-btn"
-                data-inst="rep"
-                onclick="setPfRankFilter('rep')"
-              >
-                🔄 REP
-              </button>
-              <button
-                class="btn bo bsm pf-rank-filter-btn"
-                data-inst="inter"
-                onclick="setPfRankFilter('inter')"
-              >
-                🌎 INTER
-              </button>
-            </div>
+            ></div>
             <div
               id="pe-rank-niv-filters"
               style="
@@ -3487,12 +3378,40 @@
         return ORDER.filter(n => found.has(n));
       }
 
+      const DEFAULT_RANKING_CFG = {
+        instancias: [
+          { key: "nac",   label: "NACIONAL", icono: '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>', enabled: true },
+          { key: "rep",   label: "REPESCA",  icono: "🔄", enabled: true },
+          { key: "inter", label: "INTER",    icono: "🌎", enabled: true }
+        ],
+        mostrar_niv: true,
+        niv_labels: {
+          profesional: "Profesional", semipro: "Semipro", proam: "Pro-Am",
+          open: "Open", amateur: "Amateur", master: "Master",
+          junior: "Junior", kids: "Kids", especial: "Especial"
+        },
+        mostrar_categoria: true,
+        mostrar_puntaje: true
+      };
+
+      function getRankingCfg() {
+        const saved = window._CFG?.ranking_config || {};
+        return {
+          instancias: (saved.instancias || DEFAULT_RANKING_CFG.instancias).filter(x => x.enabled !== false),
+          mostrar_niv: saved.mostrar_niv !== false,
+          niv_labels: Object.assign({}, DEFAULT_RANKING_CFG.niv_labels, saved.niv_labels || {}),
+          mostrar_categoria: saved.mostrar_categoria !== false,
+          mostrar_puntaje: saved.mostrar_puntaje !== false
+        };
+      }
+
       function matchesRankCat(r, cat) {
         if (!cat) return true;
         return catKey(r._activeCat) === cat;
       }
 
       async function buildPfRanking() {
+        const cfg = getRankingCfg();
         const [{ data }, { data: lineupCats }] = await Promise.all([
           db
             .schema("scoring")
@@ -3510,32 +3429,46 @@
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(pfRankFilter ?? sesionActiva?.instancia ?? "nac");
+        const inst = normInst(pfRankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"));
+
+        // Render instancia buttons from config into both panels
         ["pf-rank-filters", "pe-rank-filters"].forEach((cid) => {
           const c = document.getElementById(cid);
           if (!c) return;
-          c.querySelectorAll(".pf-rank-filter-btn").forEach((btn) => {
-            const active = normInst(btn.dataset.inst) === inst;
-            btn.style.background = active ? "#C9A84C" : "rgba(255,255,255,.06)";
-            btn.style.color = active ? "#000" : "rgba(255,255,255,.55)";
-            btn.style.borderColor = active
-              ? "#C9A84C"
-              : "rgba(255,255,255,.12)";
+          c.innerHTML = "";
+          const isLarge = cid === "pf-rank-filters";
+          cfg.instancias.forEach(({ key, label, icono }) => {
+            const btn = document.createElement("button");
+            const active = normInst(key) === inst;
+            if (isLarge) {
+              btn.style.cssText = `padding:10px 26px;border-radius:30px;border:1px solid ${active ? "#C9A84C" : "rgba(255,255,255,.12)"};background:${active ? "#C9A84C" : "rgba(255,255,255,.06)"};color:${active ? "#000" : "rgba(255,255,255,.55)"};font-size:12px;letter-spacing:3px;cursor:pointer;font-family:inherit`;
+            } else {
+              btn.className = "btn bo bsm";
+              btn.style.background = active ? "#C9A84C" : "";
+              btn.style.color = active ? "#000" : "";
+              btn.style.borderColor = active ? "#C9A84C" : "";
+            }
+            const escTxt = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            btn.innerHTML = (icono || "") + escTxt(label);
+            btn.onclick = () => setPfRankFilter(key);
+            c.appendChild(btn);
           });
         });
+
         const instFiltered = allData.filter(
           (r) => normInst(r.instancia) === inst,
         );
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
-        const NIV_LABELS = {profesional:"Profesional",semipro:"Semipro",proam:"Pro-Am",open:"Open",amateur:"Amateur",master:"Master",junior:"Junior",kids:"Kids"};
+
         const allNivs = extractRankNivs(allExpanded);
         ["pf-rank-niv-filters", "pe-rank-niv-filters"].forEach((cid) => {
           const cont = document.getElementById(cid);
           if (!cont) return;
           cont.innerHTML = "";
-          if (allNivs.length === 0) return;
-          [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: NIV_LABELS[n] || n, val: n }))].forEach(({ label, val }) => {
+          cont.style.display = cfg.mostrar_niv ? "" : "none";
+          if (!cfg.mostrar_niv || allNivs.length === 0) return;
+          [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: cfg.niv_labels[n] || n, val: n }))].forEach(({ label, val }) => {
             const btn = document.createElement("button");
             const active = pfRankNivFilter === val;
             btn.style.cssText = `padding:6px 18px;border-radius:30px;border:1px solid ${active ? "#C9A84C" : "rgba(255,255,255,.12)"};background:${active ? "#C9A84C" : "rgba(255,255,255,.06)"};color:${active ? "#000" : "rgba(255,255,255,.55)"};font-size:11px;letter-spacing:1px;cursor:pointer;font-family:inherit`;
@@ -3544,7 +3477,8 @@
             cont.appendChild(btn);
           });
         });
-        const nivFiltered = pfRankNivFilter
+
+        const nivFiltered = (cfg.mostrar_niv && pfRankNivFilter)
           ? allExpanded.filter(r => r._activeCat?.niv === pfRankNivFilter)
           : allExpanded;
         const cats = extractRankCats(nivFiltered);
@@ -3552,8 +3486,9 @@
           const cont = document.getElementById(cid);
           if (!cont) return;
           cont.innerHTML = "";
-          cont.style.display = pfRankNivFilter ? "flex" : "none";
-          if (!pfRankNivFilter || cats.length === 0) return;
+          const showCatRow = cfg.mostrar_categoria && cfg.mostrar_niv && pfRankNivFilter;
+          cont.style.display = showCatRow ? "flex" : "none";
+          if (!showCatRow || cats.length === 0) return;
           [
             { label: "Todas", val: null },
             ...cats.map((c) => ({ label: c, val: c })),
@@ -3566,13 +3501,14 @@
             cont.appendChild(btn);
           });
         });
+
         const toRender = pfRankCatFilter
           ? nivFiltered.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
-          : pfRankNivFilter
+          : (cfg.mostrar_niv && pfRankNivFilter)
             ? nivFiltered
             : deduped;
-        buildRankingRows("pf-rank-rows", toRender, true);
-        buildRankingRows("pe-rank-rows", toRender, false);
+        buildRankingRows("pf-rank-rows", toRender, true, cfg.mostrar_puntaje);
+        buildRankingRows("pe-rank-rows", toRender, false, cfg.mostrar_puntaje);
       }
 
       function setPfRankFilter(inst) {
@@ -3593,11 +3529,14 @@
         buildPfRanking();
       }
 
-      function buildRankingRows(contId, data, large) {
+      function buildRankingRows(contId, data, large, mostrarPuntaje = true) {
         const cont = document.getElementById(contId);
         if (!cont) return;
         cont.innerHTML = "";
-        if (!data) return;
+        if (!data || data.length === 0) {
+          cont.innerHTML = `<div style="text-align:center;padding:${large ? 60 : 40}px 0;color:rgba(255,255,255,.35);font-size:${large ? 18 : 13}px;letter-spacing:1px">No se han evaluado participantes aún</div>`;
+          return;
+        }
         data.forEach((r, i) => {
           const ps =
             i === 0
@@ -3615,7 +3554,10 @@
           const catLabel = r._activeCat
             ? r._activeCat.c + ": " + r._activeCat.n
             : r.instancia?.toUpperCase() || "";
-          cont.innerHTML += `<div style="display:flex;align-items:center;gap:${large ? 20 : 16}px;padding:${large ? 18 : 14}px ${large ? 28 : 22}px;border-radius:${large ? 18 : 16}px;margin-bottom:${large ? 12 : 10}px;${rc}"><div style="${ps}border-radius:50%;width:${large ? 44 : 34}px;height:${large ? 44 : 34}px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,32px);font-weight:600;flex-shrink:0">${i + 1}</div><div style="flex:1"><div style="font-size:${sz};font-weight:700">${r.nombre_grupo}</div><div style="font-size:clamp(12px,${large ? "2vw" : "1.5vw"},18px);color:rgba(255,255,255,.5)">${catLabel}</div></div><div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,${large ? 44 : 34}px);color:#C9A84C;font-weight:600">${r.subtotal_parcial || "—"}</div></div>`;
+          const scoreDiv = mostrarPuntaje
+            ? `<div style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,5vw,${large ? 44 : 34}px);color:#C9A84C;font-weight:600">${r.subtotal_parcial || "—"}</div>`
+            : "";
+          cont.innerHTML += `<div style="display:flex;align-items:center;gap:${large ? 20 : 16}px;padding:${large ? 18 : 14}px ${large ? 28 : 22}px;border-radius:${large ? 18 : 16}px;margin-bottom:${large ? 12 : 10}px;${rc}"><div style="${ps}border-radius:50%;width:${large ? 44 : 34}px;height:${large ? 44 : 34}px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,32px);font-weight:600;flex-shrink:0">${i + 1}</div><div style="flex:1"><div style="font-size:${sz};font-weight:700">${r.nombre_grupo}</div><div style="font-size:clamp(12px,${large ? "2vw" : "1.5vw"},18px);color:rgba(255,255,255,.5)">${catLabel}</div></div>${scoreDiv}</div>`;
         });
       }
 
