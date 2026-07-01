@@ -14,6 +14,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
       html,
       body {
@@ -1593,6 +1594,31 @@
               Renombrá jurados, reseteá contraseñas o activá/desactivá. Los cambios se reflejan inmediatamente en el sistema.
             </div>
             <div id="sa-usuarios-list">Cargando…</div>
+          </div>
+
+          <!-- 📊 Exportar datos -->
+          <div class="card mb3" style="border-color:rgba(76,175,125,.2)">
+            <div class="sf mb2">
+              <div>
+                <div class="fw6" style="color:#4CAF7D">📊 Exportar datos a Excel</div>
+                <div class="muted text-xs">Descargá los datos del sistema en formato .xlsx para abrir en Excel o Google Sheets.</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportLineup()">
+                📋 Lineup completo<br><span style="font-size:9px;opacity:.7">Todos los inscriptos</span>
+              </button>
+              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportCategorias()">
+                🎯 Por categoría<br><span style="font-size:9px;opacity:.7">Una hoja por categoría</span>
+              </button>
+              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportRankings()">
+                🏆 Rankings finales<br><span style="font-size:9px;opacity:.7">Puntajes cerrados</span>
+              </button>
+              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportAuditoria()">
+                📋 Auditoría<br><span style="font-size:9px;opacity:.7">Logs del sistema</span>
+              </button>
+            </div>
+            <div id="export-status" class="muted text-xs mt2" style="text-align:center">Listo para exportar</div>
           </div>
 
           <!-- 📋 Auditoría / Logs -->
@@ -3849,6 +3875,177 @@
         } catch (e) {
           cont.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
         }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // EXPORTACIÓN a Excel (.xlsx) - usa SheetJS desde CDN
+      // ═══════════════════════════════════════════════════════════
+      function exportStatus(msg, isErr) {
+        const el = document.getElementById("export-status");
+        if (el) { el.textContent = msg; el.style.color = isErr ? "#E0524C" : "#888"; }
+      }
+
+      function descargarXLSX(workbook, filename) {
+        try {
+          XLSX.writeFile(workbook, filename);
+          exportStatus("✓ Descargado: " + filename);
+          if (typeof auditLog === "function") auditLog("exportar", "excel", filename);
+        } catch (e) { exportStatus("Error: " + e.message, true); }
+      }
+
+      function parsearCategorias(cat) {
+        try {
+          const c = typeof cat === "string" ? JSON.parse(cat) : cat;
+          if (Array.isArray(c)) return c.map(x => (x.n || "") + (x.g ? " (" + x.g + ")" : "")).join(" | ");
+          if (c && typeof c === "object") return (c.n || "") + (c.g ? " (" + c.g + ")" : "");
+          return String(c || "");
+        } catch { return String(cat || ""); }
+      }
+
+      // 1. Lineup completo
+      async function exportLineup() {
+        exportStatus("Cargando lineup…");
+        try {
+          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada, recargá la página");
+          const { data, error } = await db.schema("evento").from("lineup")
+            .select("codigo_id,nombre_grupo,responsable,pais,instancia,categoria,estado,estado_pago,acreditado_at,posicion")
+            .order("codigo_id");
+          if (error) throw error;
+          if (!data || data.length === 0) { exportStatus("Sin datos", true); return; }
+          const rows = data.map(l => ({
+            "Código": l.codigo_id || "",
+            "Grupo / Participante": l.nombre_grupo || "",
+            "Responsable": l.responsable || "",
+            "País": l.pais || "",
+            "Instancia": (l.instancia || "").toUpperCase(),
+            "Categorías": parsearCategorias(l.categoria),
+            "Estado Acreditación": l.estado || "pendiente",
+            "Estado Pago": l.estado_pago || "pendiente",
+            "Acreditado en": l.acreditado_at ? new Date(l.acreditado_at).toLocaleString("es-AR") : "",
+            "Posición": l.posicion || "",
+          }));
+          const ws = XLSX.utils.json_to_sheet(rows);
+          ws['!cols'] = [{wch:16},{wch:30},{wch:25},{wch:14},{wch:10},{wch:35},{wch:14},{wch:14},{wch:18},{wch:8}];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Lineup");
+          const fecha = new Date().toISOString().slice(0,10);
+          descargarXLSX(wb, `JAM-Lineup-${fecha}.xlsx`);
+        } catch (e) { exportStatus("Error: " + e.message, true); }
+      }
+
+      // 2. Inscriptos por categoría (una hoja por categoría)
+      async function exportCategorias() {
+        exportStatus("Generando hojas por categoría…");
+        try {
+          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
+          const { data: cats, error: e1 } = await db.rpc("listar_categorias_lineup");
+          if (e1) throw e1;
+          if (!cats || cats.length === 0) { exportStatus("Sin categorías", true); return; }
+          
+          const wb = XLSX.utils.book_new();
+          const resumen = cats.map(c => ({
+            "Categoría": c.categoria_label,
+            "Instancia": (c.instancia || "").toUpperCase(),
+            "Inscriptos": c.cantidad,
+            "Presentes": c.presentes,
+          }));
+          const wsR = XLSX.utils.json_to_sheet(resumen);
+          wsR['!cols'] = [{wch:40},{wch:12},{wch:12},{wch:12}];
+          XLSX.utils.book_append_sheet(wb, wsR, "Resumen");
+          
+          for (const cat of cats) {
+            const { data: pasadas } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: cat.categoria_key });
+            const rows = (pasadas || []).map((p) => ({
+              "Orden": p.posicion === 999 ? "—" : p.posicion,
+              "Código": p.codigo_id || "",
+              "Grupo": p.nombre_grupo || "",
+              "Responsable": p.responsable || "",
+              "País": p.pais || "",
+              "Estado": p.estado || "pendiente",
+              "Pago": p.estado_pago || "pendiente",
+            }));
+            if (rows.length === 0) continue;
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [{wch:8},{wch:16},{wch:25},{wch:22},{wch:14},{wch:14},{wch:12}];
+            let sheetName = cat.categoria_label.replace(/[\\\/\?\*\[\]]/g, "").substring(0, 28);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          }
+          const fecha = new Date().toISOString().slice(0,10);
+          descargarXLSX(wb, `JAM-Categorias-${fecha}.xlsx`);
+        } catch (e) { exportStatus("Error: " + e.message, true); }
+      }
+
+      // 3. Rankings (puntajes de sesiones finalizadas)
+      async function exportRankings() {
+        exportStatus("Cargando rankings…");
+        try {
+          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
+          const { data: ses, error: e1 } = await db.schema("scoring").from("sesiones")
+            .select("id,codigo_id,nombre_grupo,instancia,pais,categoria,total_final,finalizada_at")
+            .eq("activa", false)
+            .not("finalizada_at", "is", null)
+            .order("instancia").order("total_final", { ascending: false });
+          if (e1) throw e1;
+          if (!ses || ses.length === 0) { exportStatus("No hay sesiones cerradas todavía", true); return; }
+          
+          const wb = XLSX.utils.book_new();
+          const rows = ses.map((s, i) => ({
+            "Posición": i + 1,
+            "Código": s.codigo_id || "",
+            "Grupo": s.nombre_grupo || "",
+            "País": s.pais || "",
+            "Instancia": (s.instancia || "").toUpperCase(),
+            "Categoría": parsearCategorias(s.categoria),
+            "Total Final": s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
+            "Finalizado": s.finalizada_at ? new Date(s.finalizada_at).toLocaleString("es-AR") : "",
+          }));
+          const ws = XLSX.utils.json_to_sheet(rows);
+          ws['!cols'] = [{wch:10},{wch:16},{wch:25},{wch:14},{wch:10},{wch:30},{wch:12},{wch:18}];
+          XLSX.utils.book_append_sheet(wb, ws, "Rankings");
+          
+          const porInst = {};
+          ses.forEach(s => { const k = (s.instancia||"otro").toUpperCase(); (porInst[k]=porInst[k]||[]).push(s); });
+          for (const [inst, items] of Object.entries(porInst)) {
+            const sorted = items.slice().sort((a,b) => (b.total_final||0) - (a.total_final||0));
+            const rows2 = sorted.map((s, i) => ({
+              "Pos": i+1,
+              "Código": s.codigo_id || "",
+              "Grupo": s.nombre_grupo || "",
+              "Total": s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
+            }));
+            const ws2 = XLSX.utils.json_to_sheet(rows2);
+            ws2['!cols'] = [{wch:6},{wch:16},{wch:30},{wch:10}];
+            XLSX.utils.book_append_sheet(wb, ws2, "Ranking " + inst);
+          }
+          const fecha = new Date().toISOString().slice(0,10);
+          descargarXLSX(wb, `JAM-Rankings-${fecha}.xlsx`);
+        } catch (e) { exportStatus("Error: " + e.message, true); }
+      }
+
+      // 4. Auditoría
+      async function exportAuditoria() {
+        exportStatus("Cargando logs…");
+        try {
+          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
+          const { data, error } = await db.rpc("audit_listar", { p_limit: 5000 });
+          if (error) throw error;
+          if (!data || data.length === 0) { exportStatus("Sin logs", true); return; }
+          const rows = data.map(l => ({
+            "Fecha/Hora": l.ts ? new Date(l.ts).toLocaleString("es-AR") : "",
+            "Usuario": l.usuario || "",
+            "Rol": l.rol || "",
+            "Acción": l.accion || "",
+            "Entidad": l.entidad || "",
+            "ID Entidad": l.entidad_id || "",
+            "Detalle": l.detalle ? (typeof l.detalle === "string" ? l.detalle : JSON.stringify(l.detalle)) : "",
+          }));
+          const ws = XLSX.utils.json_to_sheet(rows);
+          ws['!cols'] = [{wch:20},{wch:16},{wch:14},{wch:25},{wch:14},{wch:40},{wch:60}];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Auditoría");
+          const fecha = new Date().toISOString().slice(0,10);
+          descargarXLSX(wb, `JAM-Auditoria-${fecha}.xlsx`);
+        } catch (e) { exportStatus("Error: " + e.message, true); }
       }
 
       // === Wrappers de compatibilidad (las funciones viejas siguen siendo llamadas en algún lugar) ===
