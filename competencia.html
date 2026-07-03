@@ -930,7 +930,7 @@
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 8px;
         padding: 9px 12px;
-        color: #F8F5EE;
+        color: #f8f5ee;
         font-family: inherit;
         font-size: 13px;
         margin-top: 4px;
@@ -938,7 +938,7 @@
       }
       .cfg-input:focus {
         outline: none;
-        border-color: #C9A84C;
+        border-color: #c9a84c;
       }
     </style>
   </head>
@@ -1146,7 +1146,7 @@
       <div class="tabs">
         <div class="tab on" onclick="dTab('envivo', this)">⚡ En vivo</div>
         <div class="tab" onclick="dTab('lineup', this)">Line Up</div>
-        <div class="tab" onclick="dTab('repesca', this)">Repesca</div>
+        <!-- <div class="tab" onclick="dTab('repesca', this)">Repesca</div> -->
         <div class="tab" onclick="dTab('rankings', this)">Rankings</div>
         <div class="tab" onclick="dTab('jurados-cfg', this)">⚙ Jurados</div>
         <div class="tab" onclick="dTab('mails', this)">Mails</div>
@@ -1365,15 +1365,18 @@
               📺 Publicar en pantalla
             </button>
           </div>
-          <div id="d-rank-inst-filters" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
           <div
-            id="d-rank-niv-filters"
+            id="d-rank-inst-filters"
             style="
               display: flex;
-              gap: 6px;
-              margin-bottom: 8px;
+              gap: 8px;
+              margin-bottom: 10px;
               flex-wrap: wrap;
             "
+          ></div>
+          <div
+            id="d-rank-niv-filters"
+            style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap"
           ></div>
           <div
             id="d-rank-cat-filters"
@@ -1437,106 +1440,277 @@
 
         <!-- SUPER ADMIN -->
         <div class="tp" id="d-admin">
-          <div class="fw7 mb4 mt3" style="font-size: 16px">🛡 Super Admin · Acciones globales</div>
+          <div class="fw7 mb4 mt3" style="font-size: 16px">
+            🛡 Super Admin · Acciones globales
+          </div>
 
           <!-- MODO SIMULACIÓN -->
-          <div class="card mb3" style="background:linear-gradient(135deg,#1a1500 0%,#251c00 100%);border-color:#E8A838">
+          <div
+            class="card mb3"
+            style="
+              background: linear-gradient(135deg, #1a1500 0%, #251c00 100%);
+              border-color: #e8a838;
+            "
+          >
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#E8A838">🧪 Modo Simulación</div>
-                <div class="muted text-xs">Probar el sistema con datos ficticios sin afectar producción</div>
+                <div class="fw6" style="color: #e8a838">🧪 Modo Simulación</div>
+                <div class="muted text-xs">
+                  Probar el sistema con datos ficticios sin afectar producción
+                </div>
               </div>
-              <span id="sim-badge" class="bdg" style="font-size:11px;background:#444;color:#aaa">DESACTIVADO</span>
+              <span
+                id="sim-badge"
+                class="bdg"
+                style="font-size: 11px; background: #444; color: #aaa"
+                >DESACTIVADO</span
+              >
             </div>
-            <div id="sim-info" class="text-xs muted mb3" style="line-height:1.6">
-              Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.
+            <div
+              id="sim-info"
+              class="text-xs muted mb3"
+              style="line-height: 1.6"
+            >
+              Cuando activás el modo simulación, TODO el sistema (Lineup, Pista,
+              Jurados, Rankings, Configuración) trabaja con 15 participantes de
+              prueba. Las inscripciones y datos reales quedan intactos.
             </div>
-            <div class="sf" style="gap:8px;flex-wrap:wrap">
-              <button id="sim-toggle-btn" class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="simToggle()">
+            <div class="sf" style="gap: 8px; flex-wrap: wrap">
+              <button
+                id="sim-toggle-btn"
+                class="btn bo bfull"
+                style="border-color: #e8a838; color: #e8a838"
+                onclick="simToggle()"
+              >
                 ▶ Activar simulación
               </button>
-              <button class="btn bo bfull" onclick="simResetSeed()" style="border-color:rgba(232,168,56,.4)">
+              <button
+                class="btn bo bfull"
+                onclick="simResetSeed()"
+                style="border-color: rgba(232, 168, 56, 0.4)"
+              >
                 🔄 Resetear datos de simulación (15 participantes)
               </button>
             </div>
           </div>
-          
+
           <!-- Estadísticas del sistema -->
           <div class="g4 mb4">
-            <div class="card" style="padding:14px;text-align:center">
-              <div id="sa-stat-ins" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+            <div class="card" style="padding: 14px; text-align: center">
+              <div
+                id="sa-stat-ins"
+                style="font-size: 24px; font-weight: 700; color: #c9a84c"
+              >
+                —
+              </div>
               <div class="muted text-xs">Inscripciones</div>
             </div>
-            <div class="card" style="padding:14px;text-align:center">
-              <div id="sa-stat-lineup" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+            <div class="card" style="padding: 14px; text-align: center">
+              <div
+                id="sa-stat-lineup"
+                style="font-size: 24px; font-weight: 700; color: #c9a84c"
+              >
+                —
+              </div>
               <div class="muted text-xs">Lineup</div>
             </div>
-            <div class="card" style="padding:14px;text-align:center">
-              <div id="sa-stat-ses" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+            <div class="card" style="padding: 14px; text-align: center">
+              <div
+                id="sa-stat-ses"
+                style="font-size: 24px; font-weight: 700; color: #c9a84c"
+              >
+                —
+              </div>
               <div class="muted text-xs">Sesiones scoring</div>
             </div>
-            <div class="card" style="padding:14px;text-align:center">
-              <div id="sa-stat-pts" style="font-size:24px;font-weight:700;color:#C9A84C">—</div>
+            <div class="card" style="padding: 14px; text-align: center">
+              <div
+                id="sa-stat-pts"
+                style="font-size: 24px; font-weight: 700; color: #c9a84c"
+              >
+                —
+              </div>
               <div class="muted text-xs">Puntajes</div>
             </div>
           </div>
 
-          <button class="btn bo bsm mb3" onclick="saRefreshStats()">↻ Actualizar estadísticas</button>
+          <button class="btn bo bsm mb3" onclick="saRefreshStats()">
+            ↻ Actualizar estadísticas
+          </button>
 
           <!-- Estado del sistema (health) -->
           <div class="card mb3">
             <div class="fw6 mb2">📊 Estado del sistema</div>
             <div id="sa-health" class="muted text-xs">Cargando…</div>
-            <button class="btn bo bsm mt3" onclick="saCheckHealth()">↻ Verificar /api/health</button>
+            <button class="btn bo bsm mt3" onclick="saCheckHealth()">
+              ↻ Verificar /api/health
+            </button>
           </div>
 
           <!-- 📅 CRONOGRAMA del DÍA (orden de pasada de categorías) -->
-          <div class="card mb3" style="border-color:rgba(76,175,125,.3);background:#0a1e0a">
+          <div
+            class="card mb3"
+            style="border-color: rgba(76, 175, 125, 0.3); background: #0a1e0a"
+          >
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#4CAF7D">📅 Cronograma del Día</div>
-                <div class="muted text-xs">Orden de pasada de categorías. Lo ven Encargado y Ayudante de Line Up en tiempo real.</div>
+                <div class="fw6" style="color: #4caf7d">
+                  📅 Cronograma del Día
+                </div>
+                <div class="muted text-xs">
+                  Orden de pasada de categorías. Lo ven Encargado y Ayudante de
+                  Line Up en tiempo real.
+                </div>
               </div>
-              <button class="btn bo bsm" onclick="cronCargar()" style="border-color:#4CAF7D;color:#4CAF7D">↻</button>
+              <button
+                class="btn bo bsm"
+                onclick="cronCargar()"
+                style="border-color: #4caf7d; color: #4caf7d"
+              >
+                ↻
+              </button>
             </div>
-            <div id="cron-activa-display" class="text-xs muted mt2 mb3" style="padding:8px;background:rgba(0,0,0,.3);border-radius:6px">
+            <div
+              id="cron-activa-display"
+              class="text-xs muted mt2 mb3"
+              style="
+                padding: 8px;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 6px;
+              "
+            >
               Cargando…
             </div>
-            <div id="cron-lista" class="muted text-xs">Cargando cronograma…</div>
-            <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-              <button class="btn bo bsm" style="border-color:#C9A84C;color:#C9A84C;font-size:11px;flex:1;min-width:140px" onclick="cronInicializar()">
+            <div id="cron-lista" class="muted text-xs">
+              Cargando cronograma…
+            </div>
+            <div
+              style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap"
+            >
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: #c9a84c;
+                  color: #c9a84c;
+                  font-size: 11px;
+                  flex: 1;
+                  min-width: 140px;
+                "
+                onclick="cronInicializar()"
+              >
                 🔄 Generar desde lineup
               </button>
-              <button class="btn bo bsm" style="border-color:rgba(255,255,255,.2);font-size:11px;flex:1;min-width:140px" onclick="cronMostrarAgregar()">
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: rgba(255, 255, 255, 0.2);
+                  font-size: 11px;
+                  flex: 1;
+                  min-width: 140px;
+                "
+                onclick="cronMostrarAgregar()"
+              >
                 + Agregar categoría
               </button>
             </div>
-            <div id="cron-agregar-wrap" style="display:none;margin-top:10px;padding:10px;background:#1a1500;border:1px solid rgba(232,168,56,.3);border-radius:6px">
-              <div class="text-xs muted mb2">Seleccioná una categoría del lineup que no esté en el cronograma:</div>
-              <select id="cron-agregar-select" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px;color:#F8F5EE;font-size:12px;margin-bottom:8px">
+            <div
+              id="cron-agregar-wrap"
+              style="
+                display: none;
+                margin-top: 10px;
+                padding: 10px;
+                background: #1a1500;
+                border: 1px solid rgba(232, 168, 56, 0.3);
+                border-radius: 6px;
+              "
+            >
+              <div class="text-xs muted mb2">
+                Seleccioná una categoría del lineup que no esté en el
+                cronograma:
+              </div>
+              <select
+                id="cron-agregar-select"
+                style="
+                  width: 100%;
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 6px;
+                  padding: 8px;
+                  color: #f8f5ee;
+                  font-size: 12px;
+                  margin-bottom: 8px;
+                "
+              >
                 <option value="">— elegí —</option>
               </select>
-              <div style="display:flex;gap:6px">
-                <button class="btn bgn bsm" style="font-size:11px;flex:1" onclick="cronAgregar()">+ Agregar</button>
-                <button class="btn bo bsm" style="font-size:11px" onclick="document.getElementById('cron-agregar-wrap').style.display='none'">Cancelar</button>
+              <div style="display: flex; gap: 6px">
+                <button
+                  class="btn bgn bsm"
+                  style="font-size: 11px; flex: 1"
+                  onclick="cronAgregar()"
+                >
+                  + Agregar
+                </button>
+                <button
+                  class="btn bo bsm"
+                  style="font-size: 11px"
+                  onclick="
+                    document.getElementById('cron-agregar-wrap').style.display =
+                      'none'
+                  "
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>
 
           <!-- ✏️ EDITAR INSCRIPCIONES (cambiar integrantes, datos, reenviar QR) -->
-          <div class="card mb3" style="border-color:rgba(201,168,76,.3)">
+          <div class="card mb3" style="border-color: rgba(201, 168, 76, 0.3)">
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#C9A84C">✏️ Editar Inscripciones</div>
-                <div class="muted text-xs">Modificá nombre, contacto, integrantes o reenviá el QR al grupo.</div>
+                <div class="fw6" style="color: #c9a84c">
+                  ✏️ Editar Inscripciones
+                </div>
+                <div class="muted text-xs">
+                  Modificá nombre, contacto, integrantes o reenviá el QR al
+                  grupo.
+                </div>
               </div>
             </div>
-            <div style="display:flex;gap:6px;margin-bottom:10px">
-              <input id="edit-buscar-input" placeholder="Código (JAM-INTER-1000) o nombre del grupo" style="flex:1;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px;color:#F8F5EE;font-size:12px" onkeydown="if(event.key==='Enter') editBuscar()">
-              <button class="btn bo bsm" style="font-size:11px" onclick="editBuscar()">🔍 Buscar</button>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px">
+              <input
+                id="edit-buscar-input"
+                placeholder="Código (JAM-INTER-1000) o nombre del grupo"
+                style="
+                  flex: 1;
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 6px;
+                  padding: 8px;
+                  color: #f8f5ee;
+                  font-size: 12px;
+                "
+                onkeydown="if (event.key === 'Enter') editBuscar();"
+              />
+              <button
+                class="btn bo bsm"
+                style="font-size: 11px"
+                onclick="editBuscar()"
+              >
+                🔍 Buscar
+              </button>
             </div>
-            <div id="edit-resultados" style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px"></div>
-            <div id="edit-formulario" style="display:none"></div>
+            <div
+              id="edit-resultados"
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                margin-bottom: 10px;
+              "
+            ></div>
+            <div id="edit-formulario" style="display: none"></div>
           </div>
 
           <!-- Gestión de Usuarios (Jurados + Director) -->
@@ -1546,53 +1720,151 @@
               <button class="btn bo bsm" onclick="saLoadUsuarios()">↻</button>
             </div>
             <div class="muted text-xs mb3">
-              Renombrá jurados, reseteá contraseñas o activá/desactivá. Los cambios se reflejan inmediatamente en el sistema.
+              Renombrá jurados, reseteá contraseñas o activá/desactivá. Los
+              cambios se reflejan inmediatamente en el sistema.
             </div>
             <div id="sa-usuarios-list">Cargando…</div>
           </div>
 
           <!-- 📊 Exportar datos -->
-          <div class="card mb3" style="border-color:rgba(76,175,125,.2)">
+          <div class="card mb3" style="border-color: rgba(76, 175, 125, 0.2)">
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#4CAF7D">📊 Exportar datos a Excel</div>
-                <div class="muted text-xs">Descargá los datos del sistema en formato .xlsx para abrir en Excel o Google Sheets.</div>
+                <div class="fw6" style="color: #4caf7d">
+                  📊 Exportar datos a Excel
+                </div>
+                <div class="muted text-xs">
+                  Descargá los datos del sistema en formato .xlsx para abrir en
+                  Excel o Google Sheets.
+                </div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportLineup()">
-                📋 Lineup completo<br><span style="font-size:9px;opacity:.7">Todos los inscriptos</span>
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
+            >
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: #4caf7d;
+                  color: #4caf7d;
+                  font-size: 11px;
+                  padding: 10px;
+                "
+                onclick="exportLineup()"
+              >
+                📋 Lineup completo<br /><span
+                  style="font-size: 9px; opacity: 0.7"
+                  >Todos los inscriptos</span
+                >
               </button>
-              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportCategorias()">
-                🎯 Por categoría<br><span style="font-size:9px;opacity:.7">Una hoja por categoría</span>
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: #4caf7d;
+                  color: #4caf7d;
+                  font-size: 11px;
+                  padding: 10px;
+                "
+                onclick="exportCategorias()"
+              >
+                🎯 Por categoría<br /><span style="font-size: 9px; opacity: 0.7"
+                  >Una hoja por categoría</span
+                >
               </button>
-              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportRankings()">
-                🏆 Rankings finales<br><span style="font-size:9px;opacity:.7">Puntajes cerrados</span>
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: #4caf7d;
+                  color: #4caf7d;
+                  font-size: 11px;
+                  padding: 10px;
+                "
+                onclick="exportRankings()"
+              >
+                🏆 Rankings finales<br /><span
+                  style="font-size: 9px; opacity: 0.7"
+                  >Puntajes cerrados</span
+                >
               </button>
-              <button class="btn bo bsm" style="border-color:#4CAF7D;color:#4CAF7D;font-size:11px;padding:10px" onclick="exportAuditoria()">
-                📋 Auditoría<br><span style="font-size:9px;opacity:.7">Logs del sistema</span>
+              <button
+                class="btn bo bsm"
+                style="
+                  border-color: #4caf7d;
+                  color: #4caf7d;
+                  font-size: 11px;
+                  padding: 10px;
+                "
+                onclick="exportAuditoria()"
+              >
+                📋 Auditoría<br /><span style="font-size: 9px; opacity: 0.7"
+                  >Logs del sistema</span
+                >
               </button>
             </div>
-            <div id="export-status" class="muted text-xs mt2" style="text-align:center">Listo para exportar</div>
+            <div
+              id="export-status"
+              class="muted text-xs mt2"
+              style="text-align: center"
+            >
+              Listo para exportar
+            </div>
           </div>
 
           <!-- 📋 Auditoría / Logs -->
-          <div class="card mb3" style="border-color:rgba(76,175,125,.2)">
+          <div class="card mb3" style="border-color: rgba(76, 175, 125, 0.2)">
             <div class="sf mb2">
               <div>
-                <div class="fw6" style="color:#4CAF7D">📋 Auditoría · Quién hizo qué</div>
-                <div class="muted text-xs">Historial completo de acciones del sistema (los últimos 100).</div>
+                <div class="fw6" style="color: #4caf7d">
+                  📋 Auditoría · Quién hizo qué
+                </div>
+                <div class="muted text-xs">
+                  Historial completo de acciones del sistema (los últimos 100).
+                </div>
               </div>
               <button class="btn bo bsm" onclick="auditCargar()">↻</button>
             </div>
-            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-              <input id="audit-filtro-usuario" placeholder="Usuario (vacío = todos)" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
-              <select id="audit-filtro-accion" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px;color:#F8F5EE;font-size:11px">
+            <div
+              style="
+                display: flex;
+                gap: 6px;
+                margin-bottom: 8px;
+                flex-wrap: wrap;
+              "
+            >
+              <input
+                id="audit-filtro-usuario"
+                placeholder="Usuario (vacío = todos)"
+                style="
+                  flex: 1;
+                  min-width: 120px;
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 6px;
+                  padding: 6px;
+                  color: #f8f5ee;
+                  font-size: 11px;
+                "
+              />
+              <select
+                id="audit-filtro-accion"
+                style="
+                  flex: 1;
+                  min-width: 120px;
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 6px;
+                  padding: 6px;
+                  color: #f8f5ee;
+                  font-size: 11px;
+                "
+              >
                 <option value="">Todas las acciones</option>
                 <option value="login">Login</option>
                 <option value="cronograma_iniciar">Iniciar categoría</option>
                 <option value="cronograma_mover">Mover categoría</option>
-                <option value="cronograma_completar">Completar categoría</option>
+                <option value="cronograma_completar">
+                  Completar categoría
+                </option>
                 <option value="poner_en_pista">Poner en pista</option>
                 <option value="mover_pasada">Mover participante</option>
                 <option value="quitar_de_pasada">Quitar de categoría</option>
@@ -1603,60 +1875,151 @@
                 <option value="reset_password">Reset password</option>
                 <option value="sim_toggle">Modo simulación</option>
               </select>
-              <button class="btn bo bsm" onclick="auditCargar()" style="font-size:11px">🔍 Filtrar</button>
+              <button
+                class="btn bo bsm"
+                onclick="auditCargar()"
+                style="font-size: 11px"
+              >
+                🔍 Filtrar
+              </button>
             </div>
-            <div id="audit-lista" style="max-height:380px;overflow-y:auto;font-size:11px">Cargando…</div>
+            <div
+              id="audit-lista"
+              style="max-height: 380px; overflow-y: auto; font-size: 11px"
+            >
+              Cargando…
+            </div>
           </div>
 
           <!-- Limpiar tablas scoring -->
-          <div class="card mb3" style="border-color:rgba(232,168,56,.3);background:#1a1400">
-            <div class="fw6 mb2" style="color:#E8A838">🧹 Limpiar tablas Scoring (resetear competencia)</div>
-            <div class="muted text-xs mb3">
-              Borra TODAS las sesiones y puntajes activos. Los participantes y el lineup quedan intactos. Útil para resetear entre instancias.
+          <div
+            class="card mb3"
+            style="border-color: rgba(232, 168, 56, 0.3); background: #1a1400"
+          >
+            <div class="fw6 mb2" style="color: #e8a838">
+              🧹 Limpiar tablas Scoring (resetear competencia)
             </div>
-            <button class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="saResetScoring()">
+            <div class="muted text-xs mb3">
+              Borra TODAS las sesiones y puntajes activos. Los participantes y
+              el lineup quedan intactos. Útil para resetear entre instancias.
+            </div>
+            <button
+              class="btn bo bfull"
+              style="border-color: #e8a838; color: #e8a838"
+              onclick="saResetScoring()"
+            >
               Borrar sesiones + puntajes
             </button>
           </div>
 
           <!-- Limpiar lineup -->
-          <div class="card mb3" style="border-color:rgba(232,168,56,.3);background:#1a1400">
-            <div class="fw6 mb2" style="color:#E8A838">🔄 Resetear estados del lineup</div>
-            <div class="muted text-xs mb3">
-              Vuelve todos los participantes a estado "pendiente" (deja inscripciones intactas).
+          <div
+            class="card mb3"
+            style="border-color: rgba(232, 168, 56, 0.3); background: #1a1400"
+          >
+            <div class="fw6 mb2" style="color: #e8a838">
+              🔄 Resetear estados del lineup
             </div>
-            <button class="btn bo bfull" style="border-color:#E8A838;color:#E8A838" onclick="saResetLineup()">
+            <div class="muted text-xs mb3">
+              Vuelve todos los participantes a estado "pendiente" (deja
+              inscripciones intactas).
+            </div>
+            <button
+              class="btn bo bfull"
+              style="border-color: #e8a838; color: #e8a838"
+              onclick="saResetLineup()"
+            >
               Resetear estados a "pendiente"
             </button>
           </div>
 
           <!-- Resincronizar lineup -->
           <div class="card mb3">
-            <div class="fw6 mb2">🔁 Resincronizar Lineup desde Inscripciones</div>
-            <div class="muted text-xs mb3">
-              Compara lineup con inscripciones. Recalcula los códigos y crea entradas faltantes. No borra nada.
+            <div class="fw6 mb2">
+              🔁 Resincronizar Lineup desde Inscripciones
             </div>
-            <button class="btn bgn bfull" onclick="saResyncLineup()">Resincronizar</button>
+            <div class="muted text-xs mb3">
+              Compara lineup con inscripciones. Recalcula los códigos y crea
+              entradas faltantes. No borra nada.
+            </div>
+            <button class="btn bgn bfull" onclick="saResyncLineup()">
+              Resincronizar
+            </button>
           </div>
 
           <!-- Eliminar inscripción específica -->
           <div class="card mb3">
             <div class="fw6 mb2">🗑 Eliminar inscripción por código</div>
             <div class="muted text-xs mb3">
-              Borra una inscripción específica. El CASCADE borra también su entrada en lineup.
+              Borra una inscripción específica. El CASCADE borra también su
+              entrada en lineup.
             </div>
-            <input id="sa-del-code" placeholder="JAM-INTER-1000" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;color:#F8F5EE;font-family:'JetBrains Mono',monospace;font-size:13px;margin-bottom:10px">
-            <button class="btn bo bfull" style="border-color:#E0524C;color:#E0524C" onclick="saDeleteInscripcion()">Eliminar</button>
+            <input
+              id="sa-del-code"
+              placeholder="JAM-INTER-1000"
+              style="
+                width: 100%;
+                background: #1e1e1e;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 10px;
+                padding: 10px 12px;
+                color: #f8f5ee;
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                font-size: 13px;
+                margin-bottom: 10px;
+              "
+            />
+            <button
+              class="btn bo bfull"
+              style="border-color: #e0524c; color: #e0524c"
+              onclick="saDeleteInscripcion()"
+            >
+              Eliminar
+            </button>
           </div>
 
           <!-- ZONA PELIGROSA: Reset total -->
-          <div class="card" style="border-color:rgba(224,82,82,.4);background:#1a0000">
-            <div class="fw6 mb2" style="color:#E0524C">⚠️ ZONA PELIGROSA</div>
+          <div
+            class="card"
+            style="border-color: rgba(224, 82, 82, 0.4); background: #1a0000"
+          >
+            <div class="fw6 mb2" style="color: #e0524c">⚠️ ZONA PELIGROSA</div>
             <div class="muted text-xs mb3">
-              Borra <strong style="color:#E0524C">TODO</strong>: inscripciones, lineup, sesiones, puntajes. Acción irreversible. Hay que escribir "BORRAR TODO" para confirmar.
+              Borra <strong style="color: #e0524c">TODO</strong>: inscripciones,
+              lineup, sesiones, puntajes. Acción irreversible. Hay que escribir
+              "BORRAR TODO" para confirmar.
             </div>
-            <input id="sa-confirm-reset" placeholder='Escribí "BORRAR TODO" para habilitar' style="width:100%;background:#1e1e1e;border:1px solid rgba(224,82,82,.3);border-radius:10px;padding:10px 12px;color:#F8F5EE;font-family:inherit;font-size:13px;margin-bottom:10px" oninput="document.getElementById('sa-reset-btn').disabled = this.value !== 'BORRAR TODO'">
-            <button id="sa-reset-btn" class="btn bfull" disabled style="background:#E0524C;color:#fff;opacity:.4;cursor:not-allowed" onclick="saResetTotal()">
+            <input
+              id="sa-confirm-reset"
+              placeholder='Escribí "BORRAR TODO" para habilitar'
+              style="
+                width: 100%;
+                background: #1e1e1e;
+                border: 1px solid rgba(224, 82, 82, 0.3);
+                border-radius: 10px;
+                padding: 10px 12px;
+                color: #f8f5ee;
+                font-family: inherit;
+                font-size: 13px;
+                margin-bottom: 10px;
+              "
+              oninput="
+                document.getElementById('sa-reset-btn').disabled =
+                  this.value !== 'BORRAR TODO'
+              "
+            />
+            <button
+              id="sa-reset-btn"
+              class="btn bfull"
+              disabled
+              style="
+                background: #e0524c;
+                color: #fff;
+                opacity: 0.4;
+                cursor: not-allowed;
+              "
+              onclick="saResetTotal()"
+            >
               🗑 RESET TOTAL DEL SISTEMA
             </button>
           </div>
@@ -1664,187 +2027,410 @@
 
         <!-- CONFIGURACIÓN DINÁMICA (Gastón edita todo) -->
         <div class="tp" id="d-config">
-          <div class="fw7 mb2 mt3" style="font-size: 16px">⚙️ Configuración del Evento</div>
-          <div class="muted text-xs mb4">Editá cualquier configuración sin tocar código. Los cambios se aplican inmediatamente.</div>
+          <div class="fw7 mb2 mt3" style="font-size: 16px">
+            ⚙️ Configuración del Evento
+          </div>
+          <div class="muted text-xs mb4">
+            Editá cualquier configuración sin tocar código. Los cambios se
+            aplican inmediatamente.
+          </div>
 
           <!-- INFO EVENTO -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">📅 Información del Evento</div>
-            <div class="mb3">
-              <label class="text-xs muted">Nombre del evento</label>
-              <input id="cfg-nombre_evento" class="cfg-input" placeholder="JAM 2026">
+            <div class="fw6 mb3" style="color: #c9a84c">
+              📅 Información del Evento
             </div>
             <div class="mb3">
-              <label class="text-xs muted">Fecha del evento (texto libre)</label>
-              <input id="cfg-fecha_evento" class="cfg-input" placeholder="Octubre 2026">
+              <label class="text-xs muted">Nombre del evento</label>
+              <input
+                id="cfg-nombre_evento"
+                class="cfg-input"
+                placeholder="JAM 2026"
+              />
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted"
+                >Fecha del evento (texto libre)</label
+              >
+              <input
+                id="cfg-fecha_evento"
+                class="cfg-input"
+                placeholder="Octubre 2026"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Lugar del evento</label>
-              <input id="cfg-lugar_evento" class="cfg-input" placeholder="Palais Rouge · Buenos Aires">
+              <input
+                id="cfg-lugar_evento"
+                class="cfg-input"
+                placeholder="Palais Rouge · Buenos Aires"
+              />
             </div>
             <div class="mb3">
-              <label class="text-xs muted">PIN del portal /evento (Staff/Lineup/DJ/etc)</label>
-              <input id="cfg-pin_evento" class="cfg-input" placeholder="1234" maxlength="6">
+              <label class="text-xs muted"
+                >PIN del portal /evento (Staff/Lineup/DJ/etc)</label
+              >
+              <input
+                id="cfg-pin_evento"
+                class="cfg-input"
+                placeholder="1234"
+                maxlength="6"
+              />
             </div>
-            <button class="btn bgn bfull" onclick="cfgGuardarEvento()">💾 Guardar info del evento</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarEvento()">
+              💾 Guardar info del evento
+            </button>
           </div>
 
           <!-- DATOS BANCARIOS -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">🏦 Datos Bancarios / MercadoPago</div>
+            <div class="fw6 mb3" style="color: #c9a84c">
+              🏦 Datos Bancarios / MercadoPago
+            </div>
             <div class="mb3">
               <label class="text-xs muted">Alias bancario</label>
-              <input id="cfg-bank-alias" class="cfg-input" placeholder="JAM.PRODUCCIONES">
+              <input
+                id="cfg-bank-alias"
+                class="cfg-input"
+                placeholder="JAM.PRODUCCIONES"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">CBU</label>
-              <input id="cfg-bank-cbu" class="cfg-input" placeholder="0000000000000000000000">
+              <input
+                id="cfg-bank-cbu"
+                class="cfg-input"
+                placeholder="0000000000000000000000"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Banco</label>
-              <input id="cfg-bank-banco" class="cfg-input" placeholder="Banco Galicia">
+              <input
+                id="cfg-bank-banco"
+                class="cfg-input"
+                placeholder="Banco Galicia"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Titular</label>
-              <input id="cfg-bank-titular" class="cfg-input" placeholder="JAM Producciones SRL">
+              <input
+                id="cfg-bank-titular"
+                class="cfg-input"
+                placeholder="JAM Producciones SRL"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Link MercadoPago</label>
-              <input id="cfg-bank-mp_link" class="cfg-input" placeholder="https://mpago.la/...">
+              <input
+                id="cfg-bank-mp_link"
+                class="cfg-input"
+                placeholder="https://mpago.la/..."
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Alias MercadoPago</label>
-              <input id="cfg-bank-mp_alias" class="cfg-input" placeholder="jam.mp">
+              <input
+                id="cfg-bank-mp_alias"
+                class="cfg-input"
+                placeholder="jam.mp"
+              />
             </div>
-            <button class="btn bgn bfull" onclick="cfgGuardarBancarios()">💾 Guardar datos bancarios</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarBancarios()">
+              💾 Guardar datos bancarios
+            </button>
           </div>
 
           <!-- EMAILS -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">📧 Templates de Email</div>
-            <div class="muted text-xs mb3">Estos textos aparecen en los emails que envía el sistema automáticamente.</div>
-            <div class="mb2"><strong style="font-size:11px;color:#C9A84C">Email de Inscripción</strong></div>
+            <div class="fw6 mb3" style="color: #c9a84c">
+              📧 Templates de Email
+            </div>
+            <div class="muted text-xs mb3">
+              Estos textos aparecen en los emails que envía el sistema
+              automáticamente.
+            </div>
+            <div class="mb2">
+              <strong style="font-size: 11px; color: #c9a84c"
+                >Email de Inscripción</strong
+              >
+            </div>
             <div class="mb3">
               <label class="text-xs muted">Asunto</label>
-              <input id="cfg-mail-asunto_inscripcion" class="cfg-input">
+              <input id="cfg-mail-asunto_inscripcion" class="cfg-input" />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Saludo inicial</label>
-              <input id="cfg-mail-saludo_inscripcion" class="cfg-input">
+              <input id="cfg-mail-saludo_inscripcion" class="cfg-input" />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Cierre / despedida</label>
-              <input id="cfg-mail-cierre_inscripcion" class="cfg-input">
+              <input id="cfg-mail-cierre_inscripcion" class="cfg-input" />
             </div>
-            <div class="mb2 mt3"><strong style="font-size:11px;color:#C9A84C">Email de Devolución (puntaje)</strong></div>
+            <div class="mb2 mt3">
+              <strong style="font-size: 11px; color: #c9a84c"
+                >Email de Devolución (puntaje)</strong
+              >
+            </div>
             <div class="mb3">
               <label class="text-xs muted">Asunto</label>
-              <input id="cfg-mail-asunto_devolucion" class="cfg-input">
+              <input id="cfg-mail-asunto_devolucion" class="cfg-input" />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Saludo</label>
-              <input id="cfg-mail-saludo_devolucion" class="cfg-input">
+              <input id="cfg-mail-saludo_devolucion" class="cfg-input" />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Cierre</label>
-              <input id="cfg-mail-cierre_devolucion" class="cfg-input">
+              <input id="cfg-mail-cierre_devolucion" class="cfg-input" />
             </div>
-            <button class="btn bgn bfull" onclick="cfgGuardarEmails()">💾 Guardar templates email</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarEmails()">
+              💾 Guardar templates email
+            </button>
           </div>
 
           <!-- PROYECCIÓN -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">📺 Pantalla de Proyección</div>
+            <div class="fw6 mb3" style="color: #c9a84c">
+              📺 Pantalla de Proyección
+            </div>
             <div class="mb3">
               <label class="text-xs muted">Título principal</label>
-              <input id="cfg-proy-titulo_principal" class="cfg-input" placeholder="JAM 2026">
+              <input
+                id="cfg-proy-titulo_principal"
+                class="cfg-input"
+                placeholder="JAM 2026"
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Subtítulo</label>
-              <input id="cfg-proy-subtitulo" class="cfg-input" placeholder="DANCE COMPETITION">
+              <input
+                id="cfg-proy-subtitulo"
+                class="cfg-input"
+                placeholder="DANCE COMPETITION"
+              />
             </div>
             <div class="mb3">
-              <label class="text-xs muted">Mensaje cuando no hay sesión activa</label>
-              <input id="cfg-proy-mensaje_esperando" class="cfg-input" placeholder="Esperando próximo participante...">
+              <label class="text-xs muted"
+                >Mensaje cuando no hay sesión activa</label
+              >
+              <input
+                id="cfg-proy-mensaje_esperando"
+                class="cfg-input"
+                placeholder="Esperando próximo participante..."
+              />
             </div>
             <div class="mb3">
               <label class="text-xs muted">Color de marca (hex)</label>
-              <input id="cfg-proy-branding_color" class="cfg-input" placeholder="#C9A84C" style="font-family:monospace">
+              <input
+                id="cfg-proy-branding_color"
+                class="cfg-input"
+                placeholder="#C9A84C"
+                style="font-family: monospace"
+              />
             </div>
-            <button class="btn bgn bfull" onclick="cfgGuardarProyeccion()">💾 Guardar proyección</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarProyeccion()">
+              💾 Guardar proyección
+            </button>
           </div>
 
           <!-- MODO COMPETENCIA -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">🏆 Modo Competencia</div>
-            <div class="mb3">
-              <label class="text-xs muted">Ítems disponibles para los jurados (uno por línea)</label>
-              <textarea id="cfg-comp-items" class="cfg-input" rows="10" style="font-family:monospace;font-size:12px;resize:vertical" placeholder="Técnica&#10;Proyección&#10;Coreografía"></textarea>
+            <div class="fw6 mb3" style="color: #c9a84c">
+              🏆 Modo Competencia
             </div>
             <div class="mb3">
-              <label class="text-xs muted">Cantidad de jurados por instancia</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <label class="text-xs muted"
+                >Ítems disponibles para los jurados (uno por línea)</label
+              >
+              <textarea
+                id="cfg-comp-items"
+                class="cfg-input"
+                rows="10"
+                style="
+                  font-family: monospace;
+                  font-size: 12px;
+                  resize: vertical;
+                "
+                placeholder="Técnica&#10;Proyección&#10;Coreografía"
+              ></textarea>
+            </div>
+            <div class="mb3">
+              <label class="text-xs muted"
+                >Cantidad de jurados por instancia</label
+              >
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
+              >
                 <div>
-                  <label class="text-xs muted" style="font-size:10px">Final Nacional</label>
-                  <input id="cfg-comp-jur-nac" class="cfg-input" type="number" min="1" max="10">
+                  <label class="text-xs muted" style="font-size: 10px"
+                    >Final Nacional</label
+                  >
+                  <input
+                    id="cfg-comp-jur-nac"
+                    class="cfg-input"
+                    type="number"
+                    min="1"
+                    max="10"
+                  />
                 </div>
                 <div>
-                  <label class="text-xs muted" style="font-size:10px">Final Internacional</label>
-                  <input id="cfg-comp-jur-int" class="cfg-input" type="number" min="1" max="10">
+                  <label class="text-xs muted" style="font-size: 10px"
+                    >Final Internacional</label
+                  >
+                  <input
+                    id="cfg-comp-jur-int"
+                    class="cfg-input"
+                    type="number"
+                    min="1"
+                    max="10"
+                  />
                 </div>
                 <div>
-                  <label class="text-xs muted" style="font-size:10px">Sedes / Regional</label>
-                  <input id="cfg-comp-jur-reg" class="cfg-input" type="number" min="1" max="10">
+                  <label class="text-xs muted" style="font-size: 10px"
+                    >Sedes / Regional</label
+                  >
+                  <input
+                    id="cfg-comp-jur-reg"
+                    class="cfg-input"
+                    type="number"
+                    min="1"
+                    max="10"
+                  />
                 </div>
                 <div>
-                  <label class="text-xs muted" style="font-size:10px">Repesca</label>
-                  <input id="cfg-comp-jur-rep" class="cfg-input" type="number" min="1" max="10">
+                  <label class="text-xs muted" style="font-size: 10px"
+                    >Repesca</label
+                  >
+                  <input
+                    id="cfg-comp-jur-rep"
+                    class="cfg-input"
+                    type="number"
+                    min="1"
+                    max="10"
+                  />
                 </div>
               </div>
             </div>
-            <button class="btn bgn bfull" onclick="cfgGuardarCompetencia()">💾 Guardar modo competencia</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarCompetencia()">
+              💾 Guardar modo competencia
+            </button>
           </div>
 
           <!-- RANKING -->
           <div class="card mb3">
-            <div class="fw6 mb3" style="color:#C9A84C">🏅 Ranking / Filtros</div>
-            <div class="muted text-xs mb3">Configurá los filtros que aparecen en el ranking. Los cambios se aplican al guardar.</div>
-
-            <div class="mb3">
-              <div class="fw6 text-xs mb1" style="color:rgba(201,168,76,.8)">Instancias disponibles</div>
-              <div class="muted text-xs mb2">Cada instancia es un botón de filtro en el ranking (ej: Final Nacional, Repechaje, Inter). La clave (key) debe coincidir con el valor del campo <span style="font-family:monospace">instancia</span> en la base de datos.</div>
-              <div id="cfg-rank-inst-list" style="display:flex;flex-direction:column;gap:6px"></div>
-              <button class="btn bo bsm mt2" style="width:100%;margin-top:8px" onclick="cfgRankAgregarInstancia()">+ Agregar instancia</button>
+            <div class="fw6 mb3" style="color: #c9a84c">
+              🏅 Ranking / Filtros
+            </div>
+            <div class="muted text-xs mb3">
+              Configurá los filtros que aparecen en el ranking. Los cambios se
+              aplican al guardar.
             </div>
 
             <div class="mb3">
-              <div class="fw6 text-xs mb2" style="color:rgba(201,168,76,.8)">Filtros activos</div>
-              <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer">
-                <input type="checkbox" id="cfg-rank-mostrar_niv">
-                <span class="text-xs">Mostrar filtro por nivel (Semipro, Amateur, etc.)</span>
+              <div
+                class="fw6 text-xs mb1"
+                style="color: rgba(201, 168, 76, 0.8)"
+              >
+                Instancias disponibles
+              </div>
+              <div class="muted text-xs mb2">
+                Cada instancia es un botón de filtro en el ranking (ej: Final
+                Nacional, Repechaje, Inter). La clave (key) debe coincidir con
+                el valor del campo
+                <span style="font-family: monospace">instancia</span> en la base
+                de datos.
+              </div>
+              <div
+                id="cfg-rank-inst-list"
+                style="display: flex; flex-direction: column; gap: 6px"
+              ></div>
+              <button
+                class="btn bo bsm mt2"
+                style="width: 100%; margin-top: 8px"
+                onclick="cfgRankAgregarInstancia()"
+              >
+                + Agregar instancia
+              </button>
+            </div>
+
+            <div class="mb3">
+              <div
+                class="fw6 text-xs mb2"
+                style="color: rgba(201, 168, 76, 0.8)"
+              >
+                Filtros activos
+              </div>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  margin-bottom: 8px;
+                  cursor: pointer;
+                "
+              >
+                <input type="checkbox" id="cfg-rank-mostrar_niv" />
+                <span class="text-xs"
+                  >Mostrar filtro por nivel (Semipro, Amateur, etc.)</span
+                >
               </label>
-              <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer">
-                <input type="checkbox" id="cfg-rank-mostrar_categoria">
-                <span class="text-xs">Mostrar filtro por categoría específica</span>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  margin-bottom: 8px;
+                  cursor: pointer;
+                "
+              >
+                <input type="checkbox" id="cfg-rank-mostrar_categoria" />
+                <span class="text-xs"
+                  >Mostrar filtro por categoría específica</span
+                >
               </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                <input type="checkbox" id="cfg-rank-mostrar_puntaje">
-                <span class="text-xs">Mostrar el puntaje numérico en el ranking</span>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  cursor: pointer;
+                "
+              >
+                <input type="checkbox" id="cfg-rank-mostrar_puntaje" />
+                <span class="text-xs"
+                  >Mostrar el puntaje numérico en el ranking</span
+                >
               </label>
             </div>
 
             <div class="mb3">
-              <div class="fw6 text-xs mb1" style="color:rgba(201,168,76,.8)">Labels para niveles (niv)</div>
-              <div class="muted text-xs mb2">Personalizá cómo se llama cada nivel en la interfaz.</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="cfg-rank-niv-labels"></div>
+              <div
+                class="fw6 text-xs mb1"
+                style="color: rgba(201, 168, 76, 0.8)"
+              >
+                Labels para niveles (niv)
+              </div>
+              <div class="muted text-xs mb2">
+                Personalizá cómo se llama cada nivel en la interfaz.
+              </div>
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
+                id="cfg-rank-niv-labels"
+              ></div>
             </div>
 
-            <button class="btn bgn bfull" onclick="cfgGuardarRanking()">💾 Guardar config de ranking</button>
+            <button class="btn bgn bfull" onclick="cfgGuardarRanking()">
+              💾 Guardar config de ranking
+            </button>
           </div>
 
-          <div class="card" style="background:#0a1e0a;border-color:rgba(76,175,125,.3)">
-            <div class="text-xs" style="color:#7DD09B">
-              ✓ Los cambios se aplican automáticamente a todo el sistema al guardar. No hace falta refrescar.
+          <div
+            class="card"
+            style="background: #0a1e0a; border-color: rgba(76, 175, 125, 0.3)"
+          >
+            <div class="text-xs" style="color: #7dd09b">
+              ✓ Los cambios se aplican automáticamente a todo el sistema al
+              guardar. No hace falta refrescar.
             </div>
           </div>
         </div>
@@ -2033,7 +2619,11 @@
               const ch = target.channel(name);
               const origOn = ch.on.bind(ch);
               ch.on = (event, opts, cb) => {
-                if (window.SIM_MODE && opts?.schema && SIM_REDIRECT[opts.schema]) {
+                if (
+                  window.SIM_MODE &&
+                  opts?.schema &&
+                  SIM_REDIRECT[opts.schema]
+                ) {
                   opts = { ...opts, schema: SIM_REDIRECT[opts.schema] };
                 }
                 return origOn(event, opts, cb);
@@ -2042,7 +2632,7 @@
             };
           }
           return target[prop];
-        }
+        },
       });
 
       // ═══════════════════════════════════════════════════════════
@@ -2102,30 +2692,43 @@
         try {
           const { data } = await db.rpc("obtener_config");
           if (Array.isArray(data)) {
-            data.forEach(c => {
+            data.forEach((c) => {
               if (c.valor_json) window._CFG[c.clave] = c.valor_json;
               else if (c.valor != null) window._CFG[c.clave] = c.valor;
             });
             // Aplicar todas las configs al UI
             aplicarConfigUI();
           }
-        } catch(e) { console.warn("config:", e); }
+        } catch (e) {
+          console.warn("config:", e);
+        }
       }
-      
+
       function aplicarConfigUI() {
         const nombre = window._CFG.nombre_evento;
         if (nombre) {
           document.title = "Competencia — " + nombre;
-          document.querySelectorAll("[data-cfg='nombre_evento']").forEach(el => el.textContent = nombre);
+          document
+            .querySelectorAll("[data-cfg='nombre_evento']")
+            .forEach((el) => (el.textContent = nombre));
         }
         const fecha = window._CFG.fecha_evento;
-        if (fecha) document.querySelectorAll("[data-cfg='fecha_evento']").forEach(el => el.textContent = fecha);
+        if (fecha)
+          document
+            .querySelectorAll("[data-cfg='fecha_evento']")
+            .forEach((el) => (el.textContent = fecha));
         const lugar = window._CFG.lugar_evento;
-        if (lugar) document.querySelectorAll("[data-cfg='lugar_evento']").forEach(el => el.textContent = lugar);
+        if (lugar)
+          document
+            .querySelectorAll("[data-cfg='lugar_evento']")
+            .forEach((el) => (el.textContent = lugar));
         // Color marca
         const proy = window._CFG.proyeccion || {};
         if (proy.branding_color) {
-          document.documentElement.style.setProperty("--brand-gold", proy.branding_color);
+          document.documentElement.style.setProperty(
+            "--brand-gold",
+            proy.branding_color,
+          );
         }
       }
 
@@ -2459,7 +3062,9 @@
 
       function subscribeRealtimeJurado() {
         if (realtimeSub) {
-          try { db.removeChannel(realtimeSub); } catch(e){}
+          try {
+            db.removeChannel(realtimeSub);
+          } catch (e) {}
         }
         realtimeSub = db
           .channel("sesiones-jurado")
@@ -2524,13 +3129,16 @@
             // Banner global persistente
             const banner = document.createElement("div");
             banner.id = "sim-banner-global";
-            banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
+            banner.style.cssText =
+              "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
             banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
             document.body.insertBefore(banner, document.body.firstChild);
             document.body.style.paddingTop = "32px";
           }
-        } catch(e) { /* sim no instalada */ }
-        
+        } catch (e) {
+          /* sim no instalada */
+        }
+
         await dCargarJurados();
         await loadSesionDirector();
         await buildLineup();
@@ -2898,10 +3506,21 @@
       }
 
       function extractRankNivs(rows) {
-        const ORDER = ["profesional","semipro","proam","open","amateur","master","junior","kids"];
+        const ORDER = [
+          "profesional",
+          "semipro",
+          "proam",
+          "open",
+          "amateur",
+          "master",
+          "junior",
+          "kids",
+        ];
         const found = new Set();
-        (rows || []).forEach(r => { if (r._activeCat?.niv) found.add(r._activeCat.niv); });
-        return ORDER.filter(n => found.has(n));
+        (rows || []).forEach((r) => {
+          if (r._activeCat?.niv) found.add(r._activeCat.niv);
+        });
+        return ORDER.filter((n) => found.has(n));
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -2909,29 +3528,47 @@
       // ═══════════════════════════════════════════════════════════
       const DEFAULT_RANKING_CFG = {
         instancias: [
-          { key: "nac",   label: "NAC",   icono: '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>', enabled: true },
-          { key: "rep",   label: "REP",   icono: "🔄", enabled: true },
-          { key: "inter", label: "INTER", icono: "🌎", enabled: true }
+          {
+            key: "nac",
+            label: "NAC",
+            icono:
+              '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>',
+            enabled: true,
+          },
+          { key: "rep", label: "REP", icono: "🔄", enabled: true },
+          { key: "inter", label: "INTER", icono: "🌎", enabled: true },
         ],
         mostrar_niv: true,
         niv_labels: {
-          profesional: "Profesional", semipro: "Semipro", proam: "Pro-Am",
-          open: "Open", amateur: "Amateur", master: "Master",
-          junior: "Junior", kids: "Kids", especial: "Especial"
+          profesional: "Profesional",
+          semipro: "Semipro",
+          proam: "Pro-Am",
+          open: "Open",
+          amateur: "Amateur",
+          master: "Master",
+          junior: "Junior",
+          kids: "Kids",
+          especial: "Especial",
         },
         mostrar_categoria: true,
-        mostrar_puntaje: true
+        mostrar_puntaje: true,
       };
 
       function getRankingCfg() {
         const saved = window._CFG?.ranking_config || {};
         return {
-          instancias: (saved.instancias || DEFAULT_RANKING_CFG.instancias).filter(x => x.enabled !== false),
+          instancias: (
+            saved.instancias || DEFAULT_RANKING_CFG.instancias
+          ).filter((x) => x.enabled !== false),
           allInstancias: saved.instancias || DEFAULT_RANKING_CFG.instancias,
           mostrar_niv: saved.mostrar_niv !== false,
-          niv_labels: Object.assign({}, DEFAULT_RANKING_CFG.niv_labels, saved.niv_labels || {}),
+          niv_labels: Object.assign(
+            {},
+            DEFAULT_RANKING_CFG.niv_labels,
+            saved.niv_labels || {},
+          ),
           mostrar_categoria: saved.mostrar_categoria !== false,
-          mostrar_puntaje: saved.mostrar_puntaje !== false
+          mostrar_puntaje: saved.mostrar_puntaje !== false,
         };
       }
 
@@ -2945,36 +3582,49 @@
         cont.innerHTML = "";
         list.forEach((inst, i) => {
           const row = document.createElement("div");
-          row.style.cssText = "display:grid;grid-template-columns:44px 90px 1fr auto auto;gap:6px;align-items:center";
+          row.style.cssText =
+            "display:grid;grid-template-columns:44px 90px 1fr auto auto;gap:6px;align-items:center";
           row.innerHTML = `
             <input id="cri-ico-${i}" class="cfg-input" placeholder="emoji / SVG" style="text-align:center;font-size:16px;padding:6px 4px">
-            <input id="cri-key-${i}" class="cfg-input" value="${(inst.key||'').replace(/"/g,'&quot;')}" placeholder="nac" style="font-family:monospace;font-size:11px">
-            <input id="cri-lbl-${i}" class="cfg-input" value="${(inst.label||'').replace(/"/g,'&quot;')}" placeholder="Nacional">
+            <input id="cri-key-${i}" class="cfg-input" value="${(inst.key || "").replace(/"/g, "&quot;")}" placeholder="nac" style="font-family:monospace;font-size:11px">
+            <input id="cri-lbl-${i}" class="cfg-input" value="${(inst.label || "").replace(/"/g, "&quot;")}" placeholder="Nacional">
             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;white-space:nowrap">
-              <input type="checkbox" id="cri-on-${i}" ${inst.enabled!==false?'checked':''}> Activo
+              <input type="checkbox" id="cri-on-${i}" ${inst.enabled !== false ? "checked" : ""}> Activo
             </label>
             <button class="btn bo bsm" style="color:#E05252;padding:5px 9px" onclick="cfgRankQuitarInstancia(${i})">✕</button>`;
           cont.appendChild(row);
           // Set icono value after DOM insertion — SVG strings contain " < > that break HTML attribute parsing
-          const icoEl = document.getElementById("cri-ico-"+i);
+          const icoEl = document.getElementById("cri-ico-" + i);
           if (icoEl) icoEl.value = inst.icono || "";
         });
       }
 
       function cfgRankReadInstancias() {
         const list = window._cfgRankInstancias || [];
-        return list.map((_, i) => ({
-          key:     (document.getElementById("cri-key-"+i)?.value||"").trim(),
-          label:   (document.getElementById("cri-lbl-"+i)?.value||"").trim(),
-          icono:   (document.getElementById("cri-ico-"+i)?.value||"").trim(),
-          enabled: document.getElementById("cri-on-"+i)?.checked !== false
-        })).filter(x => x.key);
+        return list
+          .map((_, i) => ({
+            key: (document.getElementById("cri-key-" + i)?.value || "").trim(),
+            label: (
+              document.getElementById("cri-lbl-" + i)?.value || ""
+            ).trim(),
+            icono: (
+              document.getElementById("cri-ico-" + i)?.value || ""
+            ).trim(),
+            enabled: document.getElementById("cri-on-" + i)?.checked !== false,
+          }))
+          .filter((x) => x.key);
       }
 
       function cfgRankAgregarInstancia() {
-        if (!window._cfgRankInstancias) window._cfgRankInstancias = [...DEFAULT_RANKING_CFG.instancias];
+        if (!window._cfgRankInstancias)
+          window._cfgRankInstancias = [...DEFAULT_RANKING_CFG.instancias];
         window._cfgRankInstancias = cfgRankReadInstancias();
-        window._cfgRankInstancias.push({ key: "", label: "", icono: "", enabled: true });
+        window._cfgRankInstancias.push({
+          key: "",
+          label: "",
+          icono: "",
+          enabled: true,
+        });
         cfgRankRenderInstancias();
       }
 
@@ -2988,29 +3638,41 @@
         const cont = document.getElementById("cfg-rank-niv-labels");
         if (!cont) return;
         const saved = window._CFG?.ranking_config?.niv_labels || {};
-        cont.innerHTML = Object.keys(DEFAULT_RANKING_CFG.niv_labels).map(k =>
-          `<div>
+        cont.innerHTML = Object.keys(DEFAULT_RANKING_CFG.niv_labels)
+          .map(
+            (k) =>
+              `<div>
             <label class="text-xs muted" style="display:block;margin-bottom:3px">${k}</label>
-            <input id="cfg-rank-niv-${k}" class="cfg-input" value="${saved[k]||DEFAULT_RANKING_CFG.niv_labels[k]}">
-          </div>`
-        ).join("");
+            <input id="cfg-rank-niv-${k}" class="cfg-input" value="${saved[k] || DEFAULT_RANKING_CFG.niv_labels[k]}">
+          </div>`,
+          )
+          .join("");
       }
 
       async function cfgGuardarRanking() {
         const instancias = cfgRankReadInstancias();
         const nivLabels = {};
-        Object.keys(DEFAULT_RANKING_CFG.niv_labels).forEach(k => {
+        Object.keys(DEFAULT_RANKING_CFG.niv_labels).forEach((k) => {
           const el = document.getElementById("cfg-rank-niv-" + k);
-          if (el) nivLabels[k] = el.value.trim() || DEFAULT_RANKING_CFG.niv_labels[k];
+          if (el)
+            nivLabels[k] = el.value.trim() || DEFAULT_RANKING_CFG.niv_labels[k];
         });
         const payload = {
           instancias,
-          mostrar_niv: document.getElementById("cfg-rank-mostrar_niv")?.checked !== false,
+          mostrar_niv:
+            document.getElementById("cfg-rank-mostrar_niv")?.checked !== false,
           niv_labels: nivLabels,
-          mostrar_categoria: document.getElementById("cfg-rank-mostrar_categoria")?.checked !== false,
-          mostrar_puntaje: document.getElementById("cfg-rank-mostrar_puntaje")?.checked !== false
+          mostrar_categoria:
+            document.getElementById("cfg-rank-mostrar_categoria")?.checked !==
+            false,
+          mostrar_puntaje:
+            document.getElementById("cfg-rank-mostrar_puntaje")?.checked !==
+            false,
         };
-        const ok = await cfgGuardar("Ranking", { p_clave: "ranking_config", p_valor_json: payload });
+        const ok = await cfgGuardar("Ranking", {
+          p_clave: "ranking_config",
+          p_valor_json: payload,
+        });
         if (ok) {
           window._CFG.ranking_config = payload;
           buildRankings();
@@ -3041,7 +3703,11 @@
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(rankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"));
+        const inst = normInst(
+          rankFilter ??
+            sesionActiva?.instancia ??
+            (cfg.instancias[0]?.key || "nac"),
+        );
 
         // Render instancia buttons from config
         const instCont = document.getElementById("d-rank-inst-filters");
@@ -3050,7 +3716,11 @@
           cfg.instancias.forEach(({ key, label, icono }) => {
             const btn = document.createElement("button");
             btn.className = "btn bo bsm";
-            const escTxt = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const escTxt = (s) =>
+              s
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
             btn.innerHTML = (icono || "") + escTxt(label);
             const active = normInst(key) === inst;
             btn.style.background = active ? "#C9A84C" : "";
@@ -3074,7 +3744,13 @@
           if (cfg.mostrar_niv) {
             const allNivs = extractRankNivs(allExpanded);
             if (allNivs.length > 0) {
-              [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: cfg.niv_labels[n] || n, val: n }))].forEach(({ label, val }) => {
+              [
+                { label: "Todos", val: null },
+                ...allNivs.map((n) => ({
+                  label: cfg.niv_labels[n] || n,
+                  val: n,
+                })),
+              ].forEach(({ label, val }) => {
                 const btn = document.createElement("button");
                 btn.className = "btn bsm";
                 btn.textContent = label;
@@ -3089,14 +3765,16 @@
           }
         }
 
-        const nivFiltered = (cfg.mostrar_niv && rankNivFilter)
-          ? allExpanded.filter(r => r._activeCat?.niv === rankNivFilter)
-          : allExpanded;
+        const nivFiltered =
+          cfg.mostrar_niv && rankNivFilter
+            ? allExpanded.filter((r) => r._activeCat?.niv === rankNivFilter)
+            : allExpanded;
         const cats = extractRankCats(nivFiltered);
         const catCont = document.getElementById("d-rank-cat-filters");
         if (catCont) {
           catCont.innerHTML = "";
-          const showCatRow = cfg.mostrar_categoria && cfg.mostrar_niv && rankNivFilter;
+          const showCatRow =
+            cfg.mostrar_categoria && cfg.mostrar_niv && rankNivFilter;
           catCont.style.display = showCatRow ? "flex" : "none";
           if (showCatRow && cats.length > 0) {
             [
@@ -3118,7 +3796,7 @@
 
         const toRender = rankCatFilter
           ? nivFiltered.filter((r) => catKey(r._activeCat) === rankCatFilter)
-          : (cfg.mostrar_niv && rankNivFilter)
+          : cfg.mostrar_niv && rankNivFilter
             ? nivFiltered
             : deduped;
 
@@ -3193,9 +3871,12 @@
 
       function subscribeRealtimeDirector() {
         if (window._dirChannel) {
-          try { db.removeChannel(window._dirChannel); } catch(e){}
+          try {
+            db.removeChannel(window._dirChannel);
+          } catch (e) {}
         }
-        window._dirChannel = db.channel("director-realtime")
+        window._dirChannel = db
+          .channel("director-realtime")
           .on(
             "postgres_changes",
             { event: "*", schema: "scoring", table: "puntajes" },
@@ -3208,21 +3889,35 @@
             { event: "*", schema: "scoring", table: "sesiones" },
             async (payload) => {
               // Si se activó una sesión desde otro lado (lineup pone en pista)
-              if (payload.new && payload.new.activa && (!sesionActiva || sesionActiva.id !== payload.new.id)) {
+              if (
+                payload.new &&
+                payload.new.activa &&
+                (!sesionActiva || sesionActiva.id !== payload.new.id)
+              ) {
                 sesionActiva = payload.new;
-                if (typeof renderSesionDirector === "function") renderSesionDirector(sesionActiva);
+                if (typeof renderSesionDirector === "function")
+                  renderSesionDirector(sesionActiva);
                 if (typeof buildJuecesGrid === "function") buildJuecesGrid([]);
-                if (typeof toast === "function") toast("Sesión activa: " + payload.new.nombre_grupo, "ok");
+                if (typeof toast === "function")
+                  toast("Sesión activa: " + payload.new.nombre_grupo, "ok");
               }
               // Si se cerró la sesión activa desde otro lado
-              if (payload.new && !payload.new.activa && sesionActiva && sesionActiva.id === payload.new.id) {
+              if (
+                payload.new &&
+                !payload.new.activa &&
+                sesionActiva &&
+                sesionActiva.id === payload.new.id
+              ) {
                 sesionActiva = null;
                 const nb = document.getElementById("d-nombre");
                 const cb = document.getElementById("d-codigo");
                 const eb = document.getElementById("d-estado");
                 if (nb) nb.textContent = "Listo para siguiente";
                 if (cb) cb.textContent = "—";
-                if (eb) { eb.textContent = "✓ Completado"; eb.className = "bdg bdg-green"; }
+                if (eb) {
+                  eb.textContent = "✓ Completado";
+                  eb.className = "bdg bdg-green";
+                }
                 if (typeof buildJuecesGrid === "function") buildJuecesGrid([]);
               }
             },
@@ -3256,8 +3951,17 @@
         btn.classList.add("on");
         if (id === "rankings") buildRankings();
         if (id === "lineup") buildLineup();
-        if (id === "admin") { saRefreshStats(); saCheckHealth(); saLoadUsuarios(); cronCargar(); simRefreshUI(); auditCargar(); }
-        if (id === "config") { cfgCargar(); }
+        if (id === "admin") {
+          saRefreshStats();
+          saCheckHealth();
+          saLoadUsuarios();
+          cronCargar();
+          simRefreshUI();
+          auditCargar();
+        }
+        if (id === "config") {
+          cfgCargar();
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -3266,17 +3970,33 @@
       async function saRefreshStats() {
         try {
           const [ins, lu, ses, pts] = await Promise.all([
-            db.from("inscripciones").select("id", { count: "exact", head: true }),
-            db.schema("evento").from("lineup").select("id", { count: "exact", head: true }),
-            db.schema("scoring").from("sesiones").select("id", { count: "exact", head: true }),
-            db.schema("scoring").from("puntajes").select("id", { count: "exact", head: true }),
+            db
+              .from("inscripciones")
+              .select("id", { count: "exact", head: true }),
+            db
+              .schema("evento")
+              .from("lineup")
+              .select("id", { count: "exact", head: true }),
+            db
+              .schema("scoring")
+              .from("sesiones")
+              .select("id", { count: "exact", head: true }),
+            db
+              .schema("scoring")
+              .from("puntajes")
+              .select("id", { count: "exact", head: true }),
           ]);
-          const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? "—"; };
+          const set = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = v ?? "—";
+          };
           set("sa-stat-ins", ins.count);
           set("sa-stat-lineup", lu.count);
           set("sa-stat-ses", ses.count);
           set("sa-stat-pts", pts.count);
-        } catch (e) { toast("Error stats: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error stats: " + e.message, "err");
+        }
       }
 
       async function saCheckHealth() {
@@ -3286,113 +4006,227 @@
         try {
           const r = await fetch("/api/health", { cache: "no-cache" });
           const data = await r.json();
-          const statusColor = data.status === "HEALTHY" ? "#4CAF7D" : data.status === "WARNING" ? "#E8A838" : "#E0524C";
+          const statusColor =
+            data.status === "HEALTHY"
+              ? "#4CAF7D"
+              : data.status === "WARNING"
+                ? "#E8A838"
+                : "#E0524C";
           const checks = data.checks || {};
           let rows = "";
           for (const [k, v] of Object.entries(checks)) {
             const ok = v && v.ok;
-            rows += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
-              '<span style="color:' + (ok ? "#4CAF7D" : "#E0524C") + '">' + (ok ? "✓" : "✗") + " " + k + '</span>' +
-              '<span class="muted" style="font-size:11px">' + (v && v.total != null ? v.total : (v && v.msg ? v.msg.substring(0,30) : (ok ? "OK" : (v && v.error ? v.error.substring(0,30) : "—")))) + '</span></div>';
+            rows +=
+              '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+              '<span style="color:' +
+              (ok ? "#4CAF7D" : "#E0524C") +
+              '">' +
+              (ok ? "✓" : "✗") +
+              " " +
+              k +
+              "</span>" +
+              '<span class="muted" style="font-size:11px">' +
+              (v && v.total != null
+                ? v.total
+                : v && v.msg
+                  ? v.msg.substring(0, 30)
+                  : ok
+                    ? "OK"
+                    : v && v.error
+                      ? v.error.substring(0, 30)
+                      : "—") +
+              "</span></div>";
           }
-          el.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700;color:' + statusColor + '">' + data.status + '</span><span class="muted">' + data.elapsed_ms + 'ms</span></div>' + rows;
+          el.innerHTML =
+            '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700;color:' +
+            statusColor +
+            '">' +
+            data.status +
+            '</span><span class="muted">' +
+            data.elapsed_ms +
+            "ms</span></div>" +
+            rows;
         } catch (e) {
-          el.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+          el.innerHTML =
+            '<span style="color:#E0524C">Error: ' + e.message + "</span>";
         }
       }
 
       async function saResetScoring() {
-        if (!confirm("⚠️ Vas a borrar TODAS las sesiones y puntajes activos. Inscripciones y lineup quedan intactos.\n\n¿Continuar?")) return;
+        if (
+          !confirm(
+            "⚠️ Vas a borrar TODAS las sesiones y puntajes activos. Inscripciones y lineup quedan intactos.\n\n¿Continuar?",
+          )
+        )
+          return;
         try {
           await db.schema("scoring").from("puntajes").delete().neq("id", 0);
           await db.schema("scoring").from("sesiones").delete().neq("id", 0);
           toast("Scoring reseteado correctamente", "ok");
           saRefreshStats();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saResetLineup() {
-        if (!confirm("Vas a poner TODOS los participantes en estado 'pendiente'. ¿Continuar?")) return;
+        if (
+          !confirm(
+            "Vas a poner TODOS los participantes en estado 'pendiente'. ¿Continuar?",
+          )
+        )
+          return;
         try {
-          const { error } = await db.schema("evento").from("lineup").update({ estado: "pendiente" }).neq("id", 0);
+          const { error } = await db
+            .schema("evento")
+            .from("lineup")
+            .update({ estado: "pendiente" })
+            .neq("id", 0);
           if (error) throw error;
           toast("Lineup reseteado a 'pendiente'", "ok");
           saRefreshStats();
           if (typeof loadLineup === "function") await loadLineup();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saResyncLineup() {
         try {
           // Obtener inscripciones que NO están en lineup
-          const { data: ins } = await db.from("inscripciones").select("id,instancia,nombre_grupo,nombre,pais,categorias,pago_estado,created_at").order("created_at");
-          const { data: lu } = await db.schema("evento").from("lineup").select("inscripcion_id");
-          const luIds = new Set((lu || []).map(l => l.inscripcion_id));
-          const faltantes = (ins || []).filter(i => !luIds.has(i.id));
+          const { data: ins } = await db
+            .from("inscripciones")
+            .select(
+              "id,instancia,nombre_grupo,nombre,pais,categorias,pago_estado,created_at",
+            )
+            .order("created_at");
+          const { data: lu } = await db
+            .schema("evento")
+            .from("lineup")
+            .select("inscripcion_id");
+          const luIds = new Set((lu || []).map((l) => l.inscripcion_id));
+          const faltantes = (ins || []).filter((i) => !luIds.has(i.id));
           if (faltantes.length === 0) {
             toast("Lineup ya está sincronizado", "ok");
             return;
           }
           // Insertar las faltantes (el trigger se encargará del código)
-          const prefMap = { nac: "JAM-NAC-", int: "JAM-INTER-", reg: "JAM-REG-", rep: "JAM-REP-" };
+          const prefMap = {
+            nac: "JAM-NAC-",
+            int: "JAM-INTER-",
+            reg: "JAM-REG-",
+            rep: "JAM-REP-",
+          };
           const offMap = { nac: 200, int: 1000, reg: 1, rep: 10 };
-          const { data: maxPos } = await db.schema("evento").from("lineup").select("posicion").order("posicion", { ascending: false }).limit(1);
+          const { data: maxPos } = await db
+            .schema("evento")
+            .from("lineup")
+            .select("posicion")
+            .order("posicion", { ascending: false })
+            .limit(1);
           let pos = (maxPos?.[0]?.posicion || 0) + 1;
           const inscByInst = {};
           for (const i of ins) {
-            inscByInst[i.instancia] = (inscByInst[i.instancia] || 0);
+            inscByInst[i.instancia] = inscByInst[i.instancia] || 0;
             inscByInst[i.instancia]++;
           }
           const counters = {};
           let inserted = 0;
           for (const i of faltantes) {
             counters[i.instancia] = (counters[i.instancia] || 0) + 1;
-            const codigo = (prefMap[i.instancia] || "JAM-") + String((offMap[i.instancia] || 1) + counters[i.instancia] - 1).padStart(4, "0");
-            const { error } = await db.schema("evento").from("lineup").insert({
-              inscripcion_id: i.id, codigo_id: codigo, nombre_grupo: i.nombre_grupo,
-              responsable: i.nombre, pais: i.pais || "Argentina", categoria: i.categorias,
-              instancia: i.instancia, estado_pago: i.pago_estado || "sin_pago", posicion: pos++
-            });
+            const codigo =
+              (prefMap[i.instancia] || "JAM-") +
+              String(
+                (offMap[i.instancia] || 1) + counters[i.instancia] - 1,
+              ).padStart(4, "0");
+            const { error } = await db
+              .schema("evento")
+              .from("lineup")
+              .insert({
+                inscripcion_id: i.id,
+                codigo_id: codigo,
+                nombre_grupo: i.nombre_grupo,
+                responsable: i.nombre,
+                pais: i.pais || "Argentina",
+                categoria: i.categorias,
+                instancia: i.instancia,
+                estado_pago: i.pago_estado || "sin_pago",
+                posicion: pos++,
+              });
             if (!error) inserted++;
           }
           toast("Resincronizadas " + inserted + " entradas", "ok");
           saRefreshStats();
           if (typeof loadLineup === "function") await loadLineup();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saDeleteInscripcion() {
         const codigo = document.getElementById("sa-del-code").value.trim();
-        if (!codigo) { toast("Ingresá un código", "err"); return; }
-        if (!confirm("Eliminar inscripción con código " + codigo + "? Esta acción borra también su entrada en lineup (CASCADE).")) return;
+        if (!codigo) {
+          toast("Ingresá un código", "err");
+          return;
+        }
+        if (
+          !confirm(
+            "Eliminar inscripción con código " +
+              codigo +
+              "? Esta acción borra también su entrada en lineup (CASCADE).",
+          )
+        )
+          return;
         try {
-          const { data: lu } = await db.schema("evento").from("lineup").select("inscripcion_id").eq("codigo_id", codigo);
-          if (!lu || lu.length === 0) { toast("Código no encontrado", "err"); return; }
+          const { data: lu } = await db
+            .schema("evento")
+            .from("lineup")
+            .select("inscripcion_id")
+            .eq("codigo_id", codigo);
+          if (!lu || lu.length === 0) {
+            toast("Código no encontrado", "err");
+            return;
+          }
           const insId = lu[0].inscripcion_id;
-          const { error } = await db.from("inscripciones").delete().eq("id", insId);
+          const { error } = await db
+            .from("inscripciones")
+            .delete()
+            .eq("id", insId);
           if (error) throw error;
           toast("Inscripción " + codigo + " eliminada", "ok");
           document.getElementById("sa-del-code").value = "";
           saRefreshStats();
           if (typeof loadLineup === "function") await loadLineup();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saResetTotal() {
         const txt = document.getElementById("sa-confirm-reset").value;
         if (txt !== "BORRAR TODO") return;
-        if (!confirm("⚠️ ÚLTIMA CONFIRMACIÓN ⚠️\n\nVas a borrar:\n- Todas las inscripciones\n- Todo el lineup\n- Todas las sesiones\n- Todos los puntajes\n\n¿Estás 100% seguro?")) return;
+        if (
+          !confirm(
+            "⚠️ ÚLTIMA CONFIRMACIÓN ⚠️\n\nVas a borrar:\n- Todas las inscripciones\n- Todo el lineup\n- Todas las sesiones\n- Todos los puntajes\n\n¿Estás 100% seguro?",
+          )
+        )
+          return;
         try {
           await db.schema("scoring").from("puntajes").delete().neq("id", 0);
           await db.schema("scoring").from("sesiones").delete().neq("id", 0);
-          await db.from("inscripciones").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await db
+            .from("inscripciones")
+            .delete()
+            .neq("id", "00000000-0000-0000-0000-000000000000");
           // El CASCADE borra el lineup
           toast("Sistema reseteado completamente", "ok");
           document.getElementById("sa-confirm-reset").value = "";
           document.getElementById("sa-reset-btn").disabled = true;
           document.getElementById("sa-reset-btn").style.opacity = ".4";
           saRefreshStats();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -3414,16 +4248,38 @@
         const info = document.getElementById("sim-info");
         if (estado.activo) {
           window.SIM_MODE = true;
-          if (badge) { badge.textContent = "ACTIVO"; badge.style.background = "#E8A838"; badge.style.color = "#000"; }
-          if (btn) { btn.innerHTML = "⏸ Desactivar simulación"; btn.style.background = "#E0524C"; btn.style.color = "#fff"; btn.style.borderColor = "#E0524C"; }
-          if (info) info.innerHTML = '<strong style="color:#E8A838">🧪 Simulación ACTIVA</strong> — Todas las acciones (lineup, scoring, rankings) trabajan con datos ficticios. Los datos reales están protegidos.';
+          if (badge) {
+            badge.textContent = "ACTIVO";
+            badge.style.background = "#E8A838";
+            badge.style.color = "#000";
+          }
+          if (btn) {
+            btn.innerHTML = "⏸ Desactivar simulación";
+            btn.style.background = "#E0524C";
+            btn.style.color = "#fff";
+            btn.style.borderColor = "#E0524C";
+          }
+          if (info)
+            info.innerHTML =
+              '<strong style="color:#E8A838">🧪 Simulación ACTIVA</strong> — Todas las acciones (lineup, scoring, rankings) trabajan con datos ficticios. Los datos reales están protegidos.';
           // Banner global persistente
           simMostrarBanner(true);
         } else {
           window.SIM_MODE = false;
-          if (badge) { badge.textContent = "DESACTIVADO"; badge.style.background = "#444"; badge.style.color = "#aaa"; }
-          if (btn) { btn.innerHTML = "▶ Activar simulación"; btn.style.background = ""; btn.style.color = "#E8A838"; btn.style.borderColor = "#E8A838"; }
-          if (info) info.innerHTML = "Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.";
+          if (badge) {
+            badge.textContent = "DESACTIVADO";
+            badge.style.background = "#444";
+            badge.style.color = "#aaa";
+          }
+          if (btn) {
+            btn.innerHTML = "▶ Activar simulación";
+            btn.style.background = "";
+            btn.style.color = "#E8A838";
+            btn.style.borderColor = "#E8A838";
+          }
+          if (info)
+            info.innerHTML =
+              "Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.";
           simMostrarBanner(false);
         }
       }
@@ -3434,7 +4290,8 @@
           if (!banner) {
             banner = document.createElement("div");
             banner.id = "sim-banner-global";
-            banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
+            banner.style.cssText =
+              "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
             banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
             document.body.insertBefore(banner, document.body.firstChild);
             document.body.style.paddingTop = "32px";
@@ -3451,31 +4308,42 @@
         try {
           const estado = await simEstadoActual();
           const nuevoEstado = !estado.activo;
-          
+
           if (nuevoEstado) {
             // Activar — preguntar si quiere seed automático
             const confirmar = confirm(
               "¿Activar Modo Simulación?\n\n" +
-              "• El sistema cambiará a 15 participantes de prueba\n" +
-              "• Los datos reales NO se tocan\n" +
-              "• Podés volver a la vista real desactivándolo en cualquier momento\n\n" +
-              "¿Continuar?"
+                "• El sistema cambiará a 15 participantes de prueba\n" +
+                "• Los datos reales NO se tocan\n" +
+                "• Podés volver a la vista real desactivándolo en cualquier momento\n\n" +
+                "¿Continuar?",
             );
             if (!confirmar) return;
           } else {
-            if (!confirm("¿Volver a vista normal? (Los datos de simulación quedan guardados por si querés reactivar)")) return;
+            if (
+              !confirm(
+                "¿Volver a vista normal? (Los datos de simulación quedan guardados por si querés reactivar)",
+              )
+            )
+              return;
           }
 
-          const { data, error } = await db.rpc("sim_toggle", { 
-            p_activo: nuevoEstado, 
-            p_user: currentUser?.username || "director" 
+          const { data, error } = await db.rpc("sim_toggle", {
+            p_activo: nuevoEstado,
+            p_user: currentUser?.username || "director",
           });
           if (error) throw error;
           if (data?.ok) {
-            toast(nuevoEstado ? "🧪 Modo simulación ACTIVADO" : "✓ Modo normal restaurado", "ok");
+            toast(
+              nuevoEstado
+                ? "🧪 Modo simulación ACTIVADO"
+                : "✓ Modo normal restaurado",
+              "ok",
+            );
             await simRefreshUI();
             // Recargar datos para que la nueva fuente (sim o real) se aplique
-            if (typeof loadPuntajesDirector === "function") await loadPuntajesDirector();
+            if (typeof loadPuntajesDirector === "function")
+              await loadPuntajesDirector();
             if (typeof buildRankings === "function") await buildRankings();
             if (typeof buildLineup === "function") await buildLineup();
             saRefreshStats();
@@ -3488,22 +4356,31 @@
       }
 
       async function simResetSeed() {
-        if (!confirm(
-          "¿Resetear datos de simulación?\n\n" +
-          "• Se borran todos los datos de simulación actuales\n" +
-          "• Se cargan 15 participantes de prueba frescos\n" +
-          "• Los datos REALES NO se tocan\n\n" +
-          "¿Continuar?"
-        )) return;
+        if (
+          !confirm(
+            "¿Resetear datos de simulación?\n\n" +
+              "• Se borran todos los datos de simulación actuales\n" +
+              "• Se cargan 15 participantes de prueba frescos\n" +
+              "• Los datos REALES NO se tocan\n\n" +
+              "¿Continuar?",
+          )
+        )
+          return;
         try {
           toast("Generando 15 participantes de prueba...", "ok");
           const { data, error } = await db.rpc("sim_reset_y_seed");
           if (error) throw error;
           if (data?.ok) {
-            toast("✓ Simulación reseteada con " + data.participantes + " participantes", "ok");
+            toast(
+              "✓ Simulación reseteada con " +
+                data.participantes +
+                " participantes",
+              "ok",
+            );
             // Si está activo el modo, recargar datos visibles
             if (window.SIM_MODE) {
-              if (typeof loadPuntajesDirector === "function") await loadPuntajesDirector();
+              if (typeof loadPuntajesDirector === "function")
+                await loadPuntajesDirector();
               if (typeof buildRankings === "function") await buildRankings();
               if (typeof buildLineup === "function") await buildLineup();
               saRefreshStats();
@@ -3528,111 +4405,248 @@
           const { data, error } = await db.rpc("cronograma_listar");
           if (error) throw error;
           window._cronCache = data || [];
-          
-          const enVivo = window._cronCache.find(c => c.estado === "en_vivo");
+
+          const enVivo = window._cronCache.find((c) => c.estado === "en_vivo");
           if (enVivo) {
-            display.innerHTML = '<span style="color:#4CAF7D;font-weight:600">🔴 EN VIVO · ' + enVivo.categoria_label + '</span>';
+            display.innerHTML =
+              '<span style="color:#4CAF7D;font-weight:600">🔴 EN VIVO · ' +
+              enVivo.categoria_label +
+              "</span>";
           } else {
-            const pendientes = window._cronCache.filter(c => c.estado === "pendiente").length;
-            display.innerHTML = '<span class="muted">Nada en vivo · ' + pendientes + ' categorías pendientes</span>';
+            const pendientes = window._cronCache.filter(
+              (c) => c.estado === "pendiente",
+            ).length;
+            display.innerHTML =
+              '<span class="muted">Nada en vivo · ' +
+              pendientes +
+              " categorías pendientes</span>";
           }
-          
+
           if (window._cronCache.length === 0) {
-            lista.innerHTML = '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
+            lista.innerHTML =
+              '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
             return;
           }
-          
-          let html = '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
+
+          let html =
+            '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
           for (let i = 0; i < window._cronCache.length; i++) {
             const c = window._cronCache[i];
             const isVivo = c.estado === "en_vivo";
             const isComp = c.estado === "completada";
-            const borderC = isVivo ? "#4CAF7D" : isComp ? "rgba(255,255,255,.05)" : "rgba(255,255,255,.1)";
-            const bgC = isVivo ? "rgba(76,175,125,.08)" : isComp ? "rgba(0,0,0,.2)" : "transparent";
+            const borderC = isVivo
+              ? "#4CAF7D"
+              : isComp
+                ? "rgba(255,255,255,.05)"
+                : "rgba(255,255,255,.1)";
+            const bgC = isVivo
+              ? "rgba(76,175,125,.08)"
+              : isComp
+                ? "rgba(0,0,0,.2)"
+                : "transparent";
             const opacity = isComp ? ".5" : "1";
             const ic = isVivo ? "🔴" : isComp ? "✓" : "⏸";
-            
-            html += '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' + borderC + ';background:' + bgC + ';border-radius:6px;opacity:' + opacity + '">' +
-              '<span style="font-weight:700;color:#C9A84C;min-width:24px">' + (i+1) + '.</span>' +
-              '<span style="min-width:18px">' + ic + '</span>' +
+
+            html +=
+              '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' +
+              borderC +
+              ";background:" +
+              bgC +
+              ";border-radius:6px;opacity:" +
+              opacity +
+              '">' +
+              '<span style="font-weight:700;color:#C9A84C;min-width:24px">' +
+              (i + 1) +
+              ".</span>" +
+              '<span style="min-width:18px">' +
+              ic +
+              "</span>" +
               '<div style="flex:1;min-width:0">' +
-                '<div style="font-size:11px;font-weight:600;color:' + (isVivo ? "#4CAF7D" : "#F8F5EE") + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c.categoria_label + '</div>' +
-                '<div class="muted" style="font-size:9px">' + (c.instancia || '').toUpperCase() + ' · ' + c.presentes + '/' + c.cantidad + ' presentes</div>' +
-              '</div>' +
+              '<div style="font-size:11px;font-weight:600;color:' +
+              (isVivo ? "#4CAF7D" : "#F8F5EE") +
+              ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+              c.categoria_label +
+              "</div>" +
+              '<div class="muted" style="font-size:9px">' +
+              (c.instancia || "").toUpperCase() +
+              " · " +
+              c.presentes +
+              "/" +
+              c.cantidad +
+              " presentes</div>" +
+              "</div>" +
               '<div style="display:flex;gap:2px;flex-shrink:0">' +
-              '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' + c.id + ',' + JSON.stringify(c.categoria_key).replace(/"/g, '&quot;') + ')">👁</button>' +
-              (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;arriba&quot;)">↑</button>' : '') +
-              (i < window._cronCache.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' + c.id + ',&quot;abajo&quot;)">↓</button>' : '') +
-              (!isVivo ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' + c.id + ')">▶</button>' : '') +
-              (isVivo ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' + c.id + ')">✓</button>' : '') +
-              (isComp ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' + c.id + ')">↺</button>' : '') +
-              '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' + c.id + ')">✕</button>' +
-              '</div>' +
-              '</div>' +
-              '<div id="cron-detalle-' + c.id + '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
+              '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' +
+              c.id +
+              "," +
+              JSON.stringify(c.categoria_key).replace(/"/g, "&quot;") +
+              ')">👁</button>' +
+              (i > 0
+                ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
+                  c.id +
+                  ',&quot;arriba&quot;)">↑</button>'
+                : "") +
+              (i < window._cronCache.length - 1
+                ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
+                  c.id +
+                  ',&quot;abajo&quot;)">↓</button>'
+                : "") +
+              (!isVivo
+                ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
+                  c.id +
+                  ')">▶</button>'
+                : "") +
+              (isVivo
+                ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' +
+                  c.id +
+                  ')">✓</button>'
+                : "") +
+              (isComp
+                ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' +
+                  c.id +
+                  ')">↺</button>'
+                : "") +
+              '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' +
+              c.id +
+              ')">✕</button>' +
+              "</div>" +
+              "</div>" +
+              '<div id="cron-detalle-' +
+              c.id +
+              '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
           }
-          html += '</div>';
+          html += "</div>";
           lista.innerHTML = html;
         } catch (e) {
-          lista.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+          lista.innerHTML =
+            '<span style="color:#E0524C">Error: ' + e.message + "</span>";
         }
       }
 
       async function cronMover(id, dir) {
         try {
-          const { data, error } = await db.rpc("cronograma_mover", { p_id: id, p_direccion: dir });
+          const { data, error } = await db.rpc("cronograma_mover", {
+            p_id: id,
+            p_direccion: dir,
+          });
           if (error) throw error;
-          if (data?.ok) { auditLog("cronograma_mover","cronograma",id,{direccion:dir}); await cronCargar(); }
-          else toast(data?.error || "No se pudo mover", "warn");
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          if (data?.ok) {
+            auditLog("cronograma_mover", "cronograma", id, { direccion: dir });
+            await cronCargar();
+          } else toast(data?.error || "No se pudo mover", "warn");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronIniciar(id) {
-        const c = window._cronCache.find(x => x.id === id);
+        const c = window._cronCache.find((x) => x.id === id);
         if (!c) return;
-        if (!confirm("Iniciar categoría: " + c.categoria_label + "?\n\nLa categoría anterior (si había) se marcará como completada.")) return;
+        if (
+          !confirm(
+            "Iniciar categoría: " +
+              c.categoria_label +
+              "?\n\nLa categoría anterior (si había) se marcará como completada.",
+          )
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("cronograma_iniciar", { p_id: id, p_user: currentUser?.username || "director" });
+          const { data, error } = await db.rpc("cronograma_iniciar", {
+            p_id: id,
+            p_user: currentUser?.username || "director",
+          });
           if (error) throw error;
-          if (data?.ok) { toast("🔴 EN VIVO: " + c.categoria_label, "ok"); auditLog("cronograma_iniciar","categoria",c.categoria_key,{label:c.categoria_label}); await cronCargar(); }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          if (data?.ok) {
+            toast("🔴 EN VIVO: " + c.categoria_label, "ok");
+            auditLog("cronograma_iniciar", "categoria", c.categoria_key, {
+              label: c.categoria_label,
+            });
+            await cronCargar();
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronCompletar(id) {
         if (!confirm("Marcar categoría como completada?")) return;
         try {
-          const { data, error } = await db.rpc("cronograma_completar", { p_id: id });
+          const { data, error } = await db.rpc("cronograma_completar", {
+            p_id: id,
+          });
           if (error) throw error;
-          if (data?.ok) { auditLog("cronograma_completar","cronograma",id); toast("✓ Completada", "ok"); await cronCargar(); }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          if (data?.ok) {
+            auditLog("cronograma_completar", "cronograma", id);
+            toast("✓ Completada", "ok");
+            await cronCargar();
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronResetEstado(id) {
         try {
-          const { data, error } = await db.rpc("cronograma_reset_estado", { p_id: id });
+          const { data, error } = await db.rpc("cronograma_reset_estado", {
+            p_id: id,
+          });
           if (error) throw error;
           if (data?.ok) await cronCargar();
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronQuitar(id) {
-        const c = window._cronCache.find(x => x.id === id);
+        const c = window._cronCache.find((x) => x.id === id);
         if (!c) return;
-        if (!confirm("Quitar '" + c.categoria_label + "' del cronograma?\n\nSe puede volver a agregar después.")) return;
+        if (
+          !confirm(
+            "Quitar '" +
+              c.categoria_label +
+              "' del cronograma?\n\nSe puede volver a agregar después.",
+          )
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("cronograma_quitar", { p_id: id });
+          const { data, error } = await db.rpc("cronograma_quitar", {
+            p_id: id,
+          });
           if (error) throw error;
-          if (data?.ok) { auditLog("cronograma_quitar","cronograma",id,{categoria:c.categoria_label}); toast("Quitada del cronograma", "ok"); await cronCargar(); }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          if (data?.ok) {
+            auditLog("cronograma_quitar", "cronograma", id, {
+              categoria: c.categoria_label,
+            });
+            toast("Quitada del cronograma", "ok");
+            await cronCargar();
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronInicializar() {
-        if (!confirm("Generar cronograma con TODAS las categorías del lineup?\n\n• No reemplaza las que ya están\n• Las nuevas se agregan al final\n• Podés reordenar después")) return;
+        if (
+          !confirm(
+            "Generar cronograma con TODAS las categorías del lineup?\n\n• No reemplaza las que ya están\n• Las nuevas se agregan al final\n• Podés reordenar después",
+          )
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("cronograma_inicializar_desde_lineup");
+          const { data, error } = await db.rpc(
+            "cronograma_inicializar_desde_lineup",
+          );
           if (error) throw error;
-          if (data?.ok) { toast("Se agregaron " + (data.agregadas || 0) + " categorías", "ok"); await cronCargar(); }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          if (data?.ok) {
+            toast(
+              "Se agregaron " + (data.agregadas || 0) + " categorías",
+              "ok",
+            );
+            await cronCargar();
+          }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronMostrarAgregar() {
@@ -3642,131 +4656,284 @@
         try {
           // Categorías del lineup que NO están en el cronograma
           const { data: cats } = await db.rpc("listar_categorias_lineup");
-          const yaEstan = new Set(window._cronCache.map(c => c.categoria_key));
-          const faltantes = (cats || []).filter(c => !yaEstan.has(c.categoria_key));
+          const yaEstan = new Set(
+            window._cronCache.map((c) => c.categoria_key),
+          );
+          const faltantes = (cats || []).filter(
+            (c) => !yaEstan.has(c.categoria_key),
+          );
           if (faltantes.length === 0) {
-            toast("Todas las categorías del lineup ya están en el cronograma", "ok");
+            toast(
+              "Todas las categorías del lineup ya están en el cronograma",
+              "ok",
+            );
             return;
           }
-          sel.innerHTML = '<option value="">— elegí —</option>' + 
-            faltantes.map(c => '<option value="' + c.categoria_key.replace(/"/g,'&quot;') + '">' + c.categoria_label + ' (' + c.cantidad + ' inscriptos)</option>').join("");
+          sel.innerHTML =
+            '<option value="">— elegí —</option>' +
+            faltantes
+              .map(
+                (c) =>
+                  '<option value="' +
+                  c.categoria_key.replace(/"/g, "&quot;") +
+                  '">' +
+                  c.categoria_label +
+                  " (" +
+                  c.cantidad +
+                  " inscriptos)</option>",
+              )
+              .join("");
           wrap.style.display = "block";
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronAgregar() {
         const sel = document.getElementById("cron-agregar-select");
         const key = sel?.value;
-        if (!key) { toast("Elegí una categoría", "warn"); return; }
+        if (!key) {
+          toast("Elegí una categoría", "warn");
+          return;
+        }
         try {
-          const { data, error } = await db.rpc("cronograma_agregar", { p_categoria_key: key });
+          const { data, error } = await db.rpc("cronograma_agregar", {
+            p_categoria_key: key,
+          });
           if (error) throw error;
           if (data?.ok) {
             toast("Agregada al final del cronograma", "ok");
             document.getElementById("cron-agregar-wrap").style.display = "none";
             await cronCargar();
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       // === Inscriptos dentro de una categoría (control total de Gastón) ===
       async function cronVerInscriptos(cronId, catKey) {
         const det = document.getElementById("cron-detalle-" + cronId);
         if (!det) return;
-        if (det.style.display !== "none") { det.style.display = "none"; det.innerHTML = ""; return; }
+        if (det.style.display !== "none") {
+          det.style.display = "none";
+          det.innerHTML = "";
+          return;
+        }
         det.style.display = "block";
         det.innerHTML = '<div class="muted text-xs">Cargando inscriptos…</div>';
         try {
-          const { data: items, error } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: catKey });
+          const { data: items, error } = await db.rpc(
+            "obtener_pasadas_categoria",
+            { p_categoria_key: catKey },
+          );
           if (error) throw error;
           const list = items || [];
-          let html = '<div class="text-xs muted mb2" style="font-weight:600;color:#C9A84C">📋 Inscriptos en esta categoría (' + list.length + ')</div>';
+          let html =
+            '<div class="text-xs muted mb2" style="font-weight:600;color:#C9A84C">📋 Inscriptos en esta categoría (' +
+            list.length +
+            ")</div>";
           if (list.length === 0) {
             html += '<div class="muted text-xs">Sin inscriptos.</div>';
           } else {
             html += '<div style="display:flex;flex-direction:column;gap:3px">';
             for (let i = 0; i < list.length; i++) {
               const p = list[i];
-              const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
-              const idEsc = JSON.stringify(p.lineup_id).replace(/"/g, '&quot;');
-              const ckEsc = JSON.stringify(catKey).replace(/"/g, '&quot;');
+              const presente =
+                p.estado === "presente" ||
+                p.estado === "en_pista" ||
+                p.estado === "completado";
+              const idEsc = JSON.stringify(p.lineup_id).replace(/"/g, "&quot;");
+              const ckEsc = JSON.stringify(catKey).replace(/"/g, "&quot;");
               const posMostrar = p.posicion === 999 ? "—" : p.posicion;
-              html += '<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px">' +
-                '<span style="font-weight:700;color:#C9A84C;min-width:22px">' + posMostrar + '</span>' +
-                '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' + (p.codigo_id||'—') + '</span>' +
-                '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (p.nombre_grupo||'—') + '</span>' +
-                '<span style="font-size:9px;color:' + (presente ? '#4CAF7D' : '#888') + '">' + (presente ? '✓' : '○') + '</span>' +
+              html +=
+                '<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px">' +
+                '<span style="font-weight:700;color:#C9A84C;min-width:22px">' +
+                posMostrar +
+                "</span>" +
+                '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' +
+                (p.codigo_id || "—") +
+                "</span>" +
+                '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+                (p.nombre_grupo || "—") +
+                "</span>" +
+                '<span style="font-size:9px;color:' +
+                (presente ? "#4CAF7D" : "#888") +
+                '">' +
+                (presente ? "✓" : "○") +
+                "</span>" +
                 '<div style="display:flex;gap:2px">' +
-                (i > 0 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;arriba&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↑</button>' : '') +
-                (i < list.length - 1 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' + idEsc + ',' + ckEsc + ',&quot;abajo&quot;,' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">↓</button>' : '') +
-                '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrQuitar(' + idEsc + ',' + ckEsc + ',' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">✕</button>' +
-                '</div>' +
-                '</div>';
+                (i > 0
+                  ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' +
+                    idEsc +
+                    "," +
+                    ckEsc +
+                    ",&quot;arriba&quot;," +
+                    cronId +
+                    "," +
+                    JSON.stringify(catKey).replace(/"/g, "&quot;") +
+                    ')">↑</button>'
+                  : "") +
+                (i < list.length - 1
+                  ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' +
+                    idEsc +
+                    "," +
+                    ckEsc +
+                    ",&quot;abajo&quot;," +
+                    cronId +
+                    "," +
+                    JSON.stringify(catKey).replace(/"/g, "&quot;") +
+                    ')">↓</button>'
+                  : "") +
+                '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrQuitar(' +
+                idEsc +
+                "," +
+                ckEsc +
+                "," +
+                cronId +
+                "," +
+                JSON.stringify(catKey).replace(/"/g, "&quot;") +
+                ')">✕</button>' +
+                "</div>" +
+                "</div>";
             }
-            html += '</div>';
+            html += "</div>";
           }
           // Sección agregar
-          html += '<div style="margin-top:10px;padding:8px;border-top:1px solid rgba(255,255,255,.1)">' +
+          html +=
+            '<div style="margin-top:10px;padding:8px;border-top:1px solid rgba(255,255,255,.1)">' +
             '<div class="text-xs muted mb2">+ Agregar participante del lineup que NO esté:</div>' +
-            '<select id="cron-add-select-' + cronId + '" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px;color:#F8F5EE;font-size:11px;margin-bottom:6px">' +
-              '<option value="">Cargando…</option>' +
-            '</select>' +
-            '<button class="btn bgn bsm bfull" style="font-size:11px" onclick="cronInscrAgregar(' + cronId + ',' + JSON.stringify(catKey).replace(/"/g, '&quot;') + ')">+ Agregar a esta categoría</button>' +
-            '</div>';
+            '<select id="cron-add-select-' +
+            cronId +
+            '" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:6px;color:#F8F5EE;font-size:11px;margin-bottom:6px">' +
+            '<option value="">Cargando…</option>' +
+            "</select>" +
+            '<button class="btn bgn bsm bfull" style="font-size:11px" onclick="cronInscrAgregar(' +
+            cronId +
+            "," +
+            JSON.stringify(catKey).replace(/"/g, "&quot;") +
+            ')">+ Agregar a esta categoría</button>' +
+            "</div>";
           det.innerHTML = html;
           // Cargar select disponibles
           const sel = document.getElementById("cron-add-select-" + cronId);
           try {
-            const { data: dispo } = await db.rpc("lineup_no_en_categoria", { p_categoria_key: catKey });
-            const opts = (dispo || []).map(d => '<option value="' + d.lineup_id + '">' + d.codigo_id + ' · ' + (d.nombre_grupo||'—') + ' (' + (d.pais||'') + ')</option>').join("");
-            sel.innerHTML = opts ? ('<option value="">— elegí —</option>' + opts) : '<option value="">No hay inscriptos disponibles</option>';
-          } catch (e) { sel.innerHTML = '<option value="">Error: ' + e.message + '</option>'; }
+            const { data: dispo } = await db.rpc("lineup_no_en_categoria", {
+              p_categoria_key: catKey,
+            });
+            const opts = (dispo || [])
+              .map(
+                (d) =>
+                  '<option value="' +
+                  d.lineup_id +
+                  '">' +
+                  d.codigo_id +
+                  " · " +
+                  (d.nombre_grupo || "—") +
+                  " (" +
+                  (d.pais || "") +
+                  ")</option>",
+              )
+              .join("");
+            sel.innerHTML = opts
+              ? '<option value="">— elegí —</option>' + opts
+              : '<option value="">No hay inscriptos disponibles</option>';
+          } catch (e) {
+            sel.innerHTML =
+              '<option value="">Error: ' + e.message + "</option>";
+          }
         } catch (e) {
-          det.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+          det.innerHTML =
+            '<div style="color:#E0524C;font-size:11px">Error: ' +
+            e.message +
+            "</div>";
         }
       }
 
       async function cronInscrMover(lineupId, catKey, dir, cronId, catKeyOrig) {
         try {
-          const { data, error } = await db.rpc("mover_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey, p_direccion: dir });
+          const { data, error } = await db.rpc("mover_pasada", {
+            p_lineup_id: lineupId,
+            p_categoria_key: catKey,
+            p_direccion: dir,
+          });
           if (error) throw error;
-          if (data?.ok) { await cronVerInscriptos(cronId, catKeyOrig); await cronVerInscriptos(cronId, catKeyOrig); /* trick: cerrar+abrir refresca */
+          if (data?.ok) {
+            await cronVerInscriptos(cronId, catKeyOrig);
+            await cronVerInscriptos(
+              cronId,
+              catKeyOrig,
+            ); /* trick: cerrar+abrir refresca */
             // Forzar abierto
             const det = document.getElementById("cron-detalle-" + cronId);
-            if (det && det.style.display === "none") await cronVerInscriptos(cronId, catKeyOrig);
+            if (det && det.style.display === "none")
+              await cronVerInscriptos(cronId, catKeyOrig);
           } else toast(data?.error || "No se pudo mover", "warn");
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronInscrQuitar(lineupId, catKey, cronId, catKeyOrig) {
-        if (!confirm("Quitar este participante de la categoría?\n\nNO afecta su inscripción ni el pago. Solo no aparecerá en el orden de esta categoría.")) return;
+        if (
+          !confirm(
+            "Quitar este participante de la categoría?\n\nNO afecta su inscripción ni el pago. Solo no aparecerá en el orden de esta categoría.",
+          )
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("quitar_de_pasada", { p_lineup_id: lineupId, p_categoria_key: catKey });
+          const { data, error } = await db.rpc("quitar_de_pasada", {
+            p_lineup_id: lineupId,
+            p_categoria_key: catKey,
+          });
           if (error) throw error;
-          if (data?.ok) { 
-            auditLog("quitar_de_pasada","lineup",lineupId,{categoria:catKey}); toast("Quitado de la categoría", "ok"); 
+          if (data?.ok) {
+            auditLog("quitar_de_pasada", "lineup", lineupId, {
+              categoria: catKey,
+            });
+            toast("Quitado de la categoría", "ok");
             // Refrescar tanto el cronograma (conteo) como el detalle
             await cronCargar();
             const det = document.getElementById("cron-detalle-" + cronId);
-            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKeyOrig); }
+            if (det) {
+              det.style.display = "none";
+              await cronVerInscriptos(cronId, catKeyOrig);
+            }
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function cronInscrAgregar(cronId, catKey) {
         const sel = document.getElementById("cron-add-select-" + cronId);
         const lid = sel?.value;
-        if (!lid) { toast("Elegí un participante", "warn"); return; }
+        if (!lid) {
+          toast("Elegí un participante", "warn");
+          return;
+        }
         try {
-          const { data, error } = await db.rpc("agregar_a_pasada", { p_lineup_id: lid, p_categoria_key: catKey });
+          const { data, error } = await db.rpc("agregar_a_pasada", {
+            p_lineup_id: lid,
+            p_categoria_key: catKey,
+          });
           if (error) throw error;
           if (data?.ok) {
-            auditLog("agregar_a_pasada","lineup",lid,{categoria:catKey,posicion:data.posicion}); toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
+            auditLog("agregar_a_pasada", "lineup", lid, {
+              categoria: catKey,
+              posicion: data.posicion,
+            });
+            toast("Agregado a la categoría (pos: " + data.posicion + ")", "ok");
             await cronCargar();
             const det = document.getElementById("cron-detalle-" + cronId);
-            if (det) { det.style.display = "none"; await cronVerInscriptos(cronId, catKey); }
+            if (det) {
+              det.style.display = "none";
+              await cronVerInscriptos(cronId, catKey);
+            }
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -3775,89 +4942,143 @@
       window._editSeleccionada = null;
 
       async function editBuscar() {
-        const q = (document.getElementById("edit-buscar-input")?.value || "").trim();
+        const q = (
+          document.getElementById("edit-buscar-input")?.value || ""
+        ).trim();
         const res = document.getElementById("edit-resultados");
         const form = document.getElementById("edit-formulario");
-        if (!q) { toast("Escribí algo para buscar", "warn"); return; }
+        if (!q) {
+          toast("Escribí algo para buscar", "warn");
+          return;
+        }
         res.innerHTML = '<div class="muted text-xs">Buscando…</div>';
         form.style.display = "none";
         try {
           // Buscar en lineup (que tiene código + nombre_grupo + inscripcion_id)
-          const { data: lu, error } = await db.schema("evento").from("lineup")
+          const { data: lu, error } = await db
+            .schema("evento")
+            .from("lineup")
             .select("id,codigo_id,nombre_grupo,inscripcion_id,instancia,pais")
             .or(`codigo_id.ilike.%${q}%,nombre_grupo.ilike.%${q}%`)
             .limit(20);
           if (error) throw error;
           if (!lu || lu.length === 0) {
-            res.innerHTML = '<div class="muted text-xs" style="padding:8px;text-align:center">Sin resultados</div>';
+            res.innerHTML =
+              '<div class="muted text-xs" style="padding:8px;text-align:center">Sin resultados</div>';
             return;
           }
-          let html = '';
+          let html = "";
           for (const l of lu) {
-            html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px;cursor:pointer" onclick="editAbrir(' + JSON.stringify(l.inscripcion_id).replace(/"/g,'&quot;') + ',' + JSON.stringify(l.codigo_id||'').replace(/"/g,'&quot;') + ')">' +
-              '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' + (l.codigo_id||'—') + '</span>' +
-              '<span style="flex:1">' + (l.nombre_grupo||'—') + '</span>' +
-              '<span class="muted" style="font-size:10px">' + (l.instancia||'').toUpperCase() + ' · ' + (l.pais||'') + '</span>' +
+            html +=
+              '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;font-size:11px;cursor:pointer" onclick="editAbrir(' +
+              JSON.stringify(l.inscripcion_id).replace(/"/g, "&quot;") +
+              "," +
+              JSON.stringify(l.codigo_id || "").replace(/"/g, "&quot;") +
+              ')">' +
+              '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' +
+              (l.codigo_id || "—") +
+              "</span>" +
+              '<span style="flex:1">' +
+              (l.nombre_grupo || "—") +
+              "</span>" +
+              '<span class="muted" style="font-size:10px">' +
+              (l.instancia || "").toUpperCase() +
+              " · " +
+              (l.pais || "") +
+              "</span>" +
               '<span style="color:#C9A84C">→</span>' +
-              '</div>';
+              "</div>";
           }
           res.innerHTML = html;
         } catch (e) {
-          res.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+          res.innerHTML =
+            '<div style="color:#E0524C;font-size:11px">Error: ' +
+            e.message +
+            "</div>";
         }
       }
 
       async function editAbrir(inscripcionId, codigo) {
         const form = document.getElementById("edit-formulario");
         const res = document.getElementById("edit-resultados");
-        if (!inscripcionId) { toast("Esta entrada no tiene inscripción asociada", "warn"); return; }
+        if (!inscripcionId) {
+          toast("Esta entrada no tiene inscripción asociada", "warn");
+          return;
+        }
         form.style.display = "block";
         form.innerHTML = '<div class="muted text-xs">Cargando datos…</div>';
         try {
-          const { data: insArr, error } = await db.from("inscripciones").select("*").eq("id", inscripcionId);
+          const { data: insArr, error } = await db
+            .from("inscripciones")
+            .select("*")
+            .eq("id", inscripcionId);
           if (error) throw error;
           const ins = insArr && insArr[0];
-          if (!ins) { form.innerHTML = '<div style="color:#E0524C">No se encontró la inscripción</div>'; return; }
+          if (!ins) {
+            form.innerHTML =
+              '<div style="color:#E0524C">No se encontró la inscripción</div>';
+            return;
+          }
           window._editSeleccionada = ins;
-          
+
           let integrantes = [];
           try {
-            integrantes = Array.isArray(ins.integrantes) ? ins.integrantes
-              : (typeof ins.integrantes === "string" ? JSON.parse(ins.integrantes) : []);
-          } catch { integrantes = []; }
-          
-          res.innerHTML = '';
-          let html = '<div style="padding:14px;background:#0a0e14;border:1px solid rgba(201,168,76,.3);border-radius:8px">' +
-            '<div class="sf mb3"><div class="fw6" style="color:#C9A84C">📝 ' + (codigo || '—') + '</div>' +
+            integrantes = Array.isArray(ins.integrantes)
+              ? ins.integrantes
+              : typeof ins.integrantes === "string"
+                ? JSON.parse(ins.integrantes)
+                : [];
+          } catch {
+            integrantes = [];
+          }
+
+          res.innerHTML = "";
+          let html =
+            '<div style="padding:14px;background:#0a0e14;border:1px solid rgba(201,168,76,.3);border-radius:8px">' +
+            '<div class="sf mb3"><div class="fw6" style="color:#C9A84C">📝 ' +
+            (codigo || "—") +
+            "</div>" +
             '<button class="btn bo bsm" style="font-size:10px" onclick="editCerrar()">✕ Cerrar</button></div>' +
             '<div class="muted text-xs mb3">Los cambios se guardan inmediatamente al hacer click en "💾 Guardar". El reenvío de QR es independiente.</div>' +
-            
             '<div style="display:flex;flex-direction:column;gap:8px">' +
-              '<div><label class="text-xs muted">Nombre del grupo / participante</label><input id="edit-nombre_grupo" class="cfg-input" value="' + (ins.nombre_grupo||'').replace(/"/g,'&quot;') + '"></div>' +
-              '<div><label class="text-xs muted">Responsable (nombre)</label><input id="edit-nombre" class="cfg-input" value="' + (ins.nombre||'').replace(/"/g,'&quot;') + '"></div>' +
-              '<div><label class="text-xs muted">Email responsable</label><input id="edit-email" class="cfg-input" type="email" value="' + (ins.email||'').replace(/"/g,'&quot;') + '"></div>' +
-              '<div><label class="text-xs muted">Teléfono / Celular</label><input id="edit-cel" class="cfg-input" value="' + (ins.cel||'').replace(/"/g,'&quot;') + '"></div>' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-                '<div><label class="text-xs muted">País</label><input id="edit-pais" class="cfg-input" value="' + (ins.pais||'').replace(/"/g,'&quot;') + '"></div>' +
-                '<div><label class="text-xs muted">Ciudad</label><input id="edit-ciudad" class="cfg-input" value="' + (ins.ciudad||'').replace(/"/g,'&quot;') + '"></div>' +
-              '</div>' +
-              
-              '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
-                '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' + integrantes.length + ')</div>' +
-                '<button class="btn bo bsm" style="font-size:10px" onclick="editAgregarIntegrante()">+ Agregar</button></div>' +
-                '<div id="edit-integrantes-list" style="display:flex;flex-direction:column;gap:6px"></div>' +
-              '</div>' +
-            '</div>' +
-            
+            '<div><label class="text-xs muted">Nombre del grupo / participante</label><input id="edit-nombre_grupo" class="cfg-input" value="' +
+            (ins.nombre_grupo || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            '<div><label class="text-xs muted">Responsable (nombre)</label><input id="edit-nombre" class="cfg-input" value="' +
+            (ins.nombre || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            '<div><label class="text-xs muted">Email responsable</label><input id="edit-email" class="cfg-input" type="email" value="' +
+            (ins.email || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            '<div><label class="text-xs muted">Teléfono / Celular</label><input id="edit-cel" class="cfg-input" value="' +
+            (ins.cel || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+            '<div><label class="text-xs muted">País</label><input id="edit-pais" class="cfg-input" value="' +
+            (ins.pais || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            '<div><label class="text-xs muted">Ciudad</label><input id="edit-ciudad" class="cfg-input" value="' +
+            (ins.ciudad || "").replace(/"/g, "&quot;") +
+            '"></div>' +
+            "</div>" +
+            '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
+            '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' +
+            integrantes.length +
+            ")</div>" +
+            '<button class="btn bo bsm" style="font-size:10px" onclick="editAgregarIntegrante()">+ Agregar</button></div>' +
+            '<div id="edit-integrantes-list" style="display:flex;flex-direction:column;gap:6px"></div>' +
+            "</div>" +
+            "</div>" +
             '<div style="display:flex;gap:6px;margin-top:14px">' +
-              '<button class="btn bgn bfull" style="font-size:12px" onclick="editGuardar()">💾 Guardar cambios</button>' +
-              '<button class="btn bo bfull" style="font-size:12px;border-color:#C9A84C;color:#C9A84C" onclick="editReenviarQR()">📨 Reenviar QR al grupo</button>' +
-            '</div>' +
-          '</div>';
+            '<button class="btn bgn bfull" style="font-size:12px" onclick="editGuardar()">💾 Guardar cambios</button>' +
+            '<button class="btn bo bfull" style="font-size:12px;border-color:#C9A84C;color:#C9A84C" onclick="editReenviarQR()">📨 Reenviar QR al grupo</button>' +
+            "</div>" +
+            "</div>";
           form.innerHTML = html;
           editRenderIntegrantes(integrantes);
         } catch (e) {
-          form.innerHTML = '<div style="color:#E0524C">Error: ' + e.message + '</div>';
+          form.innerHTML =
+            '<div style="color:#E0524C">Error: ' + e.message + "</div>";
         }
       }
 
@@ -3865,37 +5086,63 @@
         const cont = document.getElementById("edit-integrantes-list");
         if (!cont) return;
         if (!integrantes || integrantes.length === 0) {
-          cont.innerHTML = '<div class="muted text-xs">Sin integrantes cargados</div>';
+          cont.innerHTML =
+            '<div class="muted text-xs">Sin integrantes cargados</div>';
           return;
         }
-        let html = '';
+        let html = "";
         for (let i = 0; i < integrantes.length; i++) {
           const it = integrantes[i] || {};
-          html += '<div style="padding:8px;background:rgba(0,0,0,.3);border-radius:4px;border:1px solid rgba(255,255,255,.05)">' +
-            '<div class="sf mb2"><div style="font-size:10px;color:#C9A84C;font-weight:600">Integrante #' + (i+1) + '</div>' +
-            '<button style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="editQuitarIntegrante(' + i + ')">✕ Quitar</button></div>' +
+          html +=
+            '<div style="padding:8px;background:rgba(0,0,0,.3);border-radius:4px;border:1px solid rgba(255,255,255,.05)">' +
+            '<div class="sf mb2"><div style="font-size:10px;color:#C9A84C;font-weight:600">Integrante #' +
+            (i + 1) +
+            "</div>" +
+            '<button style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="editQuitarIntegrante(' +
+            i +
+            ')">✕ Quitar</button></div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">' +
-              '<input data-int-idx="' + i + '" data-int-field="nombre" placeholder="Nombre completo" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.nombre||'').replace(/"/g,'&quot;') + '">' +
-              '<input data-int-idx="' + i + '" data-int-field="dni" placeholder="DNI / ID" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.dni||'').replace(/"/g,'&quot;') + '">' +
-              '<input data-int-idx="' + i + '" data-int-field="email" placeholder="Email" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.email||'').replace(/"/g,'&quot;') + '">' +
-              '<input data-int-idx="' + i + '" data-int-field="cel" placeholder="Celular" class="cfg-input" style="font-size:11px;padding:6px" value="' + (it.cel||'').replace(/"/g,'&quot;') + '">' +
-            '</div>' +
-            '</div>';
+            '<input data-int-idx="' +
+            i +
+            '" data-int-field="nombre" placeholder="Nombre completo" class="cfg-input" style="font-size:11px;padding:6px" value="' +
+            (it.nombre || "").replace(/"/g, "&quot;") +
+            '">' +
+            '<input data-int-idx="' +
+            i +
+            '" data-int-field="dni" placeholder="DNI / ID" class="cfg-input" style="font-size:11px;padding:6px" value="' +
+            (it.dni || "").replace(/"/g, "&quot;") +
+            '">' +
+            '<input data-int-idx="' +
+            i +
+            '" data-int-field="email" placeholder="Email" class="cfg-input" style="font-size:11px;padding:6px" value="' +
+            (it.email || "").replace(/"/g, "&quot;") +
+            '">' +
+            '<input data-int-idx="' +
+            i +
+            '" data-int-field="cel" placeholder="Celular" class="cfg-input" style="font-size:11px;padding:6px" value="' +
+            (it.cel || "").replace(/"/g, "&quot;") +
+            '">' +
+            "</div>" +
+            "</div>";
         }
         cont.innerHTML = html;
       }
 
       function editRecogerIntegrantes() {
         // Recoge los integrantes desde el DOM
-        const inputs = document.querySelectorAll('#edit-integrantes-list input[data-int-idx]');
+        const inputs = document.querySelectorAll(
+          "#edit-integrantes-list input[data-int-idx]",
+        );
         const map = {};
-        inputs.forEach(inp => {
+        inputs.forEach((inp) => {
           const idx = parseInt(inp.dataset.intIdx);
           const field = inp.dataset.intField;
           if (!map[idx]) map[idx] = {};
           map[idx][field] = inp.value || "";
         });
-        return Object.keys(map).sort((a,b) => a-b).map(k => map[k]);
+        return Object.keys(map)
+          .sort((a, b) => a - b)
+          .map((k) => map[k]);
       }
 
       function editAgregarIntegrante() {
@@ -3917,7 +5164,8 @@
         try {
           const integrantes = editRecogerIntegrantes();
           const updates = {
-            nombre_grupo: document.getElementById("edit-nombre_grupo")?.value || null,
+            nombre_grupo:
+              document.getElementById("edit-nombre_grupo")?.value || null,
             nombre: document.getElementById("edit-nombre")?.value || null,
             email: document.getElementById("edit-email")?.value || null,
             cel: document.getElementById("edit-cel")?.value || null,
@@ -3925,24 +5173,46 @@
             ciudad: document.getElementById("edit-ciudad")?.value || null,
             integrantes: integrantes,
           };
-          const { error } = await db.from("inscripciones").update(updates).eq("id", ins.id);
+          const { error } = await db
+            .from("inscripciones")
+            .update(updates)
+            .eq("id", ins.id);
           if (error) throw error;
-          
+
           // También actualizar nombre_grupo en lineup si cambió
-          if (updates.nombre_grupo && updates.nombre_grupo !== ins.nombre_grupo) {
-            await db.schema("evento").from("lineup").update({ nombre_grupo: updates.nombre_grupo, responsable: updates.nombre })
+          if (
+            updates.nombre_grupo &&
+            updates.nombre_grupo !== ins.nombre_grupo
+          ) {
+            await db
+              .schema("evento")
+              .from("lineup")
+              .update({
+                nombre_grupo: updates.nombre_grupo,
+                responsable: updates.nombre,
+              })
               .eq("inscripcion_id", ins.id);
           }
-          
-          auditLog("editar_inscripcion","inscripcion",ins.id,{cambios:Object.keys(updates)}); toast("✓ Cambios guardados", "ok");
+
+          auditLog("editar_inscripcion", "inscripcion", ins.id, {
+            cambios: Object.keys(updates),
+          });
+          toast("✓ Cambios guardados", "ok");
           window._editSeleccionada = { ...ins, ...updates };
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function editReenviarQR() {
         const ins = window._editSeleccionada;
         if (!ins) return;
-        if (!confirm("Reenviar el QR al responsable y a todos los integrantes con email?")) return;
+        if (
+          !confirm(
+            "Reenviar el QR al responsable y a todos los integrantes con email?",
+          )
+        )
+          return;
         try {
           const r = await fetch("/api/reenviar-qr", {
             method: "POST",
@@ -3951,13 +5221,29 @@
           });
           const data = await r.json();
           if (!r.ok) throw new Error(data.error || "Error en API");
-          auditLog("reenviar_qr","inscripcion",ins.id,{enviados:data.enviados,total:data.total}); toast("📨 Enviado a " + (data.enviados || 0) + " de " + (data.total || 0) + " emails", "ok");
-        } catch (e) { toast("Error: " + e.message, "err"); }
+          auditLog("reenviar_qr", "inscripcion", ins.id, {
+            enviados: data.enviados,
+            total: data.total,
+          });
+          toast(
+            "📨 Enviado a " +
+              (data.enviados || 0) +
+              " de " +
+              (data.total || 0) +
+              " emails",
+            "ok",
+          );
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       function editCerrar() {
         const form = document.getElementById("edit-formulario");
-        if (form) { form.style.display = "none"; form.innerHTML = ""; }
+        if (form) {
+          form.style.display = "none";
+          form.innerHTML = "";
+        }
         window._editSeleccionada = null;
       }
 
@@ -3975,7 +5261,9 @@
             p_entidad_id: entidadId ? String(entidadId) : null,
             p_detalle: detalle || null,
           });
-        } catch (e) { /* silencio: nunca interrumpir UX */ }
+        } catch (e) {
+          /* silencio: nunca interrumpir UX */
+        }
       }
 
       async function auditCargar() {
@@ -3983,33 +5271,68 @@
         if (!cont) return;
         cont.innerHTML = "Cargando…";
         try {
-          const usuario = document.getElementById("audit-filtro-usuario")?.value?.trim() || null;
-          const accion = document.getElementById("audit-filtro-accion")?.value || null;
-          const { data, error } = await db.rpc("audit_listar", { p_limit: 100, p_usuario: usuario, p_accion: accion });
+          const usuario =
+            document.getElementById("audit-filtro-usuario")?.value?.trim() ||
+            null;
+          const accion =
+            document.getElementById("audit-filtro-accion")?.value || null;
+          const { data, error } = await db.rpc("audit_listar", {
+            p_limit: 100,
+            p_usuario: usuario,
+            p_accion: accion,
+          });
           if (error) throw error;
           if (!data || data.length === 0) {
-            cont.innerHTML = '<div class="muted text-xs" style="padding:14px;text-align:center">Sin eventos para los filtros aplicados</div>';
+            cont.innerHTML =
+              '<div class="muted text-xs" style="padding:14px;text-align:center">Sin eventos para los filtros aplicados</div>';
             return;
           }
           let html = '<div style="display:flex;flex-direction:column;gap:3px">';
           for (const l of data) {
             const d = new Date(l.ts);
-            const hora = d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-            const detTxt = l.detalle ? (typeof l.detalle === "string" ? l.detalle : JSON.stringify(l.detalle)) : "";
-            html += '<div style="display:flex;gap:6px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;align-items:center">' +
-              '<span style="font-family:monospace;color:#888;font-size:9px;min-width:95px">' + hora + '</span>' +
-              '<span style="background:rgba(76,175,125,.15);color:#7DD09B;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;min-width:90px;text-align:center">' + (l.usuario || '—') + '</span>' +
-              '<span style="color:#C9A84C;font-size:10px;min-width:140px">' + (l.accion || '') + '</span>' +
-              '<span style="flex:1;color:#aaa;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + detTxt.replace(/"/g,'&quot;') + '">' +
-                (l.entidad ? '[' + l.entidad + (l.entidad_id ? ':' + l.entidad_id.substring(0,8) : '') + '] ' : '') +
-                detTxt.substring(0, 80) +
-              '</span>' +
-              '</div>';
+            const hora = d.toLocaleString("es-AR", {
+              day: "2-digit",
+              month: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            });
+            const detTxt = l.detalle
+              ? typeof l.detalle === "string"
+                ? l.detalle
+                : JSON.stringify(l.detalle)
+              : "";
+            html +=
+              '<div style="display:flex;gap:6px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;align-items:center">' +
+              '<span style="font-family:monospace;color:#888;font-size:9px;min-width:95px">' +
+              hora +
+              "</span>" +
+              '<span style="background:rgba(76,175,125,.15);color:#7DD09B;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;min-width:90px;text-align:center">' +
+              (l.usuario || "—") +
+              "</span>" +
+              '<span style="color:#C9A84C;font-size:10px;min-width:140px">' +
+              (l.accion || "") +
+              "</span>" +
+              '<span style="flex:1;color:#aaa;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' +
+              detTxt.replace(/"/g, "&quot;") +
+              '">' +
+              (l.entidad
+                ? "[" +
+                  l.entidad +
+                  (l.entidad_id ? ":" + l.entidad_id.substring(0, 8) : "") +
+                  "] "
+                : "") +
+              detTxt.substring(0, 80) +
+              "</span>" +
+              "</div>";
           }
-          html += '</div>';
+          html += "</div>";
           cont.innerHTML = html;
         } catch (e) {
-          cont.innerHTML = '<div style="color:#E0524C;font-size:11px">Error: ' + e.message + '</div>';
+          cont.innerHTML =
+            '<div style="color:#E0524C;font-size:11px">Error: ' +
+            e.message +
+            "</div>";
         }
       }
 
@@ -4018,176 +5341,287 @@
       // ═══════════════════════════════════════════════════════════
       function exportStatus(msg, isErr) {
         const el = document.getElementById("export-status");
-        if (el) { el.textContent = msg; el.style.color = isErr ? "#E0524C" : "#888"; }
+        if (el) {
+          el.textContent = msg;
+          el.style.color = isErr ? "#E0524C" : "#888";
+        }
       }
 
       function descargarXLSX(workbook, filename) {
         try {
           XLSX.writeFile(workbook, filename);
           exportStatus("✓ Descargado: " + filename);
-          if (typeof auditLog === "function") auditLog("exportar", "excel", filename);
-        } catch (e) { exportStatus("Error: " + e.message, true); }
+          if (typeof auditLog === "function")
+            auditLog("exportar", "excel", filename);
+        } catch (e) {
+          exportStatus("Error: " + e.message, true);
+        }
       }
 
       function parsearCategorias(cat) {
         try {
           const c = typeof cat === "string" ? JSON.parse(cat) : cat;
-          if (Array.isArray(c)) return c.map(x => (x.n || "") + (x.g ? " (" + x.g + ")" : "")).join(" | ");
-          if (c && typeof c === "object") return (c.n || "") + (c.g ? " (" + c.g + ")" : "");
+          if (Array.isArray(c))
+            return c
+              .map((x) => (x.n || "") + (x.g ? " (" + x.g + ")" : ""))
+              .join(" | ");
+          if (c && typeof c === "object")
+            return (c.n || "") + (c.g ? " (" + c.g + ")" : "");
           return String(c || "");
-        } catch { return String(cat || ""); }
+        } catch {
+          return String(cat || "");
+        }
       }
 
       // 1. Lineup completo
       async function exportLineup() {
         exportStatus("Cargando lineup…");
         try {
-          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada, recargá la página");
-          const { data, error } = await db.schema("evento").from("lineup")
-            .select("codigo_id,nombre_grupo,responsable,pais,instancia,categoria,estado,estado_pago,acreditado_at,posicion")
+          if (typeof XLSX === "undefined")
+            throw new Error("Librería Excel no cargada, recargá la página");
+          const { data, error } = await db
+            .schema("evento")
+            .from("lineup")
+            .select(
+              "codigo_id,nombre_grupo,responsable,pais,instancia,categoria,estado,estado_pago,acreditado_at,posicion",
+            )
             .order("codigo_id");
           if (error) throw error;
-          if (!data || data.length === 0) { exportStatus("Sin datos", true); return; }
-          const rows = data.map(l => ({
-            "Código": l.codigo_id || "",
+          if (!data || data.length === 0) {
+            exportStatus("Sin datos", true);
+            return;
+          }
+          const rows = data.map((l) => ({
+            Código: l.codigo_id || "",
             "Grupo / Participante": l.nombre_grupo || "",
-            "Responsable": l.responsable || "",
-            "País": l.pais || "",
-            "Instancia": (l.instancia || "").toUpperCase(),
-            "Categorías": parsearCategorias(l.categoria),
+            Responsable: l.responsable || "",
+            País: l.pais || "",
+            Instancia: (l.instancia || "").toUpperCase(),
+            Categorías: parsearCategorias(l.categoria),
             "Estado Acreditación": l.estado || "pendiente",
             "Estado Pago": l.estado_pago || "pendiente",
-            "Acreditado en": l.acreditado_at ? new Date(l.acreditado_at).toLocaleString("es-AR") : "",
-            "Posición": l.posicion || "",
+            "Acreditado en": l.acreditado_at
+              ? new Date(l.acreditado_at).toLocaleString("es-AR")
+              : "",
+            Posición: l.posicion || "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
-          ws['!cols'] = [{wch:16},{wch:30},{wch:25},{wch:14},{wch:10},{wch:35},{wch:14},{wch:14},{wch:18},{wch:8}];
+          ws["!cols"] = [
+            { wch: 16 },
+            { wch: 30 },
+            { wch: 25 },
+            { wch: 14 },
+            { wch: 10 },
+            { wch: 35 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 18 },
+            { wch: 8 },
+          ];
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Lineup");
-          const fecha = new Date().toISOString().slice(0,10);
+          const fecha = new Date().toISOString().slice(0, 10);
           descargarXLSX(wb, `JAM-Lineup-${fecha}.xlsx`);
-        } catch (e) { exportStatus("Error: " + e.message, true); }
+        } catch (e) {
+          exportStatus("Error: " + e.message, true);
+        }
       }
 
       // 2. Inscriptos por categoría (una hoja por categoría)
       async function exportCategorias() {
         exportStatus("Generando hojas por categoría…");
         try {
-          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
-          const { data: cats, error: e1 } = await db.rpc("listar_categorias_lineup");
+          if (typeof XLSX === "undefined")
+            throw new Error("Librería Excel no cargada");
+          const { data: cats, error: e1 } = await db.rpc(
+            "listar_categorias_lineup",
+          );
           if (e1) throw e1;
-          if (!cats || cats.length === 0) { exportStatus("Sin categorías", true); return; }
-          
+          if (!cats || cats.length === 0) {
+            exportStatus("Sin categorías", true);
+            return;
+          }
+
           const wb = XLSX.utils.book_new();
-          const resumen = cats.map(c => ({
-            "Categoría": c.categoria_label,
-            "Instancia": (c.instancia || "").toUpperCase(),
-            "Inscriptos": c.cantidad,
-            "Presentes": c.presentes,
+          const resumen = cats.map((c) => ({
+            Categoría: c.categoria_label,
+            Instancia: (c.instancia || "").toUpperCase(),
+            Inscriptos: c.cantidad,
+            Presentes: c.presentes,
           }));
           const wsR = XLSX.utils.json_to_sheet(resumen);
-          wsR['!cols'] = [{wch:40},{wch:12},{wch:12},{wch:12}];
+          wsR["!cols"] = [{ wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
           XLSX.utils.book_append_sheet(wb, wsR, "Resumen");
-          
+
           for (const cat of cats) {
-            const { data: pasadas } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: cat.categoria_key });
+            const { data: pasadas } = await db.rpc(
+              "obtener_pasadas_categoria",
+              { p_categoria_key: cat.categoria_key },
+            );
             const rows = (pasadas || []).map((p) => ({
-              "Orden": p.posicion === 999 ? "—" : p.posicion,
-              "Código": p.codigo_id || "",
-              "Grupo": p.nombre_grupo || "",
-              "Responsable": p.responsable || "",
-              "País": p.pais || "",
-              "Estado": p.estado || "pendiente",
-              "Pago": p.estado_pago || "pendiente",
+              Orden: p.posicion === 999 ? "—" : p.posicion,
+              Código: p.codigo_id || "",
+              Grupo: p.nombre_grupo || "",
+              Responsable: p.responsable || "",
+              País: p.pais || "",
+              Estado: p.estado || "pendiente",
+              Pago: p.estado_pago || "pendiente",
             }));
             if (rows.length === 0) continue;
             const ws = XLSX.utils.json_to_sheet(rows);
-            ws['!cols'] = [{wch:8},{wch:16},{wch:25},{wch:22},{wch:14},{wch:14},{wch:12}];
-            let sheetName = cat.categoria_label.replace(/[\\\/\?\*\[\]]/g, "").substring(0, 28);
+            ws["!cols"] = [
+              { wch: 8 },
+              { wch: 16 },
+              { wch: 25 },
+              { wch: 22 },
+              { wch: 14 },
+              { wch: 14 },
+              { wch: 12 },
+            ];
+            let sheetName = cat.categoria_label
+              .replace(/[\\\/\?\*\[\]]/g, "")
+              .substring(0, 28);
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
           }
-          const fecha = new Date().toISOString().slice(0,10);
+          const fecha = new Date().toISOString().slice(0, 10);
           descargarXLSX(wb, `JAM-Categorias-${fecha}.xlsx`);
-        } catch (e) { exportStatus("Error: " + e.message, true); }
+        } catch (e) {
+          exportStatus("Error: " + e.message, true);
+        }
       }
 
       // 3. Rankings (puntajes de sesiones finalizadas)
       async function exportRankings() {
         exportStatus("Cargando rankings…");
         try {
-          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
-          const { data: ses, error: e1 } = await db.schema("scoring").from("sesiones")
-            .select("id,codigo_id,nombre_grupo,instancia,pais,categoria,total_final,finalizada_at")
+          if (typeof XLSX === "undefined")
+            throw new Error("Librería Excel no cargada");
+          const { data: ses, error: e1 } = await db
+            .schema("scoring")
+            .from("sesiones")
+            .select(
+              "id,codigo_id,nombre_grupo,instancia,pais,categoria,total_final,finalizada_at",
+            )
             .eq("activa", false)
             .not("finalizada_at", "is", null)
-            .order("instancia").order("total_final", { ascending: false });
+            .order("instancia")
+            .order("total_final", { ascending: false });
           if (e1) throw e1;
-          if (!ses || ses.length === 0) { exportStatus("No hay sesiones cerradas todavía", true); return; }
-          
+          if (!ses || ses.length === 0) {
+            exportStatus("No hay sesiones cerradas todavía", true);
+            return;
+          }
+
           const wb = XLSX.utils.book_new();
           const rows = ses.map((s, i) => ({
-            "Posición": i + 1,
-            "Código": s.codigo_id || "",
-            "Grupo": s.nombre_grupo || "",
-            "País": s.pais || "",
-            "Instancia": (s.instancia || "").toUpperCase(),
-            "Categoría": parsearCategorias(s.categoria),
-            "Total Final": s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
-            "Finalizado": s.finalizada_at ? new Date(s.finalizada_at).toLocaleString("es-AR") : "",
+            Posición: i + 1,
+            Código: s.codigo_id || "",
+            Grupo: s.nombre_grupo || "",
+            País: s.pais || "",
+            Instancia: (s.instancia || "").toUpperCase(),
+            Categoría: parsearCategorias(s.categoria),
+            "Total Final":
+              s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
+            Finalizado: s.finalizada_at
+              ? new Date(s.finalizada_at).toLocaleString("es-AR")
+              : "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
-          ws['!cols'] = [{wch:10},{wch:16},{wch:25},{wch:14},{wch:10},{wch:30},{wch:12},{wch:18}];
+          ws["!cols"] = [
+            { wch: 10 },
+            { wch: 16 },
+            { wch: 25 },
+            { wch: 14 },
+            { wch: 10 },
+            { wch: 30 },
+            { wch: 12 },
+            { wch: 18 },
+          ];
           XLSX.utils.book_append_sheet(wb, ws, "Rankings");
-          
+
           const porInst = {};
-          ses.forEach(s => { const k = (s.instancia||"otro").toUpperCase(); (porInst[k]=porInst[k]||[]).push(s); });
+          ses.forEach((s) => {
+            const k = (s.instancia || "otro").toUpperCase();
+            (porInst[k] = porInst[k] || []).push(s);
+          });
           for (const [inst, items] of Object.entries(porInst)) {
-            const sorted = items.slice().sort((a,b) => (b.total_final||0) - (a.total_final||0));
+            const sorted = items
+              .slice()
+              .sort((a, b) => (b.total_final || 0) - (a.total_final || 0));
             const rows2 = sorted.map((s, i) => ({
-              "Pos": i+1,
-              "Código": s.codigo_id || "",
-              "Grupo": s.nombre_grupo || "",
-              "Total": s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
+              Pos: i + 1,
+              Código: s.codigo_id || "",
+              Grupo: s.nombre_grupo || "",
+              Total:
+                s.total_final != null ? Number(s.total_final).toFixed(2) : "—",
             }));
             const ws2 = XLSX.utils.json_to_sheet(rows2);
-            ws2['!cols'] = [{wch:6},{wch:16},{wch:30},{wch:10}];
+            ws2["!cols"] = [{ wch: 6 }, { wch: 16 }, { wch: 30 }, { wch: 10 }];
             XLSX.utils.book_append_sheet(wb, ws2, "Ranking " + inst);
           }
-          const fecha = new Date().toISOString().slice(0,10);
+          const fecha = new Date().toISOString().slice(0, 10);
           descargarXLSX(wb, `JAM-Rankings-${fecha}.xlsx`);
-        } catch (e) { exportStatus("Error: " + e.message, true); }
+        } catch (e) {
+          exportStatus("Error: " + e.message, true);
+        }
       }
 
       // 4. Auditoría
       async function exportAuditoria() {
         exportStatus("Cargando logs…");
         try {
-          if (typeof XLSX === "undefined") throw new Error("Librería Excel no cargada");
-          const { data, error } = await db.rpc("audit_listar", { p_limit: 5000 });
+          if (typeof XLSX === "undefined")
+            throw new Error("Librería Excel no cargada");
+          const { data, error } = await db.rpc("audit_listar", {
+            p_limit: 5000,
+          });
           if (error) throw error;
-          if (!data || data.length === 0) { exportStatus("Sin logs", true); return; }
-          const rows = data.map(l => ({
+          if (!data || data.length === 0) {
+            exportStatus("Sin logs", true);
+            return;
+          }
+          const rows = data.map((l) => ({
             "Fecha/Hora": l.ts ? new Date(l.ts).toLocaleString("es-AR") : "",
-            "Usuario": l.usuario || "",
-            "Rol": l.rol || "",
-            "Acción": l.accion || "",
-            "Entidad": l.entidad || "",
+            Usuario: l.usuario || "",
+            Rol: l.rol || "",
+            Acción: l.accion || "",
+            Entidad: l.entidad || "",
             "ID Entidad": l.entidad_id || "",
-            "Detalle": l.detalle ? (typeof l.detalle === "string" ? l.detalle : JSON.stringify(l.detalle)) : "",
+            Detalle: l.detalle
+              ? typeof l.detalle === "string"
+                ? l.detalle
+                : JSON.stringify(l.detalle)
+              : "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
-          ws['!cols'] = [{wch:20},{wch:16},{wch:14},{wch:25},{wch:14},{wch:40},{wch:60}];
+          ws["!cols"] = [
+            { wch: 20 },
+            { wch: 16 },
+            { wch: 14 },
+            { wch: 25 },
+            { wch: 14 },
+            { wch: 40 },
+            { wch: 60 },
+          ];
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Auditoría");
-          const fecha = new Date().toISOString().slice(0,10);
+          const fecha = new Date().toISOString().slice(0, 10);
           descargarXLSX(wb, `JAM-Auditoria-${fecha}.xlsx`);
-        } catch (e) { exportStatus("Error: " + e.message, true); }
+        } catch (e) {
+          exportStatus("Error: " + e.message, true);
+        }
       }
 
       // === Wrappers de compatibilidad (las funciones viejas siguen siendo llamadas en algún lugar) ===
-      async function saCargarCategorias() { return cronCargar(); }
-      async function saActivarCategoria() { /* deprecated */ }
-      async function saDesactivarCategoria() { /* deprecated */ }
+      async function saCargarCategorias() {
+        return cronCargar();
+      }
+      async function saActivarCategoria() {
+        /* deprecated */
+      }
+      async function saDesactivarCategoria() {
+        /* deprecated */
+      }
 
       // Gestión de usuarios (renombrar, reset pass, activar)
       async function saLoadUsuarios() {
@@ -4197,37 +5631,73 @@
         try {
           const { data, error } = await db.rpc("listar_usuarios");
           if (error) throw error;
-          if (!data || data.length === 0) { el.innerHTML = '<div class="muted text-xs">No hay usuarios.</div>'; return; }
-          let html = '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
+          if (!data || data.length === 0) {
+            el.innerHTML = '<div class="muted text-xs">No hay usuarios.</div>';
+            return;
+          }
+          let html =
+            '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
             '<th style="text-align:left;padding:6px 4px;color:#999">USUARIO</th>' +
             '<th style="text-align:left;padding:6px 4px;color:#999">ROL</th>' +
             '<th style="text-align:left;padding:6px 4px;color:#999">NOMBRE DISPLAY</th>' +
             '<th style="text-align:center;padding:6px 4px;color:#999">ESTADO</th>' +
             '<th style="text-align:right;padding:6px 4px;color:#999">ACCIONES</th>' +
-            '</tr></thead><tbody>';
+            "</tr></thead><tbody>";
           for (const u of data) {
             const display = u.nombre_display || "";
-            const rolBdg = u.rol === "director" ? "bdg-gold" : u.rol === "jurado" ? "bdg-green" : "bdg-gray";
+            const rolBdg =
+              u.rol === "director"
+                ? "bdg-gold"
+                : u.rol === "jurado"
+                  ? "bdg-green"
+                  : "bdg-gray";
             const esCriticoDir = u.rol === "director";
-            html += '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">' +
-              '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' + u.username + (u.juez_num ? '<span class="muted text-xs"> (J' + u.juez_num + ')</span>' : '') + '</td>' +
-              '<td style="padding:8px 4px"><span class="bdg ' + rolBdg + '" style="font-size:10px">' + u.rol + '</span></td>' +
-              '<td style="padding:8px 4px"><input id="sa-name-' + u.username + '" value="' + display.replace(/"/g, "&quot;") + '" placeholder="(sin nombre)" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;color:#F8F5EE;font-size:12px"></td>' +
+            html +=
+              '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">' +
+              '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' +
+              u.username +
+              (u.juez_num
+                ? '<span class="muted text-xs"> (J' + u.juez_num + ")</span>"
+                : "") +
+              "</td>" +
+              '<td style="padding:8px 4px"><span class="bdg ' +
+              rolBdg +
+              '" style="font-size:10px">' +
+              u.rol +
+              "</span></td>" +
+              '<td style="padding:8px 4px"><input id="sa-name-' +
+              u.username +
+              '" value="' +
+              display.replace(/"/g, "&quot;") +
+              '" placeholder="(sin nombre)" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:5px 8px;color:#F8F5EE;font-size:12px"></td>' +
               '<td style="padding:8px 4px;text-align:center">' +
-                (esCriticoDir
-                  ? '<span class="bdg bdg-gold" style="font-size:10px">always-on</span>'
-                  : '<span class="bdg ' + (u.activo ? "bdg-green" : "bdg-gray") + '" style="cursor:pointer;font-size:10px" onclick="saToggleActivo(\'' + u.username + '\',' + (!u.activo) + ')">' + (u.activo ? "✓" : "✗") + '</span>') +
-              '</td>' +
+              (esCriticoDir
+                ? '<span class="bdg bdg-gold" style="font-size:10px">always-on</span>'
+                : '<span class="bdg ' +
+                  (u.activo ? "bdg-green" : "bdg-gray") +
+                  '" style="cursor:pointer;font-size:10px" onclick="saToggleActivo(\'' +
+                  u.username +
+                  "'," +
+                  !u.activo +
+                  ')">' +
+                  (u.activo ? "✓" : "✗") +
+                  "</span>") +
+              "</td>" +
               '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
-                '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="saSaveNombre(\'' + u.username + '\')">💾</button>' +
-                '<button class="btn bo" style="font-size:10px;padding:4px 8px;border-color:#E8A838;color:#E8A838" onclick="saResetPass(\'' + u.username + '\')">🔑</button>' +
-              '</td>' +
-              '</tr>';
+              '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="saSaveNombre(\'' +
+              u.username +
+              "')\">💾</button>" +
+              '<button class="btn bo" style="font-size:10px;padding:4px 8px;border-color:#E8A838;color:#E8A838" onclick="saResetPass(\'' +
+              u.username +
+              "')\">🔑</button>" +
+              "</td>" +
+              "</tr>";
           }
-          html += '</tbody></table>';
+          html += "</tbody></table>";
           el.innerHTML = html;
         } catch (e) {
-          el.innerHTML = '<span style="color:#E0524C">Error: ' + e.message + '</span>';
+          el.innerHTML =
+            '<span style="color:#E0524C">Error: ' + e.message + "</span>";
         }
       }
 
@@ -4236,7 +5706,10 @@
         if (!inp) return;
         const nombre = inp.value.trim();
         try {
-          const { data, error } = await db.rpc("actualizar_nombre_jurado", { p_username: username, p_nombre: nombre });
+          const { data, error } = await db.rpc("actualizar_nombre_jurado", {
+            p_username: username,
+            p_nombre: nombre,
+          });
           if (error) throw error;
           if (data?.ok) {
             toast("Nombre actualizado: " + (nombre || "(sin nombre)"), "ok");
@@ -4245,38 +5718,67 @@
           } else {
             toast("Error: " + (data?.error || "desconocido"), "err");
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saResetPass(username) {
         const newPass = prompt("Nueva contraseña para " + username + ":", "");
         if (!newPass) return;
-        if (newPass.length < 4) { toast("La contraseña debe tener al menos 4 caracteres", "err"); return; }
-        if (!confirm("¿Confirmás resetear la contraseña de '" + username + "'?")) return;
+        if (newPass.length < 4) {
+          toast("La contraseña debe tener al menos 4 caracteres", "err");
+          return;
+        }
+        if (
+          !confirm("¿Confirmás resetear la contraseña de '" + username + "'?")
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("resetear_password", { p_username: username, p_new_password: newPass });
+          const { data, error } = await db.rpc("resetear_password", {
+            p_username: username,
+            p_new_password: newPass,
+          });
           if (error) throw error;
           if (data?.ok) {
             toast("Contraseña reseteada para " + username, "ok");
           } else {
             toast("Error: " + (data?.error || "desconocido"), "err");
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function saToggleActivo(username, nuevoEstado) {
-        if (!confirm((nuevoEstado ? "Activar" : "Desactivar") + " usuario '" + username + "'?")) return;
+        if (
+          !confirm(
+            (nuevoEstado ? "Activar" : "Desactivar") +
+              " usuario '" +
+              username +
+              "'?",
+          )
+        )
+          return;
         try {
-          const { data, error } = await db.rpc("toggle_usuario_activo", { p_username: username, p_activo: nuevoEstado });
+          const { data, error } = await db.rpc("toggle_usuario_activo", {
+            p_username: username,
+            p_activo: nuevoEstado,
+          });
           if (error) throw error;
           if (data?.ok) {
-            toast(username + " " + (nuevoEstado ? "activado" : "desactivado"), "ok");
+            toast(
+              username + " " + (nuevoEstado ? "activado" : "desactivado"),
+              "ok",
+            );
             saLoadUsuarios();
             if (typeof dCargarJurados === "function") await dCargarJurados();
           } else {
             toast("Error: " + (data?.error || "desconocido"), "err");
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -4289,11 +5791,16 @@
           const { data, error } = await db.rpc("obtener_config");
           if (error) throw error;
           const map = {};
-          (data || []).forEach(c => { map[c.clave] = c; });
+          (data || []).forEach((c) => {
+            map[c.clave] = c;
+          });
           window._configCache = map;
 
           // Info evento (valor TEXT)
-          const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ""; };
+          const setVal = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.value = v ?? "";
+          };
           setVal("cfg-nombre_evento", map.nombre_evento?.valor);
           setVal("cfg-fecha_evento", map.fecha_evento?.valor);
           setVal("cfg-lugar_evento", map.lugar_evento?.valor);
@@ -4335,9 +5842,14 @@
 
           // Ranking config (JSON)
           const rank = map.ranking_config?.valor_json || {};
-          window._cfgRankInstancias = rank.instancias ? JSON.parse(JSON.stringify(rank.instancias)) : JSON.parse(JSON.stringify(DEFAULT_RANKING_CFG.instancias));
+          window._cfgRankInstancias = rank.instancias
+            ? JSON.parse(JSON.stringify(rank.instancias))
+            : JSON.parse(JSON.stringify(DEFAULT_RANKING_CFG.instancias));
           cfgRankRenderInstancias();
-          const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val !== false; };
+          const chk = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = val !== false;
+          };
           chk("cfg-rank-mostrar_niv", rank.mostrar_niv);
           chk("cfg-rank-mostrar_categoria", rank.mostrar_categoria);
           chk("cfg-rank-mostrar_puntaje", rank.mostrar_puntaje);
@@ -4366,11 +5878,23 @@
 
       async function cfgGuardarEvento() {
         const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
-        const ok1 = await cfgGuardar("Nombre", { p_clave: "nombre_evento", p_valor: getVal("cfg-nombre_evento") });
+        const ok1 = await cfgGuardar("Nombre", {
+          p_clave: "nombre_evento",
+          p_valor: getVal("cfg-nombre_evento"),
+        });
         if (!ok1) return;
-        await cfgGuardar("Fecha", { p_clave: "fecha_evento", p_valor: getVal("cfg-fecha_evento") });
-        await cfgGuardar("Lugar", { p_clave: "lugar_evento", p_valor: getVal("cfg-lugar_evento") });
-        await cfgGuardar("PIN", { p_clave: "pin_evento", p_valor: getVal("cfg-pin_evento") });
+        await cfgGuardar("Fecha", {
+          p_clave: "fecha_evento",
+          p_valor: getVal("cfg-fecha_evento"),
+        });
+        await cfgGuardar("Lugar", {
+          p_clave: "lugar_evento",
+          p_valor: getVal("cfg-lugar_evento"),
+        });
+        await cfgGuardar("PIN", {
+          p_clave: "pin_evento",
+          p_valor: getVal("cfg-pin_evento"),
+        });
       }
 
       async function cfgGuardarBancarios() {
@@ -4383,7 +5907,10 @@
           mp_link: getVal("cfg-bank-mp_link"),
           mp_alias: getVal("cfg-bank-mp_alias"),
         };
-        await cfgGuardar("Datos bancarios", { p_clave: "datos_bancarios", p_valor_json: payload });
+        await cfgGuardar("Datos bancarios", {
+          p_clave: "datos_bancarios",
+          p_valor_json: payload,
+        });
       }
 
       async function cfgGuardarEmails() {
@@ -4396,7 +5923,10 @@
           saludo_devolucion: getVal("cfg-mail-saludo_devolucion"),
           cierre_devolucion: getVal("cfg-mail-cierre_devolucion"),
         };
-        await cfgGuardar("Templates email", { p_clave: "email_templates", p_valor_json: payload });
+        await cfgGuardar("Templates email", {
+          p_clave: "email_templates",
+          p_valor_json: payload,
+        });
       }
 
       async function cfgGuardarProyeccion() {
@@ -4407,22 +5937,35 @@
           mensaje_esperando: getVal("cfg-proy-mensaje_esperando"),
           branding_color: getVal("cfg-proy-branding_color"),
         };
-        await cfgGuardar("Proyección", { p_clave: "proyeccion", p_valor_json: payload });
+        await cfgGuardar("Proyección", {
+          p_clave: "proyeccion",
+          p_valor_json: payload,
+        });
       }
 
       async function cfgGuardarCompetencia() {
-        const items = document.getElementById("cfg-comp-items")?.value
-          .split("\n").map(x => x.trim()).filter(Boolean);
+        const items = document
+          .getElementById("cfg-comp-items")
+          ?.value.split("\n")
+          .map((x) => x.trim())
+          .filter(Boolean);
         const payload = {
           items_disponibles: items,
           cantidad_jurados: {
-            nac: parseInt(document.getElementById("cfg-comp-jur-nac")?.value) || 5,
-            int: parseInt(document.getElementById("cfg-comp-jur-int")?.value) || 3,
-            reg: parseInt(document.getElementById("cfg-comp-jur-reg")?.value) || 5,
-            rep: parseInt(document.getElementById("cfg-comp-jur-rep")?.value) || 3,
+            nac:
+              parseInt(document.getElementById("cfg-comp-jur-nac")?.value) || 5,
+            int:
+              parseInt(document.getElementById("cfg-comp-jur-int")?.value) || 3,
+            reg:
+              parseInt(document.getElementById("cfg-comp-jur-reg")?.value) || 5,
+            rep:
+              parseInt(document.getElementById("cfg-comp-jur-rep")?.value) || 3,
           },
         };
-        await cfgGuardar("Modo competencia", { p_clave: "modo_competencia", p_valor_json: payload });
+        await cfgGuardar("Modo competencia", {
+          p_clave: "modo_competencia",
+          p_valor_json: payload,
+        });
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -4547,19 +6090,23 @@
         "Tiempo",
         "Edición Musical",
       ];
-      
+
       // Hook: cuando se carga config global, sincronizar items
       async function sincronizarItemsDesdeConfig() {
         try {
-          const { data } = await db.rpc("obtener_config", { p_clave: "modo_competencia" });
+          const { data } = await db.rpc("obtener_config", {
+            p_clave: "modo_competencia",
+          });
           const cfg = data && data[0];
           const items = cfg?.valor_json?.items_disponibles;
           if (Array.isArray(items) && items.length > 0) {
             TODOS_ITEMS = items;
           }
-        } catch(e) { /* fallback a defaults */ }
+        } catch (e) {
+          /* fallback a defaults */
+        }
       }
-      
+
       let juradosConfig = [];
 
       async function dCargarJurados() {
@@ -4571,21 +6118,27 @@
           const { data: users } = await db.rpc("listar_usuarios");
           if (Array.isArray(users)) {
             const nameMap = {};
-            users.filter(u => u.rol === "jurado").forEach(u => {
-              if (u.nombre_display) nameMap[u.juez_num] = u.nombre_display;
-            });
-            juradosConfig.forEach(j => {
+            users
+              .filter((u) => u.rol === "jurado")
+              .forEach((u) => {
+                if (u.nombre_display) nameMap[u.juez_num] = u.nombre_display;
+              });
+            juradosConfig.forEach((j) => {
               j.nombre_display = nameMap[j.juez_num] || null;
             });
           }
-        } catch(e) { /* nombre_display puede no existir aún */ }
+        } catch (e) {
+          /* nombre_display puede no existir aún */
+        }
         renderJuradosGrid();
       }
 
       // Helper: nombre del jurado para mostrar
       function juradoNombre(juez_num) {
-        const cfg = juradosConfig.find(j => j.juez_num === juez_num);
-        return (cfg && cfg.nombre_display) ? cfg.nombre_display : ("Jurado " + juez_num);
+        const cfg = juradosConfig.find((j) => j.juez_num === juez_num);
+        return cfg && cfg.nombre_display
+          ? cfg.nombre_display
+          : "Jurado " + juez_num;
       }
 
       function renderJuradosGrid() {
@@ -4599,7 +6152,9 @@
           const cfg = juradosConfig.find((j) => j.juez_num === i);
           const items = cfg?.items || [];
           const activo = cfg?.activo !== false;
-          const displayName = cfg?.nombre_display ? cfg.nombre_display : ("Jurado " + i);
+          const displayName = cfg?.nombre_display
+            ? cfg.nombre_display
+            : "Jurado " + i;
           cont.innerHTML += `
     <div class="card mb2" style="padding:14px" id="jcfg-${i}">
       <div class="sf mb2">
