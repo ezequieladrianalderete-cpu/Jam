@@ -2117,10 +2117,12 @@
               document
                 .querySelectorAll(".tp")
                 .forEach((t) => t.classList.remove("show"));
-              if (allowedTabs[0])
+              if (allowedTabs[0]) {
                 document
                   .getElementById("tp-" + allowedTabs[0])
                   ?.classList.add("show");
+                if (allowedTabs[0] === "categorias") await catCargar();
+              }
               initEvento();
             }
             return;
@@ -2201,10 +2203,12 @@
         document
           .querySelectorAll(".tp")
           .forEach((t) => t.classList.remove("show"));
-        if (allowedTabs[0])
+        if (allowedTabs[0]) {
           document
             .getElementById("tp-" + allowedTabs[0])
             ?.classList.add("show");
+          if (allowedTabs[0] === "categorias") await catCargar();
+        }
 
         initEvento();
       }
