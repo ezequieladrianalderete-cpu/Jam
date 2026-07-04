@@ -1990,6 +1990,7 @@
           const a = typeof c === "string" ? JSON.parse(c) : c;
           if (Array.isArray(a))
             return a.map((x) => `${x.c}: ${x.n}`).join(" - ");
+          if (a && typeof a === "object") return `${a.c}: ${a.n}`;
           return String(c || "");
         } catch (e) {
           return String(c || "");
@@ -2261,6 +2262,7 @@
           .select("*")
           .order("posicion");
         luData = data || [];
+        await luRefreshCatsHechas();
         buildStLista(luData);
         luRender();
       }
@@ -2489,6 +2491,93 @@
       // ═══════════════════════════════════════════════════════════
       // LINE UP
       // ═══════════════════════════════════════════════════════════
+      function luParseCatArr(raw) {
+        try {
+          const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (Array.isArray(v)) return v;
+          if (v && typeof v === "object") return [v];
+          return [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      // codigo_id -> Set de códigos de categoría que ya tienen una sesión de scoring
+      let luCatsHechas = new Map();
+
+      async function luRefreshCatsHechas() {
+        const { data } = await db
+          .schema("scoring")
+          .from("sesiones")
+          .select("codigo_id,categoria");
+        const map = new Map();
+        (data || []).forEach((s) => {
+          const cats = luParseCatArr(s.categoria);
+          if (!cats.length) return;
+          const set = map.get(s.codigo_id) || new Set();
+          cats.forEach((c) => {
+            if (c?.c != null) set.add(c.c);
+          });
+          map.set(s.codigo_id, set);
+        });
+        luCatsHechas = map;
+      }
+
+      // Categorías del participante que todavía no tienen sesión de scoring propia
+      async function luCategoriasPendientes(p) {
+        const todas = luParseCatArr(p.categoria);
+        if (todas.length <= 1) return todas;
+        const { data: sesiones } = await db
+          .schema("scoring")
+          .from("sesiones")
+          .select("categoria")
+          .eq("codigo_id", p.codigo_id);
+        const hechas = new Set();
+        (sesiones || []).forEach((s) => {
+          luParseCatArr(s.categoria).forEach((c) => {
+            if (c?.c != null) hechas.add(c.c);
+          });
+        });
+        return todas.filter((c) => !hechas.has(c.c));
+      }
+
+      // Modal simple para elegir en qué categoría entra a pista un participante multi-categoría
+      function luElegirCategoria(nombre, pendientes) {
+        return new Promise((resolve) => {
+          const overlay = document.createElement("div");
+          overlay.style.cssText =
+            "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px";
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.cssText = "max-width:360px;width:100%";
+          const cerrar = (valor) => {
+            document.body.removeChild(overlay);
+            resolve(valor);
+          };
+          card.innerHTML =
+            '<div class="fw7 mb2" style="font-size:15px">¿En qué categoría entra ' +
+            nombre.replace(/</g, "&lt;") +
+            '?</div><div class="muted text-xs mb3">Está inscripto en varias categorías todavía sin evaluar.</div>';
+          pendientes.forEach((cat) => {
+            const btn = document.createElement("button");
+            btn.className = "btn bgn";
+            btn.style.cssText =
+              "width:100%;margin-bottom:8px;justify-content:flex-start";
+            btn.textContent = cat.c + ": " + cat.n;
+            btn.onclick = () => cerrar(cat);
+            card.appendChild(btn);
+          });
+          const cancelar = document.createElement("button");
+          cancelar.className = "btn bo";
+          cancelar.style.cssText = "width:100%";
+          cancelar.textContent = "Cancelar";
+          cancelar.onclick = () => cerrar(null);
+          card.appendChild(cancelar);
+          overlay.appendChild(card);
+          document.body.appendChild(overlay);
+        });
+      }
+
       function luStats() {
         const el = document.getElementById("lu-stats");
         if (!el) return;
@@ -2546,7 +2635,13 @@
           pos.textContent = p.posicion;
           const info = document.createElement("div");
           info.className = "lu-info";
-          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat">${parseCat(p.categoria)}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado] || "#555"}">${LU_LBL[p.estado] || p.estado}</div>`;
+          const catsArr = luParseCatArr(p.categoria);
+          const hechasSet = luCatsHechas.get(p.codigo_id) || new Set();
+          const progresoHtml =
+            catsArr.length > 1
+              ? `<div class="muted text-xs" style="margin-top:2px">${catsArr.filter((c) => hechasSet.has(c.c)).length}/${catsArr.length} categorías evaluadas</div>`
+              : "";
+          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat">${parseCat(p.categoria)}</div>${progresoHtml}<div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado] || "#555"}">${LU_LBL[p.estado] || p.estado}</div>`;
           const ctrl = document.createElement("div");
           ctrl.className = "lu-ctrl";
           const eBtn = document.createElement("button");
@@ -2601,31 +2696,39 @@
       }
 
       async function luCambiarEstado(id, nuevoEstado) {
-        if (nuevoEstado === "pista")
+        const p = luData.find((x) => x.id === id);
+        if (!p) return;
+
+        // Poner en pista: si tiene más de una categoría sin evaluar, hay que elegir cuál
+        if (nuevoEstado === "pista") {
+          const pendientes = await luCategoriasPendientes(p);
+          if (pendientes.length === 0) {
+            toast(p.nombre_grupo + " ya fue evaluado en todas sus categorías", "warn");
+            return;
+          }
+          let categoria = pendientes[0];
+          if (pendientes.length > 1) {
+            categoria = await luElegirCategoria(p.nombre_grupo, pendientes);
+            if (!categoria) return; // cancelado
+          }
+
           luData.forEach((x) => {
             if (x.estado === "pista") x.estado = "presente";
           });
-        const p = luData.find((x) => x.id === id);
-        if (!p) return;
-        p.estado = nuevoEstado;
-        const update = { estado: nuevoEstado };
-        if (nuevoEstado === "presente")
-          update.acreditado_at = new Date().toISOString();
-        if (nuevoEstado === "pista")
-          update.pista_desde = new Date().toISOString();
-        if (nuevoEstado === "listo") update.listo_at = new Date().toISOString();
-        await db.schema("evento").from("lineup").update(update).eq("id", id);
+          p.estado = "pista";
+          await db
+            .schema("evento")
+            .from("lineup")
+            .update({ estado: "pista", pista_desde: new Date().toISOString() })
+            .eq("id", id);
 
-        // Si se pone en pista → crear sesión en scoring para que los jurados lo vean
-        if (nuevoEstado === "pista") {
+          // Crear sesión en scoring, acotada a la categoría elegida, para que los jurados la vean
           try {
-            // Desactivar sesión anterior
             await db
               .schema("scoring")
               .from("sesiones")
               .update({ activa: false })
               .eq("activa", true);
-            // Crear nueva sesión activa
             await db
               .schema("scoring")
               .from("sesiones")
@@ -2635,21 +2738,58 @@
                 instancia: p.instancia || "nac",
                 activa: true,
                 pais: p.pais,
-                categoria:
-                  typeof p.categoria === "string"
-                    ? p.categoria
-                    : JSON.stringify(p.categoria),
+                categoria: JSON.stringify(categoria),
               });
           } catch (e) {
             console.error("Error creando sesión:", e);
           }
+
+          await luRefreshCatsHechas();
+          luRender();
+          toast(p.nombre_grupo + " — " + categoria.n + " en pista", "ok");
+          return;
         }
 
+        // Finalizar: si quedan categorías sin evaluar, vuelve a 'presente' en vez de cerrarse del todo
+        if (nuevoEstado === "listo") {
+          const pendientes = await luCategoriasPendientes(p);
+          if (pendientes.length > 0) {
+            p.estado = "presente";
+            await db
+              .schema("evento")
+              .from("lineup")
+              .update({ estado: "presente" })
+              .eq("id", id);
+            luRender();
+            toast(
+              p.nombre_grupo +
+                " evaluado en esa categoría · quedan " +
+                pendientes.length +
+                " categoría(s) más por evaluar",
+              "ok",
+            );
+            return;
+          }
+          p.estado = "listo";
+          await db
+            .schema("evento")
+            .from("lineup")
+            .update({ estado: "listo", listo_at: new Date().toISOString() })
+            .eq("id", id);
+          luRender();
+          toast(p.nombre_grupo + " marcado como finalizado", "ok");
+          return;
+        }
+
+        // Resto de transiciones (presente, pendiente, ausente): sin cambios
+        p.estado = nuevoEstado;
+        const update = { estado: nuevoEstado };
+        if (nuevoEstado === "presente")
+          update.acreditado_at = new Date().toISOString();
+        await db.schema("evento").from("lineup").update(update).eq("id", id);
         luRender();
         const msgs = {
           presente: "marcado como presente",
-          pista: "puesto en pista — sesión creada",
-          listo: "marcado como finalizado",
           pendiente: "reactivado",
           ausente: "marcado como ausente",
         };
@@ -2901,7 +3041,7 @@
       <div class="row"><span class="muted text-xs">Instancia</span><span>${p.instancia?.toUpperCase() || "—"}</span></div>
       <div class="row" style="border-bottom:none"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado] || p.estado}</span></div>
     </div>
-    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${p.nombre_grupo}')">✓ Confirmar presencia y acreditar</button>
+    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${(p.nombre_grupo || "").replace(/'/g, "\\'")}')">✓ Confirmar presencia y acreditar</button>
     <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
       }
 
@@ -3042,9 +3182,9 @@
             
             for (let i = 0; i < items.length; i++) {
               const p = items[i];
-              const presente = p.estado === "presente" || p.estado === "en_pista" || p.estado === "completado";
-              const enPista = p.estado === "en_pista";
-              const completado = p.estado === "completado";
+              const presente = p.estado === "presente" || p.estado === "pista" || p.estado === "listo";
+              const enPista = p.estado === "pista";
+              const completado = p.estado === "listo";
               const puedeIrAPista = presente && !enPista && !completado;
               const estadoBdg = completado ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
                 : enPista ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
@@ -3065,7 +3205,7 @@
                 html += '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
                   (i > 0 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;arriba&quot;)">↑</button>' : '') +
                   (i < items.length - 1 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;abajo&quot;)">↓</button>' : '') +
-                  (puedeIrAPista ? '<button class="btn" style="background:#E0524C;color:#fff;font-size:10px;padding:4px 10px;font-weight:700" onclick="catPonerEnPista(' + idEsc + ')">⚡ PISTA</button>' : '') +
+                  (puedeIrAPista ? '<button class="btn" style="background:#E0524C;color:#fff;font-size:10px;padding:4px 10px;font-weight:700" onclick="catPonerEnPista(' + idEsc + ',' + catKeyEsc + ')">⚡ PISTA</button>' : '') +
                   '</td>';
               }
               html += '</tr>';
@@ -3095,10 +3235,13 @@
         } catch (e) { toast("Error: " + e.message, "err"); }
       }
 
-      async function catPonerEnPista(lineupId) {
-        if (!confirm("Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente")) return;
+      async function catPonerEnPista(lineupId, catKey) {
+        if (!confirm("Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva (sólo para esta categoría)\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente")) return;
         try {
-          const { data, error } = await db.rpc("poner_en_pista", { p_lineup_id: lineupId });
+          const { data, error } = await db.rpc("poner_en_pista", {
+            p_lineup_id: lineupId,
+            p_categoria_key: catKey,
+          });
           if (error) throw error;
           if (data?.ok) {
             toast("⚡ Participante puesto en pista · Sesión #" + data.sesion_id, "ok");
@@ -3356,13 +3499,29 @@
         });
       }
 
+      // Clave de categoría de UNA sesión (para no mezclar sesiones de categorías distintas
+      // del mismo grupo al deduplicar). Sesiones nuevas guardan un solo objeto de categoría;
+      // sesiones viejas/contaminadas pueden traer un array con varias — se tratan como un
+      // combo aparte en vez de colapsarse con las demás.
+      function sessionCatKey(raw) {
+        try {
+          const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (Array.isArray(v)) return v.map((x) => x?.c).join(",");
+          if (v && typeof v === "object") return String(v.c);
+          return "";
+        } catch (e) {
+          return "";
+        }
+      }
+
       function dedupeScores(data) {
         const map = new Map();
         (data || []).forEach((r) => {
-          const existing = map.get(r.codigo_id);
+          const key = r.codigo_id + "|" + sessionCatKey(r.categoria);
+          const existing = map.get(key);
           const score = r.subtotal_parcial ?? -Infinity;
           const existScore = existing?.subtotal_parcial ?? -Infinity;
-          if (!existing || score > existScore) map.set(r.codigo_id, r);
+          if (!existing || score > existScore) map.set(key, r);
         });
         return [...map.values()];
       }
@@ -3372,13 +3531,19 @@
         (data || []).forEach((r) => {
           const raw = r.categoria;
           try {
-            const arr = raw
+            const val = raw
               ? typeof raw === "string"
                 ? JSON.parse(raw)
                 : raw
               : null;
-            if (Array.isArray(arr) && arr.length > 0) {
-              arr.forEach((x) => rows.push({ ...r, _activeCat: x }));
+            if (Array.isArray(val)) {
+              if (val.length > 0) {
+                val.forEach((x) => rows.push({ ...r, _activeCat: x }));
+              } else {
+                rows.push({ ...r, _activeCat: null });
+              }
+            } else if (val && typeof val === "object") {
+              rows.push({ ...r, _activeCat: val });
             } else {
               rows.push({ ...r, _activeCat: null });
             }
@@ -3453,9 +3618,11 @@
         const catMap = Object.fromEntries(
           (lineupCats || []).map((p) => [p.codigo_id, p.categoria]),
         );
+        // La sesión ya trae su propia categoría (una sola); el lineup (todas las
+        // categorías inscriptas) es sólo un respaldo para sesiones viejas sin categoria.
         const allData = (data || []).map((r) => ({
           ...r,
-          categoria: catMap[r.codigo_id] ?? r.categoria,
+          categoria: r.categoria ?? catMap[r.codigo_id],
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";

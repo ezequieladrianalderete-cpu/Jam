@@ -11,6 +11,21 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
+// sesion.categoria guarda un solo objeto de categoría (una sesión = una categoría),
+// pero sesiones viejas pueden traer un array combinado — se soportan ambos formatos.
+function formatCategoria(raw) {
+  if (!raw) return "";
+  try {
+    const v = JSON.parse(raw);
+    if (Array.isArray(v))
+      return v.map((item) => `${item.c}: ${item.n}`).join(" - ");
+    if (v && typeof v === "object") return `${v.c}: ${v.n}`;
+    return "";
+  } catch (e) {
+    return "";
+  }
+}
+
 async function supaFetch(path, opts = {}) {
   const url = `${process.env.SUPABASE_URL}/rest/v1/${path}`;
   const headers = {
@@ -127,14 +142,8 @@ module.exports = async function handler(req, res) {
         <div style="font-size:10px;color:#A08840;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">DEVOLUCI&Oacute;N DE EVALUACI&Oacute;N</div>
         <div style="font-size:13px;color:#C9A84C;margin-bottom:4px">${esc(sesion.codigo_id)}</div>
         <div style="font-size:24px;font-weight:600;color:#F8F5EE;margin-bottom:4px">${esc(sesion.nombre_grupo)}</div>
-        <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot; 
-        ${esc(
-          sesion.categoria
-            ? JSON.parse(sesion.categoria)
-                .map((item) => `${item.c}: ${item.n}`)
-                .join(" - ")
-            : "",
-        )}</div>
+        <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot;
+        ${esc(formatCategoria(sesion.categoria))}</div>
       </td></tr>
       <tr><td height="16"></td></tr>
       <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:24px">
@@ -230,11 +239,7 @@ module.exports = async function handler(req, res) {
         });
 
       // Armamos el texto limpio de la categoría
-      const categoriaLimpia = sesion.categoria
-        ? JSON.parse(sesion.categoria)
-            .map((item) => `${item.c}: ${item.n}`)
-            .join(" - ")
-        : "";
+      const categoriaLimpia = formatCategoria(sesion.categoria);
 
       doc
         .fontSize(11)

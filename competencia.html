@@ -2680,6 +2680,8 @@
           if (Array.isArray(arr))
             return arr.map((x) => `${x.c}: ${x.n}`).join(" - ");
 
+          if (arr && typeof arr === "object") return `${arr.c}: ${arr.n}`;
+
           return String(c);
         } catch (e) {
           return String(c);
@@ -3460,13 +3462,29 @@
         );
       }
 
+      // Clave de categoría de UNA sesión (para no mezclar sesiones de categorías distintas
+      // del mismo grupo al deduplicar). Sesiones nuevas guardan un solo objeto de categoría;
+      // sesiones viejas/contaminadas pueden traer un array con varias — se tratan como un
+      // combo aparte en vez de colapsarse con las demás.
+      function sessionCatKey(raw) {
+        try {
+          const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (Array.isArray(v)) return v.map((x) => x?.c).join(",");
+          if (v && typeof v === "object") return String(v.c);
+          return "";
+        } catch (e) {
+          return "";
+        }
+      }
+
       function dedupeScores(data) {
         const map = new Map();
         (data || []).forEach((r) => {
-          const existing = map.get(r.codigo_id);
+          const key = r.codigo_id + "|" + sessionCatKey(r.categoria);
+          const existing = map.get(key);
           const score = r.subtotal_parcial ?? -Infinity;
           const existScore = existing?.subtotal_parcial ?? -Infinity;
-          if (!existing || score > existScore) map.set(r.codigo_id, r);
+          if (!existing || score > existScore) map.set(key, r);
         });
         return [...map.values()];
       }
@@ -3476,13 +3494,19 @@
         (data || []).forEach((r) => {
           const raw = r.categoria;
           try {
-            const arr = raw
+            const val = raw
               ? typeof raw === "string"
                 ? JSON.parse(raw)
                 : raw
               : null;
-            if (Array.isArray(arr) && arr.length > 0) {
-              arr.forEach((x) => rows.push({ ...r, _activeCat: x }));
+            if (Array.isArray(val)) {
+              if (val.length > 0) {
+                val.forEach((x) => rows.push({ ...r, _activeCat: x }));
+              } else {
+                rows.push({ ...r, _activeCat: null });
+              }
+            } else if (val && typeof val === "object") {
+              rows.push({ ...r, _activeCat: val });
             } else {
               rows.push({ ...r, _activeCat: null });
             }
@@ -3697,9 +3721,11 @@
         const catMap = Object.fromEntries(
           (lineupCats || []).map((p) => [p.codigo_id, p.categoria]),
         );
+        // La sesión ya trae su propia categoría (una sola); el lineup (todas las
+        // categorías inscriptas) es sólo un respaldo para sesiones viejas sin categoria.
         const enriched = (data || []).map((r) => ({
           ...r,
-          categoria: catMap[r.codigo_id] ?? r.categoria,
+          categoria: r.categoria ?? catMap[r.codigo_id],
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
@@ -4741,8 +4767,8 @@
               const p = list[i];
               const presente =
                 p.estado === "presente" ||
-                p.estado === "en_pista" ||
-                p.estado === "completado";
+                p.estado === "pista" ||
+                p.estado === "listo";
               const idEsc = JSON.stringify(p.lineup_id).replace(/"/g, "&quot;");
               const ckEsc = JSON.stringify(catKey).replace(/"/g, "&quot;");
               const posMostrar = p.posicion === 999 ? "—" : p.posicion;
