@@ -2041,12 +2041,21 @@
               📅 Información del Evento
             </div>
             <div class="mb3">
-              <label class="text-xs muted">Nombre del evento</label>
+              <label class="text-xs muted">Edición (año)</label>
               <input
-                id="cfg-nombre_evento"
+                id="cfg-edicion"
                 class="cfg-input"
-                placeholder="JAM 2026"
+                placeholder="2026"
+                maxlength="20"
+                oninput="cfgActualizarPreviewEdicion()"
               />
+              <div class="text-xs muted" style="margin-top:6px;line-height:1.4">
+                El sistema se mostrará como:
+                <strong id="cfg-edicion-preview" style="color:#c9a84c">JAM 2026</strong>
+                <br>
+                <span style="opacity:.7">El nombre "JAM" es fijo. Solo cambiás el año/edición y se
+                actualiza en todos los portales, emails y certificados.</span>
+              </div>
             </div>
             <div class="mb3">
               <label class="text-xs muted"
@@ -2893,6 +2902,7 @@
           /* sim no instalada */
         }
         await loadSesionJurado();
+        aplicarNombreEventoUI();
         subscribeRealtimeJurado();
       }
 
@@ -3212,12 +3222,37 @@
         await dCargarJurados();
         await loadSesionDirector();
         await buildLineup();
+        aplicarNombreEventoUI();
         setInterval(() => {
           const el = document.getElementById("d-hora-hdr");
           if (el) el.textContent = new Date().toLocaleTimeString("es-AR");
         }, 1000);
         subscribeRealtimeDirector();
         loadStats();
+      }
+
+      // Carga nombre_madre + edicion (si no están cargados) y actualiza
+      // título de pestaña y subtítulo de login. Con fallback total.
+      // Los banners de instancia los maneja setTema() según la instancia.
+      async function aplicarNombreEventoUI() {
+        try {
+          if (!window._edicion || !window._nombreMadre) {
+            const { data } = await db.rpc("obtener_config");
+            (data || []).forEach((c) => {
+              if (c.clave === "nombre_madre") window._nombreMadre = c.valor;
+              if (c.clave === "edicion") window._edicion = c.valor;
+            });
+          }
+          const nombreEv = nombreEventoActual();
+          document.title = "Competencia — " + nombreEv;
+          document.querySelectorAll(".login-sub").forEach((el) => {
+            if (el.textContent.includes("·"))
+              el.textContent =
+                "Portal de Competencia · " + (window._edicion || "");
+          });
+        } catch (e) {
+          /* fallback: queda el texto por defecto del HTML */
+        }
       }
 
       async function loadSesionDirector() {
@@ -5895,7 +5930,12 @@
             const el = document.getElementById(id);
             if (el) el.value = v ?? "";
           };
-          setVal("cfg-nombre_evento", map.nombre_evento?.valor);
+          // Nombre madre (marca fija) + edición (editable por el director)
+          window._nombreMadre = map.nombre_madre?.valor || "JAM";
+          window._edicion = map.edicion?.valor || "";
+          setVal("cfg-edicion", window._edicion);
+          if (typeof cfgActualizarPreviewEdicion === "function")
+            cfgActualizarPreviewEdicion();
           setVal("cfg-fecha_evento", map.fecha_evento?.valor);
           setVal("cfg-lugar_evento", map.lugar_evento?.valor);
           setVal("cfg-pin_evento", map.pin_evento?.valor);
@@ -5970,13 +6010,32 @@
         }
       }
 
+      // Actualiza el texto de vista previa "JAM 2026" mientras el director escribe la edición
+      function cfgActualizarPreviewEdicion() {
+        const madre = window._nombreMadre || "JAM";
+        const ed = (document.getElementById("cfg-edicion")?.value || "").trim();
+        const prev = document.getElementById("cfg-edicion-preview");
+        if (prev) prev.textContent = (madre + " " + ed).trim();
+      }
+
       async function cfgGuardarEvento() {
         const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
-        const ok1 = await cfgGuardar("Nombre", {
-          p_clave: "nombre_evento",
-          p_valor: getVal("cfg-nombre_evento"),
+        const madre = window._nombreMadre || "JAM";
+        const edicion = getVal("cfg-edicion");
+        // 1) Guardar la edición (lo que el director controla)
+        const ok1 = await cfgGuardar("Edición", {
+          p_clave: "edicion",
+          p_valor: edicion,
         });
         if (!ok1) return;
+        // 2) Recalcular nombre_evento = "JAM 2026" para que TODO lo que ya
+        //    lee nombre_evento siga funcionando, sin depender de que el
+        //    director lo escriba bien. La marca ("JAM") queda fija.
+        window._edicion = edicion;
+        await cfgGuardar("Nombre", {
+          p_clave: "nombre_evento",
+          p_valor: (madre + " " + edicion).trim(),
+        });
         await cfgGuardar("Fecha", {
           p_clave: "fecha_evento",
           p_valor: getVal("cfg-fecha_evento"),
@@ -6068,13 +6127,22 @@
       // ═══════════════════════════════════════════════════════════
       // TEMA VISUAL (NAC vs INTER)
       // ═══════════════════════════════════════════════════════════
+      // Devuelve "JAM 2026" desde config (nombre_madre + edicion), con fallback
+      function nombreEventoActual() {
+        const madre = window._nombreMadre || "JAM";
+        const ed = window._edicion || "2026";
+        return (madre + " " + ed).trim();
+      }
+
       function setTema(instancia) {
         const isInter = instancia === "int";
         document.body.classList.toggle("tema-inter", isInter);
+        const nombreEv = nombreEventoActual();
         const label = isInter
-          ? "🌎 INTER AMÉRICA · JAM 2026"
-          : "🇦🇷 FINAL NACIONAL · JAM 2026";
-        const regLabel = instancia === "reg" ? "🏆 REGIONAL · JAM 2026" : label;
+          ? "🌎 INTER AMÉRICA · " + nombreEv
+          : "🇦🇷 FINAL NACIONAL · " + nombreEv;
+        const regLabel =
+          instancia === "reg" ? "🏆 REGIONAL · " + nombreEv : label;
         const finalLabel = instancia === "reg" ? regLabel : label;
         document
           .querySelectorAll(".instancia-banner")
