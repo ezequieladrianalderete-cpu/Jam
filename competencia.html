@@ -2764,12 +2764,28 @@
       }
 
       function aplicarConfigUI() {
+        // Guardar nombre_madre + edicion en globals para el resto del código
+        if (window._CFG.nombre_madre) window._nombreMadre = window._CFG.nombre_madre;
+        if (window._CFG.edicion) window._edicion = window._CFG.edicion;
         const nombre = window._CFG.nombre_evento;
         if (nombre) {
           document.title = "Competencia — " + nombre;
           document
             .querySelectorAll("[data-cfg='nombre_evento']")
             .forEach((el) => (el.textContent = nombre));
+          // Banners de instancia: reemplazar solo lo que va después del "·"
+          // (el nombre del evento), preservando "🇦🇷 FINAL NACIONAL".
+          document.querySelectorAll(".instancia-banner").forEach((el) => {
+            const txt = el.textContent;
+            const idx = txt.lastIndexOf("·");
+            if (idx > -1) el.textContent = txt.slice(0, idx + 1) + " " + nombre;
+          });
+          // Subtítulo del login (formato "Portal de Competencia · 2026")
+          document.querySelectorAll(".login-sub").forEach((el) => {
+            if (el.textContent.includes("·"))
+              el.textContent =
+                "Portal de Competencia · " + (window._edicion || "");
+          });
         }
         const fecha = window._CFG.fecha_evento;
         if (fecha)
@@ -3232,8 +3248,8 @@
       }
 
       // Carga nombre_madre + edicion (si no están cargados) y actualiza
-      // título de pestaña y subtítulo de login. Con fallback total.
-      // Los banners de instancia los maneja setTema() según la instancia.
+      // título de pestaña, subtítulo de login y banners de instancia.
+      // Con fallback total: si algo falla, queda el texto por defecto del HTML.
       async function aplicarNombreEventoUI() {
         try {
           if (!window._edicion || !window._nombreMadre) {
@@ -3244,11 +3260,22 @@
             });
           }
           const nombreEv = nombreEventoActual();
+          // Título de la pestaña
           document.title = "Competencia — " + nombreEv;
+          // Subtítulo del login
           document.querySelectorAll(".login-sub").forEach((el) => {
             if (el.textContent.includes("·"))
               el.textContent =
                 "Portal de Competencia · " + (window._edicion || "");
+          });
+          // Banners de instancia: reemplazar SOLO lo que viene después del " · "
+          // (el nombre del evento), preservando el prefijo "🇦🇷 FINAL NACIONAL".
+          document.querySelectorAll(".instancia-banner").forEach((el) => {
+            const txt = el.textContent;
+            const idx = txt.lastIndexOf("·");
+            if (idx > -1) {
+              el.textContent = txt.slice(0, idx + 1) + " " + nombreEv;
+            }
           });
         } catch (e) {
           /* fallback: queda el texto por defecto del HTML */
@@ -6048,6 +6075,9 @@
           p_clave: "pin_evento",
           p_valor: getVal("cfg-pin_evento"),
         });
+        // Refrescar título/banners al instante, sin recargar la página
+        if (typeof aplicarNombreEventoUI === "function")
+          await aplicarNombreEventoUI();
       }
 
       async function cfgGuardarBancarios() {
