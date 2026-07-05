@@ -2316,6 +2316,54 @@
             </button>
           </div>
 
+          <!-- PLANTILLAS DE EMAIL -->
+          <div class="card mb3">
+            <div class="fw6 mb3" style="color: #c9a84c">
+              ✉️ Plantillas de Email
+            </div>
+            <div class="muted text-xs mb3">
+              Personalizá los textos de los emails automáticos. Los campos vacíos
+              usan un texto por defecto. El código, puntajes y datos del
+              participante se agregan automáticamente.
+            </div>
+
+            <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-bottom:8px">
+              <div class="fw6 text-xs mb2" style="color:#4CAF7D">📨 Email de inscripción</div>
+              <div class="mb3">
+                <label class="text-xs muted">Asunto</label>
+                <input id="cfg-mail-asunto_inscripcion" class="cfg-input" placeholder="Inscripción JAM 2026 confirmada">
+              </div>
+              <div class="mb3">
+                <label class="text-xs muted">Saludo inicial</label>
+                <input id="cfg-mail-saludo_inscripcion" class="cfg-input" placeholder="¡Gracias por inscribirte!">
+              </div>
+              <div class="mb3">
+                <label class="text-xs muted">Cierre / despedida</label>
+                <input id="cfg-mail-cierre_inscripcion" class="cfg-input" placeholder="Nos vemos en el evento.">
+              </div>
+            </div>
+
+            <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:12px;margin-bottom:8px">
+              <div class="fw6 text-xs mb2" style="color:#4CAF7D">🏆 Email de devolución (post-evaluación)</div>
+              <div class="mb3">
+                <label class="text-xs muted">Asunto</label>
+                <input id="cfg-mail-asunto_devolucion" class="cfg-input" placeholder="JAM 2026 — Tu devolución">
+              </div>
+              <div class="mb3">
+                <label class="text-xs muted">Saludo inicial</label>
+                <input id="cfg-mail-saludo_devolucion" class="cfg-input" placeholder="Acá está tu evaluación">
+              </div>
+              <div class="mb3">
+                <label class="text-xs muted">Cierre / despedida</label>
+                <input id="cfg-mail-cierre_devolucion" class="cfg-input" placeholder="Gracias por participar">
+              </div>
+            </div>
+
+            <button class="btn bgn bfull" onclick="cfgGuardarEmails()">
+              💾 Guardar plantillas de email
+            </button>
+          </div>
+
           <!-- RANKING -->
           <div class="card mb3">
             <div class="fw6 mb3" style="color: #c9a84c">
