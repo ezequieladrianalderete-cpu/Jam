@@ -48,6 +48,18 @@ module.exports = async function handler(req, res) {
     if (!sesion_id)
       return res.status(400).json({ error: "sesion_id requerido" });
 
+    // 0. Cargar plantillas de email personalizables (con fallback si falla)
+    let mailT = {};
+    try {
+      const cfgRows = await supaFetch(
+        `config?clave=eq.email_templates&select=valor_json`,
+        { headers: { "Accept-Profile": "evento" } },
+      );
+      mailT = cfgRows?.[0]?.valor_json || {};
+    } catch (e) {
+      mailT = {}; // si falla, se usan los textos por defecto de siempre
+    }
+
     // 1. Obtener sesión
     const sesiones = await supaFetch(`sesiones?id=eq.${sesion_id}&select=*`, {
       headers: { "Accept-Profile": "scoring" },
@@ -145,6 +157,10 @@ module.exports = async function handler(req, res) {
         <div style="font-size:13px;color:#999999">${esc(sesion.pais || "")} &middot;
         ${esc(formatCategoria(sesion.categoria))}</div>
       </td></tr>
+      ${mailT.saludo_devolucion ? `<tr><td height="16"></td></tr>
+      <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:20px 24px">
+        <div style="font-size:14px;color:#F8F5EE;line-height:1.5">${esc(mailT.saludo_devolucion)}</div>
+      </td></tr>` : ""}
       <tr><td height="16"></td></tr>
       <tr><td style="background-color:#141414;border:1px solid #333333;border-radius:16px;padding:24px">
         <div style="font-size:14px;font-weight:600;color:#F8F5EE;margin-bottom:16px">Puntajes por jurado</div>
@@ -163,6 +179,7 @@ module.exports = async function handler(req, res) {
         </td></tr></table>
       </td></tr>
       <tr><td height="16"></td></tr>
+      ${mailT.cierre_devolucion ? `<tr><td align="center" style="padding:16px 20px 4px;font-size:13px;color:#C9A84C">${esc(mailT.cierre_devolucion)}</td></tr>` : ""}
       <tr><td align="center" style="padding:20px;font-size:12px;color:#555555">
         JAM Producciones &middot; Dance Competition 2026<br>
         Este email fue generado autom&aacute;ticamente.
@@ -346,7 +363,9 @@ module.exports = async function handler(req, res) {
     const sendResult = await resend.emails.send({
       from: SENDER,
       to: [email],
-      subject: `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`,
+      subject: mailT.asunto_devolucion
+        ? `${mailT.asunto_devolucion} — ${sesion.nombre_grupo} (${sesion.codigo_id})`
+        : `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`,
       html: audioNote
         ? html.replace("JAM Producciones", audioNote + "JAM Producciones")
         : html,
