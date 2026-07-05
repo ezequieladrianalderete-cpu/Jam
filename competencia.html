@@ -2824,6 +2824,26 @@
           currentUser.juez_num +
           " · Tablet " +
           currentUser.juez_num;
+        // Restaurar estado de modo simulación (igual que el director).
+        // Sin esto, el jurado leería scoring real y no vería las sesiones
+        // creadas en modo simulación → "sin sesión" aunque el director puso en pista.
+        try {
+          const { data: simData } = await db.rpc("sim_estado");
+          if (simData?.[0]?.activo) {
+            window.SIM_MODE = true;
+            if (!document.getElementById("sim-banner-global")) {
+              const banner = document.createElement("div");
+              banner.id = "sim-banner-global";
+              banner.style.cssText =
+                "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
+              banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
+              document.body.insertBefore(banner, document.body.firstChild);
+              document.body.style.paddingTop = "32px";
+            }
+          }
+        } catch (e) {
+          /* sim no instalada */
+        }
         await loadSesionJurado();
         subscribeRealtimeJurado();
       }
