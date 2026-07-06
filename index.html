@@ -5174,8 +5174,8 @@
           INST === "int"
             ? '<div class="trrow"><span class="trk">Cuenta Prex</span>' +
               '<div style="display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:4px">' +
-              '<span class="trv">35722990</span>' +
-              '<button class="cpybtn" data-v="35722990" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
+              '<span class="trv">' + (banco.cuenta || "35722990") + "</span>" +
+              '<button class="cpybtn" data-v="' + (banco.cuenta || "35722990") + '" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
               "</div></div>"
             : "";
         ct.innerHTML =
@@ -6807,8 +6807,7 @@
         // Cargar edición dinámica (año) desde la config del evento.
         // Actualiza [data-jam-edicion] y el título de la pestaña.
         // Aislada y con fallback: si falla, queda "2026" del HTML.
-        (function __jamLoadEdicion() {
-          try {
+        (function __jamLoadEdicion() {          try {
             fetch(SB_URL + "/rest/v1/rpc/obtener_config", {
               method: "POST",
               headers: {
@@ -6838,6 +6837,55 @@
                 }
                 if (nombreEv) {
                   document.title = "Inscripciones · " + nombreEv;
+                }
+              })
+              .catch(function () {});
+          } catch (e) {}
+        })();
+        // Cargar datos bancarios desde la config (editable por el director).
+        // Pisa la constante BANCOS. Con fallback: si falla, quedan los valores del HTML.
+        (function __jamLoadBancos() {
+          try {
+            fetch(
+              SB_URL +
+                "/rest/v1/config?clave=eq.datos_bancarios_v2&select=valor_json",
+              {
+                headers: {
+                  apikey: SB_ANON,
+                  Authorization: "Bearer " + SB_ANON,
+                  "Accept-Profile": "evento",
+                },
+              },
+            )
+              .then(function (r) {
+                return r.ok ? r.json() : null;
+              })
+              .then(function (d) {
+                var b = d && d[0] && d[0].valor_json;
+                if (!b) return;
+                if (b.nacional && b.nacional.alias) {
+                  // Nacional y Repesca comparten el juego "nacional"
+                  BANCOS.nac = {
+                    alias: b.nacional.alias,
+                    cbu: b.nacional.cbu,
+                    titular: b.nacional.titular,
+                    tipo: b.nacional.tipo || "CBU",
+                  };
+                  BANCOS.rep = {
+                    alias: b.nacional.alias,
+                    cbu: b.nacional.cbu,
+                    titular: b.nacional.titular,
+                    tipo: b.nacional.tipo || "CVU",
+                  };
+                }
+                if (b.internacional && b.internacional.alias) {
+                  BANCOS.int = {
+                    alias: b.internacional.alias,
+                    cbu: b.internacional.cbu,
+                    titular: b.internacional.titular,
+                    tipo: b.internacional.tipo || "CVU",
+                    cuenta: b.internacional.cuenta,
+                  };
                 }
               })
               .catch(function () {});

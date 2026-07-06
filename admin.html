@@ -1555,6 +1555,87 @@
           '</div></div>' +
           '<div class="det-block"><div class="det-title">URLs del sistema</div><div style="font-family:monospace;font-size:12px;color:#F8F5EE;line-height:1.9">Portal: <a href="/" target="_blank" style="color:#C9A84C">/</a><br>Check QR: <a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a><br>Música: <a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a><br>Términos Nacional (PDF): <a href="/terminos-nacional.pdf" target="_blank" style="color:#C9A84C">/terminos-nacional.pdf</a><br>Términos Inter (PDF): <a href="/terminos-internacional.pdf" target="_blank" style="color:#C9A84C">/terminos-internacional.pdf</a></div></div><div class="det-block" style="border-color:rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones y archivos. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>';
         sysCargarIdentidad();
+        // Inyectar sección de bancos después de la identidad
+        var bancosDiv = document.createElement('div');
+        bancosDiv.id = 'sys-bancos-container';
+        var pane = document.getElementById('pane-sistema');
+        // Insertar los bancos justo después del primer det-block (identidad)
+        var firstBlock = pane.querySelector('.det-block');
+        if (firstBlock && firstBlock.nextSibling) {
+          pane.insertBefore(bancosDiv, firstBlock.nextSibling);
+        } else {
+          pane.appendChild(bancosDiv);
+        }
+        renderBancos();
+      }
+
+      function renderBancos() {
+        var cont = document.getElementById('sys-bancos-container');
+        if (!cont) return;
+        cont.innerHTML =
+          '<div class="det-block"><div class="det-title">\ud83c\udfe6 Datos bancarios</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:14px;line-height:1.5">Los datos que ve el participante al pagar y que llegan por email. <strong>Nacional</strong> se usa tambi\u00e9n para Repesca. <strong>Internacional</strong> es la cuenta en divisa extranjera (Prex).</div>' +
+          // NACIONAL
+          '<div style="border:1px solid rgba(76,175,125,.25);border-radius:10px;padding:14px;margin-bottom:14px">' +
+          '<div style="font-size:12px;font-weight:700;color:#4CAF7D;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">\ud83c\udde6\ud83c\uddf7 Nacional / Repesca</div>' +
+          bancoField('bk-nac-alias', 'Alias') +
+          bancoField('bk-nac-cbu', 'CBU') +
+          bancoField('bk-nac-titular', 'Titular') +
+          bancoField('bk-nac-tipo', 'Tipo (CBU/CVU)') +
+          '</div>' +
+          // INTERNACIONAL
+          '<div style="border:1px solid rgba(232,168,56,.25);border-radius:10px;padding:14px;margin-bottom:14px">' +
+          '<div style="font-size:12px;font-weight:700;color:#E8A838;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">\ud83c\udf0e Internacional (Prex)</div>' +
+          bancoField('bk-int-cuenta', 'N\u00famero de cuenta Prex') +
+          bancoField('bk-int-alias', 'Alias') +
+          bancoField('bk-int-cbu', 'CBU / CVU') +
+          bancoField('bk-int-titular', 'Titular') +
+          bancoField('bk-int-tipo', 'Tipo (CBU/CVU)') +
+          '</div>' +
+          '<button onclick="bancosGuardar()" style="background:#4CAF7D;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;width:100%">\ud83d\udcbe Guardar datos bancarios</button>' +
+          '<div id="bk-msg" style="font-size:12px;text-align:center;min-height:16px;margin-top:8px"></div>' +
+          '</div>';
+        bancosCargar();
+      }
+
+      function bancoField(id, label) {
+        return '<div style="margin-bottom:10px"><label style="display:block;font-size:11px;color:rgba(248,245,238,.6);margin-bottom:4px">' + label + '</label>' +
+          '<input id="' + id + '" style="width:100%;padding:10px;background:#0e0e0e;border:1px solid #333;border-radius:7px;color:#F8F5EE;font-family:inherit;font-size:13px"></div>';
+      }
+
+      async function bancosCargar() {
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/config?clave=eq.datos_bancarios_v2&select=valor_json', {
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Accept-Profile': 'evento' }
+          });
+          var d = await r.json();
+          var b = (d && d[0] && d[0].valor_json) || {};
+          var nac = b.nacional || {}, int = b.internacional || {};
+          var setV = function(id, v) { var el = document.getElementById(id); if (el) el.value = v || ''; };
+          setV('bk-nac-alias', nac.alias); setV('bk-nac-cbu', nac.cbu); setV('bk-nac-titular', nac.titular); setV('bk-nac-tipo', nac.tipo);
+          setV('bk-int-cuenta', int.cuenta); setV('bk-int-alias', int.alias); setV('bk-int-cbu', int.cbu); setV('bk-int-titular', int.titular); setV('bk-int-tipo', int.tipo);
+        } catch (e) {}
+      }
+
+      async function bancosGuardar() {
+        var msg = document.getElementById('bk-msg');
+        var gv = function(id) { return (document.getElementById(id) && document.getElementById(id).value || '').trim(); };
+        var payload = {
+          nacional: { alias: gv('bk-nac-alias'), cbu: gv('bk-nac-cbu'), titular: gv('bk-nac-titular'), tipo: gv('bk-nac-tipo') || 'CBU' },
+          internacional: { cuenta: gv('bk-int-cuenta'), alias: gv('bk-int-alias'), cbu: gv('bk-int-cbu'), titular: gv('bk-int-titular'), tipo: gv('bk-int-tipo') || 'CVU' }
+        };
+        if (msg) { msg.style.color = '#888'; msg.textContent = 'Guardando\u2026'; }
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/rpc/actualizar_config', {
+            method: 'POST',
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_clave: 'datos_bancarios_v2', p_valor_json: payload })
+          });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (msg) { msg.style.color = '#4CAF7D'; msg.textContent = '\u2713 Datos bancarios guardados. Ya impactan en la web y los emails.'; }
+        } catch (e) {
+          if (msg) { msg.style.color = '#E0524C'; msg.textContent = 'Error: ' + e.message; }
+        }
       }
 
       let SYS_NOMBRE_MADRE = "JAM";
