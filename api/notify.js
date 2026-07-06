@@ -148,6 +148,7 @@ export default async function handler(req, res) {
     // 0) Cargar config dinámica (nombres, textos email, etc.) - no crítica, sigue si falla
     const eventoCfg = await cargarConfig();
     const nombreEvento = eventoCfg.nombre_evento || "JAM 2026";
+    const edicionEvento = eventoCfg.edicion || (String(nombreEvento).match(/\d{4}/) || ["2026"])[0];
     const emailT = eventoCfg.email_templates || {};
     // Datos bancarios: si están configurados en panel, sobreescriben los hardcoded
     const bankCfg = eventoCfg.datos_bancarios || {};
@@ -474,6 +475,65 @@ export default async function handler(req, res) {
       text: textParticipante,
       idempotencyKey: `${ins.id}-participant`,
     });
+
+    // === MAILS INDIVIDUALES POR INTEGRANTE (con su QR propio) ===
+    // Cada integrante con email recibe su credencial individual (sub-código).
+    // El QR apunta a /check?sub=<sub_codigo> para acreditación por persona.
+    // No bloquea el flujo: si uno falla, sigue con los demás.
+    const mails_integrantes = [];
+    try {
+      if (Array.isArray(integrantes) && integrantes.length > 0) {
+        const respEmail = (ins.email || "").trim().toLowerCase();
+        for (let idx = 0; idx < integrantes.length; idx++) {
+          const it = integrantes[idx] || {};
+          const itEmail = (it.email || it.mail || "").trim();
+          // Solo mandar si tiene email válido
+          if (!itEmail || !/@/.test(itEmail)) continue;
+          const subCode = codigo_legible + "-" + (idx + 1);
+          const itNombre = it.nombre || it.name || "Integrante " + (idx + 1);
+          const subCheckUrl = SITE + "/check?sub=" + encodeURIComponent(subCode);
+          const subQrUrl =
+            "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+            encodeURIComponent(subCheckUrl);
+          const htmlInt = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#fff;color:#222">
+<div style="background:#0A0A0A;padding:28px 24px;text-align:center">
+  <div style="font-family:Georgia,'Times New Roman',serif;font-size:42px;font-weight:700;letter-spacing:6px;color:#C9A84C;margin-bottom:6px">JAM</div>
+  <div style="font-size:11px;color:rgba(248,245,238,.5);letter-spacing:2px;text-transform:uppercase">Credencial individual · ${esc(edicionEvento)}</div>
+</div>
+<div style="padding:28px 24px;text-align:center">
+  <p style="font-size:15px;color:#444;margin:0 0 6px">Hola <strong>${esc(itNombre)}</strong>,</p>
+  <p style="font-size:14px;color:#666;margin:0 0 20px;line-height:1.5">Esta es tu credencial personal para <strong>${esc(nombre_grupo)}</strong>. Presentala el día del evento para acreditarte.</p>
+  <div style="font-family:'Courier New',monospace;font-size:24px;color:#C9A84C;letter-spacing:3px;font-weight:600;margin-bottom:16px">${esc(subCode)}</div>
+  <img src="${subQrUrl}" alt="QR ${esc(subCode)}" style="border:6px solid #fff;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1)" />
+  <p style="font-size:12px;color:#999;margin-top:20px;line-height:1.5">Tu QR es personal e intransferible. El staff lo escanea para acreditarte a vos, no al grupo.</p>
+</div>
+<div style="background:#0A0A0A;padding:16px;text-align:center;color:rgba(248,245,238,.4);font-size:11px">
+  <strong style="color:rgba(248,245,238,.6)">JAM Dance Competition ${esc(edicionEvento)}</strong>
+</div>
+</div>`;
+          const textInt =
+            "JAM " + edicionEvento + "\nCredencial individual\n\n" +
+            "Hola " + itNombre + ",\nTu código: " + subCode +
+            "\nGrupo: " + nombre_grupo +
+            "\n\nMostrá este código el día del evento para acreditarte:\n" + subCheckUrl;
+          try {
+            const r = await sendMail({
+              from: SENDER,
+              to: itEmail,
+              subject: "Tu credencial · " + subCode,
+              html: htmlInt,
+              text: textInt,
+              idempotencyKey: `${ins.id}-int-${idx + 1}`,
+            });
+            mails_integrantes.push({ sub: subCode, to: itEmail, ok: true, id: r?.id });
+          } catch (e) {
+            mails_integrantes.push({ sub: subCode, to: itEmail, ok: false, error: e.message });
+          }
+        }
+      }
+    } catch (e) {
+      // no interrumpir el flujo principal
+    }
 
     // === MAIL A LA SEDE (solo REG) ===
     let mail_sede = null;

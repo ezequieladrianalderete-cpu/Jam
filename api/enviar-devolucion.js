@@ -81,17 +81,37 @@ module.exports = async function handler(req, res) {
     const inscId = lineup[0]?.inscripcion_id;
     let email = null;
     let nombreResp = null;
+    let integrantesDev = [];
     if (inscId) {
       const inscrip = await supaFetch(
-        `inscripciones?id=eq.${inscId}&select=email,nombre`,
+        `inscripciones?id=eq.${inscId}&select=email,nombre,integrantes`,
       );
       email = inscrip[0]?.email;
       nombreResp = inscrip[0]?.nombre;
+      // Integrantes del grupo (para mandar la devolución a todos)
+      try {
+        const raw = inscrip[0]?.integrantes;
+        integrantesDev = Array.isArray(raw)
+          ? raw
+          : typeof raw === "string"
+            ? JSON.parse(raw)
+            : [];
+      } catch {
+        integrantesDev = [];
+      }
     }
     if (!email)
       return res
         .status(404)
         .json({ error: "Email del participante no encontrado" });
+
+    // Lista de destinatarios: titular + cada integrante con email válido (sin duplicar)
+    const destinatariosDev = new Set();
+    if (email) destinatariosDev.add(email.trim().toLowerCase());
+    integrantesDev.forEach((it) => {
+      const e = (it?.email || it?.mail || "").trim().toLowerCase();
+      if (e && /@/.test(e)) destinatariosDev.add(e);
+    });
 
     // 4. Obtener nombres de ítems de cada jurado
     const juradoNums = puntajes.map((p) => p.juez_num);
@@ -362,7 +382,7 @@ module.exports = async function handler(req, res) {
 
     const sendResult = await resend.emails.send({
       from: SENDER,
-      to: [email],
+      to: Array.from(destinatariosDev),
       subject: mailT.asunto_devolucion
         ? `${mailT.asunto_devolucion} — ${sesion.nombre_grupo} (${sesion.codigo_id})`
         : `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`,
@@ -375,7 +395,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       emailId: sendResult.data?.id,
-      to: email,
+      to: Array.from(destinatariosDev),
+      destinatarios: destinatariosDev.size,
       total: totalPts,
       jurados: puntajes.length,
     });
