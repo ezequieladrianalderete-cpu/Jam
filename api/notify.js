@@ -151,8 +151,9 @@ export default async function handler(req, res) {
     const edicionEvento = eventoCfg.edicion || (String(nombreEvento).match(/\d{4}/) || ["2026"])[0];
     const emailT = eventoCfg.email_templates || {};
     // Datos bancarios: si están configurados en panel, sobreescriben los hardcoded
+    const bankV2 = eventoCfg.datos_bancarios_v2 || {};
     const bankCfg = eventoCfg.datos_bancarios || {};
-    const datosBancarios = {
+    let datosBancarios = {
       alias: bankCfg.alias || PAGO_VIAMONTE.alias,
       cbu: bankCfg.cbu || PAGO_VIAMONTE.cbu,
       titular: bankCfg.titular || PAGO_VIAMONTE.titular,
@@ -160,10 +161,28 @@ export default async function handler(req, res) {
       mp_link: bankCfg.mp_link || "",
       mp_alias: bankCfg.mp_alias || "",
     };
+    let prexData = {
+      plataforma: PAGO_PREX.plataforma,
+      cuenta: (bankV2.internacional && bankV2.internacional.cuenta) || PAGO_PREX.cuenta,
+      titular: (bankV2.internacional && bankV2.internacional.titular) || PAGO_PREX.titular,
+      alias: (bankV2.internacional && bankV2.internacional.alias) || "",
+      cbu: (bankV2.internacional && bankV2.internacional.cbu) || "",
+    };
 
     // 1) Buscar inscripción
     const insArr = await supaSelect("inscripciones", `id=eq.${id}&select=*`);
     const ins = insArr && insArr[0];
+    // Resolver datos bancarios nacionales/repesca desde config v2 (si existen)
+    if (ins && ins.instancia !== "int" && bankV2.nacional && bankV2.nacional.alias) {
+      datosBancarios = {
+        alias: bankV2.nacional.alias,
+        cbu: bankV2.nacional.cbu,
+        titular: bankV2.nacional.titular,
+        banco: datosBancarios.banco,
+        mp_link: datosBancarios.mp_link,
+        mp_alias: datosBancarios.mp_alias,
+      };
+    }
     if (!ins)
       return res.status(404).json({ error: "Inscripción no encontrada" });
 
@@ -260,15 +279,15 @@ export default async function handler(req, res) {
   <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;text-align:center">Datos para pagar · Inter América</div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Plataforma</div>
-    <div style="font-family:Georgia,serif;font-size:22px;color:#F8F5EE;font-weight:700">${PAGO_PREX.plataforma}</div>
+    <div style="font-family:Georgia,serif;font-size:22px;color:#F8F5EE;font-weight:700">${prexData.plataforma}</div>
   </div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px;margin-bottom:8px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Cuenta / Alias Prex</div>
-    <div style="font-family:'Courier New',monospace;font-size:14px;color:#E8A838">${PAGO_PREX.cuenta}</div>
+    <div style="font-family:'Courier New',monospace;font-size:14px;color:#E8A838">${prexData.cuenta}</div>
   </div>
   <div style="background:#0A0A0A;border:1px dashed rgba(201,168,76,.5);padding:12px 14px;border-radius:10px">
     <div style="font-size:10px;color:rgba(248,245,238,.5);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Titular</div>
-    <div style="font-family:Georgia,serif;font-size:15px;color:#E8A838">${PAGO_PREX.titular}</div>
+    <div style="font-family:Georgia,serif;font-size:15px;color:#E8A838">${prexData.titular}</div>
   </div>
   <div style="font-size:12px;color:rgba(248,245,238,.6);text-align:center;margin-top:14px;line-height:1.5">El total se calcula según la tabla publicada en el portal. Podés pagar la totalidad o el 50% como seña.</div>
 </div>`
@@ -437,11 +456,11 @@ export default async function handler(req, res) {
       ? ""
       : isInter
         ? "\n\nDatos para pagar · Inter América\nPlataforma: " +
-          PAGO_PREX.plataforma +
+          prexData.plataforma +
           "\nCuenta/Alias Prex: " +
-          PAGO_PREX.cuenta +
+          prexData.cuenta +
           "\nTitular: " +
-          PAGO_PREX.titular +
+          prexData.titular +
           "\n(El total se calcula según la tabla del portal. Podés pagar total o 50% seña.)"
         : "\n\nDatos para pagar (transferencia)\nAlias: " +
           datosBancarios.alias +
