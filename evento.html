@@ -449,10 +449,14 @@
         color: #c9a84c;
       }
       #screen-proyeccion-full.proy-nac .pf-logo-text::after {
-        content: "🇦🇷";
-        font-size: clamp(28px, 6vw, 64px);
+        content: "";
         display: block;
         margin-top: 8px;
+        width: clamp(44px, 9.4vw, 100px);
+        height: clamp(28px, 6vw, 64px);
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 14"><rect width="22" height="4.67" fill="%2374ACDF"/><rect width="22" height="4.67" y="4.67" fill="%23fff"/><rect width="22" height="4.67" y="9.33" fill="%2374ACDF"/><circle cx="11" cy="7" r="2.2" fill="%23F6B40E"/></svg>')
+          center / contain no-repeat;
+        border-radius: 4px;
       }
       #screen-proyeccion-full.proy-nac .pf-divider {
         background: #c9a84c;
@@ -3480,7 +3484,8 @@
             instLabel.textContent = "🏆 REGIONAL";
             instLabel.style.color = "rgba(201,168,76,.5)";
           } else {
-            instLabel.textContent = "🇦🇷 FINAL NACIONAL";
+            instLabel.innerHTML =
+              '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg> FINAL NACIONAL';
             instLabel.style.color = "rgba(201,168,76,.5)";
           }
         }

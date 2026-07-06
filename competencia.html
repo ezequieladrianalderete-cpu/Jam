@@ -37,8 +37,6 @@
         --card-highlight: #1a1800;
         --badge-bg: #2a2000;
         --badge-border: rgba(201, 168, 76, 0.3);
-        --instancia-label: "NACIONAL";
-        --instancia-emoji: "🇦🇷";
       }
       body.tema-inter {
         --bg: #060810;
@@ -50,8 +48,6 @@
         --card-highlight: #001420;
         --badge-bg: #002040;
         --badge-border: rgba(75, 174, 222, 0.3);
-        --instancia-label: "INTER AMÉRICA";
-        --instancia-emoji: "🌎";
       }
       * {
         box-sizing: border-box;
@@ -993,7 +989,8 @@
     <!-- PANEL JURADO -->
     <div id="screen-jurado" style="display: none">
       <div class="instancia-banner" id="j-instancia-banner">
-        🇦🇷 FINAL NACIONAL · JAM 2026
+        <span class="ib-icon"><svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg></span>
+        <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
       </div>
       <header class="hdr">
         <div class="hdr-logo">JAM</div>
@@ -1132,7 +1129,8 @@
     <!-- PANEL DIRECTOR -->
     <div id="screen-director" style="display: none">
       <div class="instancia-banner" id="d-instancia-banner">
-        🇦🇷 FINAL NACIONAL · JAM 2026
+        <span class="ib-icon"><svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg></span>
+        <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
       </div>
       <header class="hdr">
         <div class="hdr-logo">JAM</div>
@@ -2822,8 +2820,8 @@
             .querySelectorAll("[data-cfg='nombre_evento']")
             .forEach((el) => (el.textContent = nombre));
           // Banners de instancia: reemplazar solo lo que va después del "·"
-          // (el nombre del evento), preservando "🇦🇷 FINAL NACIONAL".
-          document.querySelectorAll(".instancia-banner").forEach((el) => {
+          // (el nombre del evento), preservando el ícono de bandera/instancia.
+          document.querySelectorAll(".instancia-banner .ib-text").forEach((el) => {
             const txt = el.textContent;
             const idx = txt.lastIndexOf("·");
             if (idx > -1) el.textContent = txt.slice(0, idx + 1) + " " + nombre;
@@ -3318,8 +3316,8 @@
                 "Portal de Competencia · " + (window._edicion || "");
           });
           // Banners de instancia: reemplazar SOLO lo que viene después del " · "
-          // (el nombre del evento), preservando el prefijo "🇦🇷 FINAL NACIONAL".
-          document.querySelectorAll(".instancia-banner").forEach((el) => {
+          // (el nombre del evento), preservando el ícono de bandera/instancia.
+          document.querySelectorAll(".instancia-banner .ib-text").forEach((el) => {
             const txt = el.textContent;
             const idx = txt.lastIndexOf("·");
             if (idx > -1) {
@@ -6213,19 +6211,28 @@
         return (madre + " " + ed).trim();
       }
 
+      var SVG_FLAG_AR =
+        '<svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg>';
+
       function setTema(instancia) {
         const isInter = instancia === "int";
         document.body.classList.toggle("tema-inter", isInter);
         const nombreEv = nombreEventoActual();
-        const label = isInter
-          ? "🌎 INTER AMÉRICA · " + nombreEv
-          : "🇦🇷 FINAL NACIONAL · " + nombreEv;
-        const regLabel =
-          instancia === "reg" ? "🏆 REGIONAL · " + nombreEv : label;
-        const finalLabel = instancia === "reg" ? regLabel : label;
-        document
-          .querySelectorAll(".instancia-banner")
-          .forEach((el) => (el.textContent = finalLabel));
+        const icon = instancia === "reg" ? "🏆" : isInter ? "🌎" : SVG_FLAG_AR;
+        const texto =
+          instancia === "reg"
+            ? "REGIONAL · " + nombreEv
+            : isInter
+            ? "INTER AMÉRICA · " + nombreEv
+            : "FINAL NACIONAL · " + nombreEv;
+        document.querySelectorAll(".instancia-banner").forEach((el) => {
+          el.innerHTML =
+            '<span class="ib-icon">' +
+            icon +
+            '</span> <span class="ib-text">' +
+            texto +
+            "</span>";
+        });
       }
 
       // ═══════════════════════════════════════════════════════════
