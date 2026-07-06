@@ -6473,7 +6473,12 @@
 
         // Integrantes
         var ints = (STATE.ints || []).map(function (i) {
-          return { nombre: i.nombre || "", dni: i.dni || "" };
+          return {
+            nombre: i.nombre || "",
+            dni: i.dni || "",
+            email: i.email || "",
+            pais_idx: typeof i.pais_idx !== "undefined" ? i.pais_idx : null,
+          };
         });
 
         // Upload comprobante de clasificación (solo nac)
