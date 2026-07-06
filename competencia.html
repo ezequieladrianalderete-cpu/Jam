@@ -4303,8 +4303,8 @@
         )
           return;
         try {
-          await db.schema("scoring").from("puntajes").delete().neq("id", 0);
-          await db.schema("scoring").from("sesiones").delete().neq("id", 0);
+          await db.schema("scoring").from("puntajes").delete().not("id", "is", null);
+          await db.schema("scoring").from("sesiones").delete().not("id", "is", null);
           toast("Scoring reseteado correctamente", "ok");
           saRefreshStats();
         } catch (e) {
@@ -4324,7 +4324,7 @@
             .schema("evento")
             .from("lineup")
             .update({ estado: "pendiente" })
-            .neq("id", 0);
+            .not("id", "is", null);
           if (error) throw error;
           toast("Lineup reseteado a 'pendiente'", "ok");
           saRefreshStats();
@@ -4455,8 +4455,8 @@
         )
           return;
         try {
-          await db.schema("scoring").from("puntajes").delete().neq("id", 0);
-          await db.schema("scoring").from("sesiones").delete().neq("id", 0);
+          await db.schema("scoring").from("puntajes").delete().not("id", "is", null);
+          await db.schema("scoring").from("sesiones").delete().not("id", "is", null);
           await db
             .from("inscripciones")
             .delete()
@@ -5294,16 +5294,11 @@
             (ins.email || "").replace(/"/g, "&quot;") +
             '"></div>' +
             '<div><label class="text-xs muted">Teléfono / Celular</label><input id="edit-cel" class="cfg-input" value="' +
-            (ins.cel || "").replace(/"/g, "&quot;") +
+            (ins.celular || "").replace(/"/g, "&quot;") +
             '"></div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
             '<div><label class="text-xs muted">País</label><input id="edit-pais" class="cfg-input" value="' +
             (ins.pais || "").replace(/"/g, "&quot;") +
             '"></div>' +
-            '<div><label class="text-xs muted">Ciudad</label><input id="edit-ciudad" class="cfg-input" value="' +
-            (ins.ciudad || "").replace(/"/g, "&quot;") +
-            '"></div>' +
-            "</div>" +
             '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
             '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' +
             integrantes.length +
@@ -5411,9 +5406,8 @@
               document.getElementById("edit-nombre_grupo")?.value || null,
             nombre: document.getElementById("edit-nombre")?.value || null,
             email: document.getElementById("edit-email")?.value || null,
-            cel: document.getElementById("edit-cel")?.value || null,
+            celular: document.getElementById("edit-cel")?.value || null,
             pais: document.getElementById("edit-pais")?.value || null,
-            ciudad: document.getElementById("edit-ciudad")?.value || null,
             integrantes: integrantes,
           };
           const { error } = await db
