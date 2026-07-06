@@ -2973,6 +2973,23 @@
         let codigo = decodedText.trim();
         let inscripcionId = null;
         
+        // --- RAMA NUEVA: acreditación individual por integrante ---
+        // Detecta sub-código con sufijo -N (por /check?sub= o texto directo).
+        // Si no matchea, sigue el flujo de grupo de siempre (abajo).
+        let subCodigo = null;
+        const matchSub = codigo.match(/[?&]sub=([^&\s]+)/i);
+        if (matchSub) {
+          subCodigo = decodeURIComponent(matchSub[1]).toUpperCase();
+        } else {
+          const matchSubTxt = codigo.match(/JAM-(?:INTER|INT|NAC|REG|REP)-\d+-\d+/i);
+          if (matchSubTxt) subCodigo = matchSubTxt[0].toUpperCase();
+        }
+        if (subCodigo) {
+          acrProcesarIntegrante(subCodigo);
+          return;
+        }
+        // --- FIN RAMA NUEVA ---
+        
         // Intentar extraer UUID desde URL /check?id=
         const matchId = codigo.match(/[?&]id=([a-f0-9-]{36})/i);
         if (matchId) {
@@ -3001,6 +3018,84 @@
         acrCerrarCamara();
         document.getElementById("acr-input").value = p.codigo_id || "";
         acrBuscar();
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // ACREDITACIÓN INDIVIDUAL POR INTEGRANTE (QR con sufijo -N)
+      // Funciones nuevas y aisladas: no tocan el flujo de grupo.
+      // ═══════════════════════════════════════════════════════════
+      async function acrProcesarIntegrante(subCodigo) {
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .rpc("buscar_integrante", { p_sub_codigo: subCodigo });
+          if (error) throw error;
+          if (!data || !data.ok) {
+            // Si no se encuentra el integrante, avisar y reintentar escaneo
+            toast("Credencial individual no reconocida: " + subCodigo, "err");
+            setTimeout(() => acrEscanear(), 1500);
+            return;
+          }
+          acrCerrarCamara();
+          renderAcrIntegrante(data);
+        } catch (e) {
+          toast("Error al leer credencial: " + e.message, "err");
+          setTimeout(() => acrEscanear(), 1500);
+        }
+      }
+
+      function renderAcrIntegrante(it) {
+        document.getElementById("acr-scan").style.display = "none";
+        document.getElementById("acr-ok").style.display = "none";
+        const cont = document.getElementById("acr-res");
+        cont.style.display = "block";
+        const pgBdg =
+          it.grupo_pago === "confirmado"
+            ? '<span class="bdg bdg-green">✓ Pago confirmado</span>'
+            : it.grupo_pago === "senia"
+              ? '<span class="bdg bdg-amber">50% Señado</span>'
+              : '<span class="bdg bdg-red">Sin pago</span>';
+        const yaAcr =
+          it.estado === "acreditado"
+            ? '<span class="bdg bdg-green">✓ Ya acreditado</span>'
+            : "";
+        const nombreEsc = (it.nombre || "").replace(/'/g, "\\'");
+        cont.innerHTML = `
+    <div class="tarjeta">
+      <div class="ep-label"><div class="ep-dot"></div>ACREDITACIÓN INDIVIDUAL</div>
+      <div class="mono gold text-xs mb2">${it.sub_codigo}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:4px">${it.nombre || "—"}</div>
+      <div class="muted text-sm mb2">DNI: ${it.dni || "—"}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${yaAcr}</div>
+    </div>
+    <div class="card sy2">
+      <div class="row"><span class="muted text-xs">Grupo</span><span>${it.grupo_nombre || "—"}</span></div>
+      <div class="row"><span class="muted text-xs">Integrante N°</span><span>${it.orden} · ${it.codigo_id}</span></div>
+      <div class="row"><span class="muted text-xs">País</span><span>${it.grupo_pais || "—"}</span></div>
+      <div class="row" style="border-bottom:none"><span class="muted text-xs">Instancia</span><span>${(it.grupo_instancia || "").toUpperCase()}</span></div>
+    </div>
+    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmarIntegrante('${it.id}','${nombreEsc}')">✓ Acreditar a ${it.nombre || "este participante"}</button>
+    <button class="btn bo bfull" onclick="acrReset()">↻ Escanear otro</button>`;
+      }
+
+      async function acrConfirmarIntegrante(id, nombre) {
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .rpc("acreditar_integrante", { p_id: id, p_acreditar: true });
+          if (error) throw error;
+          const h = new Date().toLocaleTimeString("es-AR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          document.getElementById("acr-nombre-ok").innerHTML =
+            nombre + ' · <span id="acr-hora">' + h + "hs</span>";
+          document.getElementById("acr-res").style.display = "none";
+          document.getElementById("acr-ok").style.display = "block";
+          toast("✓ " + nombre + " acreditado/a", "ok");
+        } catch (e) {
+          toast("Error al acreditar: " + e.message, "err");
+        }
       }
 
       async function acrBuscar() {
