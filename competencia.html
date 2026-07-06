@@ -3536,6 +3536,46 @@
         toast("Sesión iniciada: " + nombre, "ok");
       }
 
+      function dParseCatArr(raw) {
+        try {
+          const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (Array.isArray(v)) return v;
+          if (v && typeof v === "object") return [v];
+          return [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      // codigo_id -> Set de códigos de categoría que ya tienen una sesión de scoring
+      let dCatsHechas = new Map();
+
+      async function dRefreshCatsHechas() {
+        const { data } = await db
+          .schema("scoring")
+          .from("sesiones")
+          .select("codigo_id,categoria");
+        const map = new Map();
+        (data || []).forEach((s) => {
+          const cats = dParseCatArr(s.categoria);
+          if (!cats.length) return;
+          const set = map.get(s.codigo_id) || new Set();
+          cats.forEach((c) => {
+            if (c?.c != null) set.add(c.c);
+          });
+          map.set(s.codigo_id, set);
+        });
+        dCatsHechas = map;
+      }
+
+      // Categorías del participante que todavía no tienen sesión de scoring propia
+      function dCategoriasPendientes(p) {
+        const todas = dParseCatArr(p.categoria);
+        if (todas.length <= 1) return todas;
+        const hechas = dCatsHechas.get(p.codigo_id) || new Set();
+        return todas.filter((c) => !hechas.has(c.c));
+      }
+
       async function buildLineup() {
         const { data: raw } = await db
           .schema("evento")
@@ -3546,6 +3586,7 @@
           (p) => p.estado !== "pendiente" && p.estado !== "ausente",
         );
         lineupData = data;
+        await dRefreshCatsHechas();
         const total = raw?.length || 0;
         const cont = document.getElementById("d-lineup-list");
         document.getElementById("d-lineup-count").textContent =
@@ -3561,35 +3602,34 @@
           div.className = "card";
           div.style.cssText =
             "padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px";
-          const cats = (() => {
-            try {
-              const c = p.categorias;
-              return Array.isArray(c) ? c : c ? JSON.parse(c) : [];
-            } catch (e) {
-              return [];
-            }
-          })();
+          const catsArr = dParseCatArr(p.categoria);
+          const hechasSet = dCatsHechas.get(p.codigo_id) || new Set();
+          const pendientes = dCategoriasPendientes(p);
           const safeNombre = p.nombre_grupo.replace(/'/g, "\\'");
+          const progresoHtml =
+            catsArr.length > 1
+              ? `<div class="muted text-xs" style="margin-top:2px">${catsArr.filter((c) => hechasSet.has(c.c)).length}/${catsArr.length} categorías evaluadas</div>`
+              : "";
           const badge =
             p.estado === "pista"
               ? '<span class="bdg bdg-gold">En pista</span>'
-              : p.estado === "listo"
+              : p.estado === "listo" || (catsArr.length > 0 && pendientes.length === 0)
                 ? '<span class="bdg bdg-green">✓ Evaluado</span>'
-                : cats.length > 1
+                : pendientes.length > 1
                   ? '<div style="display:flex;flex-direction:column;gap:4px">' +
-                    cats
+                    pendientes
                       .map(
-                        (cat, i) =>
-                          `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}',${i})">En pista — ${cat.n} →</button>`,
+                        (cat) =>
+                          `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}','${cat.c}')">En pista — ${cat.n} →</button>`,
                       )
                       .join("") +
                     "</div>"
-                  : `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}',0)">Poner en pista →</button>`;
+                  : `<button class="btn bgn bsm" onclick="dPonerEnPista('${p.id}','${safeNombre}','${p.codigo_id}','${p.instancia || "nac"}','${pendientes[0]?.c ?? ""}')">Poner en pista →</button>`;
           const pgBdg =
             p.estado_pago === "confirmado"
               ? '<span class="bdg bdg-green text-xs">Pago ✓</span>'
               : '<span class="bdg bdg-amber text-xs">Pago pendiente</span>';
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categorias)} ${pgBdg}</div></div></div><div style="flex-shrink:0">${badge}</div>`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categoria)} ${pgBdg}</div>${progresoHtml}</div></div><div style="flex-shrink:0">${badge}</div>`;
           cont.appendChild(div);
         });
       }
@@ -3599,16 +3639,14 @@
         nombre,
         codigo,
         instancia,
-        catIdx,
+        catCode,
       ) {
         const participant = lineupData.find((p) => p.id == lineupId);
         let categoria = null;
         if (participant) {
-          try {
-            const c = participant.categorias;
-            const arr = Array.isArray(c) ? c : c ? JSON.parse(c) : [];
-            categoria = arr[catIdx ?? 0] ?? null;
-          } catch (e) {}
+          const arr = dParseCatArr(participant.categoria);
+          categoria =
+            arr.find((c) => String(c.c) === String(catCode)) ?? arr[0] ?? null;
         }
         // Desactivar sesión actual
         await db
@@ -3625,13 +3663,15 @@
             nombre_grupo: nombre,
             instancia,
             activa: true,
-            categoria,
+            categoria: categoria ? JSON.stringify(categoria) : null,
           })
           .select();
         if (data) {
           sesionActiva = data[0];
           renderSesionDirector(sesionActiva);
           buildJuecesGrid([]);
+          await dRefreshCatsHechas();
+          buildLineup();
         }
         toast(
           nombre + (categoria ? " — " + categoria.n : "") + " en pista",
