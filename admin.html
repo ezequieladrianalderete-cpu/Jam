@@ -1540,7 +1540,76 @@
       }
       function renderSistema() {
         $("pane-sistema").innerHTML =
+          '<div class="det-block"><div class="det-title">\ud83c\udfab Identidad del evento</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:14px;line-height:1.5">Estos datos se muestran en los portales, emails y la web de inscripci\u00f3n. El nombre "JAM" es fijo; solo cambi\u00e1s la edici\u00f3n y los datos del evento.</div>' +
+          '<div style="display:flex;flex-direction:column;gap:12px">' +
+          '<div><label style="display:block;font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Edici\u00f3n (a\u00f1o)</label>' +
+          '<input id="sys-edicion" placeholder="2026" maxlength="20" style="width:100%;padding:11px;background:#0e0e0e;border:1px solid #333;border-radius:8px;color:#F8F5EE;font-family:inherit;font-size:14px" oninput="sysPreview()">' +
+          '<div style="font-size:11px;color:rgba(248,245,238,.4);margin-top:5px">Se mostrar\u00e1 como: <strong id="sys-preview" style="color:#C9A84C">JAM 2026</strong></div></div>' +
+          '<div><label style="display:block;font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha del evento</label>' +
+          '<input id="sys-fecha" placeholder="Octubre 2026" style="width:100%;padding:11px;background:#0e0e0e;border:1px solid #333;border-radius:8px;color:#F8F5EE;font-family:inherit;font-size:14px"></div>' +
+          '<div><label style="display:block;font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Lugar del evento</label>' +
+          '<input id="sys-lugar" placeholder="Palais Rouge \u00b7 Buenos Aires" style="width:100%;padding:11px;background:#0e0e0e;border:1px solid #333;border-radius:8px;color:#F8F5EE;font-family:inherit;font-size:14px"></div>' +
+          '<button onclick="sysGuardarIdentidad()" style="background:#4CAF7D;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">\ud83d\udcbe Guardar identidad del evento</button>' +
+          '<div id="sys-msg" style="font-size:12px;text-align:center;min-height:16px"></div>' +
+          '</div></div>' +
           '<div class="det-block"><div class="det-title">URLs del sistema</div><div style="font-family:monospace;font-size:12px;color:#F8F5EE;line-height:1.9">Portal: <a href="/" target="_blank" style="color:#C9A84C">/</a><br>Check QR: <a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a><br>Música: <a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a><br>Términos Nacional (PDF): <a href="/terminos-nacional.pdf" target="_blank" style="color:#C9A84C">/terminos-nacional.pdf</a><br>Términos Inter (PDF): <a href="/terminos-internacional.pdf" target="_blank" style="color:#C9A84C">/terminos-internacional.pdf</a></div></div><div class="det-block" style="border-color:rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones y archivos. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>';
+        sysCargarIdentidad();
+      }
+
+      let SYS_NOMBRE_MADRE = "JAM";
+
+      function sysPreview() {
+        const ed = (document.getElementById("sys-edicion")?.value || "").trim();
+        const prev = document.getElementById("sys-preview");
+        if (prev) prev.textContent = (SYS_NOMBRE_MADRE + " " + ed).trim();
+      }
+
+      async function sysCargarIdentidad() {
+        try {
+          const r = await fetch(SB_URL + "/rest/v1/rpc/obtener_config", {
+            method: "POST",
+            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" },
+            body: "{}",
+          });
+          const d = await r.json();
+          if (!Array.isArray(d)) return;
+          const map = {};
+          d.forEach((c) => (map[c.clave] = c.valor));
+          if (map.nombre_madre) SYS_NOMBRE_MADRE = map.nombre_madre;
+          const setV = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
+          setV("sys-edicion", map.edicion);
+          setV("sys-fecha", map.fecha_evento);
+          setV("sys-lugar", map.lugar_evento);
+          sysPreview();
+        } catch (e) {}
+      }
+
+      async function sysGuardarIdentidad() {
+        const msg = document.getElementById("sys-msg");
+        const getV = (id) => (document.getElementById(id)?.value || "").trim();
+        const edicion = getV("sys-edicion");
+        const fecha = getV("sys-fecha");
+        const lugar = getV("sys-lugar");
+        const nombreEvento = (SYS_NOMBRE_MADRE + " " + edicion).trim();
+        if (msg) { msg.style.color = "#888"; msg.textContent = "Guardando\u2026"; }
+        async function guardar(clave, valor) {
+          const r = await fetch(SB_URL + "/rest/v1/rpc/actualizar_config", {
+            method: "POST",
+            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON, "Content-Type": "application/json" },
+            body: JSON.stringify({ p_clave: clave, p_valor: valor }),
+          });
+          if (!r.ok) throw new Error("no se pudo guardar " + clave);
+        }
+        try {
+          await guardar("edicion", edicion);
+          await guardar("nombre_evento", nombreEvento);
+          await guardar("fecha_evento", fecha);
+          await guardar("lugar_evento", lugar);
+          if (msg) { msg.style.color = "#4CAF7D"; msg.textContent = "\u2713 Guardado. Los portales y la web reflejan " + nombreEvento; }
+        } catch (e) {
+          if (msg) { msg.style.color = "#E0524C"; msg.textContent = "Error: " + e.message; }
+        }
       }
       async function loadPrecios() {
         try {

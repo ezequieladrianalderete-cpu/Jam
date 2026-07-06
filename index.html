@@ -1280,7 +1280,7 @@
     <header class="hdr">
       <div>
         <div class="logo">JAM</div>
-        <div class="logo-sub">DANCE COMPETITION 2026</div>
+        <div class="logo-sub">DANCE COMPETITION <span data-jam-edicion>2026</span></div>
       </div>
       <div style="text-align: right">
         <div class="blv">Inscripciones abiertas</div>
@@ -6804,6 +6804,45 @@
             nacPr.style.fontWeight = 500;
           }
         }
+        // Cargar edición dinámica (año) desde la config del evento.
+        // Actualiza [data-jam-edicion] y el título de la pestaña.
+        // Aislada y con fallback: si falla, queda "2026" del HTML.
+        (function __jamLoadEdicion() {
+          try {
+            fetch(SB_URL + "/rest/v1/rpc/obtener_config", {
+              method: "POST",
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Content-Type": "application/json",
+              },
+              body: "{}",
+            })
+              .then(function (r) {
+                return r.ok ? r.json() : null;
+              })
+              .then(function (d) {
+                if (!Array.isArray(d)) return;
+                var edicion = null,
+                  nombreEv = null;
+                d.forEach(function (c) {
+                  if (c.clave === "edicion" && c.valor) edicion = c.valor;
+                  if (c.clave === "nombre_evento" && c.valor) nombreEv = c.valor;
+                });
+                if (edicion) {
+                  document
+                    .querySelectorAll("[data-jam-edicion]")
+                    .forEach(function (el) {
+                      el.textContent = edicion;
+                    });
+                }
+                if (nombreEv) {
+                  document.title = "Inscripciones · " + nombreEv;
+                }
+              })
+              .catch(function () {});
+          } catch (e) {}
+        })();
       });
       document.body.className = "bg-nac";
     </script>

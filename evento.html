@@ -3138,10 +3138,37 @@
     <div class="card sy2">
       <div class="row"><span class="muted text-xs">Responsable</span><span>${p.responsable || "—"}</span></div>
       <div class="row"><span class="muted text-xs">Instancia</span><span>${p.instancia?.toUpperCase() || "—"}</span></div>
-      <div class="row" style="border-bottom:none"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado] || p.estado}</span></div>
+      <div class="row"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado] || p.estado}</span></div>
+      <div class="row" id="acr-contador-row" style="border-bottom:none"><span class="muted text-xs">Integrantes acreditados</span><span id="acr-contador">…</span></div>
     </div>
     <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${(p.nombre_grupo || "").replace(/'/g, "\\'")}')">✓ Confirmar presencia y acreditar</button>
     <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
+        // Cargar contador de integrantes acreditados (asíncrono, no bloquea)
+        acrCargarContador(p.inscripcion_id);
+      }
+
+      // Muestra "X de Y" integrantes acreditados en la tarjeta del grupo.
+      // Solo lectura. Si falla o el grupo no tiene integrantes cargados, oculta la fila.
+      async function acrCargarContador(inscripcionId) {
+        const span = document.getElementById("acr-contador");
+        const row = document.getElementById("acr-contador-row");
+        if (!span || !inscripcionId) {
+          if (row) row.style.display = "none";
+          return;
+        }
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .rpc("contar_acreditados", { p_inscripcion_id: inscripcionId });
+          if (error || !data || !data.ok || !data.total) {
+            if (row) row.style.display = "none";
+            return;
+          }
+          const color = data.acreditados >= data.total ? "#4CAF7D" : "#E8A838";
+          span.innerHTML = `<strong style="color:${color}">${data.acreditados} de ${data.total}</strong>`;
+        } catch (e) {
+          if (row) row.style.display = "none";
+        }
       }
 
       async function acrConfirmar(id, nombre) {
