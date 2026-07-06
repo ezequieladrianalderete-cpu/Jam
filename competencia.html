@@ -2967,6 +2967,28 @@
         await loadSesionJurado();
         aplicarNombreEventoUI();
         subscribeRealtimeJurado();
+        // Red de seguridad: si el realtime se cae, este polling detecta cambios
+        // de sesión (lo ponen en pista o la cierran) sin F5. Es CUIDADOSO: solo
+        // recarga si la sesión activa cambió, para no pisar lo que el jurado
+        // está escribiendo en su planilla.
+        if (window._jurPoll) clearInterval(window._jurPoll);
+        window._jurPoll = setInterval(async () => {
+          try {
+            const { data: ses } = await db
+              .schema("scoring")
+              .from("sesiones")
+              .select("id,activa,nombre_grupo")
+              .eq("activa", true)
+              .limit(1);
+            const activaAhora = ses && ses.length ? ses[0] : null;
+            const idAhora = activaAhora ? activaAhora.id : null;
+            const idAntes = sesionActiva ? sesionActiva.id : null;
+            // Solo recargar si cambió: apareció sesión, desapareció, o es otra distinta
+            if (idAhora !== idAntes) {
+              await loadSesionJurado();
+            }
+          } catch (e) {}
+        }, 4000);
       }
 
       async function loadSesionJurado() {
@@ -3292,6 +3314,17 @@
         }, 1000);
         subscribeRealtimeDirector();
         loadStats();
+        // Red de seguridad: si el realtime se cae silenciosamente, este polling
+        // liviano refresca los puntajes cuando hay una sesión activa, para que
+        // el director vea "todos votaron" sin tener que apretar F5.
+        if (window._dirPoll) clearInterval(window._dirPoll);
+        window._dirPoll = setInterval(async () => {
+          try {
+            if (sesionActiva && sesionActiva.id) {
+              await loadPuntajesDirector();
+            }
+          } catch (e) {}
+        }, 4000);
       }
 
       // Carga nombre_madre + edicion (si no están cargados) y actualiza
