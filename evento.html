@@ -448,30 +448,32 @@
       #screen-proyeccion-full.proy-nac .pf-accent {
         color: #c9a84c;
       }
-      #screen-proyeccion-full.proy-nac .pf-logo-text::after {
-        content: "";
-        display: block;
-        margin-top: 8px;
-        width: clamp(44px, 9.4vw, 100px);
-        height: clamp(28px, 6vw, 64px);
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 14"><rect width="22" height="4.67" fill="%2374ACDF"/><rect width="22" height="4.67" y="4.67" fill="%23fff"/><rect width="22" height="4.67" y="9.33" fill="%2374ACDF"/><circle cx="11" cy="7" r="2.2" fill="%23F6B40E"/></svg>')
-          center / contain no-repeat;
-        border-radius: 4px;
-      }
       #screen-proyeccion-full.proy-nac .pf-divider {
         background: #c9a84c;
       }
 
-      /* PROYECCIÓN — TEMA INTERNACIONAL (globo/mundial) */
+      /* PROYECCIÓN — TEMA INTERNACIONAL (mismo diseño que competencia.html: logo Inter + fondo oscuro) */
+      #pf-pista,
+      #pf-ranking,
+      #pf-espera {
+        position: relative;
+        z-index: 1;
+      }
       #screen-proyeccion-full.proy-inter {
-        background: linear-gradient(
-          135deg,
-          #0a0030 0%,
-          #001a4a 30%,
-          #002a5a 50%,
-          #1a0040 70%,
-          #0a0030 100%
-        );
+        background-color: #060810;
+        position: relative;
+      }
+      #screen-proyeccion-full.proy-inter::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("/imgs/logo-int.png");
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 115vmin;
+        opacity: 0.08;
+        pointer-events: none;
+        z-index: 0;
       }
       #screen-proyeccion-full.proy-inter #pf-pista {
         background:
@@ -3595,7 +3597,8 @@
 
         // Cambiar tema visual de proyección según instancia
         const pfScreen = document.getElementById("screen-proyeccion-full");
-        const inst = s?.instancia || "nac";
+        const instRaw = s?.instancia || "nac";
+        const inst = instRaw === "int" ? "inter" : instRaw;
         pfScreen.className = inst === "inter" ? "proy-inter" : "proy-nac";
         const instLabel = document.getElementById("pf-instancia-label");
         if (instLabel) {
@@ -3606,8 +3609,7 @@
             instLabel.textContent = "🏆 REGIONAL";
             instLabel.style.color = "rgba(201,168,76,.5)";
           } else {
-            instLabel.innerHTML =
-              '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg> FINAL NACIONAL';
+            instLabel.textContent = "FINAL NACIONAL";
             instLabel.style.color = "rgba(201,168,76,.5)";
           }
         }
