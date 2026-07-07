@@ -116,13 +116,15 @@ module.exports = async function handler(req, res) {
     // 4. Obtener nombres de ítems de cada jurado
     const juradoNums = puntajes.map((p) => p.juez_num);
     let juradoItems = {};
+    let juradoNombres = {};
     try {
       const jurados = await supaFetch(
-        `usuarios?rol=eq.jurado&juez_num=in.(${juradoNums.join(",")})&select=juez_num,items`,
+        `usuarios?rol=eq.jurado&juez_num=in.(${juradoNums.join(",")})&select=juez_num,items,nombre_display`,
         { headers: { "Accept-Profile": "personal" } },
       );
       for (const j of jurados) {
         juradoItems[j.juez_num] = j.items || [];
+        if (j.nombre_display) juradoNombres[j.juez_num] = j.nombre_display;
       }
     } catch (e) {
       console.warn("No se pudieron obtener items de jurados:", e);
@@ -155,8 +157,9 @@ module.exports = async function handler(req, res) {
         })
         .join(" · ");
       const hasAudio = p.audio_url && p.audio_url.length > 50;
+      const nombreJurado = juradoNombres[p.juez_num] || `Jurado ${p.juez_num}`;
       tablaRows += `<tr>
-        <td style="padding:10px 14px;border-bottom:1px solid #222;color:#C9A84C;font-weight:700">Jurado ${p.juez_num}${hasAudio ? " 🎙" : ""}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #222;color:#C9A84C;font-weight:700">${esc(nombreJurado)}${hasAudio ? " 🎙" : ""}</td>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#eee;font-size:13px">${itemsStr}</td>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#fff;font-weight:700;text-align:right">${p.subtotal}</td>
       </tr>`;
