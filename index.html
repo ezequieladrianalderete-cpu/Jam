@@ -6096,9 +6096,10 @@
             var tot4 = getTotal().v; // precio dinámico = suma de categorías seleccionadas
             var fT4 = "ARS $" + tot4.toLocaleString("es-AR");
             var fH4 = "ARS $" + Math.round(tot4 / 2).toLocaleString("es-AR");
-            var alias = "jaminteramerica.PREX";
-            var cvu = "0000013000032357229906";
-            var titular = "Nelson Gast\u00f3n Vidarte";
+            var bancoRep4 = BANCOS.rep || BANCOS.nac;
+            var alias = bancoRep4.alias;
+            var cvu = bancoRep4.cbu;
+            var titular = bancoRep4.titular;
             var d = document.createElement("div");
             d.className = "step show";
             // Construir la transferencia sin comillas problemáticas en onclick
@@ -6112,7 +6113,9 @@
               alias +
               "</span>" +
               '<button class="cpybtn" id="rp4-btn-alias">Copiar</button></div></div>' +
-              '<div class="trrow"><span class="trk">CVU</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">' +
+              '<div class="trrow"><span class="trk">' +
+              (bancoRep4.tipo || "CBU") +
+              '</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">' +
               '<span class="trv" id="rp4-cvu">' +
               cvu +
               "</span>" +
