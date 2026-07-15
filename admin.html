@@ -1514,24 +1514,53 @@
         toast("ok", "CSV exportado (" + data.length + " filas) ✓");
       }
       function renderDJ() {
-        const c = allInscriptos.filter((i) => i.musica_estado === "cargada");
-        if (!c.length) {
+        // Cada categoría puede tener su propia canción: una fila por
+        // categoría-con-música, no una fila por inscripción.
+        const rows = [];
+        allInscriptos.forEach((ins) => {
+          const catsConMusica = (ins.categorias || []).filter(
+            (c) => c && c.musica_url,
+          );
+          if (catsConMusica.length) {
+            const multi = (ins.categorias || []).length > 1;
+            catsConMusica.forEach((c) => {
+              rows.push({
+                cod: getCodigo(ins),
+                nombre: ins.nombre_grupo || ins.nombre,
+                catLabel: multi && c.n ? "Cat. " + c.c + " — " + c.n : "",
+                filename: c.musica_nombre || "",
+                url: c.musica_url,
+              });
+            });
+          } else if (ins.musica_estado === "cargada" && ins.musica_url) {
+            // Inscripciones de antes de que cada categoría tuviera su propia
+            // canción: se mantiene la fila única de siempre.
+            rows.push({
+              cod: getCodigo(ins),
+              nombre: ins.nombre_grupo || ins.nombre,
+              catLabel: "",
+              filename: ins.musica_nombre || "",
+              url: ins.musica_url,
+            });
+          }
+        });
+        if (!rows.length) {
           $("pane-dj").innerHTML =
             '<div class="empty">No hay músicas cargadas todavía.</div>';
           return;
         }
-        const list = c
-          .map((ins) => {
-            const cod = getCodigo(ins);
+        const list = rows
+          .map((r) => {
+            const meta = [r.catLabel, r.filename].filter(Boolean).join(" · ");
             return (
               '<div class="ins-row"><div><div class="ins-codigo">' +
-              esc(cod) +
+              esc(r.cod) +
               '</div></div><div><div class="ins-nombre">' +
-              esc(ins.nombre_grupo || ins.nombre) +
+              esc(r.nombre) +
               '</div><div class="ins-meta">' +
-              esc(ins.musica_nombre || "") +
+              esc(meta) +
               '</div></div><div></div><div class="ins-actions"><button class="btn-icon" onclick="window.open(\'' +
-              esc(ins.musica_url) +
+              esc(r.url) +
               "','_blank')\">▶ Reproducir</button></div></div>"
             );
           })
