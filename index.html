@@ -4590,12 +4590,19 @@
           var totalSlots = document.querySelectorAll("#mslots .mslot").length;
           var uploadedSlots =
             document.querySelectorAll("#mslots .mslot.upl").length;
+          var regSlot = document.getElementById("reg-mslot");
+          var regUploaded = regSlot && regSlot.classList.contains("upl");
 
-          if (totalSlots > 0 && uploadedSlots < totalSlots) {
-            toast(
-              "Subí la pista musical para cada categoría antes de continuar",
-              "err",
-            );
+          if (totalSlots > 0) {
+            if (uploadedSlots < totalSlots) {
+              toast(
+                "Subí la pista musical para cada categoría antes de continuar",
+                "err",
+              );
+              return;
+            }
+          } else if (!regUploaded) {
+            toast("Subí la pista musical antes de continuar", "err");
             return;
           }
         }
@@ -5243,7 +5250,6 @@
         cats.forEach(function (cat) {
           var s = document.createElement("div");
           s.className = "mslot click";
-          s.dataset.catId = String(cat.c);
           s.innerHTML =
             '<div style="display:flex;align-items:center;gap:10px">' +
             '<div style="font-size:19px;flex-shrink:0">&#127925;</div>' +
@@ -5254,7 +5260,10 @@
             cat.n +
             "</div>" +
             '<div class="mf" style="font-size:15px;color:rgba(28,28,22,.60);margin-top:1px">Tocar para subir MP3</div>' +
-            (INST === "nac" || INST === "int" || INST === "rep"
+            (INST === "nac" ||
+            INST === "int" ||
+            INST === "rep" ||
+            INST === "reg"
               ? '<div class="ms" style="font-size:13px;color:#b45309;font-weight:600;margin-top:1px">Obligatorio \u2014 sub\u00ed el MP3 ahora</div>'
               : '<div class="ms" style="font-size:13px;color:rgba(28,28,22,.50);margin-top:1px">Opcional \u2014 pod\u00e9s subirla despu\u00e9s</div>') +
             '</div><div class="mx" style="font-size:18px;color:rgba(28,28,22,.45)">+</div></div>';
@@ -5343,6 +5352,18 @@
       }
 
       // ── UPLOADS ──────────────────────────────────────────────────────
+      function regSubirMusica(el) {
+        el.classList.remove("click");
+        el.classList.add("upl");
+        el.innerHTML =
+          '<div style="display:flex;align-items:center;gap:10px">' +
+          '<div style="font-size:19px">&#127925;</div>' +
+          '<div style="flex:1">' +
+          '<div style="font-size:15px;color:#1c1c16">pista_sedes.mp3 · subida</div>' +
+          '<div style="font-size:13px;color:#16a34a;margin-top:2px">✓ Subida correctamente</div>' +
+          '</div><div style="color:#16a34a">✓</div></div>';
+        el.onclick = null;
+      }
       function subirClasif(input) {
         var el = document.getElementById("comp-clasif");
         if (!el || !input || !input.files || !input.files[0]) return;
@@ -5507,7 +5528,11 @@
               '<div class="clist" id="clist"></div></div>' +
               '<div class="card">' +
               '<div style="font-size:16px;font-weight:600;color:#1c1c16;margin-bottom:12px">&#127925; Pista musical <span class="opt-bdg">Opcional</span></div>' +
-              '<div id="mslots"></div>' +
+              '<div id="reg-mslot" class="mslot click" onclick="regSubirMusica(this)">' +
+              '<div style="display:flex;align-items:center;gap:10px">' +
+              '<div style="font-size:19px">&#127925;</div>' +
+              '<div style="flex:1"><div style="font-size:15px;color:rgba(28,28,22,.60)">Tocar para subir MP3 (opcional)</div></div>' +
+              '<div style="font-size:18px;color:rgba(28,28,22,.45)">+</div></div></div>' +
               "</div></div></div></div>" +
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">← Atrás</button>' +
               '<button class="btn bgn" onclick="goTo(4)">Continuar →</button></div>';
@@ -5542,7 +5567,6 @@
             GF = "todas";
             NF = "";
             renderCatList("clist");
-            buildMSlots("mslots");
           },
           4: function (w) {
             var nombre = sv("f-nombre") || "Participante";
@@ -6421,16 +6445,6 @@
       }
 
       // Guardar inscripción en Supabase
-      function genMusicaToken() {
-        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-        return (
-          Date.now().toString(36) +
-          "-" +
-          Math.random().toString(36).slice(2) +
-          Math.random().toString(36).slice(2)
-        );
-      }
-
       async function saveInscripcion() {
         var sb = getSb();
         if (!sb) {
@@ -6450,23 +6464,14 @@
         var tot = getTotal();
         var ts = Date.now();
 
-        // Categorías seleccionadas, cada una con su propia música (si se subió) y token de carga diferida
-        var musicSlots = window.jamMusicSlots || {};
+        // Categorías seleccionadas
         var cats = Array.from(selC).map(function (id) {
           var c = CATS.find(function (x) {
             return INST === "int"
               ? x.c === id && x.inst === "int"
               : x.c === id && x.inst !== "int";
           });
-          var base = c ? { c: c.c, n: c.n, g: c.g, niv: c.niv } : { c: id };
-          var picked = musicSlots[String(base.c)];
-          base.musica_url = picked ? picked.url : null;
-          base.musica_nombre = picked
-            ? picked.name || (picked.file && picked.file.name) || null
-            : null;
-          base.musica_estado = picked && picked.url ? "cargada" : "pendiente";
-          base.musica_token = genMusicaToken();
-          return base;
+          return c ? { c: c.c, n: c.n, g: c.g, niv: c.niv } : { c: id };
         });
 
         // Integrantes
@@ -6507,17 +6512,40 @@
           }
         }
 
-        // Música a nivel de inscripción: espejo de la primera categoría con canción,
-        // usado por paneles/DJ que todavía leen un único musica_url por inscripción.
-        // "cargada" solo si TODAS las categorías tienen su canción.
-        var catsConMusica = cats.filter(function (c) {
-          return c.musica_estado === "cargada";
-        });
-        var primeraConMusica = catsConMusica[0] || null;
-        var musUrl = primeraConMusica ? primeraConMusica.musica_url : null;
-        var musName = primeraConMusica ? primeraConMusica.musica_nombre : null;
-        var musicaCompleta =
-          cats.length > 0 && catsConMusica.length === cats.length;
+        // Upload música (prioriza archivo subido en slots)
+        var musUrl = null;
+        var musName = null;
+        if (window.jamMusicPicked && window.jamMusicPicked.url) {
+          musUrl = window.jamMusicPicked.url;
+          musName =
+            window.jamMusicPicked.name ||
+            (window.jamMusicPicked.file && window.jamMusicPicked.file.name);
+        }
+        var musInput = document.querySelector(".mslot-file-input");
+        if (!musUrl && musInput && musInput.files && musInput.files[0]) {
+          try {
+            musUrl = await sbUpload(
+              "musica",
+              INST + "_" + ts,
+              musInput.files[0],
+            );
+            musName = musInput.files[0].name;
+          } catch (e) {
+            console.error("music upload:", e);
+          }
+        }
+        if (!musUrl && window.jamMusicPicked && window.jamMusicPicked.file) {
+          try {
+            musUrl = await sbUpload(
+              "musica",
+              INST + "_" + ts,
+              window.jamMusicPicked.file,
+            );
+            musName = window.jamMusicPicked.file.name;
+          } catch (e) {
+            console.error("music upload:", e);
+          }
+        }
 
         var record = {
           instancia: INST,
@@ -6537,7 +6565,7 @@
           monto_total: tot.v,
           moneda: tot.m,
           musica_url: musUrl,
-          musica_estado: musicaCompleta ? "cargada" : "pendiente",
+          musica_estado: musUrl ? "cargada" : "pendiente",
           musica_nombre: musName || null,
         };
         if (clasifUrl) record.clasif_url = clasifUrl;
@@ -6717,7 +6745,7 @@
         GF = "todas";
         NF = "";
         STATE = {};
-        window.jamMusicSlots = {};
+        window.jamMusicPicked = null;
         document.getElementById("sform").style.display = "block";
         document.getElementById("sok").style.display = "none";
         document.getElementById("sok-regional").style.display = "none";
@@ -6899,8 +6927,8 @@
         // Neutralizar verde/check post-upload (queda solo texto, sin colores)
         var __jamStyleReset = document.createElement("style");
         __jamStyleReset.textContent =
-          '[id="mslots"] { background: inherit !important; color: inherit !important; border-color: inherit !important; }' +
-          '[id="mslots"]::before, [id="mslots"]::after { content: none !important; background: none !important; }';
+          '[id="mslots"], #reg-mslot { background: inherit !important; color: inherit !important; border-color: inherit !important; }' +
+          '[id="mslots"]::before, [id="mslots"]::after, #reg-mslot::before, #reg-mslot::after { content: none !important; background: none !important; }';
         if (document.head) document.head.appendChild(__jamStyleReset);
         else
           document.addEventListener("DOMContentLoaded", function () {
@@ -7086,11 +7114,15 @@
         function findActiveSlot() {
           if (pendingSlotEl && pendingSlotEl.offsetParent !== null)
             return pendingSlotEl;
-          var slots = document.querySelectorAll("#mslots .mslot");
+          var slots = [document.getElementById("reg-mslot")];
+          var mslotsList = document.querySelectorAll('[id="mslots"]');
+          for (var j = 0; j < mslotsList.length; j++) slots.push(mslotsList[j]);
           for (var k = 0; k < slots.length; k++) {
-            if (slots[k].offsetParent !== null) return slots[k];
+            if (slots[k] && slots[k].offsetParent !== null) return slots[k];
           }
-          return slots[0] || null;
+          return slots.find(function (s) {
+            return s;
+          });
         }
 
         function setSlotLabel(t) {
@@ -7113,6 +7145,22 @@
           if (!slotEl) return;
           slotEl.classList.remove("click");
           slotEl.classList.add("upl");
+          if (slotEl.id === "reg-mslot") {
+            slotEl.innerHTML =
+              '<div style="display:flex;align-items:center;gap:10px">' +
+              '<div style="font-size:19px">&#127925;</div>' +
+              '<div style="flex:1">' +
+              '<div style="font-size:15px;color:#1c1c16">' +
+              fileName +
+              "</div>" +
+              '<div style="font-size:13px;color:#16a34a;margin-top:2px">\u2713 Subida correctamente</div>' +
+              '</div><div style="color:#16a34a">\u2713</div></div>';
+            slotEl.onclick = function () {
+              pendingSlotEl = slotEl;
+              $audioInput().click();
+            };
+            return;
+          }
           var mf = slotEl.querySelector(".mf");
           var ms = slotEl.querySelector(".ms");
           var mx = slotEl.querySelector(".mx");
@@ -7171,21 +7219,12 @@
             return;
           }
           pickedFile = f;
-          var slotForPick = pendingSlotEl;
-          var catId = slotForPick ? slotForPick.dataset.catId : null;
           setSlotLabel("Subiendo: " + f.name);
           try {
             pickedUrl = await uploadAudio(f);
-            if (!window.jamMusicSlots) window.jamMusicSlots = {};
-            if (catId) {
-              window.jamMusicSlots[catId] = {
-                file: f,
-                url: pickedUrl,
-                name: f.name,
-              };
-            }
-            if (slotForPick) {
-              markSlotUploaded(slotForPick, f.name);
+            window.jamMusicPicked = { file: f, url: pickedUrl, name: f.name };
+            if (pendingSlotEl) {
+              markSlotUploaded(pendingSlotEl, f.name);
             }
             setSlotLabel(f.name);
             pendingSlotEl = null;
@@ -7193,7 +7232,7 @@
           } catch (e) {
             pickedFile = null;
             pickedUrl = null;
-            if (catId && window.jamMusicSlots) delete window.jamMusicSlots[catId];
+            window.jamMusicPicked = null;
             restoreSlotLabel();
             pendingSlotEl = null;
             ev.target.value = "";
@@ -7202,10 +7241,11 @@
         }
 
         function wireAllSlots() {
-          var slots = document.querySelectorAll("#mslots .mslot");
+          var slots = document.querySelectorAll("#mslots .mslot, #reg-mslot");
           for (var j = 0; j < slots.length; j++) {
             var slot = slots[j];
             if (slot.dataset._jamWired) continue;
+            if (slot.id === "reg-mslot") continue;
             slot.dataset._jamWired = "1";
             slot.style.cursor = "pointer";
             slot.addEventListener("click", function (e) {
@@ -7213,6 +7253,20 @@
               $audioInput().click();
             });
           }
+        }
+
+        function patchRegSubir() {
+          if (window._regSubirMusicaPatched) return;
+          if (typeof window.regSubirMusica !== "function") {
+            setTimeout(patchRegSubir, 400);
+            return;
+          }
+          window._regSubirMusicaPatched = true;
+          window.__originalRegSubirMusica = window.regSubirMusica;
+          window.regSubirMusica = function (el) {
+            pendingSlotEl = el;
+            $audioInput().click();
+          };
         }
 
         // ===== Botón Términos y Condiciones PDF (nuevo en v3) ===================
@@ -7387,6 +7441,7 @@
 
         function init() {
           $audioInput();
+          patchRegSubir();
           wireAllSlots();
           injectTerminosButton();
           setupObserver();

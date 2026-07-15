@@ -316,14 +316,11 @@ export default async function handler(req, res) {
       encodeURIComponent(checkUrl);
     const subj = (emailT.asunto_inscripcion || ("Inscripción " + nombreEvento + " confirmada")) + " — " + codigo_legible;
 
-    // === MÚSICA: link(es) de carga, SOLO para Sedes virtuales sin música cargada ===
+    // === MÚSICA: link de carga, SOLO para Sedes virtuales sin música cargada ===
     // Nacional/Repesca/Inter la cargan obligatoria al inscribirse y nunca ven
     // este bloque. Sedes presenciales tampoco. Si la sede virtual ya tiene
     // música cargada, tampoco se muestra nada: el reemplazo lo maneja el
     // negocio directamente, no es self-service.
-    // Cada categoría tiene su propio musica_token (guardado dentro del array
-    // `categorias`), así que una inscripción con varias categorías recibe UN
-    // solo mail con UN link por categoría pendiente.
     let musicaHtml = "";
     let musicaText = "";
     const esSedeVirtual =
@@ -331,38 +328,14 @@ export default async function handler(req, res) {
       typeof ins.sede_nombre === "string" &&
       /virtual/i.test(ins.sede_nombre);
 
-    if (esSedeVirtual) {
-      let categorias = ins.categorias;
-      if (typeof categorias === "string") {
-        try {
-          categorias = JSON.parse(categorias);
-        } catch (e) {
-          categorias = [];
-        }
-      }
-      if (!Array.isArray(categorias)) categorias = [];
-
-      const tieneTokensPorCategoria = categorias.some((c) => c && c.musica_token);
-
-      let pendientes = [];
-      if (tieneTokensPorCategoria) {
-        pendientes = categorias.filter(
-          (c) => c && c.musica_token && c.musica_estado !== "cargada",
+    if (esSedeVirtual && ins.musica_estado !== "cargada") {
+      if (!ins.musica_token) {
+        console.warn(
+          `Inscripción ${ins.id} sin musica_token (revisar columna/default en Supabase)`,
         );
-      } else if (ins.musica_estado !== "cargada") {
-        // Inscripciones viejas, de antes de que cada categoría tuviera su propio
-        // token: se mantiene el link único de siempre sobre el token de la fila.
-        if (!ins.musica_token) {
-          console.warn(
-            `Inscripción ${ins.id} sin musica_token (revisar columna/default en Supabase)`,
-          );
-        } else {
-          pendientes = [{ c: null, n: null, musica_token: ins.musica_token, _legacy: true }];
-        }
-      }
+      } else {
+        const musicaUrl = SITE + "/musica?token=" + ins.musica_token;
 
-      if (pendientes.length) {
-        let vencFecha = null;
         if (MUSICA_VENCIMIENTO_ACTIVO) {
           let vencimientoMusica = ins.vencimiento_musica;
           if (!vencimientoMusica) {
@@ -380,63 +353,32 @@ export default async function handler(req, res) {
               );
             }
           }
-          vencFecha = new Date(vencimientoMusica).toLocaleDateString("es-AR", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          });
-        }
-
-        const linkFor = (c) =>
-          c._legacy
-            ? SITE + "/musica?token=" + c.musica_token
-            : SITE +
-              "/musica?token=" +
-              ins.musica_token +
-              "&cat=" +
-              encodeURIComponent(c.c);
-
-        const linksHtml = pendientes
-          .map((c) => {
-            const label = c._legacy
-              ? "Subir mi música →"
-              : `Subir música — Cat. ${esc(c.c)} · ${esc(c.n)} →`;
-            return `<a href="${linkFor(c)}" style="background:#C9A84C;color:#0A0A0A;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block;margin:4px 0">${label}</a>`;
-          })
-          .join("<br>");
-
-        const linksText = pendientes
-          .map((c) =>
-            c._legacy
-              ? linkFor(c)
-              : `Cat. ${c.c} — ${c.n}: ${linkFor(c)}`,
-          )
-          .join("\n");
-
-        const introTxt =
-          pendientes.length > 1
-            ? `Todavía no cargaste la pista para ${pendientes.length} de tus categorías. Subí una canción para cada una desde estos links.`
-            : "Todavía no cargaste la pista de tu presentación.";
-
-        const vencTxtHtml = vencFecha
-          ? ` Tenés hasta el <strong style="color:#F8F5EE">${esc(vencFecha)}</strong> para subirla sin cargo extra. Pasada esa fecha podés subirla igual, pero se te va a cobrar un recargo aparte.`
-          : " Podés subirla cuando quieras.";
-        const vencTxtPlain = vencFecha
-          ? ` Tenés hasta el ${vencFecha} para subirla sin cargo extra (pasada esa fecha se puede subir igual, con recargo aparte).`
-          : " Podés subirla cuando quieras.";
-
-        musicaHtml = `
+          const vencFecha = new Date(vencimientoMusica).toLocaleDateString(
+            "es-AR",
+            { day: "numeric", month: "long", year: "numeric" },
+          );
+          musicaHtml = `
 <div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0;text-align:center">
   <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Subí tu música</div>
-  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">${introTxt}${vencTxtHtml}</p>
-  ${linksHtml}
+  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">Todavía no cargaste la pista de tu presentación. Tenés hasta el <strong style="color:#F8F5EE">${esc(vencFecha)}</strong> para subirla sin cargo extra. Pasada esa fecha podés subirla igual, pero se te va a cobrar un recargo aparte.</p>
+  <a href="${musicaUrl}" style="background:#C9A84C;color:#0A0A0A;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block">Subir mi música →</a>
 </div>`;
-        musicaText =
-          "\n\nSUBÍ TU MÚSICA\n" +
-          introTxt +
-          vencTxtPlain +
-          "\n" +
-          linksText;
+          musicaText =
+            "\n\nSUBÍ TU MÚSICA\nTodavía no cargaste la pista. Tenés hasta el " +
+            vencFecha +
+            " para subirla sin cargo extra (pasada esa fecha se puede subir igual, con recargo aparte).\n" +
+            musicaUrl;
+        } else {
+          musicaHtml = `
+<div style="background:#1a1600;border:2px solid #C9A84C;border-radius:14px;padding:22px;margin:24px 0;text-align:center">
+  <div style="font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px">Subí tu música</div>
+  <p style="color:rgba(248,245,238,.7);font-size:13px;margin:0 0 16px;line-height:1.5">Todavía no cargaste la pista de tu presentación. Podés subirla cuando quieras desde este link.</p>
+  <a href="${musicaUrl}" style="background:#C9A84C;color:#0A0A0A;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;display:inline-block">Subir mi música →</a>
+</div>`;
+          musicaText =
+            "\n\nSUBÍ TU MÚSICA\nTodavía no cargaste la pista. Podés subirla cuando quieras desde este link:\n" +
+            musicaUrl;
+        }
       }
     }
 

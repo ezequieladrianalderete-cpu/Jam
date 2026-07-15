@@ -2002,19 +2002,6 @@
           return String(c || "");
         }
       }
-
-      // Igual que parseCat pero devuelve el/los objeto(s) de categoría en vez
-      // de una etiqueta de texto (para matchear c.c contra inscripciones.categorias).
-      function parseCatArr(raw) {
-        try {
-          const v = typeof raw === "string" ? JSON.parse(raw) : raw;
-          if (Array.isArray(v)) return v;
-          if (v && typeof v === "object") return [v];
-          return [];
-        } catch (e) {
-          return [];
-        }
-      }
       // ═══════════════════════════════════════════════════════════
       // CONFIG DINÁMICA (cargada desde evento.config)
       // ═══════════════════════════════════════════════════════════
@@ -3449,13 +3436,11 @@
           buildDjLista();
           return;
         }
-        // Buscar música de cada inscripción (musica_url/nombre = espejo de la
-        // primera categoría con canción; categorias trae la canción propia de
-        // cada categoría para poder tocar la correcta según la sesión activa)
+        // Buscar música de cada inscripción
         const ids = lineup.map((l) => l.inscripcion_id).filter(Boolean);
         const { data: inscrip } = await db
           .from("inscripciones")
-          .select("id, musica_url, musica_nombre, categorias")
+          .select("id, musica_url, musica_nombre")
           .in("id", ids);
         const musicMap = {};
         (inscrip || []).forEach((i) => {
@@ -3470,32 +3455,11 @@
             filename: m.musica_nombre || "Sin nombre",
             verificado: !!m.musica_url,
             musica_url: m.musica_url || null,
-            categorias: parseCatArr(m.categorias),
             activo_dj: false,
             duracion_fmt: "—",
           };
         });
         buildDjLista();
-      }
-
-      // Resuelve qué canción tocar para la sesión activa: si la sesión tiene
-      // una categoría puntual (dPonerEnPista guarda una sola), busca la canción
-      // de ESA categoría dentro de las del participante; si no matchea (datos
-      // viejos, o inscripción de una sola categoría) cae en la canción de fila.
-      function resolveCancionSesion(m, sesion) {
-        if (!m) return null;
-        const catsSesion = sesion ? parseCatArr(sesion.categoria) : [];
-        const catSesion = catsSesion[0] || null;
-        if (catSesion && catSesion.c != null && m.categorias && m.categorias.length) {
-          const match = m.categorias.find(
-            (c) => c && String(c.c) === String(catSesion.c),
-          );
-          if (match && match.musica_url) {
-            return { url: match.musica_url, nombre: match.musica_nombre || m.filename };
-          }
-        }
-        if (m.musica_url) return { url: m.musica_url, nombre: m.filename };
-        return null;
       }
 
       function buildDjLista(filtro) {
@@ -3522,19 +3486,18 @@
             " · " +
             (sesionActiva.instancia || "").toUpperCase();
           const m = djData.find((x) => x.codigo_id === sesionActiva.codigo_id);
-          const cancion = resolveCancionSesion(m, sesionActiva);
-          if (cancion) {
+          if (m && m.musica_url) {
             document.getElementById("dj-musica-activa").innerHTML = `
         <div style="background:#0d0d0d;border-radius:14px;padding:16px;margin-bottom:12px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <button onclick="djTogglePlay()" id="dj-play-btn" style="width:48px;height:48px;border-radius:50%;background:#C9A84C;border:none;cursor:pointer;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>
             <div style="flex:1">
-              <div class="fw6">${cancion.nombre}</div>
+              <div class="fw6">${m.filename}</div>
               <div class="muted text-xs">${m.codigo_id} · ${m.nombre_grupo}</div>
             </div>
             <button onclick="djStop()" style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:16px;color:#E05252;display:flex;align-items:center;justify-content:center">⏹</button>
           </div>
-          <audio id="dj-audio" src="${cancion.url}" preload="auto" ontimeupdate="djUpdateProgress()" onended="djOnEnded()"></audio>
+          <audio id="dj-audio" src="${m.musica_url}" preload="auto" ontimeupdate="djUpdateProgress()" onended="djOnEnded()"></audio>
           <div style="display:flex;align-items:center;gap:10px">
             <span class="mono text-xs muted" id="dj-time-current">0:00</span>
             <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative" onclick="djSeek(event)">
