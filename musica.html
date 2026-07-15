@@ -358,14 +358,29 @@
       // === Estado ===
       var state = {
         token: null,
+        cat: null,
+        catObj: null,
         ins: null,
         codigo: "",
         pickedFile: null,
       };
 
+      function parseCategorias(ins) {
+        var categorias = ins.categorias;
+        if (typeof categorias === "string") {
+          try {
+            categorias = JSON.parse(categorias);
+          } catch (e) {
+            categorias = [];
+          }
+        }
+        return Array.isArray(categorias) ? categorias : [];
+      }
+
       // === Init ===
       async function init() {
         state.token = new URLSearchParams(location.search).get("token");
+        state.cat = new URLSearchParams(location.search).get("cat");
         if (!state.token) {
           return showError(
             "Falta el token en la URL. Revisá el link de tu mail.",
@@ -390,6 +405,20 @@
               "No se encontró inscripción con ese token. Verificá el link.",
             );
           state.ins = data[0];
+
+          // Si el link trae categoría (inscripciones multi-categoría), buscarla
+          // dentro del array `categorias` — cada una tiene su propia canción.
+          if (state.cat) {
+            var categorias = parseCategorias(state.ins);
+            state.catObj = categorias.find(function (c) {
+              return c && String(c.c) === String(state.cat);
+            });
+            if (!state.catObj) {
+              return showError(
+                "No se encontró esa categoría en tu inscripción. Verificá el link.",
+              );
+            }
+          }
 
           // 2. Calcular posición para código legible
           var r2 = await fetch(
@@ -417,6 +446,7 @@
       // === Render ===
       function render() {
         var ins = state.ins;
+        var target = state.catObj || ins;
         var integrantes = [];
         try {
           integrantes =
@@ -427,7 +457,7 @@
         if (!Array.isArray(integrantes)) integrantes = [];
         var nombreGrupo = ins.nombre_grupo || ins.nombre || "Participante";
 
-        var yaCargada = ins.musica_estado === "cargada" && ins.musica_url;
+        var yaCargada = target.musica_estado === "cargada" && target.musica_url;
 
         var intHtml = integrantes.length
           ? integrantes
@@ -458,6 +488,13 @@
           '<div class="subtitle">Responsable: ' +
           esc(ins.nombre || "—") +
           "</div>" +
+          (state.catObj
+            ? '<div class="subtitle" style="margin-top:4px;color:#d97706;font-weight:600">Categoría ' +
+              esc(state.catObj.c) +
+              " — " +
+              esc(state.catObj.n) +
+              "</div>"
+            : "") +
           (integrantes.length
             ? '<div class="section-title">Integrantes (' +
               integrantes.length +
@@ -467,7 +504,7 @@
           "</div>";
 
         if (yaCargada) {
-          var fueraNota = ins.musica_fuera_termino
+          var fueraNota = target.musica_fuera_termino
             ? '<div class="alert alert-warn" style="margin-top:14px"><div>⚠ Esta música se subió fuera del plazo sin cargo. Se va a aplicar un recargo aparte; te contactaremos para coordinarlo.</div></div>'
             : "";
           html +=
@@ -476,10 +513,10 @@
             '<div class="status cargada">✓ Ya cargaste tu canción</div>' +
             fueraNota +
             '<div style="margin-top:14px;padding:12px;background:rgba(255, 255, 255, 0.60);border-radius:10px"><div style="font-size:15px;color:#1c1c16;font-weight:600;margin-bottom:4px">' +
-            esc(ins.musica_nombre || "archivo.mp3") +
+            esc(target.musica_nombre || "archivo.mp3") +
             "</div></div>" +
             '<audio class="audio" controls src="' +
-            esc(ins.musica_url) +
+            esc(target.musica_url) +
             '"></audio>' +
             '<button class="btn btn-secondary" onclick="document.getElementById(\'reemplazar\').click()">Reemplazar archivo</button>' +
             '<input id="reemplazar" type="file" accept="audio/*" class="file-input">' +
@@ -675,12 +712,55 @@
 
           // 2. PATCH a la inscripción (CRÍTICO - este es el fix)
           var venc = vencimientoInfo(state.ins);
-          var patchBody = {
-            musica_url: publicUrl,
-            musica_nombre: file.name,
-            musica_estado: "cargada",
-          };
-          if (venc && venc.vencido) patchBody.musica_fuera_termino = true;
+          var patchBody;
+          var categorias = null;
+          var catIdx = -1;
+
+          if (state.catObj) {
+            // Inscripción multi-categoría: cada categoría guarda su propia
+            // canción dentro del array `categorias` (read-modify-write, ya
+            // que PostgREST no permite un PATCH parcial de un elemento del
+            // array). Además se refleja en las columnas de nivel-fila para
+            // paneles que todavía leen un único musica_url por inscripción.
+            categorias = parseCategorias(state.ins);
+            catIdx = categorias.findIndex(function (c) {
+              return c && String(c.c) === String(state.cat);
+            });
+            if (catIdx === -1) {
+              throw new Error(
+                "No se encontró la categoría en tu inscripción. Contactá a info@jamcompetencia.com",
+              );
+            }
+            categorias[catIdx] = Object.assign({}, categorias[catIdx], {
+              musica_url: publicUrl,
+              musica_nombre: file.name,
+              musica_estado: "cargada",
+            });
+            if (venc && venc.vencido)
+              categorias[catIdx].musica_fuera_termino = true;
+
+            var catsConMusica = categorias.filter(function (c) {
+              return c && c.musica_estado === "cargada";
+            });
+            var primera = catsConMusica[0] || null;
+            patchBody = {
+              categorias: categorias,
+              musica_url: primera ? primera.musica_url : null,
+              musica_nombre: primera ? primera.musica_nombre : null,
+              musica_estado:
+                categorias.length > 0 &&
+                catsConMusica.length === categorias.length
+                  ? "cargada"
+                  : "pendiente",
+            };
+          } else {
+            patchBody = {
+              musica_url: publicUrl,
+              musica_nombre: file.name,
+              musica_estado: "cargada",
+            };
+            if (venc && venc.vencido) patchBody.musica_fuera_termino = true;
+          }
 
           var patchRes = await fetch(
             SB_URL + "/rest/v1/inscripciones?id=eq." + state.ins.id,
@@ -708,17 +788,33 @@
 
           // Verificar que efectivamente quedó guardado
           var verify = await patchRes.json();
-          if (!verify || !verify[0] || !verify[0].musica_url) {
+          var verifyRow = verify && verify[0];
+          var verifyOk = state.catObj
+            ? verifyRow &&
+              parseCategorias(verifyRow).some(function (c) {
+                return (
+                  c &&
+                  String(c.c) === String(state.cat) &&
+                  c.musica_url === publicUrl
+                );
+              })
+            : verifyRow && verifyRow.musica_url === publicUrl;
+          if (!verifyOk) {
             throw new Error(
               "La inscripción se actualizó pero no se confirmó la URL. Contactá a info@jamcompetencia.com",
             );
           }
 
           // 3. Mostrar éxito
-          state.ins.musica_url = publicUrl;
-          state.ins.musica_nombre = file.name;
-          state.ins.musica_estado = "cargada";
-          if (venc && venc.vencido) state.ins.musica_fuera_termino = true;
+          if (state.catObj && categorias) {
+            state.ins.categorias = categorias;
+            state.catObj = categorias[catIdx];
+          } else {
+            state.ins.musica_url = publicUrl;
+            state.ins.musica_nombre = file.name;
+            state.ins.musica_estado = "cargada";
+            if (venc && venc.vencido) state.ins.musica_fuera_termino = true;
+          }
 
           setHtml("#progressBox", "");
           setHtml(

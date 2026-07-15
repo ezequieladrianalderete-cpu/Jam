@@ -989,7 +989,19 @@
     <!-- PANEL JURADO -->
     <div id="screen-jurado" style="display: none">
       <div class="instancia-banner" id="j-instancia-banner">
-        <span class="ib-icon"><svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg></span>
+        <span class="ib-icon"
+          ><svg
+            width="22"
+            height="14"
+            viewBox="0 0 22 14"
+            xmlns="http://www.w3.org/2000/svg"
+            style="vertical-align: middle; border-radius: 2px"
+          >
+            <rect width="22" height="4.67" fill="#74ACDF" />
+            <rect width="22" height="4.67" y="4.67" fill="#fff" />
+            <rect width="22" height="4.67" y="9.33" fill="#74ACDF" />
+            <circle cx="11" cy="7" r="2.2" fill="#F6B40E" /></svg
+        ></span>
         <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
       </div>
       <header class="hdr">
@@ -1056,17 +1068,47 @@
               type="button"
               id="j-rep-si"
               onclick="jRepVotar(1)"
-              style="flex: 1; padding: 28px 12px; border-radius: 14px; border: 2px solid rgba(76,175,125,.4); background: rgba(76,175,125,.08); color: #4CAF7D; font-size: 22px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all .15s"
+              style="
+                flex: 1;
+                padding: 28px 12px;
+                border-radius: 14px;
+                border: 2px solid rgba(76, 175, 125, 0.4);
+                background: rgba(76, 175, 125, 0.08);
+                color: #4caf7d;
+                font-size: 22px;
+                font-weight: 800;
+                cursor: pointer;
+                font-family: inherit;
+                transition: all 0.15s;
+              "
             >
-              ✅ SÍ<br /><span style="font-size: 12px; font-weight: 500; opacity: .8">Pasa</span>
+              ✅ SÍ<br /><span
+                style="font-size: 12px; font-weight: 500; opacity: 0.8"
+                >Pasa</span
+              >
             </button>
             <button
               type="button"
               id="j-rep-no"
               onclick="jRepVotar(0)"
-              style="flex: 1; padding: 28px 12px; border-radius: 14px; border: 2px solid rgba(224,82,82,.4); background: rgba(224,82,82,.08); color: #e05252; font-size: 22px; font-weight: 800; cursor: pointer; font-family: inherit; transition: all .15s"
+              style="
+                flex: 1;
+                padding: 28px 12px;
+                border-radius: 14px;
+                border: 2px solid rgba(224, 82, 82, 0.4);
+                background: rgba(224, 82, 82, 0.08);
+                color: #e05252;
+                font-size: 22px;
+                font-weight: 800;
+                cursor: pointer;
+                font-family: inherit;
+                transition: all 0.15s;
+              "
             >
-              ❌ NO<br /><span style="font-size: 12px; font-weight: 500; opacity: .8">No pasa</span>
+              ❌ NO<br /><span
+                style="font-size: 12px; font-weight: 500; opacity: 0.8"
+                >No pasa</span
+              >
             </button>
           </div>
           <button
@@ -1172,7 +1214,19 @@
     <!-- PANEL DIRECTOR -->
     <div id="screen-director" style="display: none">
       <div class="instancia-banner" id="d-instancia-banner">
-        <span class="ib-icon"><svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg></span>
+        <span class="ib-icon"
+          ><svg
+            width="22"
+            height="14"
+            viewBox="0 0 22 14"
+            xmlns="http://www.w3.org/2000/svg"
+            style="vertical-align: middle; border-radius: 2px"
+          >
+            <rect width="22" height="4.67" fill="#74ACDF" />
+            <rect width="22" height="4.67" y="4.67" fill="#fff" />
+            <rect width="22" height="4.67" y="9.33" fill="#74ACDF" />
+            <circle cx="11" cy="7" r="2.2" fill="#F6B40E" /></svg
+        ></span>
         <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
       </div>
       <header class="hdr">
@@ -1311,7 +1365,7 @@
           </div>
 
           <!-- Nueva sesión manual -->
-          <div class="card mb4" id="d-nueva-sesion-panel">
+          <!-- <div class="card mb4" id="d-nueva-sesion-panel">
             <div class="fw6 mb3">Iniciar sesión manual</div>
             <div class="g2">
               <div class="fld" style="margin-bottom: 0">
@@ -1373,7 +1427,7 @@
               Iniciar sesión en pista →
             </button>
           </div>
-        </div>
+        </div> -->
         <!-- /envivo -->
 
         <!-- LINE UP -->
@@ -1387,16 +1441,28 @@
 
         <!-- REPESCA -->
         <div class="tp" id="d-repesca">
-          <div class="fw7 mb4 mt3" style="font-size: 16px">Repesca — Votación SÍ/NO</div>
+          <div class="fw7 mb4 mt3" style="font-size: 16px">
+            Repesca — Votación SÍ/NO
+          </div>
           <div class="muted text-xs mb4">
-            Poné cada participante en pista. Los jurados votan SÍ o NO. Pasa por mayoría de síes.
+            Poné cada participante en pista. Los jurados votan SÍ o NO. Pasa por
+            mayoría de síes.
           </div>
           <div class="sy2" id="d-repesca-list"></div>
-          <div class="fw7 mb4 mt3" style="font-size: 15px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 16px; margin-top: 20px">
+          <div
+            class="fw7 mb4 mt3"
+            style="
+              font-size: 15px;
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              padding-top: 16px;
+              margin-top: 20px;
+            "
+          >
             ✅ Pasaron a la Final Nacional
           </div>
           <div class="muted text-xs mb4">
-            Listado informativo. Los que pasaron deben re-inscribirse al flujo de Final Nacional.
+            Listado informativo. Los que pasaron deben re-inscribirse al flujo
+            de Final Nacional.
           </div>
           <div class="sy2" id="d-repesca-aprobados"></div>
         </div>
@@ -2150,7 +2216,7 @@
           </div>
 
           <!-- DATOS BANCARIOS -->
-          <div class="card mb3">
+          <!-- <div class="card mb3">
             <div class="fw6 mb3" style="color: #c9a84c">
               🏦 Datos Bancarios / MercadoPago
             </div>
@@ -2205,7 +2271,7 @@
             <button class="btn bgn bfull" onclick="cfgGuardarBancarios()">
               💾 Guardar datos bancarios
             </button>
-          </div>
+          </div> -->
 
           <!-- EMAILS -->
           <div class="card mb3">
@@ -2874,11 +2940,14 @@
             .forEach((el) => (el.textContent = nombre));
           // Banners de instancia: reemplazar solo lo que va después del "·"
           // (el nombre del evento), preservando el ícono de bandera/instancia.
-          document.querySelectorAll(".instancia-banner .ib-text").forEach((el) => {
-            const txt = el.textContent;
-            const idx = txt.lastIndexOf("·");
-            if (idx > -1) el.textContent = txt.slice(0, idx + 1) + " " + nombre;
-          });
+          document
+            .querySelectorAll(".instancia-banner .ib-text")
+            .forEach((el) => {
+              const txt = el.textContent;
+              const idx = txt.lastIndexOf("·");
+              if (idx > -1)
+                el.textContent = txt.slice(0, idx + 1) + " " + nombre;
+            });
           // Subtítulo del login (formato "Portal de Competencia · 2026")
           document.querySelectorAll(".login-sub").forEach((el) => {
             if (el.textContent.includes("·"))
@@ -3182,7 +3251,8 @@
           jRepVoto = miPuntaje.subtotal >= 1 ? 1 : 0;
           jRepPintarSeleccion();
           const badge = document.getElementById("j-rep-estado-badge");
-          badge.textContent = jRepVoto === 1 ? "✓ Votaste: SÍ" : "✓ Votaste: NO";
+          badge.textContent =
+            jRepVoto === 1 ? "✓ Votaste: SÍ" : "✓ Votaste: NO";
           badge.className = "bdg " + (jRepVoto === 1 ? "bdg-green" : "bdg-red");
           document.getElementById("j-rep-si").disabled = true;
           document.getElementById("j-rep-no").disabled = true;
@@ -3195,8 +3265,10 @@
         jRepVoto = miPuntaje ? (miPuntaje.subtotal >= 1 ? 1 : 0) : null;
         document.getElementById("j-rep-si").disabled = false;
         document.getElementById("j-rep-no").disabled = false;
-        document.getElementById("j-rep-cerrar-btn").disabled = jRepVoto === null;
-        document.getElementById("j-rep-cerrar-btn").textContent = "Confirmar voto";
+        document.getElementById("j-rep-cerrar-btn").disabled =
+          jRepVoto === null;
+        document.getElementById("j-rep-cerrar-btn").textContent =
+          "Confirmar voto";
         jRepPintarSeleccion();
       }
 
@@ -3233,7 +3305,8 @@
           toast("Elegí SÍ o NO antes de confirmar", "err");
           return;
         }
-        if (!confirm("¿Confirmar tu voto? No se puede cambiar después.")) return;
+        if (!confirm("¿Confirmar tu voto? No se puede cambiar después."))
+          return;
         try {
           const payload = {
             sesion_id: sesionActiva.id,
@@ -3532,13 +3605,15 @@
           });
           // Banners de instancia: reemplazar SOLO lo que viene después del " · "
           // (el nombre del evento), preservando el ícono de bandera/instancia.
-          document.querySelectorAll(".instancia-banner .ib-text").forEach((el) => {
-            const txt = el.textContent;
-            const idx = txt.lastIndexOf("·");
-            if (idx > -1) {
-              el.textContent = txt.slice(0, idx + 1) + " " + nombreEv;
-            }
-          });
+          document
+            .querySelectorAll(".instancia-banner .ib-text")
+            .forEach((el) => {
+              const txt = el.textContent;
+              const idx = txt.lastIndexOf("·");
+              if (idx > -1) {
+                el.textContent = txt.slice(0, idx + 1) + " " + nombreEv;
+              }
+            });
         } catch (e) {
           /* fallback: queda el texto por defecto del HTML */
         }
@@ -3828,7 +3903,8 @@
           const badge =
             p.estado === "pista"
               ? '<span class="bdg bdg-gold">En pista</span>'
-              : p.estado === "listo" || (catsArr.length > 0 && pendientes.length === 0)
+              : p.estado === "listo" ||
+                  (catsArr.length > 0 && pendientes.length === 0)
                 ? '<span class="bdg bdg-green">✓ Evaluado</span>'
                 : pendientes.length > 1
                   ? '<div style="display:flex;flex-direction:column;gap:4px">' +
@@ -4185,29 +4261,67 @@
               const r = ses.resultado_repesca;
               const badge =
                 r === "paso"
-                  ? '<span class="bdg bdg-green">✅ PASÓ (' + (ses.votos_si || 0) + " SÍ / " + (ses.votos_no || 0) + " NO)</span>"
+                  ? '<span class="bdg bdg-green">✅ PASÓ (' +
+                    (ses.votos_si || 0) +
+                    " SÍ / " +
+                    (ses.votos_no || 0) +
+                    " NO)</span>"
                   : r === "no_paso"
-                    ? '<span class="bdg bdg-red">❌ No pasó (' + (ses.votos_si || 0) + " SÍ / " + (ses.votos_no || 0) + " NO)</span>"
-                    : '<span class="bdg bdg-amber">⚖ EMPATE (' + (ses.votos_si || 0) + " SÍ / " + (ses.votos_no || 0) + " NO) — desempatar en vivo</span>";
+                    ? '<span class="bdg bdg-red">❌ No pasó (' +
+                      (ses.votos_si || 0) +
+                      " SÍ / " +
+                      (ses.votos_no || 0) +
+                      " NO)</span>"
+                    : '<span class="bdg bdg-amber">⚖ EMPATE (' +
+                      (ses.votos_si || 0) +
+                      " SÍ / " +
+                      (ses.votos_no || 0) +
+                      " NO) — desempatar en vivo</span>";
               estadoHtml =
                 badge +
-                ' <button class="btn bo bsm" onclick="dRepVerVotos(\'' + p.codigo_id + '\')">Ver votos</button>' +
-                ' <button class="btn bo bsm" onclick="dRepReVotar(\'' + p.codigo_id + '\',\'' + safeNombre + '\',\'' + p.instancia + '\')">Re-votar</button>';
+                ' <button class="btn bo bsm" onclick="dRepVerVotos(\'' +
+                p.codigo_id +
+                "')\">Ver votos</button>" +
+                ' <button class="btn bo bsm" onclick="dRepReVotar(\'' +
+                p.codigo_id +
+                "','" +
+                safeNombre +
+                "','" +
+                p.instancia +
+                "')\">Re-votar</button>";
             } else if (ses && ses.activa) {
               estadoHtml =
                 '<span class="bdg bdg-gold">En pista votándose</span>' +
-                ' <button class="btn bgn bsm" onclick="dRepCerrarVotacion(\'' + ses.id + '\',\'' + p.codigo_id + '\')">Cerrar votación</button>';
+                ' <button class="btn bgn bsm" onclick="dRepCerrarVotacion(\'' +
+                ses.id +
+                "','" +
+                p.codigo_id +
+                "')\">Cerrar votación</button>";
             } else {
               estadoHtml =
-                '<button class="btn bgn bsm" onclick="dPonerEnPista(\'' + p.id + '\',\'' + safeNombre + '\',\'' + p.codigo_id + '\',\'rep\',\'\')">Poner en pista</button>';
+                '<button class="btn bgn bsm" onclick="dPonerEnPista(\'' +
+                p.id +
+                "','" +
+                safeNombre +
+                "','" +
+                p.codigo_id +
+                "','rep','')\">Poner en pista</button>";
             }
             const div = document.createElement("div");
             div.className = "card";
             div.style.cssText =
               "padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap";
             div.innerHTML =
-              '<div style="min-width:0"><span class="mono gold text-xs">' + p.codigo_id + '</span> <span class="fw6">' + p.nombre_grupo + '</span> <span class="muted text-xs">' + (p.pais || "") + '</span></div>' +
-              '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + estadoHtml + "</div>";
+              '<div style="min-width:0"><span class="mono gold text-xs">' +
+              p.codigo_id +
+              '</span> <span class="fw6">' +
+              p.nombre_grupo +
+              '</span> <span class="muted text-xs">' +
+              (p.pais || "") +
+              "</span></div>" +
+              '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+              estadoHtml +
+              "</div>";
             cont.appendChild(div);
           });
         }
@@ -4227,8 +4341,16 @@
             div.style.cssText =
               "padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-left:3px solid #4CAF7D";
             div.innerHTML =
-              '<div><span class="mono gold text-xs">' + s.codigo_id + '</span> <span class="fw6">' + s.nombre_grupo + '</span></div>' +
-              '<span class="bdg bdg-green text-xs">' + (s.votos_si || 0) + " SÍ / " + (s.votos_no || 0) + " NO</span>";
+              '<div><span class="mono gold text-xs">' +
+              s.codigo_id +
+              '</span> <span class="fw6">' +
+              s.nombre_grupo +
+              "</span></div>" +
+              '<span class="bdg bdg-green text-xs">' +
+              (s.votos_si || 0) +
+              " SÍ / " +
+              (s.votos_no || 0) +
+              " NO</span>";
             contAprob.appendChild(div);
           });
         }
@@ -4243,7 +4365,9 @@
             .select("subtotal,cerrado")
             .eq("sesion_id", sesionId)
             .eq("cerrado", true);
-          const si = (votos || []).filter((v) => Number(v.subtotal) >= 1).length;
+          const si = (votos || []).filter(
+            (v) => Number(v.subtotal) >= 1,
+          ).length;
           const no = (votos || []).filter((v) => Number(v.subtotal) < 1).length;
           let resultado;
           if (si > no) resultado = "paso";
@@ -4251,8 +4375,16 @@
           else resultado = "empate";
           if (
             !confirm(
-              "Cerrar votación:\n" + si + " SÍ / " + no + " NO\nResultado: " +
-                (resultado === "paso" ? "PASA" : resultado === "no_paso" ? "NO PASA" : "EMPATE (desempatar en vivo)") +
+              "Cerrar votación:\n" +
+                si +
+                " SÍ / " +
+                no +
+                " NO\nResultado: " +
+                (resultado === "paso"
+                  ? "PASA"
+                  : resultado === "no_paso"
+                    ? "NO PASA"
+                    : "EMPATE (desempatar en vivo)") +
                 "\n\n¿Confirmar?",
             )
           )
@@ -4270,7 +4402,11 @@
             .eq("id", sesionId);
           toast(
             "Votación cerrada: " +
-              (resultado === "paso" ? "PASÓ" : resultado === "no_paso" ? "No pasó" : "EMPATE"),
+              (resultado === "paso"
+                ? "PASÓ"
+                : resultado === "no_paso"
+                  ? "No pasó"
+                  : "EMPATE"),
             "ok",
           );
           buildRepesca();
@@ -4298,16 +4434,26 @@
         const lineas = (votos || [])
           .map(
             (v) =>
-              "Jurado " + v.juez_num + ": " + (Number(v.subtotal) >= 1 ? "SÍ ✅" : "NO ❌"),
+              "Jurado " +
+              v.juez_num +
+              ": " +
+              (Number(v.subtotal) >= 1 ? "SÍ ✅" : "NO ❌"),
           )
           .join("\n");
-        alert("Votos de " + codigoId + ":\n\n" + (lineas || "Sin votos registrados"));
+        alert(
+          "Votos de " +
+            codigoId +
+            ":\n\n" +
+            (lineas || "Sin votos registrados"),
+        );
       }
 
       async function dRepReVotar(codigoId, nombre, instancia) {
         if (
           !confirm(
-            "¿Volver a votar " + nombre + "? Se borrarán los votos anteriores y se pone de nuevo en pista.",
+            "¿Volver a votar " +
+              nombre +
+              "? Se borrarán los votos anteriores y se pone de nuevo en pista.",
           )
         )
           return;
@@ -4323,7 +4469,11 @@
             .limit(1);
           if (ses && ses.length) {
             // Borrar votos anteriores y reactivar la sesión
-            await db.schema("scoring").from("puntajes").delete().eq("sesion_id", ses[0].id);
+            await db
+              .schema("scoring")
+              .from("puntajes")
+              .delete()
+              .eq("sesion_id", ses[0].id);
             await db
               .schema("scoring")
               .from("sesiones")
@@ -4737,8 +4887,16 @@
         )
           return;
         try {
-          await db.schema("scoring").from("puntajes").delete().not("id", "is", null);
-          await db.schema("scoring").from("sesiones").delete().not("id", "is", null);
+          await db
+            .schema("scoring")
+            .from("puntajes")
+            .delete()
+            .not("id", "is", null);
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .delete()
+            .not("id", "is", null);
           toast("Scoring reseteado correctamente", "ok");
           saRefreshStats();
         } catch (e) {
@@ -4889,8 +5047,16 @@
         )
           return;
         try {
-          await db.schema("scoring").from("puntajes").delete().not("id", "is", null);
-          await db.schema("scoring").from("sesiones").delete().not("id", "is", null);
+          await db
+            .schema("scoring")
+            .from("puntajes")
+            .delete()
+            .not("id", "is", null);
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .delete()
+            .not("id", "is", null);
           await db
             .from("inscripciones")
             .delete()
@@ -6692,8 +6858,8 @@
           instancia === "reg"
             ? "REGIONAL · " + nombreEv
             : isInter
-            ? "INTER AMÉRICA · " + nombreEv
-            : "FINAL NACIONAL · " + nombreEv;
+              ? "INTER AMÉRICA · " + nombreEv
+              : "FINAL NACIONAL · " + nombreEv;
         document.querySelectorAll(".instancia-banner").forEach((el) => {
           el.innerHTML =
             '<span class="ib-icon">' +
