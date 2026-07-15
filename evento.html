@@ -3554,13 +3554,42 @@
         }
 
         lista.forEach((t) => {
-          const div = document.createElement("div");
-          div.className =
-            "mtrack" +
-            (t.activo_dj ? " activo" : "") +
-            (!t.verificado ? " falta" : "");
-          div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion || "—"}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div><div style="font-size:11px;color:${t.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${t.verificado ? "🎵 " + t.filename : "⚠️ Sin música"}</div></div>${t.musica_url ? "<button onclick=\"djPreview('" + t.musica_url.replace(/'/g, "\\'") + "','" + t.nombre_grupo.replace(/'/g, "\\'") + '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>' : '<div style="width:32px"></div>'}`;
-          cont.appendChild(div);
+          // Cada categoría puede tener su propia canción: una fila por
+          // categoría-con-música, igual que en admin > DJ.
+          const catsConMusica = (t.categorias || []).filter(
+            (c) => c && c.musica_url,
+          );
+          const multi = (t.categorias || []).length > 1;
+          const rows = catsConMusica.length
+            ? catsConMusica.map((c) => ({
+                filename: c.musica_nombre || "Sin nombre",
+                url: c.musica_url,
+                verificado: true,
+                catLabel: multi && c.n ? "Cat. " + c.c + " — " + c.n : "",
+              }))
+            : [
+                {
+                  filename: t.filename,
+                  url: t.musica_url,
+                  verificado: t.verificado,
+                  catLabel: "",
+                },
+              ];
+          rows.forEach((r) => {
+            const div = document.createElement("div");
+            div.className =
+              "mtrack" +
+              (t.activo_dj ? " activo" : "") +
+              (!r.verificado ? " falta" : "");
+            const label = [
+              r.catLabel,
+              r.verificado ? "🎵 " + r.filename : "⚠️ Sin música",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion || "—"}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div><div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${label}</div></div>${r.url ? "<button onclick=\"djPreview('" + r.url.replace(/'/g, "\\'") + "','" + t.nombre_grupo.replace(/'/g, "\\'") + '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>' : '<div style="width:32px"></div>'}`;
+            cont.appendChild(div);
+          });
         });
 
         // Sin música
