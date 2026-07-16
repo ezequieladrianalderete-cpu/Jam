@@ -180,7 +180,8 @@
         border-radius: 8px;
       }
       .hdr {
-        border-bottom: 1px solid var(--rol-hdr-border, rgba(255, 255, 255, 0.07));
+        border-bottom: 1px solid
+          var(--rol-hdr-border, rgba(255, 255, 255, 0.07));
         height: 48px;
         padding: 0 14px;
         display: flex;
@@ -463,7 +464,7 @@
         background-color: #060810;
         position: relative;
       }
-      #screen-proyeccion-full.proy-inter::before {
+      /* #screen-proyeccion-full.proy-inter::before {
         content: "";
         position: fixed;
         inset: 0;
@@ -474,7 +475,7 @@
         opacity: 0.08;
         pointer-events: none;
         z-index: 0;
-      }
+      } */
       #screen-proyeccion-full.proy-inter #pf-pista {
         background:
           radial-gradient(
@@ -1393,20 +1394,50 @@
         <div class="con">
           <div class="sf mt3 mb3">
             <div>
-              <div class="fw7" style="font-size: 16px">🎯 Vista por Categorías</div>
-              <div class="muted text-xs mt2" id="cat-stats">Cargando categorías...</div>
+              <div class="fw7" style="font-size: 16px">
+                🎯 Vista por Categorías
+              </div>
+              <div class="muted text-xs mt2" id="cat-stats">
+                Cargando categorías...
+              </div>
             </div>
-            <button class="btn bo bsm" id="cat-btn-refresh" onclick="catCargar()">↻ Refrescar</button>
+            <button
+              class="btn bo bsm"
+              id="cat-btn-refresh"
+              onclick="catCargar()"
+            >
+              ↻ Refrescar
+            </button>
           </div>
 
           <!-- Banner de categoría EN VIVO -->
-          <div id="cat-activa-banner" class="card mb3" style="display:none;background:linear-gradient(135deg,#0a1e0a 0%,#0e2a14 100%);border-color:#4CAF7D">
+          <div
+            id="cat-activa-banner"
+            class="card mb3"
+            style="
+              display: none;
+              background: linear-gradient(135deg, #0a1e0a 0%, #0e2a14 100%);
+              border-color: #4caf7d;
+            "
+          >
             <div class="sf">
               <div>
                 <div class="text-xs muted">🔴 CATEGORÍA EN VIVO</div>
-                <div class="fw7" style="font-size:18px;color:#4CAF7D" id="cat-activa-label">—</div>
+                <div
+                  class="fw7"
+                  style="font-size: 18px; color: #4caf7d"
+                  id="cat-activa-label"
+                >
+                  —
+                </div>
               </div>
-              <button class="btn bsm" style="background:#4CAF7D;color:#fff" onclick="catScrollToActiva()">Ver ↓</button>
+              <button
+                class="btn bsm"
+                style="background: #4caf7d; color: #fff"
+                onclick="catScrollToActiva()"
+              >
+                Ver ↓
+              </button>
             </div>
           </div>
 
@@ -1414,9 +1445,19 @@
           <div id="cat-lista"></div>
 
           <!-- Nota para Ayudante -->
-          <div id="cat-nota-ayudante" class="card mt3" style="background:#1a1500;border-color:rgba(232,168,56,.3);display:none">
-            <div class="text-xs" style="color:#E8A838">
-              👁 <strong>Modo solo lectura</strong> · Como Ayudante de Line Up, ves los presentes en tiempo real. Avisá al Encargado de Line Up cualquier participante presente que necesite ser puesto en pista.
+          <div
+            id="cat-nota-ayudante"
+            class="card mt3"
+            style="
+              background: #1a1500;
+              border-color: rgba(232, 168, 56, 0.3);
+              display: none;
+            "
+          >
+            <div class="text-xs" style="color: #e8a838">
+              👁 <strong>Modo solo lectura</strong> · Como Ayudante de Line Up,
+              ves los presentes en tiempo real. Avisá al Encargado de Line Up
+              cualquier participante presente que necesite ser puesto en pista.
             </div>
           </div>
         </div>
@@ -1444,11 +1485,29 @@
             </div>
 
             <!-- Contenedor de cámara (oculto hasta activar) -->
-            <div id="acr-camera-wrap" class="card mt3" style="display:none;padding:0;overflow:hidden;background:#000">
-              <div id="acr-qr-reader" style="width:100%;min-height:300px"></div>
-              <div style="padding:14px;text-align:center;background:#111">
-                <div class="muted text-xs mb2">Apuntá la cámara al QR del participante</div>
-                <button class="btn bo" onclick="acrCerrarCamara()" style="border-color:#E0524C;color:#E0524C">
+            <div
+              id="acr-camera-wrap"
+              class="card mt3"
+              style="
+                display: none;
+                padding: 0;
+                overflow: hidden;
+                background: #000;
+              "
+            >
+              <div
+                id="acr-qr-reader"
+                style="width: 100%; min-height: 300px"
+              ></div>
+              <div style="padding: 14px; text-align: center; background: #111">
+                <div class="muted text-xs mb2">
+                  Apuntá la cámara al QR del participante
+                </div>
+                <button
+                  class="btn bo"
+                  onclick="acrCerrarCamara()"
+                  style="border-color: #e0524c; color: #e0524c"
+                >
                   ✕ Cerrar cámara
                 </button>
               </div>
@@ -1922,12 +1981,36 @@
       };
 
       const ROL_THEME = {
-        dj:              { bg: "linear-gradient(160deg,#0e001e 0%,#1a0038 100%)", accent: "#a855f7", hdr: "rgba(168,85,247,.35)" },
-        staff:           { bg: "linear-gradient(160deg,#00102e 0%,#001c50 100%)", accent: "#60a5fa", hdr: "rgba(96,165,250,.35)" },
-        lineup:          { bg: "linear-gradient(160deg,#001a0e 0%,#002c18 100%)", accent: "#34d399", hdr: "rgba(52,211,153,.35)" },
-        ayudante_lineup: { bg: "linear-gradient(160deg,#00161e 0%,#002436 100%)", accent: "#22d3ee", hdr: "rgba(34,211,238,.35)" },
-        acreditacion:    { bg: "linear-gradient(160deg,#1e0800 0%,#341400 100%)", accent: "#fbbf24", hdr: "rgba(251,191,36,.35)" },
-        presentador:     { bg: "linear-gradient(160deg,#1e0008 0%,#340010 100%)", accent: "#fb7185", hdr: "rgba(251,113,133,.35)" },
+        dj: {
+          bg: "linear-gradient(160deg,#0e001e 0%,#1a0038 100%)",
+          accent: "#a855f7",
+          hdr: "rgba(168,85,247,.35)",
+        },
+        staff: {
+          bg: "linear-gradient(160deg,#00102e 0%,#001c50 100%)",
+          accent: "#60a5fa",
+          hdr: "rgba(96,165,250,.35)",
+        },
+        lineup: {
+          bg: "linear-gradient(160deg,#001a0e 0%,#002c18 100%)",
+          accent: "#34d399",
+          hdr: "rgba(52,211,153,.35)",
+        },
+        ayudante_lineup: {
+          bg: "linear-gradient(160deg,#00161e 0%,#002436 100%)",
+          accent: "#22d3ee",
+          hdr: "rgba(34,211,238,.35)",
+        },
+        acreditacion: {
+          bg: "linear-gradient(160deg,#1e0800 0%,#341400 100%)",
+          accent: "#fbbf24",
+          hdr: "rgba(251,191,36,.35)",
+        },
+        presentador: {
+          bg: "linear-gradient(160deg,#1e0008 0%,#340010 100%)",
+          accent: "#fb7185",
+          hdr: "rgba(251,113,133,.35)",
+        },
       };
 
       function applyRolTheme(rol) {
@@ -2032,21 +2115,24 @@
         try {
           const { data } = await db.rpc("obtener_config");
           if (Array.isArray(data)) {
-            data.forEach(c => {
+            data.forEach((c) => {
               if (c.valor_json) window._CFG[c.clave] = c.valor_json;
               else if (c.valor != null) window._CFG[c.clave] = c.valor;
             });
             aplicarConfigUI();
           }
-        } catch(e) { console.warn("config:", e); }
+        } catch (e) {
+          console.warn("config:", e);
+        }
       }
 
       function aplicarConfigUI() {
         const proy = window._CFG.proyeccion || {};
         // Logo área en proyección (título principal)
         const logoArea = document.getElementById("pf-logo-area");
-        if (logoArea && proy.titulo_principal) logoArea.textContent = proy.titulo_principal;
-        
+        if (logoArea && proy.titulo_principal)
+          logoArea.textContent = proy.titulo_principal;
+
         // Mensaje esperando (cuando no hay sesión activa)
         const empty = document.getElementById("pf-pista-empty");
         if (empty && proy.mensaje_esperando) {
@@ -2054,44 +2140,59 @@
           const walker = document.createTreeWalker(empty, NodeFilter.SHOW_TEXT);
           let n;
           while ((n = walker.nextNode())) {
-            if (n.textContent.includes("Esperando") || n.textContent.includes("próximo participante")) {
+            if (
+              n.textContent.includes("Esperando") ||
+              n.textContent.includes("próximo participante")
+            ) {
               n.textContent = proy.mensaje_esperando;
               break;
             }
           }
         }
-        
+
         // Subtítulo
         if (proy.subtitulo) {
           const subEls = document.querySelectorAll("[data-cfg='subtitulo']");
-          subEls.forEach(el => el.textContent = proy.subtitulo);
+          subEls.forEach((el) => (el.textContent = proy.subtitulo));
         }
-        
+
         // Color de marca (variable CSS global)
         if (proy.branding_color) {
-          document.documentElement.style.setProperty("--brand-gold", proy.branding_color);
-          document.documentElement.style.setProperty("--C9A84C", proy.branding_color);
+          document.documentElement.style.setProperty(
+            "--brand-gold",
+            proy.branding_color,
+          );
+          document.documentElement.style.setProperty(
+            "--C9A84C",
+            proy.branding_color,
+          );
         }
-        
+
         // Nombre evento (título de la página + headers)
         const nombre = window._CFG.nombre_evento;
         if (nombre) {
           document.title = "Evento — " + nombre;
           // Reemplazar en headers visibles
-          const nombreEls = document.querySelectorAll("[data-cfg='nombre_evento']");
-          nombreEls.forEach(el => el.textContent = nombre);
+          const nombreEls = document.querySelectorAll(
+            "[data-cfg='nombre_evento']",
+          );
+          nombreEls.forEach((el) => (el.textContent = nombre));
         }
-        
+
         // Fecha y lugar (banners informativos)
         const fecha = window._CFG.fecha_evento;
         if (fecha) {
-          const fechaEls = document.querySelectorAll("[data-cfg='fecha_evento']");
-          fechaEls.forEach(el => el.textContent = fecha);
+          const fechaEls = document.querySelectorAll(
+            "[data-cfg='fecha_evento']",
+          );
+          fechaEls.forEach((el) => (el.textContent = fecha));
         }
         const lugar = window._CFG.lugar_evento;
         if (lugar) {
-          const lugarEls = document.querySelectorAll("[data-cfg='lugar_evento']");
-          lugarEls.forEach(el => el.textContent = lugar);
+          const lugarEls = document.querySelectorAll(
+            "[data-cfg='lugar_evento']",
+          );
+          lugarEls.forEach((el) => (el.textContent = lugar));
         }
       }
 
@@ -2722,7 +2823,10 @@
         if (nuevoEstado === "pista") {
           const pendientes = await luCategoriasPendientes(p);
           if (pendientes.length === 0) {
-            toast(p.nombre_grupo + " ya fue evaluado en todas sus categorías", "warn");
+            toast(
+              p.nombre_grupo + " ya fue evaluado en todas sus categorías",
+              "warn",
+            );
             return;
           }
           let categoria = pendientes[0];
@@ -2888,9 +2992,10 @@
             return;
           }
           // Verificar HTTPS (cámara solo funciona en https o localhost)
-          const isSecure = window.location.protocol === "https:" || 
-                          window.location.hostname === "localhost" || 
-                          window.location.hostname === "127.0.0.1";
+          const isSecure =
+            window.location.protocol === "https:" ||
+            window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1";
           if (!isSecure) {
             toast("La cámara requiere HTTPS. Usá la URL de producción.", "err");
             return;
@@ -2902,27 +3007,31 @@
 
           // Crear instancia del scanner
           if (window._acrScanner) {
-            try { await window._acrScanner.stop(); } catch (e) {}
+            try {
+              await window._acrScanner.stop();
+            } catch (e) {}
           }
           window._acrScanner = new Html5Qrcode("acr-qr-reader");
 
           // Configuración del scanner
           const config = {
             fps: 10,
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
+            qrbox: function (viewfinderWidth, viewfinderHeight) {
               const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
               const qrboxSize = Math.floor(minEdge * 0.7);
               return { width: qrboxSize, height: qrboxSize };
             },
-            aspectRatio: 1.0
+            aspectRatio: 1.0,
           };
 
           // Callback de éxito
           const onScanSuccess = async (decodedText) => {
             // Apenas detecta, frenar el scanner y procesar
-            try { await window._acrScanner.stop(); } catch (e) {}
+            try {
+              await window._acrScanner.stop();
+            } catch (e) {}
             window._acrScanner = null;
-            
+
             // Vibrar si está disponible (feedback táctil en móvil)
             if (navigator.vibrate) navigator.vibrate(150);
 
@@ -2931,7 +3040,9 @@
           };
 
           // Callback de error (silencioso, se llama mucho por cada frame sin QR)
-          const onScanError = (errorMessage) => { /* silencio */ };
+          const onScanError = (errorMessage) => {
+            /* silencio */
+          };
 
           // Intentar arrancar con cámara trasera primero
           try {
@@ -2939,7 +3050,7 @@
               { facingMode: "environment" },
               config,
               onScanSuccess,
-              onScanError
+              onScanError,
             );
           } catch (e) {
             // Si falla, intentar con cámara frontal
@@ -2948,10 +3059,12 @@
                 { facingMode: "user" },
                 config,
                 onScanSuccess,
-                onScanError
+                onScanError,
               );
             } catch (e2) {
-              throw new Error("No se pudo acceder a ninguna cámara: " + e2.message);
+              throw new Error(
+                "No se pudo acceder a ninguna cámara: " + e2.message,
+              );
             }
           }
           toast("Cámara activa. Apuntá al QR.", "ok");
@@ -2959,9 +3072,16 @@
           console.error("Error scanner:", e);
           acrCerrarCamara();
           let msg = "Error al abrir cámara: " + e.message;
-          if (e.name === "NotAllowedError" || /permission|denied/i.test(e.message)) {
-            msg = "Permiso de cámara denegado. Autorizá en la configuración del navegador.";
-          } else if (e.name === "NotFoundError" || /not found/i.test(e.message)) {
+          if (
+            e.name === "NotAllowedError" ||
+            /permission|denied/i.test(e.message)
+          ) {
+            msg =
+              "Permiso de cámara denegado. Autorizá en la configuración del navegador.";
+          } else if (
+            e.name === "NotFoundError" ||
+            /not found/i.test(e.message)
+          ) {
             msg = "No se encontró ninguna cámara en este dispositivo.";
           }
           toast(msg, "err");
@@ -2970,8 +3090,12 @@
 
       async function acrCerrarCamara() {
         if (window._acrScanner) {
-          try { await window._acrScanner.stop(); } catch (e) {}
-          try { window._acrScanner.clear(); } catch (e) {}
+          try {
+            await window._acrScanner.stop();
+          } catch (e) {}
+          try {
+            window._acrScanner.clear();
+          } catch (e) {}
           window._acrScanner = null;
         }
         const wrap = document.getElementById("acr-camera-wrap");
@@ -2987,7 +3111,7 @@
         // 3) Solo el UUID
         let codigo = decodedText.trim();
         let inscripcionId = null;
-        
+
         // --- RAMA NUEVA: acreditación individual por integrante ---
         // Detecta sub-código con sufijo -N (por /check?sub= o texto directo).
         // Si no matchea, sigue el flujo de grupo de siempre (abajo).
@@ -2996,7 +3120,9 @@
         if (matchSub) {
           subCodigo = decodeURIComponent(matchSub[1]).toUpperCase();
         } else {
-          const matchSubTxt = codigo.match(/JAM-(?:INTER|INT|NAC|REG|REP)-\d+-\d+/i);
+          const matchSubTxt = codigo.match(
+            /JAM-(?:INTER|INT|NAC|REG|REP)-\d+-\d+/i,
+          );
           if (matchSubTxt) subCodigo = matchSubTxt[0].toUpperCase();
         }
         if (subCodigo) {
@@ -3004,7 +3130,7 @@
           return;
         }
         // --- FIN RAMA NUEVA ---
-        
+
         // Intentar extraer UUID desde URL /check?id=
         const matchId = codigo.match(/[?&]id=([a-f0-9-]{36})/i);
         if (matchId) {
@@ -3014,16 +3140,18 @@
           const matchCodigo = codigo.match(/JAM-(INTER|INT|NAC|REG|REP)-\d+/i);
           if (matchCodigo) codigo = matchCodigo[0].toUpperCase();
         }
-        
+
         // Buscar en lineup
         let p = null;
         if (inscripcionId) {
           p = luData.find((x) => x.inscripcion_id === inscripcionId);
         }
         if (!p) {
-          p = luData.find((x) => x.codigo_id?.toUpperCase() === codigo.toUpperCase());
+          p = luData.find(
+            (x) => x.codigo_id?.toUpperCase() === codigo.toUpperCase(),
+          );
         }
-        
+
         if (!p) {
           toast("QR no reconocido. Reintentando...", "err");
           setTimeout(() => acrEscanear(), 1500);
@@ -3228,11 +3356,16 @@
         const lista = document.getElementById("cat-lista");
         const banner = document.getElementById("cat-activa-banner");
         const notaAy = document.getElementById("cat-nota-ayudante");
-        if (notaAy) notaAy.style.display = currentRol === "ayudante_lineup" ? "block" : "none";
+        if (notaAy)
+          notaAy.style.display =
+            currentRol === "ayudante_lineup" ? "block" : "none";
 
         try {
           // 1. Cargar lineup
-          if (typeof loadLineup === "function" && (!luData || luData.length === 0)) {
+          if (
+            typeof loadLineup === "function" &&
+            (!luData || luData.length === 0)
+          ) {
             await loadLineup();
           }
 
@@ -3242,7 +3375,9 @@
 
           if (window._catActiva && window._catActiva.categoria_key) {
             banner.style.display = "block";
-            document.getElementById("cat-activa-label").textContent = window._catActiva.categoria_label || window._catActiva.categoria_key;
+            document.getElementById("cat-activa-label").textContent =
+              window._catActiva.categoria_label ||
+              window._catActiva.categoria_key;
           } else {
             banner.style.display = "none";
           }
@@ -3252,110 +3387,204 @@
           try {
             const { data: cron } = await db.rpc("cronograma_listar");
             cronograma = cron || [];
-          } catch(e) { /* si no hay cronograma, sigue como antes */ }
-          
+          } catch (e) {
+            /* si no hay cronograma, sigue como antes */
+          }
+
           // Si NO hay cronograma armado, caer en listado simple por listar_categorias_lineup
           let usarCronograma = cronograma.length > 0;
           let catList;
           if (usarCronograma) {
-            catList = cronograma.map(c => ({
-              categoria_key: c.categoria_key, categoria_label: c.categoria_label,
-              instancia: c.instancia, cantidad: c.cantidad, presentes: c.presentes,
-              estado_cron: c.estado, posicion_cron: c.posicion
+            catList = cronograma.map((c) => ({
+              categoria_key: c.categoria_key,
+              categoria_label: c.categoria_label,
+              instancia: c.instancia,
+              cantidad: c.cantidad,
+              presentes: c.presentes,
+              estado_cron: c.estado,
+              posicion_cron: c.posicion,
             }));
           } else {
             const { data, error } = await db.rpc("listar_categorias_lineup");
             if (error) throw error;
-            catList = (data || []).map(c => ({...c, estado_cron: 'pendiente'}));
+            catList = (data || []).map((c) => ({
+              ...c,
+              estado_cron: "pendiente",
+            }));
           }
-          
+
           if (!catList || catList.length === 0) {
-            lista.innerHTML = '<div class="card" style="text-align:center;padding:24px"><div class="muted">No hay categorías cargadas todavía.</div></div>';
+            lista.innerHTML =
+              '<div class="card" style="text-align:center;padding:24px"><div class="muted">No hay categorías cargadas todavía.</div></div>';
             stats.textContent = "0 categorías";
             return;
           }
-          
-          stats.textContent = catList.length + " categorías · " + (luData?.length || 0) + " inscriptos" + (usarCronograma ? ' · 📅 ordenadas por cronograma' : '');
-          
+
+          stats.textContent =
+            catList.length +
+            " categorías · " +
+            (luData?.length || 0) +
+            " inscriptos" +
+            (usarCronograma ? " · 📅 ordenadas por cronograma" : "");
+
           const esAyudante = currentRol === "ayudante_lineup";
           const esEncargado = currentRol === "lineup";
-          
+
           // Si hay cronograma: separar en 3 grupos (EN VIVO, próximas, completadas)
           let categoriasAMostrar = catList;
           if (usarCronograma) {
-            const enVivo = catList.filter(c => c.estado_cron === 'en_vivo');
-            const pendientes = catList.filter(c => c.estado_cron === 'pendiente');
-            const completadas = catList.filter(c => c.estado_cron === 'completada');
+            const enVivo = catList.filter((c) => c.estado_cron === "en_vivo");
+            const pendientes = catList.filter(
+              (c) => c.estado_cron === "pendiente",
+            );
+            const completadas = catList.filter(
+              (c) => c.estado_cron === "completada",
+            );
             categoriasAMostrar = [...enVivo, ...pendientes, ...completadas];
           }
-          
+
           // 4. Para cada categoría, obtener sus pasadas ordenadas del backend
           let html = "";
           for (const cat of categoriasAMostrar) {
-            const esActiva = cat.estado_cron === 'en_vivo' || window._catActiva?.categoria_key === cat.categoria_key;
-            const esCompletada = cat.estado_cron === 'completada';
-            const { data: pasadas } = await db.rpc("obtener_pasadas_categoria", { p_categoria_key: cat.categoria_key });
+            const esActiva =
+              cat.estado_cron === "en_vivo" ||
+              window._catActiva?.categoria_key === cat.categoria_key;
+            const esCompletada = cat.estado_cron === "completada";
+            const { data: pasadas } = await db.rpc(
+              "obtener_pasadas_categoria",
+              { p_categoria_key: cat.categoria_key },
+            );
             const items = pasadas || [];
-            
-            const cardStyle = esActiva ? 'border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)' 
-              : esCompletada ? 'opacity:.5;border-color:rgba(255,255,255,.05)' : '';
-            const headerColor = esActiva ? '#4CAF7D' : esCompletada ? '#888' : '#C9A84C';
-            const headerIcon = esActiva ? '🔴 EN VIVO · ' : esCompletada ? '✓ Completada · ' : (cat.posicion_cron ? '#' + cat.posicion_cron + ' · ' : '');
-            
-            html += '<div class="card mb3" id="cat-' + encodeURIComponent(cat.categoria_key) + '" style="' + cardStyle + '">' +
+
+            const cardStyle = esActiva
+              ? "border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)"
+              : esCompletada
+                ? "opacity:.5;border-color:rgba(255,255,255,.05)"
+                : "";
+            const headerColor = esActiva
+              ? "#4CAF7D"
+              : esCompletada
+                ? "#888"
+                : "#C9A84C";
+            const headerIcon = esActiva
+              ? "🔴 EN VIVO · "
+              : esCompletada
+                ? "✓ Completada · "
+                : cat.posicion_cron
+                  ? "#" + cat.posicion_cron + " · "
+                  : "";
+
+            html +=
+              '<div class="card mb3" id="cat-' +
+              encodeURIComponent(cat.categoria_key) +
+              '" style="' +
+              cardStyle +
+              '">' +
               '<div class="sf mb2">' +
-                '<div>' +
-                  '<div class="fw7" style="font-size:14px;color:' + headerColor + '">' +
-                    headerIcon + cat.categoria_label +
-                  '</div>' +
-                  '<div class="muted text-xs mt2">' + cat.presentes + '/' + cat.cantidad + ' presentes · ' + (cat.instancia || '').toUpperCase() + '</div>' +
-                '</div>' +
-              '</div>' +
+              "<div>" +
+              '<div class="fw7" style="font-size:14px;color:' +
+              headerColor +
+              '">' +
+              headerIcon +
+              cat.categoria_label +
+              "</div>" +
+              '<div class="muted text-xs mt2">' +
+              cat.presentes +
+              "/" +
+              cat.cantidad +
+              " presentes · " +
+              (cat.instancia || "").toUpperCase() +
+              "</div>" +
+              "</div>" +
+              "</div>" +
               '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
               '<thead><tr style="border-bottom:1px solid rgba(255,255,255,.1)">' +
-                '<th style="text-align:center;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase;width:36px">#</th>' +
-                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Estado</th>' +
-                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Código</th>' +
-                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Grupo</th>' +
-                '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">País</th>' +
-                (esEncargado ? '<th style="text-align:right;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Acciones</th>' : '') +
-              '</tr></thead><tbody>';
-            
+              '<th style="text-align:center;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase;width:36px">#</th>' +
+              '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Estado</th>' +
+              '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Código</th>' +
+              '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Grupo</th>' +
+              '<th style="text-align:left;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">País</th>' +
+              (esEncargado
+                ? '<th style="text-align:right;padding:6px 4px;color:#999;font-size:10px;text-transform:uppercase">Acciones</th>'
+                : "") +
+              "</tr></thead><tbody>";
+
             for (let i = 0; i < items.length; i++) {
               const p = items[i];
-              const presente = p.estado === "presente" || p.estado === "pista" || p.estado === "listo";
+              const presente =
+                p.estado === "presente" ||
+                p.estado === "pista" ||
+                p.estado === "listo";
               const enPista = p.estado === "pista";
               const completado = p.estado === "listo";
               const puedeIrAPista = presente && !enPista && !completado;
-              const estadoBdg = completado ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
-                : enPista ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
-                : presente ? '<span class="bdg bdg-green" style="font-size:10px">✓ Presente</span>'
-                : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
-              const posMostrar = p.posicion === 999 ? '—' : p.posicion;
+              const estadoBdg = completado
+                ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
+                : enPista
+                  ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
+                  : presente
+                    ? '<span class="bdg bdg-green" style="font-size:10px">✓ Presente</span>'
+                    : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
+              const posMostrar = p.posicion === 999 ? "—" : p.posicion;
               const catKeyEsc = JSON.stringify(cat.categoria_key);
               const idEsc = JSON.stringify(p.lineup_id);
-              
-              html += '<tr style="border-bottom:1px solid rgba(255,255,255,.05);' + (presente ? 'background:rgba(76,175,125,.05)' : '') + '">' +
-                '<td style="padding:8px 4px;text-align:center;font-weight:700;color:#C9A84C">' + posMostrar + '</td>' +
-                '<td style="padding:8px 4px">' + estadoBdg + '</td>' +
-                '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' + (p.codigo_id || '—') + '</td>' +
-                '<td style="padding:8px 4px">' + (p.nombre_grupo || '—') + '</td>' +
-                '<td style="padding:8px 4px" class="muted">' + (p.pais || '—') + '</td>';
-              
+
+              html +=
+                '<tr style="border-bottom:1px solid rgba(255,255,255,.05);' +
+                (presente ? "background:rgba(76,175,125,.05)" : "") +
+                '">' +
+                '<td style="padding:8px 4px;text-align:center;font-weight:700;color:#C9A84C">' +
+                posMostrar +
+                "</td>" +
+                '<td style="padding:8px 4px">' +
+                estadoBdg +
+                "</td>" +
+                '<td style="padding:8px 4px;font-family:monospace;color:#C9A84C">' +
+                (p.codigo_id || "—") +
+                "</td>" +
+                '<td style="padding:8px 4px">' +
+                (p.nombre_grupo || "—") +
+                "</td>" +
+                '<td style="padding:8px 4px" class="muted">' +
+                (p.pais || "—") +
+                "</td>";
+
               if (esEncargado) {
-                html += '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
-                  (i > 0 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;arriba&quot;)">↑</button>' : '') +
-                  (i < items.length - 1 ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' + idEsc + ',' + catKeyEsc + ',&quot;abajo&quot;)">↓</button>' : '') +
-                  (puedeIrAPista ? '<button class="btn" style="background:#E0524C;color:#fff;font-size:10px;padding:4px 10px;font-weight:700" onclick="catPonerEnPista(' + idEsc + ',' + catKeyEsc + ')">⚡ PISTA</button>' : '') +
-                  '</td>';
+                html +=
+                  '<td style="padding:8px 4px;text-align:right;white-space:nowrap">' +
+                  (i > 0
+                    ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' +
+                      idEsc +
+                      "," +
+                      catKeyEsc +
+                      ',&quot;arriba&quot;)">↑</button>'
+                    : "") +
+                  (i < items.length - 1
+                    ? '<button class="btn bo" style="font-size:10px;padding:4px 8px;margin-right:4px" onclick="catMover(' +
+                      idEsc +
+                      "," +
+                      catKeyEsc +
+                      ',&quot;abajo&quot;)">↓</button>'
+                    : "") +
+                  (puedeIrAPista
+                    ? '<button class="btn" style="background:#E0524C;color:#fff;font-size:10px;padding:4px 10px;font-weight:700" onclick="catPonerEnPista(' +
+                      idEsc +
+                      "," +
+                      catKeyEsc +
+                      ')">⚡ PISTA</button>'
+                    : "") +
+                  "</td>";
               }
-              html += '</tr>';
+              html += "</tr>";
             }
-            html += '</tbody></table></div></div>';
+            html += "</tbody></table></div></div>";
           }
           lista.innerHTML = html;
         } catch (e) {
-          lista.innerHTML = '<div class="card" style="background:#1a0000;border-color:#E0524C"><div style="color:#E0524C">Error: ' + e.message + '</div></div>';
+          lista.innerHTML =
+            '<div class="card" style="background:#1a0000;border-color:#E0524C"><div style="color:#E0524C">Error: ' +
+            e.message +
+            "</div></div>";
         }
       }
 
@@ -3364,7 +3593,7 @@
           const { data, error } = await db.rpc("mover_pasada", {
             p_lineup_id: lineupId,
             p_categoria_key: catKey,
-            p_direccion: direccion
+            p_direccion: direccion,
           });
           if (error) throw error;
           if (data?.ok) {
@@ -3373,11 +3602,18 @@
           } else {
             toast(data?.error || "No se pudo mover", "warn");
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       async function catPonerEnPista(lineupId, catKey) {
-        if (!confirm("Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva (sólo para esta categoría)\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente")) return;
+        if (
+          !confirm(
+            "Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva (sólo para esta categoría)\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente",
+          )
+        )
+          return;
         try {
           const { data, error } = await db.rpc("poner_en_pista", {
             p_lineup_id: lineupId,
@@ -3385,46 +3621,80 @@
           });
           if (error) throw error;
           if (data?.ok) {
-            toast("⚡ Participante puesto en pista · Sesión #" + data.sesion_id, "ok");
+            toast(
+              "⚡ Participante puesto en pista · Sesión #" + data.sesion_id,
+              "ok",
+            );
             await loadLineup();
             await catCargar();
           } else {
             toast(data?.error || "No se pudo poner en pista", "err");
           }
-        } catch (e) { toast("Error: " + e.message, "err"); }
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
       }
 
       function catScrollToActiva() {
         if (!window._catActiva?.categoria_key) return;
-        const el = document.getElementById("cat-" + encodeURIComponent(window._catActiva.categoria_key));
+        const el = document.getElementById(
+          "cat-" + encodeURIComponent(window._catActiva.categoria_key),
+        );
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
       // Realtime para categoria_activa y lineup → recargar tab si está visible
       function subscribeRealtimeCategorias() {
         if (window._catChannel) {
-          try { db.removeChannel(window._catChannel); } catch(e) {}
+          try {
+            db.removeChannel(window._catChannel);
+          } catch (e) {}
         }
-        window._catChannel = db.channel("categorias-realtime")
-          .on("postgres_changes", { event: "*", schema: "evento", table: "categoria_activa" }, async () => {
-            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
-            if (visible) await catCargar();
-          })
-          .on("postgres_changes", { event: "*", schema: "evento", table: "cronograma_categorias" }, async () => {
-            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
-            if (visible) await catCargar();
-          })
-          .on("postgres_changes", { event: "*", schema: "evento", table: "lineup" }, async () => {
-            const visible = document.getElementById("tp-categorias")?.classList.contains("show");
-            if (visible) {
-              if (typeof loadLineup === "function") await loadLineup();
-              await catCargar();
-            }
-          })
-          .on("postgres_changes", { event: "*", schema: "evento", table: "config" }, async () => {
-            // Recargar config global y aplicar a la UI (textos proyección, etc) sin refresh
-            try { await cargarConfigGlobal(); } catch(e) {}
-          })
+        window._catChannel = db
+          .channel("categorias-realtime")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "categoria_activa" },
+            async () => {
+              const visible = document
+                .getElementById("tp-categorias")
+                ?.classList.contains("show");
+              if (visible) await catCargar();
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "cronograma_categorias" },
+            async () => {
+              const visible = document
+                .getElementById("tp-categorias")
+                ?.classList.contains("show");
+              if (visible) await catCargar();
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "lineup" },
+            async () => {
+              const visible = document
+                .getElementById("tp-categorias")
+                ?.classList.contains("show");
+              if (visible) {
+                if (typeof loadLineup === "function") await loadLineup();
+                await catCargar();
+              }
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "config" },
+            async () => {
+              // Recargar config global y aplicar a la UI (textos proyección, etc) sin refresh
+              try {
+                await cargarConfigGlobal();
+              } catch (e) {}
+            },
+          )
           .subscribe((status) => {
             if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
               setTimeout(() => subscribeRealtimeCategorias(), 3000);
@@ -3486,12 +3756,20 @@
         if (!m) return null;
         const catsSesion = sesion ? parseCatArr(sesion.categoria) : [];
         const catSesion = catsSesion[0] || null;
-        if (catSesion && catSesion.c != null && m.categorias && m.categorias.length) {
+        if (
+          catSesion &&
+          catSesion.c != null &&
+          m.categorias &&
+          m.categorias.length
+        ) {
           const match = m.categorias.find(
             (c) => c && String(c.c) === String(catSesion.c),
           );
           if (match && match.musica_url) {
-            return { url: match.musica_url, nombre: match.musica_nombre || m.filename };
+            return {
+              url: match.musica_url,
+              nombre: match.musica_nombre || m.filename,
+            };
           }
         }
         if (m.musica_url) return { url: m.musica_url, nombre: m.filename };
@@ -3762,36 +4040,65 @@
       }
 
       function extractRankNivs(rows) {
-        const ORDER = ["profesional","semipro","proam","open","amateur","master","junior","kids"];
+        const ORDER = [
+          "profesional",
+          "semipro",
+          "proam",
+          "open",
+          "amateur",
+          "master",
+          "junior",
+          "kids",
+        ];
         const found = new Set();
-        (rows || []).forEach(r => { if (r._activeCat?.niv) found.add(r._activeCat.niv); });
-        return ORDER.filter(n => found.has(n));
+        (rows || []).forEach((r) => {
+          if (r._activeCat?.niv) found.add(r._activeCat.niv);
+        });
+        return ORDER.filter((n) => found.has(n));
       }
 
       const DEFAULT_RANKING_CFG = {
         instancias: [
-          { key: "nac",   label: "NACIONAL", icono: '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>', enabled: true },
-          { key: "rep",   label: "REPESCA",  icono: "🔄", enabled: true },
-          { key: "inter", label: "INTER",    icono: "🌎", enabled: true }
+          {
+            key: "nac",
+            label: "NACIONAL",
+            icono:
+              '<svg width="16" height="11" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px;display:inline-block;margin-right:7px"><rect width="16" height="3.67" fill="#74ACDF"/><rect width="16" height="3.67" y="3.67" fill="#fff"/><rect width="16" height="3.67" y="7.33" fill="#74ACDF"/><circle cx="8" cy="5.5" r="1.6" fill="#F6B40E"/></svg>',
+            enabled: true,
+          },
+          { key: "rep", label: "REPESCA", icono: "🔄", enabled: true },
+          { key: "inter", label: "INTER", icono: "🌎", enabled: true },
         ],
         mostrar_niv: true,
         niv_labels: {
-          profesional: "Profesional", semipro: "Semipro", proam: "Pro-Am",
-          open: "Open", amateur: "Amateur", master: "Master",
-          junior: "Junior", kids: "Kids", especial: "Especial"
+          profesional: "Profesional",
+          semipro: "Semipro",
+          proam: "Pro-Am",
+          open: "Open",
+          amateur: "Amateur",
+          master: "Master",
+          junior: "Junior",
+          kids: "Kids",
+          especial: "Especial",
         },
         mostrar_categoria: true,
-        mostrar_puntaje: true
+        mostrar_puntaje: true,
       };
 
       function getRankingCfg() {
         const saved = window._CFG?.ranking_config || {};
         return {
-          instancias: (saved.instancias || DEFAULT_RANKING_CFG.instancias).filter(x => x.enabled !== false),
+          instancias: (
+            saved.instancias || DEFAULT_RANKING_CFG.instancias
+          ).filter((x) => x.enabled !== false),
           mostrar_niv: saved.mostrar_niv !== false,
-          niv_labels: Object.assign({}, DEFAULT_RANKING_CFG.niv_labels, saved.niv_labels || {}),
+          niv_labels: Object.assign(
+            {},
+            DEFAULT_RANKING_CFG.niv_labels,
+            saved.niv_labels || {},
+          ),
           mostrar_categoria: saved.mostrar_categoria !== false,
-          mostrar_puntaje: saved.mostrar_puntaje !== false
+          mostrar_puntaje: saved.mostrar_puntaje !== false,
         };
       }
 
@@ -3821,7 +4128,11 @@
         }));
         const normInst = (v) =>
           v === "int" || v === "inter" ? "inter" : v || "nac";
-        const inst = normInst(pfRankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"));
+        const inst = normInst(
+          pfRankFilter ??
+            sesionActiva?.instancia ??
+            (cfg.instancias[0]?.key || "nac"),
+        );
 
         // Render instancia buttons from config into both panels
         ["pf-rank-filters", "pe-rank-filters"].forEach((cid) => {
@@ -3840,7 +4151,11 @@
               btn.style.color = active ? "#000" : "";
               btn.style.borderColor = active ? "#C9A84C" : "";
             }
-            const escTxt = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const escTxt = (s) =>
+              s
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
             btn.innerHTML = (icono || "") + escTxt(label);
             btn.onclick = () => setPfRankFilter(key);
             c.appendChild(btn);
@@ -3860,7 +4175,10 @@
           cont.innerHTML = "";
           cont.style.display = cfg.mostrar_niv ? "" : "none";
           if (!cfg.mostrar_niv || allNivs.length === 0) return;
-          [{ label: "Todos", val: null }, ...allNivs.map(n => ({ label: cfg.niv_labels[n] || n, val: n }))].forEach(({ label, val }) => {
+          [
+            { label: "Todos", val: null },
+            ...allNivs.map((n) => ({ label: cfg.niv_labels[n] || n, val: n })),
+          ].forEach(({ label, val }) => {
             const btn = document.createElement("button");
             const active = pfRankNivFilter === val;
             btn.style.cssText = `padding:6px 18px;border-radius:30px;border:1px solid ${active ? "#C9A84C" : "rgba(255,255,255,.12)"};background:${active ? "#C9A84C" : "rgba(255,255,255,.06)"};color:${active ? "#000" : "rgba(255,255,255,.55)"};font-size:11px;letter-spacing:1px;cursor:pointer;font-family:inherit`;
@@ -3870,15 +4188,17 @@
           });
         });
 
-        const nivFiltered = (cfg.mostrar_niv && pfRankNivFilter)
-          ? allExpanded.filter(r => r._activeCat?.niv === pfRankNivFilter)
-          : allExpanded;
+        const nivFiltered =
+          cfg.mostrar_niv && pfRankNivFilter
+            ? allExpanded.filter((r) => r._activeCat?.niv === pfRankNivFilter)
+            : allExpanded;
         const cats = extractRankCats(nivFiltered);
         ["pf-rank-cat-filters", "pe-rank-cat-filters"].forEach((cid) => {
           const cont = document.getElementById(cid);
           if (!cont) return;
           cont.innerHTML = "";
-          const showCatRow = cfg.mostrar_categoria && cfg.mostrar_niv && pfRankNivFilter;
+          const showCatRow =
+            cfg.mostrar_categoria && cfg.mostrar_niv && pfRankNivFilter;
           cont.style.display = showCatRow ? "flex" : "none";
           if (!showCatRow || cats.length === 0) return;
           [
@@ -3896,7 +4216,7 @@
 
         const toRender = pfRankCatFilter
           ? nivFiltered.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
-          : (cfg.mostrar_niv && pfRankNivFilter)
+          : cfg.mostrar_niv && pfRankNivFilter
             ? nivFiltered
             : deduped;
         buildRankingRows("pf-rank-rows", toRender, true, cfg.mostrar_puntaje);
@@ -3955,7 +4275,9 @@
 
       function subscribeRealtimeSesion() {
         if (realtimeSub) {
-          try { db.removeChannel(realtimeSub); } catch(e){}
+          try {
+            db.removeChannel(realtimeSub);
+          } catch (e) {}
         }
         realtimeSub = db
           .channel("sesion-evento")
@@ -3984,9 +4306,12 @@
       function subscribeRealtimeEvento() {
         // Cleanup previous if exists
         if (window._luChannel) {
-          try { db.removeChannel(window._luChannel); } catch(e){}
+          try {
+            db.removeChannel(window._luChannel);
+          } catch (e) {}
         }
-        window._luChannel = db.channel("lineup-realtime")
+        window._luChannel = db
+          .channel("lineup-realtime")
           .on(
             "postgres_changes",
             { event: "UPDATE", schema: "evento", table: "lineup" },
@@ -4004,7 +4329,11 @@
               if (!luData.find((x) => x.id === payload.new.id)) {
                 luData.push(payload.new);
                 luRender();
-                if (typeof toast === "function") toast("Nueva inscripción: " + (payload.new.nombre_grupo || ""), "ok");
+                if (typeof toast === "function")
+                  toast(
+                    "Nueva inscripción: " + (payload.new.nombre_grupo || ""),
+                    "ok",
+                  );
               }
             },
           )
