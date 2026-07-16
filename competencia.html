@@ -5325,6 +5325,11 @@
               JSON.stringify(c.categoria_key).replace(/"/g, "&quot;") +
               ')">👁</button>' +
               (i > 0
+                ? '<button title="Mover al principio" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
+                  c.id +
+                  ',&quot;inicio&quot;)">⇈</button>'
+                : "") +
+              (i > 0
                 ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
                   c.id +
                   ',&quot;arriba&quot;)">↑</button>'
@@ -5333,6 +5338,11 @@
                 ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
                   c.id +
                   ',&quot;abajo&quot;)">↓</button>'
+                : "") +
+              (i < window._cronCache.length - 1
+                ? '<button title="Mover al final" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
+                  c.id +
+                  ',&quot;fin&quot;)">⇊</button>'
                 : "") +
               (!isVivo
                 ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
@@ -5375,6 +5385,24 @@
           if (error) throw error;
           if (data?.ok) {
             auditLog("cronograma_mover", "cronograma", id, { direccion: dir });
+            await cronCargar();
+          } else toast(data?.error || "No se pudo mover", "warn");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+      }
+
+      async function cronMoverExtremo(id, dir) {
+        try {
+          const { data, error } = await db.rpc("cronograma_mover_extremo", {
+            p_id: id,
+            p_direccion: dir,
+          });
+          if (error) throw error;
+          if (data?.ok) {
+            auditLog("cronograma_mover_extremo", "cronograma", id, {
+              direccion: dir,
+            });
             await cronCargar();
           } else toast(data?.error || "No se pudo mover", "warn");
         } catch (e) {
