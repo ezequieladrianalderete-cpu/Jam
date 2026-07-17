@@ -551,6 +551,52 @@
         color: rgba(248, 245, 238, 0.4);
         font-size: 14px;
       }
+      .mus-row {
+        border: 1px solid #2a2a2a;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 10px;
+        width: 100%;
+      }
+      .mus-row-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .mus-audio {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      .mus-empty {
+        font-size: 12px;
+        color: rgba(248, 245, 238, 0.5);
+        font-style: italic;
+        margin-bottom: 10px;
+      }
+      .mus-progress {
+        height: 6px;
+        background: #2a2a2a;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .mus-progress .bar {
+        height: 100%;
+        width: 0%;
+        background: #c9a84c;
+        transition: width 0.2s;
+      }
+      .mus-pct {
+        font-size: 11px;
+        color: rgba(248, 245, 238, 0.6);
+        margin-top: 4px;
+      }
+      .mus-msg {
+        font-size: 12px;
+        margin-top: 8px;
+      }
       .det-block {
         background: #141414;
         border: 1px solid #2a2a2a;
@@ -733,6 +779,11 @@
       class="modal"
       onclick="if (event.target === this) closeComp();"
     ></div>
+    <div
+      id="musModal"
+      class="modal"
+      onclick="if (event.target === this) closeMusica();"
+    ></div>
     <script>
       const SB_URL = "https://paexpktmcytccjphoppu.supabase.co";
       const SB_ANON =
@@ -810,6 +861,12 @@
           $("compModal").classList.contains("open")
         )
           closeComp();
+        if (
+          e.key === "Escape" &&
+          $("musModal") &&
+          $("musModal").classList.contains("open")
+        )
+          closeMusica();
       });
       async function initApp() {
         $("root").innerHTML =
@@ -1249,6 +1306,9 @@
           '<button class="btn-icon" onclick="verIns(\'' +
           esc(ins.id) +
           "')\">↗ Ver</button>" +
+          '<button class="btn-icon" onclick="abrirMusica(\'' +
+          esc(ins.id) +
+          "')\">🎵 Música</button>" +
           compBtn +
           '<button class="btn-icon" onclick="confirmarPago(\'' +
           esc(ins.id) +
@@ -1320,6 +1380,298 @@
       function closeComp() {
         $("compModal").classList.remove("open");
         $("compModal").innerHTML = "";
+      }
+
+      // === Música (subida por el director, para participantes que no la cargaron) ===
+      const MUS_BUCKET = "musica";
+      const MUS_MAX_MB = 50;
+
+      function closeMusica() {
+        $("musModal").classList.remove("open");
+        $("musModal").innerHTML = "";
+      }
+
+      function abrirMusica(id) {
+        const ins = allInscriptos.find((x) => x.id === id);
+        if (!ins) return;
+        const cod = getCodigo(ins);
+        const cats =
+          Array.isArray(ins.categorias) && ins.categorias.length
+            ? ins.categorias
+            : null;
+        // Muchas inscripciones (schema legacy) no guardan musica_url/musica_estado
+        // dentro de cada categoría — solo a nivel de fila. Si ninguna categoría
+        // tiene su propio dato, usamos el de la fila como referencia.
+        const anyCatHasOwnMusic = cats
+          ? cats.some((c) => c && c.musica_url)
+          : false;
+        const rowsHtml = cats
+          ? cats
+              .map((c, idx) => renderMusicaRow(ins, c, idx, anyCatHasOwnMusic))
+              .join("")
+          : renderMusicaRow(ins, null, -1, false);
+        $("musModal").innerHTML =
+          '<div class="modal-box" onclick="event.stopPropagation()">' +
+          '<div class="modal-head"><h3>Música · ' +
+          esc(cod) +
+          " — " +
+          esc(ins.nombre_grupo || ins.nombre || "") +
+          "</h3>" +
+          '<button class="modal-close" onclick="closeMusica()">✕</button>' +
+          "</div>" +
+          '<div class="modal-body" style="align-items:stretch;justify-content:flex-start">' +
+          rowsHtml +
+          "</div>" +
+          "</div>";
+        $("musModal").classList.add("open");
+      }
+
+      function renderMusicaRow(ins, cat, idx, anyCatHasOwnMusic) {
+        const slot = ins.id + "__" + idx;
+        const label = cat
+          ? "#" +
+            esc(String(cat.c)) +
+            (cat.n ? " — " + esc(cat.n) : "") +
+            (cat.g ? " (" + esc(cat.g) + ")" : "")
+          : "Música";
+
+        // La categoría tiene su propia canción cargada explícitamente.
+        const ownUrl = cat && cat.musica_url;
+        // Fallback legacy: ninguna categoría de esta inscripción tiene dato propio,
+        // pero la fila sí tiene una canción cargada (schema viejo, pre-multicategoría).
+        const legacyFallback =
+          !ownUrl &&
+          !anyCatHasOwnMusic &&
+          ins.musica_estado === "cargada" &&
+          ins.musica_url;
+
+        const cargada = !!(ownUrl || legacyFallback);
+        const effUrl = ownUrl ? cat.musica_url : legacyFallback ? ins.musica_url : null;
+        const effNombre = ownUrl
+          ? cat.musica_nombre
+          : legacyFallback
+            ? ins.musica_nombre
+            : null;
+
+        const statusHtml = cargada
+          ? '<span class="status-pill ok"><span class="ico">✓</span>Cargada</span>'
+          : '<span class="status-pill pend"><span class="ico">⏳</span>Pendiente</span>';
+        const audioHtml = cargada
+          ? '<audio class="mus-audio" controls src="' +
+            esc(effUrl) +
+            '"></audio><div class="ins-meta" style="margin-bottom:10px">' +
+            esc(effNombre || "") +
+            "</div>" +
+            (legacyFallback
+              ? '<div class="mus-empty">Canción registrada a nivel de inscripción (no vinculada a esta categoría en particular).</div>'
+              : "")
+          : '<div class="mus-empty">El participante no subió canción.</div>';
+        const btnLabel = cargada ? "🎵 Reemplazar archivo" : "🎵 Elegir archivo";
+        return (
+          '<div class="mus-row">' +
+          '<div class="mus-row-head"><div class="ins-nombre" style="font-size:15px">' +
+          label +
+          "</div>" +
+          statusHtml +
+          "</div>" +
+          audioHtml +
+          '<button class="btn-icon" onclick="document.getElementById(\'musFile-' +
+          slot +
+          "').click()\">" +
+          btnLabel +
+          "</button>" +
+          '<input type="file" accept="audio/*" id="musFile-' +
+          slot +
+          '" style="display:none" onchange="onMusicaPicked(\'' +
+          esc(ins.id) +
+          "','" +
+          idx +
+          "', this)\">" +
+          '<div id="musProg-' +
+          slot +
+          '"></div>' +
+          '<div id="musMsg-' +
+          slot +
+          '" class="mus-msg"></div>' +
+          "</div>"
+        );
+      }
+
+      function onMusicaPicked(insId, idxStr, inputEl) {
+        const file = inputEl.files[0];
+        if (!file) return;
+        const slot = insId + "__" + idxStr;
+        const msgBox = $("musMsg-" + slot);
+        const mb = file.size / (1024 * 1024);
+        if (mb > MUS_MAX_MB) {
+          if (msgBox)
+            msgBox.innerHTML =
+              '<span style="color:#e0524c">El archivo supera ' +
+              MUS_MAX_MB +
+              " MB (" +
+              mb.toFixed(1) +
+              " MB).</span>";
+          inputEl.value = "";
+          return;
+        }
+        if (msgBox) msgBox.innerHTML = "";
+        uploadMusicaAdmin(insId, Number(idxStr), file);
+      }
+
+      async function uploadMusicaAdmin(insId, idx, file) {
+        const ins = allInscriptos.find((x) => x.id === insId);
+        if (!ins) return;
+        const slot = insId + "__" + idx;
+        const progBox = $("musProg-" + slot);
+        const msgBox = $("musMsg-" + slot);
+        if (progBox)
+          progBox.innerHTML =
+            '<div class="mus-progress"><div class="bar" id="musBar-' +
+            slot +
+            '"></div></div><div class="mus-pct" id="musPct-' +
+            slot +
+            '">0%</div>';
+        if (msgBox) msgBox.innerHTML = "";
+
+        try {
+          const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+          const safeCod = getCodigo(ins).replace(/[^A-Za-z0-9\-]/g, "");
+          const path = safeCod + "-" + Date.now() + "." + ext;
+
+          const publicUrl = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(
+              "POST",
+              SB_URL +
+                "/storage/v1/object/" +
+                MUS_BUCKET +
+                "/" +
+                encodeURIComponent(path),
+            );
+            xhr.setRequestHeader("apikey", SB_ANON);
+            xhr.setRequestHeader("Authorization", "Bearer " + SB_ANON);
+            xhr.setRequestHeader(
+              "Content-Type",
+              file.type || "application/octet-stream",
+            );
+            xhr.setRequestHeader("x-upsert", "true");
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded * 100) / e.total);
+                const bar = $("musBar-" + slot);
+                if (bar) bar.style.width = pct + "%";
+                const txt = $("musPct-" + slot);
+                if (txt) txt.textContent = pct + "%";
+              }
+            };
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(
+                  SB_URL +
+                    "/storage/v1/object/public/" +
+                    MUS_BUCKET +
+                    "/" +
+                    path,
+                );
+              } else {
+                reject(
+                  new Error(
+                    "Upload falló: HTTP " +
+                      xhr.status +
+                      " " +
+                      xhr.responseText.substring(0, 200),
+                  ),
+                );
+              }
+            };
+            xhr.onerror = () => reject(new Error("Error de red durante upload"));
+            xhr.send(file);
+          });
+
+          let patchBody, categorias = null, catCode = null;
+          if (idx >= 0 && Array.isArray(ins.categorias) && ins.categorias[idx]) {
+            categorias = ins.categorias.slice();
+            categorias[idx] = Object.assign({}, categorias[idx], {
+              musica_url: publicUrl,
+              musica_nombre: file.name,
+              musica_estado: "cargada",
+            });
+            catCode = categorias[idx].c;
+            const catsConMusica = categorias.filter(
+              (c) => c && c.musica_estado === "cargada",
+            );
+            const primera = catsConMusica[0] || null;
+            patchBody = {
+              categorias: categorias,
+              musica_url: primera ? primera.musica_url : null,
+              musica_nombre: primera ? primera.musica_nombre : null,
+              musica_estado:
+                categorias.length > 0 &&
+                catsConMusica.length === categorias.length
+                  ? "cargada"
+                  : "pendiente",
+            };
+          } else {
+            patchBody = {
+              musica_url: publicUrl,
+              musica_nombre: file.name,
+              musica_estado: "cargada",
+            };
+          }
+
+          const patchRes = await fetch(
+            SB_URL + "/rest/v1/inscripciones?id=eq." + insId,
+            {
+              method: "PATCH",
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Content-Type": "application/json",
+                Prefer: "return=representation",
+              },
+              body: JSON.stringify(patchBody),
+            },
+          );
+          if (!patchRes.ok) {
+            const errTxt = await patchRes.text();
+            throw new Error(
+              "No se pudo guardar (HTTP " +
+                patchRes.status +
+                "): " +
+                errTxt.substring(0, 200),
+            );
+          }
+          const verify = await patchRes.json();
+          const verifyRow = verify && verify[0];
+          const verifyOk = categorias
+            ? verifyRow &&
+              Array.isArray(verifyRow.categorias) &&
+              verifyRow.categorias.some(
+                (c) =>
+                  c && String(c.c) === String(catCode) && c.musica_url === publicUrl,
+              )
+            : verifyRow && verifyRow.musica_url === publicUrl;
+          if (!verifyOk)
+            throw new Error(
+              "Se subió pero no se confirmó la asociación. Reintentá.",
+            );
+
+          if (categorias) ins.categorias = verifyRow.categorias;
+          ins.musica_url = verifyRow.musica_url;
+          ins.musica_nombre = verifyRow.musica_nombre;
+          ins.musica_estado = verifyRow.musica_estado;
+
+          updateStats();
+          drawList();
+          abrirMusica(insId);
+          toast("ok", "Música cargada ✓");
+        } catch (e) {
+          if (progBox) progBox.innerHTML = "";
+          if (msgBox)
+            msgBox.innerHTML =
+              '<span style="color:#e0524c">' + esc(e.message) + "</span>";
+          toast("err", "Error: " + e.message);
+        }
       }
       async function confirmarPago(id) {
         if (!confirm("¿Confirmar pago?")) return;
