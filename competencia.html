@@ -464,6 +464,9 @@
       .jnum {
         font-size: 10px;
         color: rgba(248, 245, 238, 0.4);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .jscore {
         font-size: 15px;
@@ -3694,7 +3697,7 @@
             cerrados++;
           }
           div.innerHTML =
-            `<div class="jnum" title="${juradoNombre(i)}">J${i}</div><div class="jscore">${score}</div>` +
+            `<div class="jnum" title="${juradoNombre(i)}">${juradoNombre(i)}</div><div class="jscore">${score}</div>` +
             (!p?.cerrado && p
               ? `<button class="jforzar" onclick="dForzar(${i})">Forzar</button>`
               : "");
