@@ -2405,6 +2405,7 @@
           .order("posicion");
         luData = data || [];
         await luRefreshCatsHechas();
+        await luRefreshSesionActiva();
         buildStLista(luData);
         luRender();
       }
@@ -2665,6 +2666,58 @@
         luCatsHechas = map;
       }
 
+      // codigo_id -> código de categoría (c) que tiene la sesión de scoring activa ahora mismo
+      let luSesionActivaCat = new Map();
+
+      async function luRefreshSesionActiva() {
+        const { data } = await db
+          .schema("scoring")
+          .from("sesiones")
+          .select("codigo_id,categoria")
+          .eq("activa", true);
+        const map = new Map();
+        (data || []).forEach((s) => {
+          const cats = luParseCatArr(s.categoria);
+          if (cats[0]?.c != null) map.set(s.codigo_id, cats[0].c);
+        });
+        luSesionActivaCat = map;
+      }
+
+      // Expande cada participante en una fila por categoría, con estado
+      // calculado de forma independiente por categoría.
+      function luExpandirFilas(lista) {
+        const filas = [];
+        lista.forEach((p) => {
+          const catsArr = luParseCatArr(p.categoria);
+          if (!catsArr.length) {
+            filas.push({ p, cat: null, estado: p.estado, bloqueado: false });
+            return;
+          }
+          const hechasSet = luCatsHechas.get(p.codigo_id) || new Set();
+          const catActiva = luSesionActivaCat.get(p.codigo_id);
+          catsArr.forEach((cat) => {
+            let estado;
+            let bloqueado = false;
+            if (hechasSet.has(cat.c)) {
+              estado = "listo";
+            } else if (p.estado === "pista" && catActiva === cat.c) {
+              estado = "pista";
+            } else if (
+              p.estado === "pendiente" ||
+              p.estado === "ausente" ||
+              p.estado === "listo"
+            ) {
+              estado = p.estado;
+            } else {
+              estado = "presente";
+              if (p.estado === "pista") bloqueado = true;
+            }
+            filas.push({ p, cat, estado, bloqueado });
+          });
+        });
+        return filas;
+      }
+
       // Categorías del participante que todavía no tienen sesión de scoring propia
       async function luCategoriasPendientes(p) {
         const todas = luParseCatArr(p.categoria);
@@ -2681,43 +2734,6 @@
           });
         });
         return todas.filter((c) => !hechas.has(c.c));
-      }
-
-      // Modal simple para elegir en qué categoría entra a pista un participante multi-categoría
-      function luElegirCategoria(nombre, pendientes) {
-        return new Promise((resolve) => {
-          const overlay = document.createElement("div");
-          overlay.style.cssText =
-            "position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px";
-          const card = document.createElement("div");
-          card.className = "card";
-          card.style.cssText = "max-width:360px;width:100%";
-          const cerrar = (valor) => {
-            document.body.removeChild(overlay);
-            resolve(valor);
-          };
-          card.innerHTML =
-            '<div class="fw7 mb2" style="font-size:15px">¿En qué categoría entra ' +
-            nombre.replace(/</g, "&lt;") +
-            '?</div><div class="muted text-xs mb3">Está inscripto en varias categorías todavía sin evaluar.</div>';
-          pendientes.forEach((cat) => {
-            const btn = document.createElement("button");
-            btn.className = "btn bgn";
-            btn.style.cssText =
-              "width:100%;margin-bottom:8px;justify-content:flex-start";
-            btn.textContent = cat.c + ": " + cat.n;
-            btn.onclick = () => cerrar(cat);
-            card.appendChild(btn);
-          });
-          const cancelar = document.createElement("button");
-          cancelar.className = "btn bo";
-          cancelar.style.cssText = "width:100%";
-          cancelar.textContent = "Cancelar";
-          cancelar.onclick = () => cerrar(null);
-          card.appendChild(cancelar);
-          overlay.appendChild(card);
-          document.body.appendChild(overlay);
-        });
       }
 
       function luStats() {
@@ -2746,91 +2762,95 @@
         const est = document.getElementById("lu-filtro")?.value || "";
         const lista = luData.filter(
           (p) =>
-            (!q ||
-              p.nombre_grupo?.toLowerCase().includes(q) ||
-              p.codigo_id?.toLowerCase().includes(q)) &&
-            (!est || p.estado === est),
+            !q ||
+            p.nombre_grupo?.toLowerCase().includes(q) ||
+            p.codigo_id?.toLowerCase().includes(q),
         );
-        buildLuLista(lista);
+        let filas = luExpandirFilas(lista);
+        if (est) filas = filas.filter((f) => f.estado === est);
+        const cont = document.getElementById("lu-lista");
+        if (cont) cont.innerHTML = "";
+        luStats();
+        buildLuLista(filas);
       }
 
-      function buildLuLista(lista) {
+      function buildLuLista(filas) {
         const cont = document.getElementById("lu-lista");
         if (!cont) return;
-        cont.innerHTML = "";
-        luStats();
-        if (!lista.length) {
+        if (!filas.length) {
           cont.innerHTML =
             '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>';
           return;
         }
-        lista.forEach((p) => {
+        let prevPId = null;
+        filas.forEach(({ p, cat, estado, bloqueado }) => {
           const idx = luData.findIndex((x) => x.id === p.id);
+          const esPrimeraDelGrupo = p.id !== prevPId;
+          prevPId = p.id;
           const row = document.createElement("div");
-          row.className = "lu-row " + p.estado;
+          row.className = "lu-row " + estado;
           const dot = document.createElement("div");
           dot.className = "lu-dot";
-          dot.style.background = LU_DOT[p.estado] || "#555";
-          if (p.estado === "pista") dot.style.animation = "bl 1.5s infinite";
+          dot.style.background = LU_DOT[estado] || "#555";
+          if (estado === "pista") dot.style.animation = "bl 1.5s infinite";
           const pos = document.createElement("div");
           pos.className = "lu-pos";
-          pos.textContent = p.posicion;
+          pos.textContent = esPrimeraDelGrupo ? p.posicion : "";
           const info = document.createElement("div");
           info.className = "lu-info";
-          const catsArr = luParseCatArr(p.categoria);
-          const hechasSet = luCatsHechas.get(p.codigo_id) || new Set();
-          const progresoHtml =
-            catsArr.length > 1
-              ? `<div class="muted text-xs" style="margin-top:2px">${catsArr.filter((c) => hechasSet.has(c.c)).length}/${catsArr.length} categorías evaluadas</div>`
-              : "";
-          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat">${parseCat(p.categoria)}</div>${progresoHtml}<div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[p.estado] || "#555"}">${LU_LBL[p.estado] || p.estado}</div>`;
+          const catLabel = cat ? cat.c + ": " + cat.n : parseCat(p.categoria);
+          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat">${catLabel}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[estado] || "#555"}">${LU_LBL[estado] || estado}${bloqueado ? " · en pista en otra categoría" : ""}</div>`;
           const ctrl = document.createElement("div");
           ctrl.className = "lu-ctrl";
           const eBtn = document.createElement("button");
           eBtn.className = "lu-estado-btn";
-          eBtn.textContent = LU_BTN[p.estado] || "→";
-          if (p.estado === "listo") {
+          eBtn.textContent = LU_BTN[estado] || "→";
+          if (estado === "listo" || bloqueado) {
             eBtn.style.color = "#4B96D8";
             eBtn.style.borderColor = "rgba(75,150,216,.3)";
             eBtn.style.background = "#001020";
             eBtn.disabled = true;
+            if (bloqueado) eBtn.title = "En pista en otra categoría";
           } else {
-            ((id) =>
+            ((id, catCode) =>
               (eBtn.onclick = (e) => {
                 e.stopPropagation();
-                luCambiarEstado(id, LU_NEXT[p.estado] || "listo");
-              }))(p.id);
+                if (estado === "pista") luCambiarEstado(id, "listo");
+                else luPonerEnPistaCategoria(id, catCode);
+              }))(p.id, cat ? cat.c : null);
           }
           const flechas = document.createElement("div");
           flechas.className = "lu-flechas";
-          if (idx > 0) {
-            const up = document.createElement("button");
-            up.className = "lu-flecha";
-            up.textContent = "↑";
-            ((i) => {
-              up.onclick = (e) => {
-                e.stopPropagation();
-                luMover(i, -1);
-              };
-            })(idx);
-            flechas.appendChild(up);
-          }
-          if (idx < luData.length - 1) {
-            const dn = document.createElement("button");
-            dn.className = "lu-flecha";
-            dn.textContent = "↓";
-            ((i) => {
-              dn.onclick = (e) => {
-                e.stopPropagation();
-                luMover(i, 1);
-              };
-            })(idx);
-            flechas.appendChild(dn);
+          if (esPrimeraDelGrupo) {
+            if (idx > 0) {
+              const up = document.createElement("button");
+              up.className = "lu-flecha";
+              up.textContent = "↑";
+              ((i) => {
+                up.onclick = (e) => {
+                  e.stopPropagation();
+                  luMover(i, -1);
+                };
+              })(idx);
+              flechas.appendChild(up);
+            }
+            if (idx < luData.length - 1) {
+              const dn = document.createElement("button");
+              dn.className = "lu-flecha";
+              dn.textContent = "↓";
+              ((i) => {
+                dn.onclick = (e) => {
+                  e.stopPropagation();
+                  luMover(i, 1);
+                };
+              })(idx);
+              flechas.appendChild(dn);
+            }
           }
           ctrl.appendChild(eBtn);
           // Botón "Anular / Volver atrás": solo cuando está en pista, para
           // deshacer si se puso a alguien por error. No borra nada.
-          if (p.estado === "pista") {
+          if (estado === "pista") {
             const anularBtn = document.createElement("button");
             anularBtn.className = "lu-estado-btn";
             anularBtn.textContent = "↩ Anular";
@@ -2855,67 +2875,68 @@
         });
       }
 
+      // Pone en pista una categoría puntual de un participante (la fila ya
+      // sabe qué categoría es — ya no hace falta elegir con un modal).
+      async function luPonerEnPistaCategoria(id, catCode) {
+        const p = luData.find((x) => x.id === id);
+        if (!p) return;
+        const catsArr = luParseCatArr(p.categoria);
+        const categoria = catsArr.find((c) => c.c === catCode) || catsArr[0];
+        if (!categoria) {
+          toast(p.nombre_grupo + " no tiene categoría asignada", "warn");
+          return;
+        }
+        const hechasSet = luCatsHechas.get(p.codigo_id) || new Set();
+        if (hechasSet.has(categoria.c)) {
+          toast(p.nombre_grupo + " ya fue evaluado en " + categoria.n, "warn");
+          return;
+        }
+
+        // Recordar el estado en que estaba cada uno ANTES de tocar pista,
+        // para poder "volver atrás" fielmente si el encargado se equivoca.
+        if (!window._estadoAntesPista) window._estadoAntesPista = {};
+        luData.forEach((x) => {
+          if (x.estado === "pista") x.estado = "presente";
+        });
+        window._estadoAntesPista[id] = p.estado; // estado previo real (normalmente "presente")
+        p.estado = "pista";
+        await db
+          .schema("evento")
+          .from("lineup")
+          .update({ estado: "pista", pista_desde: new Date().toISOString() })
+          .eq("id", id);
+
+        // Crear sesión en scoring, acotada a la categoría elegida, para que los jurados la vean
+        try {
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .update({ activa: false })
+            .eq("activa", true);
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .insert({
+              codigo_id: p.codigo_id,
+              nombre_grupo: p.nombre_grupo,
+              instancia: p.instancia || "nac",
+              activa: true,
+              pais: p.pais,
+              categoria: JSON.stringify(categoria),
+            });
+        } catch (e) {
+          console.error("Error creando sesión:", e);
+        }
+
+        await luRefreshCatsHechas();
+        await luRefreshSesionActiva();
+        luRender();
+        toast(p.nombre_grupo + " — " + categoria.n + " en pista", "ok");
+      }
+
       async function luCambiarEstado(id, nuevoEstado) {
         const p = luData.find((x) => x.id === id);
         if (!p) return;
-
-        // Poner en pista: si tiene más de una categoría sin evaluar, hay que elegir cuál
-        if (nuevoEstado === "pista") {
-          const pendientes = await luCategoriasPendientes(p);
-          if (pendientes.length === 0) {
-            toast(
-              p.nombre_grupo + " ya fue evaluado en todas sus categorías",
-              "warn",
-            );
-            return;
-          }
-          let categoria = pendientes[0];
-          if (pendientes.length > 1) {
-            categoria = await luElegirCategoria(p.nombre_grupo, pendientes);
-            if (!categoria) return; // cancelado
-          }
-
-          // Recordar el estado en que estaba cada uno ANTES de tocar pista,
-          // para poder "volver atrás" fielmente si el encargado se equivoca.
-          if (!window._estadoAntesPista) window._estadoAntesPista = {};
-          luData.forEach((x) => {
-            if (x.estado === "pista") x.estado = "presente";
-          });
-          window._estadoAntesPista[id] = p.estado; // estado previo real (normalmente "presente")
-          p.estado = "pista";
-          await db
-            .schema("evento")
-            .from("lineup")
-            .update({ estado: "pista", pista_desde: new Date().toISOString() })
-            .eq("id", id);
-
-          // Crear sesión en scoring, acotada a la categoría elegida, para que los jurados la vean
-          try {
-            await db
-              .schema("scoring")
-              .from("sesiones")
-              .update({ activa: false })
-              .eq("activa", true);
-            await db
-              .schema("scoring")
-              .from("sesiones")
-              .insert({
-                codigo_id: p.codigo_id,
-                nombre_grupo: p.nombre_grupo,
-                instancia: p.instancia || "nac",
-                activa: true,
-                pais: p.pais,
-                categoria: JSON.stringify(categoria),
-              });
-          } catch (e) {
-            console.error("Error creando sesión:", e);
-          }
-
-          await luRefreshCatsHechas();
-          luRender();
-          toast(p.nombre_grupo + " — " + categoria.n + " en pista", "ok");
-          return;
-        }
 
         // Finalizar: si quedan categorías sin evaluar, vuelve a 'presente' en vez de cerrarse del todo
         if (nuevoEstado === "listo") {
@@ -3020,6 +3041,7 @@
           if (window._estadoAntesPista) delete window._estadoAntesPista[id];
 
           await luRefreshCatsHechas();
+          await luRefreshSesionActiva();
           luRender();
           toast(
             p.nombre_grupo + " sacado de pista — vuelve a estar disponible",
@@ -3067,24 +3089,35 @@
         if (!cont) return;
         cont.innerHTML = "";
         luStats();
-        const grupos = { Salsa: [], Bachata: [], Otros: [] };
-        luData.forEach((p) => {
-          const g = p.categoria?.toLowerCase().includes("bachata")
-            ? "Bachata"
-            : p.categoria?.toLowerCase().includes("salsa")
-              ? "Salsa"
-              : "Otros";
-          grupos[g].push(p);
+        const q = (document.getElementById("lu-q")?.value || "").toLowerCase();
+        const est = document.getElementById("lu-filtro")?.value || "";
+        const lista = luData.filter(
+          (p) =>
+            !q ||
+            p.nombre_grupo?.toLowerCase().includes(q) ||
+            p.codigo_id?.toLowerCase().includes(q),
+        );
+        let filas = luExpandirFilas(lista);
+        if (est) filas = filas.filter((f) => f.estado === est);
+        const grupos = {};
+        filas.forEach((f) => {
+          const nombre = f.cat ? f.cat.n : "Sin categoría";
+          (grupos[nombre] = grupos[nombre] || []).push(f);
         });
-        ["Salsa", "Bachata", "Otros"].forEach((gen) => {
-          const lista = grupos[gen];
-          if (!lista.length) return;
+        const nombres = Object.keys(grupos).sort();
+        if (!nombres.length) {
+          cont.innerHTML =
+            '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>';
+          return;
+        }
+        nombres.forEach((nombre) => {
+          const filasGrupo = grupos[nombre];
           const hdr = document.createElement("div");
           hdr.style.cssText =
             "font-size:11px;font-weight:700;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1.5px;padding:12px 4px 6px;margin-top:8px";
-          hdr.textContent = "⚡ " + gen + " (" + lista.length + ")";
+          hdr.textContent = "⚡ " + nombre + " (" + filasGrupo.length + ")";
           cont.appendChild(hdr);
-          buildLuLista(lista);
+          buildLuLista(filasGrupo);
         });
       }
 
