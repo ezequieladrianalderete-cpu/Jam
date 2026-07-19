@@ -2357,6 +2357,27 @@
         await buildPfRanking();
         subscribeRealtimeEvento();
         subscribeRealtimeCategorias();
+        // Red de seguridad para eventos largos: si el realtime (WebSocket) se
+        // cae, este polling refresca la vista visible cada 5s. Solo toca la
+        // pestaa activa, as es liviano. Cubre lineup, ayudante, dj.
+        if (window._eventoPoll) clearInterval(window._eventoPoll);
+        window._eventoPoll = setInterval(async () => {
+          try {
+            const catPane = document.getElementById("tp-categorias");
+            const luPane = document.getElementById("tp-lineup");
+            const djPane = document.getElementById("tp-dj");
+            if (catPane && catPane.classList.contains("show")) {
+              if (typeof loadLineup === "function") await loadLineup();
+              await catCargar();
+            } else if (luPane && luPane.classList.contains("show")) {
+              if (typeof loadLineup === "function") await loadLineup();
+              if (typeof luRender === "function") luRender();
+            } else if (djPane && djPane.classList.contains("show")) {
+              await loadSesionActivaForProy();
+              buildDjLista(document.getElementById("dj-q")?.value || "");
+            }
+          } catch (e) {}
+        }, 5000);
       }
 
       function eTab(id, btn) {
@@ -4656,6 +4677,20 @@
               const djPane = document.getElementById("tp-dj");
               if (djPane && djPane.classList.contains("show")) {
                 buildDjLista(document.getElementById("dj-q")?.value || "");
+              }
+              // Si la vista de categorias esta visible (line up / ayudante),
+              // refrescarla: al cerrar el director una evaluacion, el estado
+              // "FIN" por categoria debe verse sin refresh manual.
+              const catPane = document.getElementById("tp-categorias");
+              if (catPane && catPane.classList.contains("show")) {
+                if (typeof loadLineup === "function") await loadLineup();
+                await catCargar();
+              }
+              // Si la lista lineup plana esta visible, refrescarla tambien.
+              const luPane = document.getElementById("tp-lineup");
+              if (luPane && luPane.classList.contains("show")) {
+                if (typeof loadLineup === "function") await loadLineup();
+                if (typeof luRender === "function") luRender();
               }
             },
           )
