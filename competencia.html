@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
     />
-    <title>Competencia — JAM 2026</title>
+    <title>Competencia — CUP SYSTEM</title>
     <link rel="icon" type="image/png" href="/imgs/logo-int.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -952,7 +952,7 @@
     <!-- LOGIN -->
     <div id="screen-login" class="login-wrap" style="display: none">
       <div class="login-box">
-        <div class="login-logo">JAM</div>
+        <div class="login-logo">CUP SYSTEM</div>
         <div class="login-sub">Portal de Competencia · 2026</div>
         <div class="login-card">
           <div class="login-title">Acceso restringido</div>
@@ -1005,10 +1005,10 @@
             <rect width="22" height="4.67" y="9.33" fill="#74ACDF" />
             <circle cx="11" cy="7" r="2.2" fill="#F6B40E" /></svg
         ></span>
-        <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
+        <span class="ib-text">FINAL NACIONAL · CUP SYSTEM</span>
       </div>
       <header class="hdr">
-        <div class="hdr-logo">JAM</div>
+        <div class="hdr-logo">CUP SYSTEM</div>
         <div class="hdr-right">
           <div class="hdr-dot"></div>
           <div class="hdr-user" id="j-header-user">Jurado 3</div>
@@ -1230,10 +1230,10 @@
             <rect width="22" height="4.67" y="9.33" fill="#74ACDF" />
             <circle cx="11" cy="7" r="2.2" fill="#F6B40E" /></svg
         ></span>
-        <span class="ib-text">FINAL NACIONAL · JAM 2026</span>
+        <span class="ib-text">FINAL NACIONAL · CUP SYSTEM</span>
       </div>
       <header class="hdr">
-        <div class="hdr-logo">JAM</div>
+        <div class="hdr-logo">CUP SYSTEM</div>
         <div class="hdr-right">
           <div class="hdr-dot"></div>
           <div class="hdr-user" id="d-hora-hdr"></div>
@@ -2175,11 +2175,11 @@
               >
                 El sistema se mostrará como:
                 <strong id="cfg-edicion-preview" style="color: #c9a84c"
-                  >JAM 2026</strong
+                  >CUP SYSTEM 2026</strong
                 >
                 <br />
                 <span style="opacity: 0.7"
-                  >El nombre "JAM" es fijo. Solo cambiás el año/edición y se
+                  >El nombre "CUP SYSTEM" es fijo. Solo cambiás el año/edición y se
                   actualiza en todos los portales, emails y certificados.</span
                 >
               </div>
@@ -2334,7 +2334,7 @@
               <input
                 id="cfg-proy-titulo_principal"
                 class="cfg-input"
-                placeholder="JAM 2026"
+                placeholder="CUP SYSTEM"
               />
             </div>
             <div class="mb3">
@@ -6687,7 +6687,7 @@
             if (el) el.value = v ?? "";
           };
           // Nombre madre (marca fija) + edición (editable por el director)
-          window._nombreMadre = map.nombre_madre?.valor || "JAM";
+          window._nombreMadre = map.nombre_madre?.valor || "CUP SYSTEM";
           window._edicion = map.edicion?.valor || "";
           setVal("cfg-edicion", window._edicion);
           if (typeof cfgActualizarPreviewEdicion === "function")
@@ -6769,7 +6769,7 @@
 
       // Actualiza el texto de vista previa "JAM 2026" mientras el director escribe la edición
       function cfgActualizarPreviewEdicion() {
-        const madre = window._nombreMadre || "JAM";
+        const madre = window._nombreMadre || "CUP SYSTEM";
         const ed = (document.getElementById("cfg-edicion")?.value || "").trim();
         const prev = document.getElementById("cfg-edicion-preview");
         if (prev) prev.textContent = (madre + " " + ed).trim();
@@ -6777,7 +6777,7 @@
 
       async function cfgGuardarEvento() {
         const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
-        const madre = window._nombreMadre || "JAM";
+        const madre = window._nombreMadre || "CUP SYSTEM";
         const edicion = getVal("cfg-edicion");
         // 1) Guardar la edición (lo que el director controla)
         const ok1 = await cfgGuardar("Edición", {
@@ -6889,7 +6889,7 @@
       // ═══════════════════════════════════════════════════════════
       // Devuelve "JAM 2026" desde config (nombre_madre + edicion), con fallback
       function nombreEventoActual() {
-        const madre = window._nombreMadre || "JAM";
+        const madre = window._nombreMadre || "CUP SYSTEM";
         const ed = window._edicion || "2026";
         return (madre + " " + ed).trim();
       }
