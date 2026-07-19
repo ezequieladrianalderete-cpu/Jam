@@ -2807,6 +2807,24 @@
             flechas.appendChild(dn);
           }
           ctrl.appendChild(eBtn);
+          // Botón "Anular / Volver atrás": solo cuando está en pista, para
+          // deshacer si se puso a alguien por error. No borra nada.
+          if (p.estado === "pista") {
+            const anularBtn = document.createElement("button");
+            anularBtn.className = "lu-estado-btn";
+            anularBtn.textContent = "↩ Anular";
+            anularBtn.title = "Sacar de pista y volver al estado anterior (sin borrar)";
+            anularBtn.style.color = "#E0524C";
+            anularBtn.style.borderColor = "rgba(224,82,76,.35)";
+            anularBtn.style.background = "#1a0000";
+            anularBtn.style.marginTop = "4px";
+            ((id) =>
+              (anularBtn.onclick = (e) => {
+                e.stopPropagation();
+                luAnularPista(id);
+              }))(p.id);
+            ctrl.appendChild(anularBtn);
+          }
           ctrl.appendChild(flechas);
           row.appendChild(pos);
           row.appendChild(dot);
@@ -2836,9 +2854,13 @@
             if (!categoria) return; // cancelado
           }
 
+          // Recordar el estado en que estaba cada uno ANTES de tocar pista,
+          // para poder "volver atrás" fielmente si el encargado se equivoca.
+          if (!window._estadoAntesPista) window._estadoAntesPista = {};
           luData.forEach((x) => {
             if (x.estado === "pista") x.estado = "presente";
           });
+          window._estadoAntesPista[id] = p.estado; // estado previo real (normalmente "presente")
           p.estado = "pista";
           await db
             .schema("evento")
@@ -2919,6 +2941,64 @@
         };
         toast(p.nombre_grupo + " " + (msgs[nuevoEstado] || nuevoEstado), "ok");
       }
+
+      // ═══════════════════════════════════════════════════════════
+      // ANULAR PISTA — "volver atrás" si el encargado puso a alguien
+      // en pista por error. Restaura el estado anterior del participante,
+      // desactiva la sesión de scoring (sin borrarla) y limpia pista_desde.
+      // NO borra al participante ni su presentación.
+      // ═══════════════════════════════════════════════════════════
+      async function luAnularPista(id) {
+        const p = luData.find((x) => x.id === id);
+        if (!p) return;
+        if (p.estado !== "pista") {
+          toast("Ese participante no está en pista", "warn");
+          return;
+        }
+        if (
+          !confirm(
+            "¿Anular la puesta en pista de " +
+              p.nombre_grupo +
+              "?\n\nVuelve al estado anterior como si no lo hubieran puesto.\nNo se borra nada: el participante sigue en la lista para pasar después.",
+          )
+        )
+          return;
+        // Estado a restaurar: el que tenía antes de ir a pista (normalmente
+        // "presente"). Si no lo recordamos (ej. página recargada), usar "presente".
+        const estadoPrevio =
+          (window._estadoAntesPista && window._estadoAntesPista[id]) || "presente";
+        try {
+          // 1. Restaurar estado del participante y limpiar pista_desde
+          p.estado = estadoPrevio;
+          await db
+            .schema("evento")
+            .from("lineup")
+            .update({ estado: estadoPrevio, pista_desde: null })
+            .eq("id", id);
+
+          // 2. Desactivar la sesión de scoring de ESTE participante (sin borrarla)
+          //    para que los jurados dejen de verlo. Solo la que esté activa.
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .update({ activa: false })
+            .eq("codigo_id", p.codigo_id)
+            .eq("activa", true);
+
+          // 3. Limpiar el registro en memoria del estado previo
+          if (window._estadoAntesPista) delete window._estadoAntesPista[id];
+
+          await luRefreshCatsHechas();
+          luRender();
+          toast(
+            p.nombre_grupo + " sacado de pista — vuelve a estar disponible",
+            "ok",
+          );
+        } catch (e) {
+          toast("Error al anular: " + e.message, "err");
+        }
+      }
+
 
       async function luMover(idx, dir) {
         const ni = idx + dir;
