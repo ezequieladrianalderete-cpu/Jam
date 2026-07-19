@@ -3783,6 +3783,64 @@
           })
           .eq("id", sesId);
 
+        // Actualizar el estado del participante en el lineup segun si le quedan
+        // categorias por evaluar. Cierra el "bache": no queda colgado en "pista".
+        try {
+          const codigoSes = sesionActiva.codigo_id;
+          // Todas las categorias del participante (desde su inscripcion via lineup)
+          const { data: luRow } = await db
+            .schema("evento")
+            .from("lineup")
+            .select("id,categoria")
+            .eq("codigo_id", codigoSes)
+            .limit(1);
+          if (luRow && luRow[0]) {
+            let todasCats = [];
+            try {
+              const parsed =
+                typeof luRow[0].categoria === "string"
+                  ? JSON.parse(luRow[0].categoria)
+                  : luRow[0].categoria;
+              todasCats = Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {}
+            // Categorias ya evaluadas (con sesion finalizada)
+            const { data: sesFin } = await db
+              .schema("scoring")
+              .from("sesiones")
+              .select("categoria")
+              .eq("codigo_id", codigoSes)
+              .not("finalizada_at", "is", null);
+            const hechas = new Set();
+            (sesFin || []).forEach((s) => {
+              try {
+                const pc =
+                  typeof s.categoria === "string"
+                    ? JSON.parse(s.categoria)
+                    : s.categoria;
+                (Array.isArray(pc) ? pc : [pc]).forEach((cc) => {
+                  if (cc && cc.c != null) hechas.add(cc.c);
+                });
+              } catch (e) {}
+            });
+            const pendientes = todasCats.filter(
+              (cc) => cc && cc.c != null && !hechas.has(cc.c),
+            );
+            // Si le quedan categorias -> "presente" (listo para su otra pasada)
+            // Si ya evaluo todas -> "listo" (finalizado del todo)
+            const nuevoEstadoLu = pendientes.length > 0 ? "presente" : "listo";
+            const upd = { estado: nuevoEstadoLu, pista_desde: null };
+            if (nuevoEstadoLu === "listo")
+              upd.listo_at = new Date().toISOString();
+            await db
+              .schema("evento")
+              .from("lineup")
+              .update(upd)
+              .eq("id", luRow[0].id);
+          }
+        } catch (e) {
+          console.warn("No se pudo actualizar estado lineup:", e);
+        }
+
         // Enviar email de devolución al participante (async, no bloquea)
         fetch("/api/enviar-devolucion", {
           method: "POST",
