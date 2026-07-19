@@ -2977,13 +2977,23 @@
             .eq("id", id);
 
           // 2. Desactivar la sesión de scoring de ESTE participante (sin borrarla)
-          //    para que los jurados dejen de verlo. Solo la que esté activa.
-          await db
+          //    para que jurados y director dejen de verlo. Buscamos primero la
+          //    sesión activa de este código y la desactivamos por id (más preciso).
+          const { data: sesAct } = await db
             .schema("scoring")
             .from("sesiones")
-            .update({ activa: false })
+            .select("id")
             .eq("codigo_id", p.codigo_id)
             .eq("activa", true);
+          if (sesAct && sesAct.length) {
+            for (const s of sesAct) {
+              await db
+                .schema("scoring")
+                .from("sesiones")
+                .update({ activa: false })
+                .eq("id", s.id);
+            }
+          }
 
           // 3. Limpiar el registro en memoria del estado previo
           if (window._estadoAntesPista) delete window._estadoAntesPista[id];
@@ -3654,6 +3664,13 @@
                       catKeyEsc +
                       ')">⚡ PISTA</button>'
                     : "") +
+                  (enPista
+                    ? '<button class="btn" style="background:#1a0000;color:#E0524C;border:1px solid rgba(224,82,76,.35);font-size:10px;padding:4px 10px;font-weight:700" onclick="catAnularPista(' +
+                      idEsc +
+                      "," +
+                      catKeyEsc +
+                      ')">↩ Anular</button>'
+                    : "") +
                   "</td>";
               }
               html += "</tr>";
@@ -3688,6 +3705,77 @@
         }
       }
 
+      // Anular pista desde la vista de categorías (encargado). Igual que
+      // luAnularPista pero operando por lineup_id y refrescando esta vista.
+      async function catAnularPista(lineupId, catKey) {
+        // Buscar datos del participante: primero en memoria, sino en la base
+        let p = (luData || []).find((x) => x.id === lineupId);
+        let codigo = p ? p.codigo_id : null;
+        let nombre = p ? p.nombre_grupo : null;
+        if (!codigo) {
+          try {
+            const { data } = await db
+              .schema("evento")
+              .from("lineup")
+              .select("codigo_id,nombre_grupo")
+              .eq("id", lineupId)
+              .limit(1);
+            if (data && data[0]) {
+              codigo = data[0].codigo_id;
+              nombre = data[0].nombre_grupo;
+            }
+          } catch (e) {}
+        }
+        if (!nombre) nombre = "este participante";
+        if (
+          !confirm(
+            "¿Anular la puesta en pista de " +
+              nombre +
+              "?\n\nVuelve al estado anterior como si no lo hubieran puesto.\nNo se borra nada.",
+          )
+        )
+          return;
+        try {
+          // Estado a restaurar (normalmente "presente")
+          const estadoPrevio =
+            (window._estadoAntesPista && window._estadoAntesPista[lineupId]) ||
+            "presente";
+          // 1. Restaurar estado del participante y limpiar pista_desde
+          await db
+            .schema("evento")
+            .from("lineup")
+            .update({ estado: estadoPrevio, pista_desde: null })
+            .eq("id", lineupId);
+          if (p) p.estado = estadoPrevio;
+          // 2. Desactivar la sesión de scoring de ese código (sin borrarla)
+          if (codigo) {
+            const { data: sesAct } = await db
+              .schema("scoring")
+              .from("sesiones")
+              .select("id")
+              .eq("codigo_id", codigo)
+              .eq("activa", true);
+            if (sesAct && sesAct.length) {
+              for (const s of sesAct) {
+                await db
+                  .schema("scoring")
+                  .from("sesiones")
+                  .update({ activa: false })
+                  .eq("id", s.id);
+              }
+            }
+          }
+          // 3. Limpiar memoria del estado previo
+          if (window._estadoAntesPista) delete window._estadoAntesPista[lineupId];
+          // 4. Refrescar esta vista (y el lineup si está en memoria)
+          await catCargar();
+          if (typeof luRender === "function") luRender();
+          toast(nombre + " sacado de pista — vuelve a estar disponible", "ok");
+        } catch (e) {
+          toast("Error al anular: " + e.message, "err");
+        }
+      }
+
       async function catPonerEnPista(lineupId, catKey) {
         if (
           !confirm(
@@ -3696,6 +3784,10 @@
         )
           return;
         try {
+          // Guardar el estado previo del participante para poder "anular" luego
+          if (!window._estadoAntesPista) window._estadoAntesPista = {};
+          const prev = (luData || []).find((x) => x.id === lineupId);
+          window._estadoAntesPista[lineupId] = prev ? prev.estado : "presente";
           const { data, error } = await db.rpc("poner_en_pista", {
             p_lineup_id: lineupId,
             p_categoria_key: catKey,
