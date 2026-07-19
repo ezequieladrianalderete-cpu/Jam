@@ -3612,13 +3612,17 @@
               const estadoBdg = completado
                 ? '<span class="bdg" style="background:#4CAF7D;color:#fff;font-size:10px">✓ FIN</span>'
                 : enPista
-                  ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">⚡ PISTA</span>'
+                  ? '<span class="bdg" style="background:#E0524C;color:#fff;font-size:10px">PISTA</span>'
                   : presente
                     ? '<span class="bdg bdg-green" style="font-size:10px">✓ Presente</span>'
                     : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
               const posMostrar = p.posicion === 999 ? "—" : p.posicion;
-              const catKeyEsc = JSON.stringify(cat.categoria_key);
-              const idEsc = JSON.stringify(p.lineup_id);
+              // Escapar para uso seguro dentro de onclick="..." (comillas dobles).
+              // Usamos comillas simples y escapamos las que pueda haber en el valor.
+              const esc = (v) =>
+                "'" + String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+              const catKeyEsc = esc(cat.categoria_key);
+              const idEsc = esc(p.lineup_id);
 
               html +=
                 '<tr style="border-bottom:1px solid rgba(255,255,255,.05);' +
@@ -3662,7 +3666,7 @@
                       idEsc +
                       "," +
                       catKeyEsc +
-                      ')">⚡ PISTA</button>'
+                      ')">PISTA</button>'
                     : "") +
                   (enPista
                     ? '<button class="btn" style="background:#1a0000;color:#E0524C;border:1px solid rgba(224,82,76,.35);font-size:10px;padding:4px 10px;font-weight:700" onclick="catAnularPista(' +
