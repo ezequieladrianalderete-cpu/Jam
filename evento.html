@@ -1591,6 +1591,7 @@
             <input
               type="text"
               class="srch"
+              id="dj-q"
               placeholder="🔍 Buscar..."
               oninput="djFiltrar(this.value)"
               style="width: 160px; padding: 8px 12px; font-size: 13px"
@@ -3776,7 +3777,7 @@
         return null;
       }
 
-      function buildDjLista(filtro) {
+      async function buildDjLista(filtro) {
         const lista = filtro
           ? djData.filter(
               (t) =>
@@ -3831,46 +3832,182 @@
           }
         }
 
-        lista.forEach((t) => {
-          // Cada categoría puede tener su propia canción: una fila por
-          // categoría-con-música, igual que en admin > DJ.
-          const catsConMusica = (t.categorias || []).filter(
-            (c) => c && c.musica_url,
-          );
-          const multi = (t.categorias || []).length > 1;
-          const rows = catsConMusica.length
-            ? catsConMusica.map((c) => ({
-                filename: c.musica_nombre || "Sin nombre",
-                url: c.musica_url,
-                verificado: true,
-                catLabel: multi && c.n ? "Cat. " + c.c + " — " + c.n : "",
-              }))
-            : [
-                {
-                  filename: t.filename,
-                  url: t.musica_url,
-                  verificado: t.verificado,
-                  catLabel: "",
-                },
-              ];
-          rows.forEach((r) => {
-            const div = document.createElement("div");
-            div.className =
-              "mtrack" +
-              (t.activo_dj ? " activo" : "") +
-              (!r.verificado ? " falta" : "");
-            const label = [
-              r.catLabel,
-              r.verificado ? "🎵 " + r.filename : "⚠️ Sin música",
-            ]
-              .filter(Boolean)
-              .join(" · ");
-            div.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion || "—"}</div><div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div><div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div><div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${label}</div></div>${r.url ? "<button onclick=\"djPreview('" + r.url.replace(/'/g, "\\'") + "','" + t.nombre_grupo.replace(/'/g, "\\'") + '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>' : '<div style="width:32px"></div>'}`;
-            cont.appendChild(div);
-          });
-        });
+        // ═══════════════════════════════════════════════════════════
+        // LISTA AGRUPADA POR CATEGORÍA (en orden de salida del cronograma)
+        // Cada categoría es una "carpeta" con sus participantes en orden.
+        // Reutiliza cronograma_listar + obtener_pasadas_categoria (igual que
+        // la vista del ayudante de line up). El reproductor de arriba y el
+        // tiempo real quedan intactos.
+        // ═══════════════════════════════════════════════════════════
 
-        // Sin música
+        // 1. Orden de categorías desde el cronograma del director
+        let cronograma = [];
+        try {
+          const { data: cron } = await db.rpc("cronograma_listar");
+          cronograma = cron || [];
+        } catch (e) {
+          /* sin cronograma: se cae al modo simple más abajo */
+        }
+
+        // Helper: arma una fila de tema del DJ (misma UI que antes)
+        const armarFila = (t, r) => {
+          const div = document.createElement("div");
+          div.className =
+            "mtrack" +
+            (t.activo_dj ? " activo" : "") +
+            (!r.verificado ? " falta" : "");
+          const label = [
+            r.catLabel,
+            r.verificado ? "♪ " + r.filename : "⚠ Sin música",
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          div.innerHTML =
+            `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion || ""}</div>` +
+            `<div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div>` +
+            `<div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div>` +
+            `<div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${label}</div></div>` +
+            (r.url
+              ? '<button onclick="djPreview(\'' + r.url.replace(/'/g, "\\'") + "','" + (t.nombre_grupo || "").replace(/'/g, "\\'") + '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>'
+              : '<div style="width:32px"></div>');
+          return div;
+        };
+
+        // Helper: dado un participante (djData item) y una categoría objetivo,
+        // devuelve las filas de música que corresponden a ESA categoría.
+        const filasDeCategoria = (t, catKey) => {
+          const cats = t.categorias || [];
+          // El categoria_key del cronograma tiene formato "genero|nombre"
+          // (ej. "bachata|Solista Fem. Amateur"). Cada categoría del
+          // participante tiene {c, g, n}. Matcheamos armando "g|n".
+          const catMatch = cats.filter((c) => {
+            if (!catKey) return false;
+            const keyPart = (c.g || "") + "|" + (c.n || "");
+            return (
+              keyPart === catKey ||
+              (c.n && catKey === c.n) ||
+              (c.n && catKey.endsWith("|" + c.n))
+            );
+          });
+          return catMatch
+            .filter((c) => c.musica_url)
+            .map((c) => ({
+              filename: c.musica_nombre || "Sin nombre",
+              url: c.musica_url,
+              verificado: true,
+              catLabel: c.n ? "Cat. " + c.c + " · " + c.n : "",
+            }));
+        };
+
+        // 2. Si hay cronograma, agrupar por categoría en su orden
+        const filtroTxt = filtro ? filtro.toLowerCase() : "";
+        const pasaFiltro = (t) =>
+          !filtroTxt ||
+          t.nombre_grupo?.toLowerCase().includes(filtroTxt) ||
+          t.codigo_id?.toLowerCase().includes(filtroTxt);
+
+        let algoRenderizado = false;
+
+        if (cronograma.length > 0) {
+          // Ordenar: en vivo primero, luego pendientes, luego completadas
+          const enVivo = cronograma.filter((c) => c.estado === "en_vivo");
+          const pend = cronograma.filter((c) => c.estado === "pendiente");
+          const comp = cronograma.filter((c) => c.estado === "completada");
+          const ordenadas = [...enVivo, ...pend, ...comp];
+
+          for (const cat of ordenadas) {
+            // Traer participantes de esta categoría en orden (backend)
+            let pasadas = [];
+            try {
+              const { data } = await db.rpc("obtener_pasadas_categoria", {
+                p_categoria_key: cat.categoria_key,
+              });
+              pasadas = data || [];
+            } catch (e) {
+              pasadas = [];
+            }
+            // Para cada pasada, buscar su música en djData
+            const filasCat = [];
+            pasadas.forEach((pas) => {
+              const t = djData.find((x) => x.codigo_id === pas.codigo_id);
+              if (!t || !pasaFiltro(t)) return;
+              // Filas de música de esta categoría puntual
+              let filas = filasDeCategoria(t, cat.categoria_key);
+              // Si no matchea por categoría (datos simples), usar la música de fila
+              if (!filas.length) {
+                filas = [
+                  {
+                    filename: t.filename,
+                    url: t.musica_url,
+                    verificado: t.verificado,
+                    catLabel: "",
+                  },
+                ];
+              }
+              filas.forEach((r) => filasCat.push({ t, r }));
+            });
+
+            if (!filasCat.length) continue;
+
+            // Header de la carpeta (categoría)
+            const estadoTxt =
+              cat.estado === "en_vivo"
+                ? "● EN VIVO"
+                : cat.estado === "completada"
+                  ? "✓ Completada"
+                  : "";
+            const headerColor =
+              cat.estado === "en_vivo"
+                ? "#4CAF7D"
+                : cat.estado === "completada"
+                  ? "#888"
+                  : "#C9A84C";
+            const hdr = document.createElement("div");
+            hdr.style.cssText =
+              "display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:" +
+              headerColor +
+              ";text-transform:uppercase;letter-spacing:1.2px;padding:14px 4px 6px;margin-top:10px;border-bottom:1px solid rgba(255,255,255,.06)";
+            hdr.innerHTML =
+              "<span>📁 " +
+              (cat.categoria_label || cat.categoria_key) +
+              " (" +
+              filasCat.length +
+              ")</span>" +
+              (estadoTxt ? '<span style="font-size:10px">' + estadoTxt + "</span>" : "");
+            cont.appendChild(hdr);
+            filasCat.forEach(({ t, r }) => cont.appendChild(armarFila(t, r)));
+            algoRenderizado = true;
+          }
+        }
+
+        // 3. Fallback: si no hay cronograma o no se renderizó nada, lista simple
+        if (!algoRenderizado) {
+          const listaFallback = djData.filter(pasaFiltro);
+          listaFallback.forEach((t) => {
+            const catsConMusica = (t.categorias || []).filter(
+              (c) => c && c.musica_url,
+            );
+            const multi = (t.categorias || []).length > 1;
+            const rows = catsConMusica.length
+              ? catsConMusica.map((c) => ({
+                  filename: c.musica_nombre || "Sin nombre",
+                  url: c.musica_url,
+                  verificado: true,
+                  catLabel: multi && c.n ? "Cat. " + c.c + " · " + c.n : "",
+                }))
+              : [
+                  {
+                    filename: t.filename,
+                    url: t.musica_url,
+                    verificado: t.verificado,
+                    catLabel: "",
+                  },
+                ];
+            rows.forEach((r) => cont.appendChild(armarFila(t, r)));
+          });
+        }
+
+        // Sin música (igual que antes)
         const sinMusica = luData.filter(
           (p) => !djData.find((m) => m.codigo_id === p.codigo_id),
         );
@@ -4287,6 +4424,12 @@
             async () => {
               await loadSesionActivaForProy();
               await buildPfRanking();
+              // Si el DJ está viendo su panel, refrescar para que la música
+              // del que está en pista se actualice en tiempo real.
+              const djPane = document.getElementById("tp-dj");
+              if (djPane && djPane.classList.contains("show")) {
+                buildDjLista(document.getElementById("dj-q")?.value || "");
+              }
             },
           )
           .on(
