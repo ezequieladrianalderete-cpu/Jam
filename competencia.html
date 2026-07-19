@@ -3580,7 +3580,23 @@
             if (repTab && repTab.classList.contains("show")) {
               await buildRepesca();
             } else if (sesionActiva && sesionActiva.id) {
-              await loadPuntajesDirector();
+              // Verificar si la sesión que tengo cargada sigue activa.
+              // Si el line up la anuló (activa=false) o cambió, esto lo detecta
+              // aunque el realtime no haya llegado, y evita que el director
+              // quede mostrando "esperando votos" de una sesión ya anulada.
+              const { data: chk } = await db
+                .schema("scoring")
+                .from("sesiones")
+                .select("id,activa")
+                .eq("id", sesionActiva.id)
+                .limit(1);
+              const sigueActiva = chk && chk[0] && chk[0].activa;
+              if (!sigueActiva) {
+                // La sesión dejó de estar activa: recargar estado real
+                await loadSesionDirector();
+              } else {
+                await loadPuntajesDirector();
+              }
             }
           } catch (e) {}
         }, 4000);
