@@ -1384,6 +1384,23 @@
               <option value="listo">Finalizados</option>
               <option value="ausente">Ausentes</option>
             </select>
+            <select
+              id="lu-filtro-inst"
+              onchange="luRender()"
+              style="
+                background: #1e1e1e;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 10px;
+                padding: 9px 12px;
+                color: #f8f5ee;
+                font-family: &quot;Outfit&quot;, sans-serif;
+                font-size: 13px;
+                -webkit-appearance: none;
+                cursor: pointer;
+              "
+            >
+              <option value="">Todas las competencias</option>
+            </select>
           </div>
           <div id="lu-lista" class="sy2"></div>
         </div>
@@ -1409,6 +1426,10 @@
               ↻ Refrescar
             </button>
           </div>
+          <div
+            id="cat-filtro-wrap"
+            style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap"
+          ></div>
 
           <!-- Banner de categoría EN VIVO -->
           <div
@@ -2071,6 +2092,30 @@
         ausente: "pendiente",
       };
 
+      // Competencias: nacional siempre existe como bloque/filtro; regional
+      // (sedes) y repesca sólo aparecen si hay al menos un participante con
+      // esa instancia — si no hay ninguno, ese filtro/grupo ni se muestra.
+      const LU_INST_META = {
+        nac: { color: "#C9A84C", label: "🥇 Nacional" },
+        reg: { color: "#B080E0", label: "📍 Regional / Sedes" },
+        rep: { color: "#E8A838", label: "🔁 Repesca" },
+        int: { color: "#4BAEDE", label: "🌎 Internacional" },
+      };
+      const LU_INST_ORDEN = ["nac", "reg", "rep", "int"];
+
+      function luInstBucket(instancia) {
+        if (instancia === "int" || instancia === "inter") return "int";
+        if (instancia === "reg") return "reg";
+        if (instancia === "rep") return "rep";
+        return "nac";
+      }
+      function luEsInternacional(instancia) {
+        return luInstBucket(instancia) === "int";
+      }
+      function luInstColor(instancia) {
+        return LU_INST_META[luInstBucket(instancia)].color;
+      }
+
       // ═══════════════════════════════════════════════════════════
       // INIT
       // ═══════════════════════════════════════════════════════════
@@ -2406,6 +2451,7 @@
         luData = data || [];
         await luRefreshCatsHechas();
         await luRefreshSesionActiva();
+        await luRefreshOrdenFlat();
         buildStLista(luData);
         luRender();
       }
@@ -2683,6 +2729,29 @@
         luSesionActivaCat = map;
       }
 
+      // Clave de categoría igual al formato server-side (genero|nombre) usado
+      // por evento.orden_pasadas / mover_pasada_flat.
+      function luCategoriaKey(cat) {
+        return (cat?.g || "sin") + "|" + (cat?.n || "sin");
+      }
+
+      // (lineup_id + "|" + categoria_key) -> posicion_flat. Posición
+      // independiente de cada fila (participante, categoría) en la cola
+      // combinada del Line Up plano, separada del orden dentro de una sola
+      // categoría (eso usa `posicion`, no `posicion_flat`).
+      let luOrdenFlat = new Map();
+
+      async function luRefreshOrdenFlat() {
+        const { data, error } = await db.rpc("obtener_orden_flat");
+        const map = new Map();
+        if (!error) {
+          (data || []).forEach((r) => {
+            map.set(r.lineup_id + "|" + r.categoria_key, r.posicion_flat);
+          });
+        }
+        luOrdenFlat = map;
+      }
+
       // Expande cada participante en una fila por categoría, con estado
       // calculado de forma independiente por categoría.
       function luExpandirFilas(lista) {
@@ -2690,7 +2759,14 @@
         lista.forEach((p) => {
           const catsArr = luParseCatArr(p.categoria);
           if (!catsArr.length) {
-            filas.push({ p, cat: null, estado: p.estado, bloqueado: false });
+            filas.push({
+              p,
+              cat: null,
+              catKey: null,
+              estado: p.estado,
+              bloqueado: false,
+              posicionFlat: null,
+            });
             return;
           }
           const hechasSet = luCatsHechas.get(p.codigo_id) || new Set();
@@ -2712,7 +2788,16 @@
               estado = "presente";
               if (p.estado === "pista") bloqueado = true;
             }
-            filas.push({ p, cat, estado, bloqueado });
+            const catKey = luCategoriaKey(cat);
+            const posicionFlat = luOrdenFlat.get(p.id + "|" + catKey);
+            filas.push({
+              p,
+              cat,
+              catKey,
+              estado,
+              bloqueado,
+              posicionFlat: posicionFlat ?? null,
+            });
           });
         });
         return filas;
@@ -2753,6 +2838,67 @@
           " finalizados";
       }
 
+      // Reconstruye las opciones del <select> de competencia según qué
+      // instancias existen realmente en luData. Si no hay ninguna fila de
+      // repesca/regional, esas opciones ni se ofrecen.
+      function luRenderFiltroSelect() {
+        const sel = document.getElementById("lu-filtro-inst");
+        if (!sel) return;
+        const presentes = new Set(luData.map((p) => luInstBucket(p.instancia)));
+        const actual = sel.value;
+        let html = '<option value="">Todas las competencias</option>';
+        LU_INST_ORDEN.forEach((b) => {
+          if (!presentes.has(b)) return;
+          html += '<option value="' + b + '">' + LU_INST_META[b].label + "</option>";
+        });
+        sel.innerHTML = html;
+        // Si la instancia elegida ya no tiene datos, volver a "Todas".
+        sel.value = presentes.has(actual) ? actual : "";
+      }
+
+      // Divide filas ya expandidas en bloques por competencia según la
+      // instancia del participante, respetando el filtro elegido. "Nacional"
+      // es SOLO instancia === "nac": regional/sedes ("reg") y repesca ("rep")
+      // quedan visibles únicamente en "Todas las competencias".
+      function luFilasPorInstancia(filas) {
+        const inst = document.getElementById("lu-filtro-inst")?.value || "";
+        const buckets = inst ? [inst] : LU_INST_ORDEN;
+        return buckets
+          .map((b) => [
+            b,
+            // Orden estable por posicion_flat; las filas nunca movidas (null)
+            // conservan su orden relativo original (por posicion del lineup),
+            // ya que Array.sort de JS es estable.
+            filas
+              .filter((f) => luInstBucket(f.p.instancia) === b)
+              .slice()
+              .sort(
+                (a, b2) =>
+                  (a.posicionFlat ?? Infinity) - (b2.posicionFlat ?? Infinity),
+              ),
+          ])
+          .filter(([, fs]) => fs.length);
+      }
+
+      function luRenderGrupos(grupos, cont) {
+        if (!grupos.length) {
+          cont.innerHTML =
+            '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>';
+          return;
+        }
+        grupos.forEach(([tipo, filas]) => {
+          const m = LU_INST_META[tipo];
+          const hdr = document.createElement("div");
+          hdr.style.cssText =
+            "font-size:11px;font-weight:700;color:" +
+            m.color +
+            ";text-transform:uppercase;letter-spacing:1.5px;padding:12px 4px 6px";
+          hdr.textContent = m.label;
+          cont.appendChild(hdr);
+          buildLuLista(filas);
+        });
+      }
+
       function luRender() {
         if (luAgrupado) {
           luRenderAgrupado();
@@ -2769,12 +2915,22 @@
         let filas = luExpandirFilas(lista);
         if (est) filas = filas.filter((f) => f.estado === est);
         const cont = document.getElementById("lu-lista");
-        if (cont) cont.innerHTML = "";
+        if (!cont) return;
+        cont.innerHTML = "";
         luStats();
-        buildLuLista(filas);
+        luRenderFiltroSelect();
+        luRenderGrupos(luFilasPorInstancia(filas), cont);
       }
 
-      function buildLuLista(filas) {
+      // `filas` debe venir de un solo bloque de competencia (ya ordenado por
+      // posicion_flat) para que la numeración y las flechas ↑/↓ tengan
+      // sentido: cada fila (participante, categoría) es independiente — su
+      // número y su posición no dependen de las demás categorías del mismo
+      // participante. `arrows: false` oculta las flechas (usado en la vista
+      // "Agrupar por categoría", donde el vecino real puede quedar fuera del
+      // subgrupo visible y el movimiento no se vería reflejado ahí).
+      function buildLuLista(filas, opts) {
+        const arrows = !opts || opts.arrows !== false;
         const cont = document.getElementById("lu-lista");
         if (!cont) return;
         if (!filas.length) {
@@ -2782,11 +2938,7 @@
             '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>';
           return;
         }
-        let prevPId = null;
-        filas.forEach(({ p, cat, estado, bloqueado }) => {
-          const idx = luData.findIndex((x) => x.id === p.id);
-          const esPrimeraDelGrupo = p.id !== prevPId;
-          prevPId = p.id;
+        filas.forEach(({ p, cat, catKey, estado, bloqueado }, i) => {
           const row = document.createElement("div");
           row.className = "lu-row " + estado;
           const dot = document.createElement("div");
@@ -2795,11 +2947,12 @@
           if (estado === "pista") dot.style.animation = "bl 1.5s infinite";
           const pos = document.createElement("div");
           pos.className = "lu-pos";
-          pos.textContent = esPrimeraDelGrupo ? p.posicion : "";
+          pos.textContent = i + 1;
           const info = document.createElement("div");
           info.className = "lu-info";
           const catLabel = cat ? cat.c + ": " + cat.n : parseCat(p.categoria);
-          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat">${catLabel}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[estado] || "#555"}">${LU_LBL[estado] || estado}${bloqueado ? " · en pista en otra categoría" : ""}</div>`;
+          const instColor = luInstColor(p.instancia);
+          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat" style="color:${instColor}">${catLabel}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[estado] || "#555"}">${LU_LBL[estado] || estado}${bloqueado ? " · en pista en otra categoría" : ""}</div>`;
           const ctrl = document.createElement("div");
           ctrl.className = "lu-ctrl";
           const eBtn = document.createElement("button");
@@ -2821,29 +2974,29 @@
           }
           const flechas = document.createElement("div");
           flechas.className = "lu-flechas";
-          if (esPrimeraDelGrupo) {
-            if (idx > 0) {
+          if (arrows && catKey) {
+            if (i > 0) {
               const up = document.createElement("button");
               up.className = "lu-flecha";
               up.textContent = "↑";
-              ((i) => {
+              ((id, ck) => {
                 up.onclick = (e) => {
                   e.stopPropagation();
-                  luMover(i, -1);
+                  luMoverCategoria(id, ck, "arriba");
                 };
-              })(idx);
+              })(p.id, catKey);
               flechas.appendChild(up);
             }
-            if (idx < luData.length - 1) {
+            if (i < filas.length - 1) {
               const dn = document.createElement("button");
               dn.className = "lu-flecha";
               dn.textContent = "↓";
-              ((i) => {
+              ((id, ck) => {
                 dn.onclick = (e) => {
                   e.stopPropagation();
-                  luMover(i, 1);
+                  luMoverCategoria(id, ck, "abajo");
                 };
-              })(idx);
+              })(p.id, catKey);
               flechas.appendChild(dn);
             }
           }
@@ -2854,7 +3007,8 @@
             const anularBtn = document.createElement("button");
             anularBtn.className = "lu-estado-btn";
             anularBtn.textContent = "↩ Anular";
-            anularBtn.title = "Sacar de pista y volver al estado anterior (sin borrar)";
+            anularBtn.title =
+              "Sacar de pista y volver al estado anterior (sin borrar)";
             anularBtn.style.color = "#E0524C";
             anularBtn.style.borderColor = "rgba(224,82,76,.35)";
             anularBtn.style.background = "#1a0000";
@@ -3008,7 +3162,8 @@
         // Estado a restaurar: el que tenía antes de ir a pista (normalmente
         // "presente"). Si no lo recordamos (ej. página recargada), usar "presente".
         const estadoPrevio =
-          (window._estadoAntesPista && window._estadoAntesPista[id]) || "presente";
+          (window._estadoAntesPista && window._estadoAntesPista[id]) ||
+          "presente";
         try {
           // 1. Restaurar estado del participante y limpiar pista_desde
           p.estado = estadoPrevio;
@@ -3052,26 +3207,26 @@
         }
       }
 
-
-      async function luMover(idx, dir) {
-        const ni = idx + dir;
-        if (ni < 0 || ni >= luData.length) return;
-        const tmp = luData[idx];
-        luData[idx] = luData[ni];
-        luData[ni] = tmp;
-        luData.forEach((p, i) => (p.posicion = i + 1));
-        // Actualizar posiciones en BD
-        const updates = [
-          { id: luData[idx].id, posicion: luData[idx].posicion },
-          { id: luData[ni].id, posicion: luData[ni].posicion },
-        ];
-        for (const u of updates)
-          await db
-            .schema("evento")
-            .from("lineup")
-            .update({ posicion: u.posicion })
-            .eq("id", u.id);
-        luRender();
+      // Mueve UNA fila (participante, categoría) dentro de su propio bloque
+      // de competencia, sin afectar a las demás categorías del participante.
+      async function luMoverCategoria(lineupId, categoriaKey, direccion) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada_flat", {
+            p_lineup_id: lineupId,
+            p_categoria_key: categoriaKey,
+            p_direccion: direccion,
+          });
+          if (error) throw error;
+          if (!data?.ok) {
+            if (data?.error !== "En el extremo")
+              toast(data?.error || "No se pudo mover", "warn");
+            return;
+          }
+          await luRefreshOrdenFlat();
+          luRender();
+        } catch (e) {
+          toast("Error al mover: " + e.message, "err");
+        }
       }
 
       function luToggleGrupo() {
@@ -3099,25 +3254,40 @@
         );
         let filas = luExpandirFilas(lista);
         if (est) filas = filas.filter((f) => f.estado === est);
-        const grupos = {};
-        filas.forEach((f) => {
-          const nombre = f.cat ? f.cat.n : "Sin categoría";
-          (grupos[nombre] = grupos[nombre] || []).push(f);
-        });
-        const nombres = Object.keys(grupos).sort();
-        if (!nombres.length) {
+        luRenderFiltroSelect();
+        const instGrupos = luFilasPorInstancia(filas);
+        if (!instGrupos.length) {
           cont.innerHTML =
             '<div style="text-align:center;padding:32px;color:rgba(248,245,238,.3);font-size:13px">Sin resultados</div>';
           return;
         }
-        nombres.forEach((nombre) => {
-          const filasGrupo = grupos[nombre];
-          const hdr = document.createElement("div");
-          hdr.style.cssText =
-            "font-size:11px;font-weight:700;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1.5px;padding:12px 4px 6px;margin-top:8px";
-          hdr.textContent = "⚡ " + nombre + " (" + filasGrupo.length + ")";
-          cont.appendChild(hdr);
-          buildLuLista(filasGrupo);
+        instGrupos.forEach(([tipo, filasInst]) => {
+          const instColor = LU_INST_META[tipo].color;
+          const instLabel = LU_INST_META[tipo].label;
+          const instHdr = document.createElement("div");
+          instHdr.style.cssText =
+            "font-size:11px;font-weight:700;color:" +
+            instColor +
+            ";text-transform:uppercase;letter-spacing:1.5px;padding:12px 4px 6px";
+          instHdr.textContent = instLabel;
+          cont.appendChild(instHdr);
+
+          const grupos = {};
+          filasInst.forEach((f) => {
+            const nombre = f.cat ? f.cat.n : "Sin categoría";
+            (grupos[nombre] = grupos[nombre] || []).push(f);
+          });
+          Object.keys(grupos)
+            .sort()
+            .forEach((nombre) => {
+              const filasGrupo = grupos[nombre];
+              const hdr = document.createElement("div");
+              hdr.style.cssText =
+                "font-size:10px;font-weight:600;color:rgba(248,245,238,.4);text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px 12px";
+              hdr.textContent = "⚡ " + nombre + " (" + filasGrupo.length + ")";
+              cont.appendChild(hdr);
+              buildLuLista(filasGrupo, { arrows: false });
+            });
         });
       }
 
@@ -3495,6 +3665,60 @@
       // TAB CATEGORÍAS (Ayudante y Encargado de Line Up)
       // ═══════════════════════════════════════════════════════════
       window._catActiva = null;
+      window._catFiltro = "";
+
+      function catFiltrar(f) {
+        window._catFiltro = f;
+        catAplicarEstiloFiltro();
+        catCargar();
+      }
+
+      function catAplicarEstiloFiltro() {
+        const wrap = document.getElementById("cat-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          const k = btn.getAttribute("data-f");
+          const activo = k === (window._catFiltro || "");
+          const color = k ? LU_INST_META[k].color : "#888";
+          btn.style.background = activo ? color : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      // Reconstruye los botones de filtro según qué instancias existen
+      // realmente en la lista actual — repesca/regional sólo se ofrecen si
+      // hay al menos una categoría con esa instancia.
+      function catRenderFiltroBtns(catList) {
+        const wrap = document.getElementById("cat-filtro-wrap");
+        if (!wrap) return;
+        const presentes = new Set(
+          (catList || []).map((c) => luInstBucket(c.instancia)),
+        );
+        if (window._catFiltro && !presentes.has(window._catFiltro)) {
+          window._catFiltro = "";
+        }
+        let html =
+          '<button class="btn bo bsm" data-f="" style="font-size:11px">Todos</button>';
+        LU_INST_ORDEN.forEach((b) => {
+          if (!presentes.has(b)) return;
+          const m = LU_INST_META[b];
+          html +=
+            '<button class="btn bo bsm" data-f="' +
+            b +
+            '" style="font-size:11px;border-color:' +
+            m.color +
+            ";color:" +
+            m.color +
+            '">' +
+            m.label +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          btn.onclick = () => catFiltrar(btn.getAttribute("data-f"));
+        });
+        catAplicarEstiloFiltro();
+      }
 
       async function catCargar() {
         const stats = document.getElementById("cat-stats");
@@ -3598,13 +3822,6 @@
             return;
           }
 
-          stats.textContent =
-            catList.length +
-            " categorías · " +
-            (luData?.length || 0) +
-            " inscriptos" +
-            (usarCronograma ? " · 📅 ordenadas por cronograma" : "");
-
           const esAyudante = currentRol === "ayudante_lineup";
           const esEncargado = currentRol === "lineup";
 
@@ -3621,6 +3838,26 @@
             categoriasAMostrar = [...enVivo, ...pendientes, ...completadas];
           }
 
+          // Agrupar por competencia (nacional/regional/repesca/internacional):
+          // nunca mezcladas, preservando el orden en_vivo/pendiente/completada
+          // ya calculado dentro de cada grupo. Regional y repesca sólo se
+          // ofrecen como filtro/grupo si existe al menos una categoría con
+          // esa instancia.
+          catRenderFiltroBtns(catList);
+          const catFiltro = window._catFiltro || "";
+          const catBuckets = catFiltro ? [catFiltro] : LU_INST_ORDEN;
+          categoriasAMostrar = catBuckets.flatMap((b) =>
+            categoriasAMostrar.filter((c) => luInstBucket(c.instancia) === b),
+          );
+
+          stats.textContent =
+            categoriasAMostrar.length +
+            (catFiltro ? " de " + catList.length : "") +
+            " categorías · " +
+            (luData?.length || 0) +
+            " inscriptos" +
+            (usarCronograma ? " · 📅 ordenadas por cronograma" : "");
+
           // 4. Para cada categoría, obtener sus pasadas ordenadas del backend
           // Obtener las pasadas de TODAS las categorias EN PARALELO (mucho mas
           // rapido que secuencial, que era la causa de la lentitud).
@@ -3635,6 +3872,7 @@
             ),
           );
           let html = "";
+          let _grupoAnterior = null;
           for (let _ci = 0; _ci < categoriasAMostrar.length; _ci++) {
             const cat = categoriasAMostrar[_ci];
             const esActiva =
@@ -3642,17 +3880,33 @@
               window._catActiva?.categoria_key === cat.categoria_key;
             const esCompletada = cat.estado_cron === "completada";
             const items = _pasadasAll[_ci] || [];
+            const grupoActual = luInstBucket(cat.instancia);
+            const instColor = LU_INST_META[grupoActual].color;
 
-            const cardStyle = esActiva
-              ? "border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%)"
-              : esCompletada
-                ? "opacity:.5;border-color:rgba(255,255,255,.05)"
-                : "";
+            if (grupoActual !== _grupoAnterior) {
+              _grupoAnterior = grupoActual;
+              html +=
+                '<div style="font-size:11px;font-weight:700;color:' +
+                instColor +
+                ';text-transform:uppercase;letter-spacing:1px;padding:10px 2px 4px">' +
+                LU_INST_META[grupoActual].label +
+                "</div>";
+            }
+
+            const cardStyle =
+              (esActiva
+                ? "border-color:#4CAF7D;background:linear-gradient(135deg,#0a1e0a 0%,#111 100%);"
+                : esCompletada
+                  ? "opacity:.5;border-color:rgba(255,255,255,.05);"
+                  : "") +
+              "border-left:3px solid " +
+              instColor +
+              ";";
             const headerColor = esActiva
               ? "#4CAF7D"
               : esCompletada
                 ? "#888"
-                : "#C9A84C";
+                : instColor;
             const headerIcon = esActiva
               ? "🔴 EN VIVO · "
               : esCompletada
@@ -3675,13 +3929,15 @@
               headerIcon +
               cat.categoria_label +
               "</div>" +
-              '<div class="muted text-xs mt2">' +
+              '<div class="text-xs mt2" style="color:' +
+              instColor +
+              '">' +
+              (cat.instancia || "").toUpperCase() +
+              ' · <span class="muted">' +
               cat.presentes +
               "/" +
               cat.cantidad +
-              " presentes · " +
-              (cat.instancia || "").toUpperCase() +
-              "</div>" +
+              " presentes</span></div>" +
               "</div>" +
               "</div>" +
               '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
@@ -3725,7 +3981,9 @@
               // Comillas simples escapadas: evita que categorias con comillas
               // rompan el onclick (bug que dejaba los botones sin funcionar).
               const _escOnclick = (v) =>
-                "'" + String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+                "'" +
+                String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'") +
+                "'";
               const catKeyEsc = _escOnclick(cat.categoria_key);
               const idEsc = _escOnclick(p.lineup_id);
 
@@ -3875,7 +4133,8 @@
             }
           }
           // 3. Limpiar memoria del estado previo
-          if (window._estadoAntesPista) delete window._estadoAntesPista[lineupId];
+          if (window._estadoAntesPista)
+            delete window._estadoAntesPista[lineupId];
           // 4. Refrescar esta vista (y el lineup si está en memoria)
           await catCargar();
           if (typeof luRender === "function") luRender();
@@ -4149,7 +4408,11 @@
             `<div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div>` +
             `<div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${label}</div></div>` +
             (r.url
-              ? '<button onclick="djPreview(\'' + r.url.replace(/'/g, "\\'") + "','" + (t.nombre_grupo || "").replace(/'/g, "\\'") + '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>'
+              ? "<button onclick=\"djPreview('" +
+                r.url.replace(/'/g, "\\'") +
+                "','" +
+                (t.nombre_grupo || "").replace(/'/g, "\\'") +
+                '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>'
               : '<div style="width:32px"></div>');
           return div;
         };
@@ -4254,7 +4517,9 @@
               " (" +
               filasCat.length +
               ")</span>" +
-              (estadoTxt ? '<span style="font-size:10px">' + estadoTxt + "</span>" : "");
+              (estadoTxt
+                ? '<span style="font-size:10px">' + estadoTxt + "</span>"
+                : "");
             cont.appendChild(hdr);
             filasCat.forEach(({ t, r }) => cont.appendChild(armarFila(t, r)));
             algoRenderizado = true;

@@ -1659,6 +1659,10 @@
               </button>
             </div>
             <div
+              id="cron-filtro-wrap"
+              style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap"
+            ></div>
+            <div
               id="cron-activa-display"
               class="text-xs muted mt2 mb3"
               style="
@@ -5285,6 +5289,227 @@
       // CRONOGRAMA DEL DÍA (orden de pasada de categorías)
       // ═══════════════════════════════════════════════════════════
       window._cronCache = [];
+      window._cronFiltro = "";
+
+      // Competencias: nacional siempre existe como bloque/filtro; regional
+      // (sedes) y repesca sólo aparecen si hay al menos una categoría con
+      // esa instancia — si no hay ninguna, ese filtro/grupo ni se muestra.
+      const CRON_INST_META = {
+        nac: { color: "#C9A84C", label: "🥇 Nacional" },
+        reg: { color: "#B080E0", label: "📍 Regional / Sedes" },
+        rep: { color: "#E8A838", label: "🔁 Repesca" },
+        int: { color: "#4BAEDE", label: "🌎 Internacional" },
+      };
+      const CRON_INST_ORDEN = ["nac", "reg", "rep", "int"];
+
+      function cronInstBucket(instancia) {
+        if (instancia === "int" || instancia === "inter") return "int";
+        if (instancia === "reg") return "reg";
+        if (instancia === "rep") return "rep";
+        return "nac";
+      }
+      function cronEsInternacional(instancia) {
+        return cronInstBucket(instancia) === "int";
+      }
+      function cronInstColor(instancia) {
+        return CRON_INST_META[cronInstBucket(instancia)].color;
+      }
+
+      function cronBucketsPresentes() {
+        const set = new Set(window._cronCache.map((c) => cronInstBucket(c.instancia)));
+        return CRON_INST_ORDEN.filter((b) => set.has(b));
+      }
+
+      function cronRenderFiltroBtns() {
+        const wrap = document.getElementById("cron-filtro-wrap");
+        if (!wrap) return;
+        const presentes = cronBucketsPresentes();
+        // Si el filtro activo ya no tiene datos (p.ej. se borró la única
+        // categoría de repesca), volver a "Todos".
+        if (window._cronFiltro && !presentes.includes(window._cronFiltro)) {
+          window._cronFiltro = "";
+        }
+        let html =
+          '<button class="btn bo bsm" data-f="" style="font-size:11px">Todos</button>';
+        presentes.forEach((b) => {
+          const m = CRON_INST_META[b];
+          html +=
+            '<button class="btn bo bsm" data-f="' +
+            b +
+            '" style="font-size:11px;border-color:' +
+            m.color +
+            ";color:" +
+            m.color +
+            '">' +
+            m.label +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          btn.onclick = () => cronFiltrar(btn.getAttribute("data-f"));
+        });
+        cronAplicarEstiloFiltro();
+      }
+
+      function cronAplicarEstiloFiltro() {
+        const wrap = document.getElementById("cron-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          const k = btn.getAttribute("data-f");
+          const activo = k === window._cronFiltro;
+          const color = k ? CRON_INST_META[k].color : "#888";
+          btn.style.background = activo ? color : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function cronFiltrar(f) {
+        window._cronFiltro = f;
+        cronAplicarEstiloFiltro();
+        cronRenderLista();
+      }
+
+      // Arma el HTML de un grupo (bloque nacional o internacional) de items
+      // del cronograma. `items` ya viene filtrado a UN solo grupo, así que el
+      // índice local determina correctamente los extremos ↑/↓ dentro de esa
+      // competencia (cronograma_mover ya está restringido server-side a no
+      // cruzar entre nacional/internacional).
+      function cronRenderGrupo(items) {
+        let html = "";
+        for (let i = 0; i < items.length; i++) {
+          const c = items[i];
+          const isVivo = c.estado === "en_vivo";
+          const isComp = c.estado === "completada";
+          const borderC = isVivo
+            ? "#4CAF7D"
+            : isComp
+              ? "rgba(255,255,255,.05)"
+              : "rgba(255,255,255,.1)";
+          const bgC = isVivo
+            ? "rgba(76,175,125,.08)"
+            : isComp
+              ? "rgba(0,0,0,.2)"
+              : "transparent";
+          const opacity = isComp ? ".5" : "1";
+          const ic = isVivo ? "🔴" : isComp ? "✓" : "⏸";
+          const instColor = cronInstColor(c.instancia);
+
+          html +=
+            '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' +
+            borderC +
+            ";border-left:3px solid " +
+            instColor +
+            ";background:" +
+            bgC +
+            ";border-radius:6px;opacity:" +
+            opacity +
+            '">' +
+            '<span style="font-weight:700;color:#C9A84C;min-width:24px">' +
+            (i + 1) +
+            ".</span>" +
+            '<span style="min-width:18px">' +
+            ic +
+            "</span>" +
+            '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:11px;font-weight:600;color:' +
+            (isVivo ? "#4CAF7D" : "#F8F5EE") +
+            ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+            c.categoria_label +
+            "</div>" +
+            '<div style="font-size:9px;color:' +
+            instColor +
+            '">' +
+            (c.instancia || "").toUpperCase() +
+            ' · <span class="muted">' +
+            c.presentes +
+            "/" +
+            c.cantidad +
+            " presentes</span></div>" +
+            "</div>" +
+            '<div style="display:flex;gap:2px;flex-shrink:0">' +
+            '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' +
+            c.id +
+            "," +
+            JSON.stringify(c.categoria_key).replace(/"/g, "&quot;") +
+            ')">👁</button>' +
+            (i > 0
+              ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
+                c.id +
+                ',&quot;arriba&quot;)">↑</button>'
+              : "") +
+            (i < items.length - 1
+              ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
+                c.id +
+                ',&quot;abajo&quot;)">↓</button>'
+              : "") +
+            (!isVivo
+              ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
+                c.id +
+                ')">▶</button>'
+              : "") +
+            (isVivo
+              ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' +
+                c.id +
+                ')">✓</button>'
+              : "") +
+            (isComp
+              ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' +
+                c.id +
+                ')">↺</button>'
+              : "") +
+            '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' +
+            c.id +
+            ')">✕</button>' +
+            "</div>" +
+            "</div>" +
+            '<div id="cron-detalle-' +
+            c.id +
+            '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
+        }
+        return html;
+      }
+
+      function cronRenderLista() {
+        const lista = document.getElementById("cron-lista");
+        if (!lista) return;
+        cronRenderFiltroBtns();
+        if (window._cronCache.length === 0) {
+          lista.innerHTML =
+            '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
+          return;
+        }
+        const filtro = window._cronFiltro || "";
+        const buckets = filtro ? [filtro] : CRON_INST_ORDEN;
+        const grupos = buckets
+          .map((b) => [
+            b,
+            window._cronCache.filter((c) => cronInstBucket(c.instancia) === b),
+          ])
+          .filter(([, items]) => items.length);
+
+        if (!grupos.length) {
+          lista.innerHTML =
+            '<div class="muted text-xs" style="text-align:center;padding:14px">Sin categorías para este filtro.</div>';
+          return;
+        }
+
+        let html =
+          '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
+        grupos.forEach(([tipo, items]) => {
+          const m = CRON_INST_META[tipo];
+          html +=
+            '<div style="font-size:11px;font-weight:700;color:' +
+            m.color +
+            ';text-transform:uppercase;letter-spacing:1px;padding:8px 2px 2px">' +
+            m.label +
+            " (" +
+            items.length +
+            ")</div>";
+          html += cronRenderGrupo(items);
+        });
+        html += "</div>";
+        lista.innerHTML = html;
+      }
 
       async function cronCargar() {
         const lista = document.getElementById("cron-lista");
@@ -5312,111 +5537,7 @@
               " categorías pendientes</span>";
           }
 
-          if (window._cronCache.length === 0) {
-            lista.innerHTML =
-              '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
-            return;
-          }
-
-          let html =
-            '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
-          for (let i = 0; i < window._cronCache.length; i++) {
-            const c = window._cronCache[i];
-            const isVivo = c.estado === "en_vivo";
-            const isComp = c.estado === "completada";
-            const borderC = isVivo
-              ? "#4CAF7D"
-              : isComp
-                ? "rgba(255,255,255,.05)"
-                : "rgba(255,255,255,.1)";
-            const bgC = isVivo
-              ? "rgba(76,175,125,.08)"
-              : isComp
-                ? "rgba(0,0,0,.2)"
-                : "transparent";
-            const opacity = isComp ? ".5" : "1";
-            const ic = isVivo ? "🔴" : isComp ? "✓" : "⏸";
-
-            html +=
-              '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid ' +
-              borderC +
-              ";background:" +
-              bgC +
-              ";border-radius:6px;opacity:" +
-              opacity +
-              '">' +
-              '<span style="font-weight:700;color:#C9A84C;min-width:24px">' +
-              (i + 1) +
-              ".</span>" +
-              '<span style="min-width:18px">' +
-              ic +
-              "</span>" +
-              '<div style="flex:1;min-width:0">' +
-              '<div style="font-size:11px;font-weight:600;color:' +
-              (isVivo ? "#4CAF7D" : "#F8F5EE") +
-              ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
-              c.categoria_label +
-              "</div>" +
-              '<div class="muted" style="font-size:9px">' +
-              (c.instancia || "").toUpperCase() +
-              " · " +
-              c.presentes +
-              "/" +
-              c.cantidad +
-              " presentes</div>" +
-              "</div>" +
-              '<div style="display:flex;gap:2px;flex-shrink:0">' +
-              '<button title="Ver inscriptos" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#C9A84C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronVerInscriptos(' +
-              c.id +
-              "," +
-              JSON.stringify(c.categoria_key).replace(/"/g, "&quot;") +
-              ')">👁</button>' +
-              (i > 0
-                ? '<button title="Mover al principio" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
-                  c.id +
-                  ',&quot;inicio&quot;)">⇈</button>'
-                : "") +
-              (i > 0
-                ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
-                  c.id +
-                  ',&quot;arriba&quot;)">↑</button>'
-                : "") +
-              (i < window._cronCache.length - 1
-                ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
-                  c.id +
-                  ',&quot;abajo&quot;)">↓</button>'
-                : "") +
-              (i < window._cronCache.length - 1
-                ? '<button title="Mover al final" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
-                  c.id +
-                  ',&quot;fin&quot;)">⇊</button>'
-                : "") +
-              (!isVivo
-                ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
-                  c.id +
-                  ')">▶</button>'
-                : "") +
-              (isVivo
-                ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' +
-                  c.id +
-                  ')">✓</button>'
-                : "") +
-              (isComp
-                ? '<button title="Volver a pendiente" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronResetEstado(' +
-                  c.id +
-                  ')">↺</button>'
-                : "") +
-              '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronQuitar(' +
-              c.id +
-              ')">✕</button>' +
-              "</div>" +
-              "</div>" +
-              '<div id="cron-detalle-' +
-              c.id +
-              '" style="display:none;margin-top:-2px;margin-bottom:6px;padding:10px;background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.2);border-radius:0 0 6px 6px"></div>';
-          }
-          html += "</div>";
-          lista.innerHTML = html;
+          cronRenderLista();
         } catch (e) {
           lista.innerHTML =
             '<span style="color:#E0524C">Error: ' + e.message + "</span>";
@@ -5587,20 +5708,29 @@
             );
             return;
           }
+          const opt = (c) =>
+            '<option value="' +
+            c.categoria_key.replace(/"/g, "&quot;") +
+            '">' +
+            c.categoria_label +
+            " (" +
+            c.cantidad +
+            " inscriptos)</option>";
           sel.innerHTML =
             '<option value="">— elegí —</option>' +
-            faltantes
-              .map(
-                (c) =>
-                  '<option value="' +
-                  c.categoria_key.replace(/"/g, "&quot;") +
-                  '">' +
-                  c.categoria_label +
-                  " (" +
-                  c.cantidad +
-                  " inscriptos)</option>",
-              )
-              .join("");
+            CRON_INST_ORDEN.map((b) => {
+              const items = faltantes.filter(
+                (c) => cronInstBucket(c.instancia) === b,
+              );
+              if (!items.length) return "";
+              return (
+                '<optgroup label="' +
+                CRON_INST_META[b].label +
+                '">' +
+                items.map(opt).join("") +
+                "</optgroup>"
+              );
+            }).join("");
           wrap.style.display = "block";
         } catch (e) {
           toast("Error: " + e.message, "err");
