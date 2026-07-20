@@ -2976,6 +2976,18 @@
           flechas.className = "lu-flechas";
           if (arrows && catKey) {
             if (i > 0) {
+              const top = document.createElement("button");
+              top.className = "lu-flecha";
+              top.title = "Mover al principio";
+              top.textContent = "⇈";
+              ((id, ck) => {
+                top.onclick = (e) => {
+                  e.stopPropagation();
+                  luMoverExtremo(id, ck, "inicio");
+                };
+              })(p.id, catKey);
+              flechas.appendChild(top);
+
               const up = document.createElement("button");
               up.className = "lu-flecha";
               up.textContent = "↑";
@@ -2998,6 +3010,18 @@
                 };
               })(p.id, catKey);
               flechas.appendChild(dn);
+
+              const bottom = document.createElement("button");
+              bottom.className = "lu-flecha";
+              bottom.title = "Mover al final";
+              bottom.textContent = "⇊";
+              ((id, ck) => {
+                bottom.onclick = (e) => {
+                  e.stopPropagation();
+                  luMoverExtremo(id, ck, "fin");
+                };
+              })(p.id, catKey);
+              flechas.appendChild(bottom);
             }
           }
           ctrl.appendChild(eBtn);
@@ -3220,6 +3244,29 @@
           if (!data?.ok) {
             if (data?.error !== "En el extremo")
               toast(data?.error || "No se pudo mover", "warn");
+            return;
+          }
+          await luRefreshOrdenFlat();
+          luRender();
+        } catch (e) {
+          toast("Error al mover: " + e.message, "err");
+        }
+      }
+
+      // Manda UNA fila (participante, categoría) al principio o al final de
+      // su propio bloque de competencia, sin afectar a las demás categorías
+      // del mismo participante — útil cuando está lejos y no da para clickear
+      // ↑/↓ una por una.
+      async function luMoverExtremo(lineupId, categoriaKey, direccion) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada_flat_extremo", {
+            p_lineup_id: lineupId,
+            p_categoria_key: categoriaKey,
+            p_direccion: direccion,
+          });
+          if (error) throw error;
+          if (!data?.ok) {
+            toast(data?.error || "No se pudo mover", "warn");
             return;
           }
           await luRefreshOrdenFlat();
