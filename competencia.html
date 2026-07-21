@@ -4840,6 +4840,12 @@
         if (id === "config") {
           cfgCargar();
         }
+        if (id === "jurados-cfg") {
+          // Recarga ítems disponibles (por si se editaron en Configuración) y
+          // la asignación actual de cada jurado, para no mostrar una grilla
+          // desactualizada si el director no recargó la página.
+          dCargarJurados();
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -7014,6 +7020,21 @@
       }
 
       async function cfgGuardarCompetencia() {
+        // Ítems previos a este guardado (para detectar renombres/eliminaciones
+        // que dejen a algún jurado con un ítem que ya no existe en la lista).
+        // Se pide fresco a la DB en vez de usar TODOS_ITEMS: esa variable sólo
+        // se sincroniza al visitar la pestaña Jurados, así que si el director
+        // entra directo a Configuración y guarda, TODOS_ITEMS podía seguir
+        // teniendo los defaults hardcodeados en vez del valor real anterior.
+        let itemsAntes = [];
+        try {
+          const { data } = await db.rpc("obtener_config", {
+            p_clave: "modo_competencia",
+          });
+          itemsAntes = data?.[0]?.valor_json?.items_disponibles || [];
+        } catch (e) {
+          itemsAntes = Array.isArray(TODOS_ITEMS) ? TODOS_ITEMS.slice() : [];
+        }
         const items = document
           .getElementById("cfg-comp-items")
           ?.value.split("\n")
@@ -7032,10 +7053,53 @@
               parseInt(document.getElementById("cfg-comp-jur-rep")?.value) || 3,
           },
         };
-        await cfgGuardar("Modo competencia", {
+        const ok = await cfgGuardar("Modo competencia", {
           p_clave: "modo_competencia",
           p_valor_json: payload,
         });
+        // Sin esto, los ítems recién guardados no aparecían en la grilla de
+        // Jurados hasta recargar la página entera (TODOS_ITEMS quedaba con
+        // el valor viejo), por lo que el director podía terminar asignando
+        // ítems desactualizados a los jurados sin darse cuenta.
+        if (ok) {
+          await sincronizarItemsDesdeConfig();
+          if (typeof renderJuradosGrid === "function") renderJuradosGrid();
+          await cfgAvisarItemsRemovidosAsignados(itemsAntes, items || []);
+        }
+      }
+
+      // Un ítem se identifica por su texto literal (no hay un ID estable), así
+      // que renombrarlo equivale a borrar el viejo y crear uno nuevo: si un
+      // jurado ya tenía el nombre viejo asignado, esa asignación queda
+      // "huérfana" en silencio hasta que alguien lo nota en plena competencia.
+      // Avisamos apenas se guarda para que el director reasigne a tiempo.
+      async function cfgAvisarItemsRemovidosAsignados(itemsAntes, itemsNuevos) {
+        const nuevosSet = new Set(itemsNuevos);
+        const removidos = itemsAntes.filter((it) => !nuevosSet.has(it));
+        if (removidos.length === 0) return;
+        try {
+          const { data: jurados } = await db.rpc("obtener_jurados");
+          const removidosSet = new Set(removidos);
+          const afectados = (jurados || []).filter(
+            (j) =>
+              j.activo &&
+              Array.isArray(j.items) &&
+              j.items.some((it) => removidosSet.has(it)),
+          );
+          if (afectados.length > 0) {
+            const nums = afectados.map((j) => j.juez_num).join(", ");
+            toast(
+              "⚠️ '" +
+                removidos.join("', '") +
+                "' ya no está en la lista y seguía asignado a Jurado " +
+                nums +
+                ". Reasignale un ítem antes de la competencia.",
+              "warn",
+            );
+          }
+        } catch (e) {
+          /* no bloquear el guardado de la config si esta verificación falla */
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
