@@ -4004,7 +4004,13 @@
               // Estado POR CATEGORIA: buscar en el mapa si este participante
               // tiene sesion (finalizada/activa) para ESTA categoria puntual.
               // Si no hay sesion de esta categoria, usar su estado global.
-              const _catKey = p.codigo_id + "||" + cat.categoria_key;
+              // cat.categoria_key ahora es "genero|nombre|instancia"; el mapa
+              // estadoPorCat se arma con "genero|nombre" (ver arriba), así que
+              // hay que truncar al mismo formato de 2 segmentos para matchear.
+              const _catKey2 = cat.categoria_key
+                ? cat.categoria_key.split("|").slice(0, 2).join("|")
+                : cat.categoria_key;
+              const _catKey = p.codigo_id + "||" + _catKey2;
               const _estadoCat =
                 (window._estadoPorCat && window._estadoPorCat.get(_catKey)) ||
                 null;
@@ -4468,16 +4474,20 @@
         // devuelve las filas de música que corresponden a ESA categoría.
         const filasDeCategoria = (t, catKey) => {
           const cats = t.categorias || [];
-          // El categoria_key del cronograma tiene formato "genero|nombre"
-          // (ej. "bachata|Solista Fem. Amateur"). Cada categoría del
-          // participante tiene {c, g, n}. Matcheamos armando "g|n".
+          // El categoria_key del cronograma tiene formato "genero|nombre|instancia"
+          // (ej. "bachata|Solista Fem. Amateur|reg"). Cada categoría del
+          // participante tiene {c, g, n}. Matcheamos armando "g|n", ignorando
+          // el segmento de instancia (un participante ya pertenece a una sola).
+          const catKey2 = catKey
+            ? catKey.split("|").slice(0, 2).join("|")
+            : catKey;
           const catMatch = cats.filter((c) => {
-            if (!catKey) return false;
+            if (!catKey2) return false;
             const keyPart = (c.g || "") + "|" + (c.n || "");
             return (
-              keyPart === catKey ||
-              (c.n && catKey === c.n) ||
-              (c.n && catKey.endsWith("|" + c.n))
+              keyPart === catKey2 ||
+              (c.n && catKey2 === c.n) ||
+              (c.n && catKey2.endsWith("|" + c.n))
             );
           });
           return catMatch
