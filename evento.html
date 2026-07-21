@@ -3772,7 +3772,18 @@
         catAplicarEstiloFiltro();
       }
 
+      let _catCargaSeq = 0;
       async function catCargar() {
+        // Reentrancia: catCargar hace varios awaits (lineup, sesiones,
+        // cronograma, y un Promise.all de pasadas) y puede ser disparada por
+        // el polling y por varios canales de realtime casi al mismo tiempo
+        // (más aún ahora que mover una categoría al principio/final puede
+        // renumerar muchas filas de una sola vez, generando una ráfaga de
+        // eventos). Como cada llamada termina en un solo innerHTML= atómico,
+        // no se mezclan/intercalan como pasaba en buildDjLista — pero sin
+        // esto, una llamada vieja que tarda más podía terminar de escribir
+        // DESPUÉS que una más nueva, pisando datos frescos con unos viejos.
+        const _seq = ++_catCargaSeq;
         const stats = document.getElementById("cat-stats");
         const lista = document.getElementById("cat-lista");
         const banner = document.getElementById("cat-activa-banner");
@@ -3866,6 +3877,7 @@
               estado_cron: "pendiente",
             }));
           }
+          if (_seq !== _catCargaSeq) return; // superada por una llamada más nueva
 
           if (!catList || catList.length === 0) {
             lista.innerHTML =
@@ -3923,6 +3935,7 @@
                 .catch(() => []),
             ),
           );
+          if (_seq !== _catCargaSeq) return; // superada por una llamada más nueva
           let html = "";
           let _grupoAnterior = null;
           for (let _ci = 0; _ci < categoriasAMostrar.length; _ci++) {

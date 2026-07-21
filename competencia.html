@@ -5375,11 +5375,11 @@
         cronRenderLista();
       }
 
-      // Arma el HTML de un grupo (bloque nacional o internacional) de items
-      // del cronograma. `items` ya viene filtrado a UN solo grupo, así que el
-      // índice local determina correctamente los extremos ↑/↓ dentro de esa
-      // competencia (cronograma_mover ya está restringido server-side a no
-      // cruzar entre nacional/internacional).
+      // Arma el HTML de un grupo (bloque nac/reg/rep/int) de items del
+      // cronograma. `items` ya viene filtrado a UN solo grupo, así que el
+      // índice local determina correctamente los extremos ↑/↓/⇈/⇊ dentro de
+      // esa competencia (cronograma_mover y cronograma_mover_extremo están
+      // restringidos server-side a nunca cruzar entre nac/reg/rep/int).
       function cronRenderGrupo(items) {
         let html = "";
         for (let i = 0; i < items.length; i++) {
@@ -5439,6 +5439,11 @@
             JSON.stringify(c.categoria_key).replace(/"/g, "&quot;") +
             ')">👁</button>' +
             (i > 0
+              ? '<button title="Mover al principio" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
+                c.id +
+                ',&quot;inicio&quot;)">⇈</button>'
+              : "") +
+            (i > 0
               ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
                 c.id +
                 ',&quot;arriba&quot;)">↑</button>'
@@ -5447,6 +5452,11 @@
               ? '<button title="Bajar" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMover(' +
                 c.id +
                 ',&quot;abajo&quot;)">↓</button>'
+              : "") +
+            (i < items.length - 1
+              ? '<button title="Mover al final" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
+                c.id +
+                ',&quot;fin&quot;)">⇊</button>'
               : "") +
             (!isVivo
               ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
