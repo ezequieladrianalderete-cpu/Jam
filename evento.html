@@ -1618,6 +1618,10 @@
               style="width: 160px; padding: 8px 12px; font-size: 13px"
             />
           </div>
+          <div
+            id="dj-filtro-wrap"
+            style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap"
+          ></div>
           <div class="sy2" id="dj-lista"></div>
           <div class="cr mt4" id="dj-sin-musica" style="display: none">
             <div class="fw6 red mb3 text-sm">⚠️ Sin música cargada</div>
@@ -2404,22 +2408,23 @@
         subscribeRealtimeCategorias();
         // Red de seguridad para eventos largos: si el realtime (WebSocket) se
         // cae, este polling refresca la vista visible cada 5s. Solo toca la
-        // pestaa activa, as es liviano. Cubre lineup, ayudante, dj.
+        // pestaa activa, as es liviano. Cubre lineup y ayudante.
+        // El DJ quedó afuera a pedido del cliente: ese panel debe sentirse
+        // 100% reactivo (sin ticks de refresco visibles), y ya está cubierto
+        // en su totalidad por websockets — ver subscribeRealtimeSesion()
+        // (scoring.sesiones) y subscribeRealtimeCategorias() (cronograma_
+        // categorias, orden_pasadas, lineup) más arriba.
         if (window._eventoPoll) clearInterval(window._eventoPoll);
         window._eventoPoll = setInterval(async () => {
           try {
             const catPane = document.getElementById("tp-categorias");
             const luPane = document.getElementById("tp-lineup");
-            const djPane = document.getElementById("tp-dj");
             if (catPane && catPane.classList.contains("show")) {
               if (typeof loadLineup === "function") await loadLineup();
               await catCargar();
             } else if (luPane && luPane.classList.contains("show")) {
               if (typeof loadLineup === "function") await loadLineup();
               if (typeof luRender === "function") luRender();
-            } else if (djPane && djPane.classList.contains("show")) {
-              await loadSesionActivaForProy();
-              await buildDjLista(document.getElementById("dj-q")?.value || "");
             }
           } catch (e) {}
         }, 5000);
@@ -4264,6 +4269,21 @@
                 .getElementById("tp-categorias")
                 ?.classList.contains("show");
               if (visible) await catCargar();
+              await refrescarDjSiVisible();
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "orden_pasadas" },
+            async () => {
+              // Reordenar participantes dentro de una categoría (mover_pasada,
+              // agregar/quitar de pasada) no tenía ningún canal realtime: el DJ
+              // y la vista de categorías sólo se enteraban vía el polling de 5s.
+              const visible = document
+                .getElementById("tp-categorias")
+                ?.classList.contains("show");
+              if (visible) await catCargar();
+              await refrescarDjSiVisible();
             },
           )
           .on(
@@ -4277,6 +4297,7 @@
                 if (typeof loadLineup === "function") await loadLineup();
                 await catCargar();
               }
+              await refrescarDjSiVisible();
             },
           )
           .on(
@@ -4294,6 +4315,17 @@
               setTimeout(() => subscribeRealtimeCategorias(), 3000);
             }
           });
+      }
+
+      // El panel del DJ (buildDjLista) depende de cronograma_categorias,
+      // orden_pasadas y lineup, además de scoring.sesiones (que ya se
+      // refresca aparte en subscribeRealtimeSesion). Reutilizado por todos
+      // los canales de arriba para que el DJ se actualice solo, sin polling.
+      async function refrescarDjSiVisible() {
+        const djPane = document.getElementById("tp-dj");
+        if (djPane && djPane.classList.contains("show")) {
+          await buildDjLista(document.getElementById("dj-q")?.value || "");
+        }
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -4331,6 +4363,7 @@
             codigo_id: l.codigo_id,
             nombre_grupo: l.nombre_grupo,
             posicion: l.posicion,
+            instancia: l.instancia,
             filename: m.musica_nombre || "Sin nombre",
             verificado: !!m.musica_url,
             musica_url: m.musica_url || null,
@@ -4389,6 +4422,8 @@
           : djData;
         const cont = document.getElementById("dj-lista");
         cont.innerHTML = "";
+        djRenderFiltroBtns();
+        const djFiltroInstAct = window._djFiltro || "";
 
         // Mostrar sesión activa en DJ
         if (sesionActiva) {
@@ -4513,17 +4548,33 @@
         // 2. Si hay cronograma, agrupar por categoría en su orden
         const filtroTxt = filtro ? filtro.toLowerCase() : "";
         const pasaFiltro = (t) =>
-          !filtroTxt ||
-          t.nombre_grupo?.toLowerCase().includes(filtroTxt) ||
-          t.codigo_id?.toLowerCase().includes(filtroTxt);
+          (!djFiltroInstAct || luInstBucket(t.instancia) === djFiltroInstAct) &&
+          (!filtroTxt ||
+            t.nombre_grupo?.toLowerCase().includes(filtroTxt) ||
+            t.codigo_id?.toLowerCase().includes(filtroTxt));
 
         let algoRenderizado = false;
 
-        if (cronograma.length > 0) {
+        // Filtrar categorías por competencia ANTES de pedir sus pasadas: evita
+        // llamadas de red innecesarias a obtener_pasadas_categoria para
+        // categorías que van a quedar ocultas de todos modos.
+        const cronogramaFiltrado = djFiltroInstAct
+          ? cronograma.filter(
+              (c) => luInstBucket(c.instancia) === djFiltroInstAct,
+            )
+          : cronograma;
+
+        if (cronogramaFiltrado.length > 0) {
           // Ordenar: en vivo primero, luego pendientes, luego completadas
-          const enVivo = cronograma.filter((c) => c.estado === "en_vivo");
-          const pend = cronograma.filter((c) => c.estado === "pendiente");
-          const comp = cronograma.filter((c) => c.estado === "completada");
+          const enVivo = cronogramaFiltrado.filter(
+            (c) => c.estado === "en_vivo",
+          );
+          const pend = cronogramaFiltrado.filter(
+            (c) => c.estado === "pendiente",
+          );
+          const comp = cronogramaFiltrado.filter(
+            (c) => c.estado === "completada",
+          );
           const ordenadas = [...enVivo, ...pend, ...comp];
 
           for (const cat of ordenadas) {
@@ -4621,9 +4672,11 @@
           });
         }
 
-        // Sin música (igual que antes)
+        // Sin música (igual que antes, respetando el filtro de competencia)
         const sinMusica = luData.filter(
-          (p) => !djData.find((m) => m.codigo_id === p.codigo_id),
+          (p) =>
+            !djData.find((m) => m.codigo_id === p.codigo_id) &&
+            (!djFiltroInstAct || luInstBucket(p.instancia) === djFiltroInstAct),
         );
         const sm = document.getElementById("dj-sin-musica");
         if (sinMusica.length && sm) {
@@ -4640,6 +4693,58 @@
 
       function djFiltrar(q) {
         buildDjLista(q);
+      }
+
+      // Filtro por competencia (nac/reg/rep/int) en el lineup del DJ, igual
+      // patrón que catRenderFiltroBtns/catFiltrar en la vista de Categorías.
+      // Sólo se ofrecen los botones de las competencias que realmente tengan
+      // participantes cargados.
+      function djRenderFiltroBtns() {
+        const wrap = document.getElementById("dj-filtro-wrap");
+        if (!wrap) return;
+        const presentes = new Set(djData.map((t) => luInstBucket(t.instancia)));
+        if (window._djFiltro && !presentes.has(window._djFiltro)) {
+          window._djFiltro = "";
+        }
+        let html =
+          '<button class="btn bo bsm" data-f="" style="font-size:11px">Todos</button>';
+        LU_INST_ORDEN.forEach((b) => {
+          if (!presentes.has(b)) return;
+          const m = LU_INST_META[b];
+          html +=
+            '<button class="btn bo bsm" data-f="' +
+            b +
+            '" style="font-size:11px;border-color:' +
+            m.color +
+            ";color:" +
+            m.color +
+            '">' +
+            m.label +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          btn.onclick = () => djFiltroInst(btn.getAttribute("data-f"));
+        });
+        djAplicarEstiloFiltro();
+      }
+
+      function djFiltroInst(f) {
+        window._djFiltro = f;
+        djAplicarEstiloFiltro();
+        buildDjLista(document.getElementById("dj-q")?.value || "");
+      }
+
+      function djAplicarEstiloFiltro() {
+        const wrap = document.getElementById("dj-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          const k = btn.getAttribute("data-f");
+          const activo = k === (window._djFiltro || "");
+          const color = k ? LU_INST_META[k].color : "#888";
+          btn.style.background = activo ? color : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
       }
 
       // ═══════════════════════════════════════════════════════════
