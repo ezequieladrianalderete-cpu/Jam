@@ -2419,7 +2419,7 @@
               if (typeof luRender === "function") luRender();
             } else if (djPane && djPane.classList.contains("show")) {
               await loadSesionActivaForProy();
-              buildDjLista(document.getElementById("dj-q")?.value || "");
+              await buildDjLista(document.getElementById("dj-q")?.value || "");
             }
           } catch (e) {}
         }, 5000);
@@ -4370,7 +4370,16 @@
         return null;
       }
 
+      let _djListaSeq = 0;
       async function buildDjLista(filtro) {
+        // Reentrancia: esta función hace varios awaits seguidos (una llamada
+        // por categoría) y puede tardar más que los 5s del polling. Si mientras
+        // tanto arranca una llamada más nueva (poll, o el buscador tipeando),
+        // las dos terminan escribiendo sobre el mismo #dj-lista intercaladas,
+        // dejando el orden de las canciones mezclado/aleatorio en pantalla.
+        // Con este token, la llamada vieja se aborta apenas detecta que ya no
+        // es la última, sin tocar más el DOM.
+        const _seq = ++_djListaSeq;
         const lista = filtro
           ? djData.filter(
               (t) =>
@@ -4441,6 +4450,7 @@
         } catch (e) {
           /* sin cronograma: se cae al modo simple más abajo */
         }
+        if (_seq !== _djListaSeq) return; // superada por una llamada más nueva
 
         // Helper: arma una fila de tema del DJ (misma UI que antes)
         const armarFila = (t, r) => {
@@ -4527,6 +4537,7 @@
             } catch (e) {
               pasadas = [];
             }
+            if (_seq !== _djListaSeq) return; // superada por una llamada más nueva
             // Para cada pasada, buscar su música en djData
             const filasCat = [];
             pasadas.forEach((pas) => {
