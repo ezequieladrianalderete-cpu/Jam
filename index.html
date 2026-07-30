@@ -1280,7 +1280,9 @@
     <header class="hdr">
       <div>
         <div class="logo">JAM</div>
-        <div class="logo-sub">DANCE COMPETITION <span data-jam-edicion>2026</span></div>
+        <div class="logo-sub">
+          DANCE COMPETITION <span data-jam-edicion>2026</span>
+        </div>
       </div>
       <div style="text-align: right">
         <div class="blv">Inscripciones abiertas</div>
@@ -5167,8 +5169,12 @@
           INST === "int"
             ? '<div class="trrow"><span class="trk">Cuenta Prex</span>' +
               '<div style="display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:4px">' +
-              '<span class="trv">' + (banco.cuenta || "35722990") + "</span>" +
-              '<button class="cpybtn" data-v="' + (banco.cuenta || "35722990") + '" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
+              '<span class="trv">' +
+              (banco.cuenta || "35722990") +
+              "</span>" +
+              '<button class="cpybtn" data-v="' +
+              (banco.cuenta || "35722990") +
+              '" onclick="cpy(this.dataset.v,this)">Copiar</button>' +
               "</div></div>"
             : "";
         ct.innerHTML =
@@ -6773,7 +6779,8 @@
         // Cargar edición dinámica (año) desde la config del evento.
         // Actualiza [data-jam-edicion] y el título de la pestaña.
         // Aislada y con fallback: si falla, queda "2026" del HTML.
-        (function __jamLoadEdicion() {          try {
+        (function __jamLoadEdicion() {
+          try {
             fetch(SB_URL + "/rest/v1/rpc/obtener_config", {
               method: "POST",
               headers: {
@@ -6792,7 +6799,8 @@
                   nombreEv = null;
                 d.forEach(function (c) {
                   if (c.clave === "edicion" && c.valor) edicion = c.valor;
-                  if (c.clave === "nombre_evento" && c.valor) nombreEv = c.valor;
+                  if (c.clave === "nombre_evento" && c.valor)
+                    nombreEv = c.valor;
                 });
                 if (edicion) {
                   document
@@ -7184,7 +7192,8 @@
           } catch (e) {
             pickedFile = null;
             pickedUrl = null;
-            if (catId && window.jamMusicSlots) delete window.jamMusicSlots[catId];
+            if (catId && window.jamMusicSlots)
+              delete window.jamMusicSlots[catId];
             restoreSlotLabel();
             pendingSlotEl = null;
             ev.target.value = "";
