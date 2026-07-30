@@ -5002,49 +5002,23 @@
             toast("Lineup ya está sincronizado", "ok");
             return;
           }
-          // Insertar las faltantes (el trigger se encargará del código)
-          const prefMap = {
-            nac: "JAM-NAC-",
-            int: "JAM-INTER-",
-            reg: "JAM-REG-",
-            rep: "JAM-REP-",
-          };
-          const offMap = { nac: 200, int: 1000, reg: 1, rep: 10 };
-          const { data: maxPos } = await db
-            .schema("evento")
-            .from("lineup")
-            .select("posicion")
-            .order("posicion", { ascending: false })
-            .limit(1);
-          let pos = (maxPos?.[0]?.posicion || 0) + 1;
-          const inscByInst = {};
-          for (const i of ins) {
-            inscByInst[i.instancia] = inscByInst[i.instancia] || 0;
-            inscByInst[i.instancia]++;
-          }
-          const counters = {};
+          // codigo_id y posicion se generan atómicamente en la base (ver
+          // fix-codigo-id-atomico.sql) — antes este offset fijo por
+          // instancia (nac:200, int:1000, reg:1, rep:10) + contador local
+          // ignoraba lo que ya existía en la tabla y podía repetir un
+          // código ya usado por otra alta (el origen de los duplicados
+          // JAM-INTER-1007).
           let inserted = 0;
           for (const i of faltantes) {
-            counters[i.instancia] = (counters[i.instancia] || 0) + 1;
-            const codigo =
-              (prefMap[i.instancia] || "JAM-") +
-              String(
-                (offMap[i.instancia] || 1) + counters[i.instancia] - 1,
-              ).padStart(4, "0");
-            const { error } = await db
-              .schema("evento")
-              .from("lineup")
-              .insert({
-                inscripcion_id: i.id,
-                codigo_id: codigo,
-                nombre_grupo: i.nombre_grupo,
-                responsable: i.nombre,
-                pais: i.pais || "Argentina",
-                categoria: i.categorias,
-                instancia: i.instancia,
-                estado_pago: i.pago_estado || "sin_pago",
-                posicion: pos++,
-              });
+            const { error } = await db.rpc("lineup_insertar_auto", {
+              p_nombre_grupo: i.nombre_grupo,
+              p_responsable: i.nombre,
+              p_pais: i.pais || "Argentina",
+              p_instancia: i.instancia,
+              p_categoria: i.categorias,
+              p_estado_pago: i.pago_estado || "sin_pago",
+              p_inscripcion_id: i.id,
+            });
             if (!error) inserted++;
           }
           toast("Resincronizadas " + inserted + " entradas", "ok");

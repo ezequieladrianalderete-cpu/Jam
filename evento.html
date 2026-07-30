@@ -2527,11 +2527,6 @@
           : inst.includes("Repesca")
             ? "rep"
             : "nac";
-        const prefijo =
-          instCod === "inter" ? "INTER" : instCod === "rep" ? "REP" : "NAC";
-        const nextNum = luData.length + 1;
-        const codigo_id =
-          "JAM-" + prefijo + "-" + String(nextNum).padStart(4, "0");
         const pago = document.getElementById("nf-pago").value;
         const estado_pago =
           pago === "Confirmado"
@@ -2540,29 +2535,24 @@
               ? "senia"
               : "sin_pago";
 
-        const payload = {
-          codigo_id,
-          nombre_grupo: grupo,
-          responsable: document.getElementById("nf-resp").value,
-          pais,
-          instancia: instCod,
-          categoria: document.getElementById("nf-cats").value,
-          estado_pago,
-          posicion: nextNum,
-          estado: "pendiente",
-        };
-
-        const { error } = await db
-          .schema("evento")
-          .from("lineup")
-          .insert(payload);
+        // codigo_id y posicion se generan atómicamente en la base (ver
+        // fix-codigo-id-atomico.sql) para que dos altas simultáneas nunca
+        // puedan terminar con el mismo código.
+        const { data, error } = await db.rpc("lineup_insertar_auto", {
+          p_nombre_grupo: grupo,
+          p_responsable: document.getElementById("nf-resp").value,
+          p_pais: pais,
+          p_instancia: instCod,
+          p_categoria: document.getElementById("nf-cats").value,
+          p_estado_pago: estado_pago,
+        });
         if (error) {
           toast("Error: " + error.message, "err");
           return;
         }
         await loadLineup();
         showNuevo(false);
-        toast("Participante guardado · " + codigo_id, "ok");
+        toast("Participante guardado · " + data.codigo_id, "ok");
       }
 
       function showImport(show) {
@@ -2604,6 +2594,11 @@
           headers[0].toLowerCase() === "id" ||
           headers[0].toLowerCase().includes("jam-");
         importRows = [];
+        // Si el CSV no trae IDs propios, codigo_id y posicion se generan
+        // atómicamente en la base al confirmar (uno por uno, vía
+        // lineup_insertar_auto) en vez de calcularse acá — así nunca
+        // chocan con códigos ya emitidos por otra pantalla. Por eso estas
+        // filas quedan con codigo_id: null hasta ese momento.
         let nextNum = luData.length + 1;
         for (let i = 1; i < lines.length; i++) {
           const cols = lines[i]
@@ -2618,14 +2613,9 @@
             : instRaw.includes("rep")
               ? "rep"
               : "nac";
-          const prefijo =
-            instCod === "inter" ? "INTER" : instCod === "rep" ? "REP" : "NAC";
-          const id = hasId
-            ? cols[0]
-            : "JAM-" + prefijo + "-" + String(nextNum).padStart(4, "0");
           const pagoRaw = (cols[off + 7] || "").toLowerCase();
           importRows.push({
-            codigo_id: id,
+            codigo_id: hasId ? cols[0] : null,
             nombre_grupo: cols[off] || "Sin nombre",
             responsable: cols[off + 1] || "",
             pais,
@@ -2636,10 +2626,9 @@
               : pagoRaw.includes("se")
                 ? "senia"
                 : "sin_pago",
-            posicion: nextNum,
+            posicion: hasId ? nextNum : null,
             estado: "pendiente",
           });
-          if (!hasId) nextNum++;
         }
         document.getElementById("import-count").textContent = importRows.length;
         const table = document.getElementById("import-table");
@@ -2654,7 +2643,7 @@
                   : r.estado_pago === "senia"
                     ? '<span style="color:#E8A838;font-size:11px">50%</span>'
                     : '<span style="color:#E05252;font-size:11px">Sin pago</span>';
-              return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${r.codigo_id}</td><td style="padding:6px 10px;font-size:12px">${r.nombre_grupo}</td><td style="padding:6px 10px;font-size:12px;color:rgba(248,245,238,.5)">${r.pais}</td><td style="padding:6px 10px">${pg}</td></tr>`;
+              return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${r.codigo_id || "(automático)"}</td><td style="padding:6px 10px;font-size:12px">${r.nombre_grupo}</td><td style="padding:6px 10px;font-size:12px;color:rgba(248,245,238,.5)">${r.pais}</td><td style="padding:6px 10px">${pg}</td></tr>`;
             })
             .join("") +
           (importRows.length > 10
@@ -2665,18 +2654,49 @@
       }
 
       async function confirmarImport() {
-        const { error } = await db
-          .schema("evento")
-          .from("lineup")
-          .insert(importRows);
-        if (error) {
-          toast("Error al importar: " + error.message, "err");
-          return;
+        // Filas con ID explícito en el CSV: se insertan tal cual, en un
+        // solo bulk insert (comportamiento sin cambios).
+        const conId = importRows.filter((r) => r.codigo_id);
+        // Filas sin ID: cada una pasa por lineup_insertar_auto para que el
+        // código y la posición se generen atómicamente en la base, una por
+        // una, sin pisarse entre sí ni con altas hechas desde otra pantalla.
+        const sinId = importRows.filter((r) => !r.codigo_id);
+
+        if (conId.length) {
+          const { error } = await db
+            .schema("evento")
+            .from("lineup")
+            .insert(conId);
+          if (error) {
+            toast("Error al importar: " + error.message, "err");
+            return;
+          }
         }
+
+        let okAuto = 0;
+        for (const r of sinId) {
+          const { error } = await db.rpc("lineup_insertar_auto", {
+            p_nombre_grupo: r.nombre_grupo,
+            p_responsable: r.responsable,
+            p_pais: r.pais,
+            p_instancia: r.instancia,
+            p_categoria: r.categoria,
+            p_estado_pago: r.estado_pago,
+          });
+          if (error) {
+            toast(
+              `Error importando "${r.nombre_grupo}": ` + error.message,
+              "err",
+            );
+            continue;
+          }
+          okAuto++;
+        }
+
         await loadLineup();
         showImport(false);
         toast(
-          importRows.length + " participantes importados correctamente",
+          conId.length + okAuto + " participantes importados correctamente",
           "ok",
         );
         importRows = [];

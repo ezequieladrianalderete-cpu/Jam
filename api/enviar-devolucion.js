@@ -234,10 +234,10 @@ module.exports = async function handler(req, res) {
         __dirname,
         "..",
         "imgs",
-        esNac ? "certificado-nac.png" : "certificado-inter.jpeg",
+        esNac ? "certificado-nac.jpg" : "certificado-inter.jpeg",
       );
-      const imgW = esNac ? 2406 : 1536;
-      const imgH = esNac ? 1760 : 1024;
+      const imgW = esNac ? 1684 : 1536;
+      const imgH = esNac ? 1232 : 1024;
       const pageW = 800;
       const pageH = pageW * (imgH / imgW);
 
