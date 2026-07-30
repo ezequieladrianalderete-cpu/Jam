@@ -2720,10 +2720,16 @@
       let luCatsHechas = new Map();
 
       async function luRefreshCatsHechas() {
+        // Solo cuentan las sesiones ya finalizadas — antes esto traía
+        // TODAS las sesiones (incluida la que se acaba de crear al poner
+        // a alguien en pista, con finalizada_at aún null), así que apenas
+        // arrancaba su evaluación su propia categoría ya aparecía como
+        // "hecha" y el estado saltaba de "En pista" a "Finalizado" solo.
         const { data } = await db
           .schema("scoring")
           .from("sesiones")
-          .select("codigo_id,categoria");
+          .select("codigo_id,categoria")
+          .not("finalizada_at", "is", null);
         const map = new Map();
         (data || []).forEach((s) => {
           const cats = luParseCatArr(s.categoria);
@@ -2756,8 +2762,16 @@
 
       // Clave de categoría igual al formato server-side (genero|nombre) usado
       // por evento.orden_pasadas / mover_pasada_flat.
-      function luCategoriaKey(cat) {
-        return (cat?.g || "sin") + "|" + (cat?.n || "sin");
+      function luCategoriaKey(cat, instancia) {
+        // Tiene que coincidir EXACTO con el categoria_key que calculan
+        // mover_pasada_flat / mover_pasada_flat_extremo / obtener_orden_flat
+        // en Supabase ("g|n|bucket"). Antes faltaba el bucket acá, así que
+        // el lookup de posicion_flat nunca encontraba fila (siempre
+        // undefined) y las flechas devolvían "No se pudo determinar la
+        // posición" — el orden manual nunca llegó a funcionar.
+        return (
+          (cat?.g || "sin") + "|" + (cat?.n || "sin") + "|" + luInstBucket(instancia)
+        );
       }
 
       // (lineup_id + "|" + categoria_key) -> posicion_flat. Posición
@@ -2813,7 +2827,7 @@
               estado = "presente";
               if (p.estado === "pista") bloqueado = true;
             }
-            const catKey = luCategoriaKey(cat);
+            const catKey = luCategoriaKey(cat, p.instancia);
             const posicionFlat = luOrdenFlat.get(p.id + "|" + catKey);
             filas.push({
               p,

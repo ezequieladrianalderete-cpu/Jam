@@ -6305,10 +6305,6 @@
         }
         showSaving(false);
         _submitting = false;
-        if (dbRecord === "DUPLICATE_EMAIL") {
-          toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
-          return;
-        }
         if (!dbRecord) {
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
@@ -6548,7 +6544,6 @@
           "Insert inscripcion",
         );
         if (res.error) {
-          if (res.error.code === "23505") return "DUPLICATE_EMAIL";
           console.error("Insert err:", res.error);
           return null;
         }
@@ -6666,10 +6661,6 @@
         }
         showSaving(false);
         _submitting = false;
-        if (dbRecord === "DUPLICATE_EMAIL") {
-          toast("Este email ya tiene una inscripci\u00f3n registrada.", "err");
-          return;
-        }
         if (!dbRecord) {
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
