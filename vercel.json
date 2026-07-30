@@ -8,7 +8,11 @@
     { "src": "data.js", "use": "@vercel/static" },
     { "src": "docs/**", "use": "@vercel/static" },
     { "src": "imgs/**", "use": "@vercel/static" },
-    { "src": "api/*.js", "use": "@vercel/node" }
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node",
+      "config": { "includeFiles": "imgs/**" }
+    }
   ],
   "rewrites": [
     { "source": "/musica", "destination": "/musica.html" },

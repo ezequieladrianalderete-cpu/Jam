@@ -213,7 +213,83 @@ module.exports = async function handler(req, res) {
 
     // 7. Generar certificado de participación PDF
     const PDFDocument = require("pdfkit");
-    const certBuffer = await new Promise((resolve) => {
+    const path = require("path");
+
+    // Nacional e Inter América usan una plantilla con imagen de fondo,
+    // donde solo varía el nombre del participante (y, en Inter América,
+    // la fecha — el diseño de Nacional ya la trae impresa en la imagen).
+    // Regional/Sedes conserva el certificado vectorial de siempre.
+    const esNacOInter =
+      sesion.instancia === "nac" ||
+      sesion.instancia === "int" ||
+      sesion.instancia === "inter";
+
+    const certBuffer = esNacOInter
+      ? await generarCertificadoConPlantilla(sesion)
+      : await generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal);
+
+    async function generarCertificadoConPlantilla(sesion) {
+      const esNac = sesion.instancia === "nac";
+      const templatePath = path.join(
+        __dirname,
+        "..",
+        "imgs",
+        esNac ? "certificado-nac.png" : "certificado-inter.jpeg",
+      );
+      const imgW = esNac ? 2406 : 1536;
+      const imgH = esNac ? 1760 : 1024;
+      const pageW = 800;
+      const pageH = pageW * (imgH / imgW);
+
+      return new Promise((resolve) => {
+        const doc = new PDFDocument({ size: [pageW, pageH], margin: 0 });
+        const chunks = [];
+        doc.on("data", (c) => chunks.push(c));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+
+        doc.image(templatePath, 0, 0, { width: pageW, height: pageH });
+
+        const nombre = sesion.nombre_grupo || "—";
+
+        if (esNac) {
+          doc
+            .font("Times-Bold")
+            .fontSize(30)
+            .fillColor("#1a1a1a")
+            .text(nombre, 0, pageH * 0.555, { align: "center", width: pageW });
+        } else {
+          doc
+            .font("Times-Bold")
+            .fontSize(17)
+            .fillColor("#1a1a1a")
+            .text(nombre, pageW * 0.3, pageH * 0.655, {
+              align: "center",
+              width: pageW * 0.44,
+            });
+
+          const fecha = new Date(
+            sesion.finalizada_at || Date.now(),
+          ).toLocaleDateString("es-AR", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          doc
+            .font("Times-Italic")
+            .fontSize(9)
+            .fillColor("#555555")
+            .text(`Buenos Aires, Argentina — ${fecha}`, 0, pageH * 0.808, {
+              align: "center",
+              width: pageW,
+            });
+        }
+
+        doc.end();
+      });
+    }
+
+    async function generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal) {
+     return new Promise((resolve) => {
       const doc = new PDFDocument({
         size: "A4",
         layout: "landscape",
@@ -328,7 +404,8 @@ module.exports = async function handler(req, res) {
         );
 
       doc.end();
-    });
+     });
+    }
 
     // 8. Enviar con Resend
     const { Resend } = require("resend");
