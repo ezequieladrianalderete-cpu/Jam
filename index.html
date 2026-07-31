@@ -5264,6 +5264,33 @@
               : '<div class="ms" style="font-size:13px;color:rgba(28,28,22,.50);margin-top:1px">Opcional \u2014 pod\u00e9s subirla despu\u00e9s</div>') +
             '</div><div class="mx" style="font-size:18px;color:rgba(28,28,22,.45)">+</div></div>';
           c.appendChild(s);
+          // Si esta categor\u00eda ya ten\u00eda una m\u00fasica subida (guardada en
+          // window.jamMusicSlots), el dato sigue vivo aunque se reconstruya
+          // el DOM al cambiar de categor\u00eda \u2014 solo hay que reflejarlo visualmente.
+          var uploaded =
+            window.jamMusicSlots && window.jamMusicSlots[String(cat.c)];
+          if (uploaded) {
+            s.classList.remove("click");
+            s.classList.add("upl");
+            var mf = s.querySelector(".mf");
+            var ms = s.querySelector(".ms");
+            var mx = s.querySelector(".mx");
+            if (mf) {
+              mf.textContent =
+                uploaded.name ||
+                (uploaded.file && uploaded.file.name) ||
+                "Archivo subido";
+              mf.style.color = "#1c1c16";
+            }
+            if (ms) {
+              ms.textContent = "\u2713 Subida correctamente";
+              ms.style.color = "#16a34a";
+            }
+            if (mx) {
+              mx.textContent = "\u2713";
+              mx.style.color = "#16a34a";
+            }
+          }
         });
         // Nota de límites de duración por instancia
         if (INST === "int") {
@@ -7107,6 +7134,24 @@
           if (l && l.dataset._orig) l.innerText = l.dataset._orig;
         }
 
+        function setSlotSpinner(slotEl, on) {
+          if (!slotEl || !on) return;
+          var mf = slotEl.querySelector(".mf");
+          if (!mf) return;
+          var text = mf.textContent;
+          mf.innerHTML = "";
+          var wrap = document.createElement("span");
+          wrap.style.cssText = "display:inline-flex;align-items:center;gap:6px";
+          var spin = document.createElement("span");
+          spin.style.cssText =
+            "width:12px;height:12px;flex-shrink:0;border:2px solid rgba(0,0,0,.15);border-top-color:#d97706;border-radius:50%;animation:spin .8s linear infinite;display:inline-block";
+          var label = document.createElement("span");
+          label.textContent = text;
+          wrap.appendChild(spin);
+          wrap.appendChild(label);
+          mf.appendChild(wrap);
+        }
+
         function markSlotUploaded(slotEl, fileName) {
           if (!slotEl) return;
           slotEl.classList.remove("click");
@@ -7156,7 +7201,10 @@
             ev.target.value = "";
             return;
           }
-          if (!f.type.startsWith("audio/")) {
+          if (
+            !f.type.startsWith("audio/") &&
+            !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name)
+          ) {
             alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
             ev.target.value = "";
             pendingSlotEl = null;
@@ -7172,6 +7220,7 @@
           var slotForPick = pendingSlotEl;
           var catId = slotForPick ? slotForPick.dataset.catId : null;
           setSlotLabel("Subiendo: " + f.name);
+          setSlotSpinner(slotForPick, true);
           try {
             pickedUrl = await uploadAudio(f);
             if (!window.jamMusicSlots) window.jamMusicSlots = {};
@@ -7194,6 +7243,7 @@
             if (catId && window.jamMusicSlots)
               delete window.jamMusicSlots[catId];
             restoreSlotLabel();
+            setSlotSpinner(slotForPick, false);
             pendingSlotEl = null;
             ev.target.value = "";
             alert("Error subiendo la musica: " + e.message);
