@@ -1709,7 +1709,6 @@
         jamsbkoficial@gmail.com
       </p>
     </footer>
-    <script src="./data.js"></script>
     <script>
       // ═══════════════════════════════════════════════════════════════
       // JAM 2026 — PORTAL DE INSCRIPCIONES — JS COMPLETO Y REVISADO
@@ -6337,14 +6336,14 @@
       }
 
       function getPlanillaPDF() {
-        if (INST === "int")
-          return typeof PDF_INT !== "undefined" ? PDF_INT : null;
-        return typeof PDF_NAC !== "undefined" ? PDF_NAC : null;
+        return INST === "int"
+          ? "/terminos-internacional.pdf"
+          : "/terminos-nacional.pdf";
       }
       function getPlanillaFilename() {
         return INST === "int"
-          ? "Planilla_INTERAMERICA_JAM2026.pdf"
-          : "Planilla_Nacional_JAM2026.pdf";
+          ? "terminos-internacional.pdf"
+          : "terminos-nacional.pdf";
       }
       function getPlanillaLabel() {
         return INST === "int"

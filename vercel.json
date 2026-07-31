@@ -5,7 +5,6 @@
     { "src": "*.pdf", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "*.ico", "use": "@vercel/static" },
-    { "src": "data.js", "use": "@vercel/static" },
     { "src": "docs/**", "use": "@vercel/static" },
     { "src": "imgs/**", "use": "@vercel/static" },
     {
