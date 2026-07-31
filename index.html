@@ -4564,8 +4564,8 @@
             return;
           }
         }
-        // Validar categoría seleccionada al avanzar del paso 3 (solo nac e int)
-        if (n > 3 && (INST === "nac" || INST === "int") && selC.size === 0) {
+        // Validar categoría seleccionada al avanzar del paso 3 (todas las instancias)
+        if (n > 3 && selC.size === 0) {
           toast("Seleccioná al menos una categoría", "err");
           return;
         }
