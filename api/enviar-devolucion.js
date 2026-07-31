@@ -256,7 +256,7 @@ module.exports = async function handler(req, res) {
             .font("Times-Bold")
             .fontSize(30)
             .fillColor("#1a1a1a")
-            .text(nombre, 0, pageH * 0.555, { align: "center", width: pageW });
+            .text(nombre, 0, pageH * 0.555 - 5, { align: "center", width: pageW });
         } else {
           doc
             .font("Times-Bold")
