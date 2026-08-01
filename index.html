@@ -7136,7 +7136,12 @@
           if (!i) {
             i = document.createElement("input");
             i.type = "file";
-            i.accept = "audio/*";
+            // Sin "accept": un MP3 descargado de internet y guardado en
+            // Archivos suele quedar con un tipo genérico en iOS, y con
+            // accept="audio/*" el selector de Archivos lo mostraba en gris,
+            // sin dejar elegirlo. Ahora se puede elegir cualquier archivo y
+            // el chequeo real (bloquear solo lo que es CLARAMENTE no-audio)
+            // pasa después, en onPicked.
             i.id = "__jam_audio_in";
             i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
             document.body.appendChild(i);
