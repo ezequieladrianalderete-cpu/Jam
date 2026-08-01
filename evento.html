@@ -4412,8 +4412,8 @@
             },
           )
           .subscribe((status) => {
-            // Safari en iPad reporta "CLOSED" (no CHANNEL_ERROR/TIMED_OUT)
-            // al cortar el WebSocket con la pantalla apagada o la pestaña en
+            // El navegador reporta "CLOSED" (no CHANNEL_ERROR/TIMED_OUT) al
+            // cortar el WebSocket con la pantalla apagada o la pestaña en
             // segundo plano — sin este caso el canal quedaba muerto en
             // silencio hasta un F5 manual (mismo bug ya resuelto en jurados).
             if (

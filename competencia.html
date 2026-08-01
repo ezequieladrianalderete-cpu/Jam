@@ -3585,10 +3585,10 @@
             },
           )
           .subscribe((status) => {
-            // "CLOSED" pasa seguido en tablets iOS: Safari corta el WebSocket
-            // cuando la pantalla se apaga o la pestaña queda en segundo plano,
-            // y sin este caso el canal quedaba muerto hasta que el jurado
-            // hacía F5 a mano.
+            // "CLOSED" pasa seguido en las tablets Android: el navegador corta
+            // el WebSocket cuando la pantalla se apaga o la pestaña queda en
+            // segundo plano, y sin este caso el canal quedaba muerto hasta
+            // que el jurado hacía F5 a mano.
             if (
               status === "CHANNEL_ERROR" ||
               status === "TIMED_OUT" ||
@@ -5044,7 +5044,7 @@
             },
           )
           .subscribe((status) => {
-            // Mismo caso que en el jurado: Safari en iPad reporta "CLOSED"
+            // Mismo caso que en el jurado: el navegador reporta "CLOSED"
             // al cortar el WebSocket con la pantalla apagada, y sin
             // reintentar ahí el canal del director quedaba muerto.
             if (
