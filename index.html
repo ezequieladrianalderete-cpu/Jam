@@ -7238,11 +7238,20 @@
             ev.target.value = "";
             return;
           }
-          if (
-            !f.type.startsWith("audio/") &&
-            !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name)
-          ) {
-            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
+          // En iPhone, los archivos elegidos desde la app Archivos (iCloud) o
+          // compartidos desde WhatsApp suelen llegar con file.type vacío o
+          // genérico ("application/octet-stream"), y con extensiones que no
+          // están en ninguna lista fija (.opus, .caf, etc.). Antes esto
+          // rechazaba música real. Ahora solo bloqueamos si el tipo indica
+          // con certeza que NO es audio (imagen, video, texto, PDF).
+          var pickedType = (f.type || "").toLowerCase();
+          var esClaramenteNoAudio =
+            pickedType.startsWith("image/") ||
+            pickedType.startsWith("video/") ||
+            pickedType.startsWith("text/") ||
+            pickedType === "application/pdf";
+          if (esClaramenteNoAudio) {
+            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG, etc.).");
             ev.target.value = "";
             pendingSlotEl = null;
             return;
