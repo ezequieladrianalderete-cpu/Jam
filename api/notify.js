@@ -7,6 +7,20 @@
 const SENDER = "JAM Producciones <info@jamcompetencia.com>";
 const ADMIN_EMAIL = "info@jamcompetencia.com";
 
+// Cada inscripción nueva dispara /api/notify DOS VECES casi al mismo
+// tiempo: una vez desde el navegador (sendNotify() en index.html) y otra
+// vez desde un trigger de la base (notify_inscripcion → net.http_post),
+// como red de seguridad por si el navegador se cierra antes de llamar.
+// Sin agrupar por ventana de tiempo, un Date.now() distinto en cada
+// llamado hace que Resend las trate como dos pedidos genuinos y mande el
+// mail duplicado. Redondeando a bloques de 3 minutos, esas dos llamadas
+// casi simultáneas caen en el mismo bloque (se deduplican como una sola),
+// pero un reenvío real más tarde (el botón de /admin, o después de
+// reemplazar un integrante) cae en un bloque distinto y sí sale.
+function ventanaEnvio() {
+  return Math.floor(Date.now() / (3 * 60 * 1000));
+}
+
 const INSTANCIA_CFG = {
   reg: { label: "Sedes", code: "JAM-REG", offset: 1 },
   rep: { label: "Repechaje", code: "JAM-REP", offset: 10 },
@@ -557,7 +571,7 @@ export default async function handler(req, res) {
       subject: subj,
       html: htmlParticipante,
       text: textParticipante,
-      idempotencyKey: `${ins.id}-participant-${Date.now()}`,
+      idempotencyKey: `${ins.id}-participant-${ventanaEnvio()}`,
     });
 
     // === MAILS INDIVIDUALES POR INTEGRANTE (con su QR propio) ===
@@ -613,7 +627,7 @@ export default async function handler(req, res) {
               // en la posición #3 recibía la MISMA key que ya se había
               // usado para el competidor original — Resend la trataba como
               // duplicada y el reemplazo nunca recibía su credencial.
-              idempotencyKey: `${ins.id}-int-${idx + 1}-${Date.now()}`,
+              idempotencyKey: `${ins.id}-int-${idx + 1}-${ventanaEnvio()}`,
             });
             mails_integrantes.push({ sub: subCode, to: itEmail, ok: true, id: r?.id });
           } catch (e) {
@@ -657,7 +671,7 @@ export default async function handler(req, res) {
         to: ins.sede_email_org,
         subject: "Nueva inscripción " + codigo_legible + " — " + nombre_grupo,
         html: sedeHtml,
-        idempotencyKey: `${ins.id}-sede-${Date.now()}`,
+        idempotencyKey: `${ins.id}-sede-${ventanaEnvio()}`,
         text:
           "Nueva inscripción en sede " +
           (ins.sede_nombre || "") +
@@ -754,7 +768,7 @@ export default async function handler(req, res) {
     const mail_admin = await sendMail({
       from: SENDER,
       to: ADMIN_EMAIL,
-      idempotencyKey: `${ins.id}-admin-${Date.now()}`,
+      idempotencyKey: `${ins.id}-admin-${ventanaEnvio()}`,
       subject:
         "[Admin JAM] Nueva inscripción " +
         codigo_legible +
