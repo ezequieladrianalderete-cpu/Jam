@@ -555,27 +555,32 @@
             cfg.prefix +
             "-" +
             String(cfg.offset).padStart(cfg.pad, "0");
+          // Antes esto se recalculaba contando filas por created_at cada vez
+          // que se abría la página — el mismo esquema inseguro que
+          // fix-codigo-id-atomico.sql eliminó en el resto del sistema. Cada
+          // inscripción borrada corría el conteo de todas las que venían
+          // después, así que el código mostrado acá podía dejar de coincidir
+          // con el que el participante ya tiene en su mail. Ahora se lee el
+          // código real y fijo desde evento.lineup (el mismo que ya generó
+          // la base al inscribirse, vía secuencia atómica).
           try {
-            const seqResp = await fetch(
+            const luResp = await fetch(
               SB_URL +
-                "/rest/v1/inscripciones?instancia=eq." +
-                encodeURIComponent(ins.instancia) +
-                "&created_at=lte." +
-                encodeURIComponent(ins.created_at) +
-                "&select=id&order=created_at.asc",
+                "/rest/v1/lineup?inscripcion_id=eq." +
+                encodeURIComponent(ins.id) +
+                "&select=codigo_id&limit=1",
               {
                 headers: {
                   apikey: SB_ANON,
                   Authorization: "Bearer " + SB_ANON,
+                  "Accept-Profile": "evento",
                 },
               },
             );
-            const seqRows = await seqResp.json();
-            let pos = seqRows.findIndex((x) => x.id === ins.id) + 1;
-            if (pos < 1) pos = seqRows.length;
-            const num = cfg.offset + (Math.max(pos, 1) - 1);
-            codigoLegible =
-              "JAM-" + cfg.prefix + "-" + String(num).padStart(cfg.pad, "0");
+            const luRows = await luResp.json();
+            if (Array.isArray(luRows) && luRows[0] && luRows[0].codigo_id) {
+              codigoLegible = luRows[0].codigo_id;
+            }
           } catch (e) {}
 
           render(ins, codigoLegible, cfg);
