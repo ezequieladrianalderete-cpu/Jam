@@ -363,6 +363,7 @@
         ins: null,
         codigo: "",
         pickedFile: null,
+        uploading: false,
       };
 
       function parseCategorias(ins) {
@@ -637,8 +638,20 @@
 
       // === Upload + PATCH ===
       async function doUpload() {
+        // El botón "Reemplazar archivo" dispara doUpload() directo desde
+        // el onchange del <input>, sin pasar por #btnUpload (que ni
+        // siquiera existe en esa plantilla) — así que el bloqueo de abajo
+        // (que solo deshabilitaba ese botón) no protegía ese flujo. Un
+        // "change" duplicado (conocido en algunos navegadores/WebViews) o
+        // un segundo intento antes de que termine el primero podía disparar
+        // dos subidas + dos PATCH concurrentes sobre la misma fila.
+        if (state.uploading) return;
+        state.uploading = true;
         var file = state.pickedFile;
-        if (!file) return;
+        if (!file) {
+          state.uploading = false;
+          return;
+        }
         var btn = $("#btnUpload");
         if (btn) {
           btn.disabled = true;
@@ -722,7 +735,30 @@
             // que PostgREST no permite un PATCH parcial de un elemento del
             // array). Además se refleja en las columnas de nivel-fila para
             // paneles que todavía leen un único musica_url por inscripción.
-            categorias = parseCategorias(state.ins);
+            //
+            // Se relee `categorias` fresco de la base ACÁ (no del
+            // state.ins cargado al abrir la página) para no pisar la
+            // subida de OTRA categoría del mismo equipo que haya llegado
+            // mientras esta subía (dos personas subiendo canciones de
+            // categorías distintas casi al mismo tiempo) — antes se
+            // armaba el array desde ese snapshot viejo, y la segunda
+            // subida podía revertir en silencio a la primera.
+            var freshResp = await fetch(
+              SB_URL +
+                "/rest/v1/inscripciones?id=eq." +
+                state.ins.id +
+                "&select=categorias",
+              {
+                headers: {
+                  apikey: SB_ANON,
+                  Authorization: "Bearer " + SB_ANON,
+                },
+              },
+            );
+            var freshRows = freshResp.ok ? await freshResp.json() : null;
+            var freshIns =
+              freshRows && freshRows[0] ? freshRows[0] : state.ins;
+            categorias = parseCategorias(freshIns);
             catIdx = categorias.findIndex(function (c) {
               return c && String(c.c) === String(state.cat);
             });
@@ -838,6 +874,8 @@
             btn.disabled = false;
             btn.textContent = "REINTENTAR";
           }
+        } finally {
+          state.uploading = false;
         }
       }
 

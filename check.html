@@ -511,9 +511,132 @@
         return [];
       }
 
+      async function initSub(sub) {
+        if (!/^[A-Z]+-[A-Z]+-\d+-\d+$/i.test(sub)) {
+          return showErr(
+            "Código inválido",
+            "El identificador no tiene el formato correcto.",
+          );
+        }
+        // El código base (JAM-NAC-0200) es todo salvo el último tramo, que
+        // es el número de integrante dentro del grupo (empieza en 1).
+        const parts = sub.split("-");
+        const suffix = parts.pop();
+        const baseCode = parts.join("-");
+        const idx = parseInt(suffix, 10);
+        if (!baseCode || !idx || idx < 1) {
+          return showErr(
+            "Código inválido",
+            "El identificador no tiene el formato correcto.",
+          );
+        }
+
+        try {
+          const luResp = await fetch(
+            SB_URL +
+              "/rest/v1/lineup?codigo_id=eq." +
+              encodeURIComponent(baseCode) +
+              "&select=inscripcion_id&limit=1",
+            {
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Accept-Profile": "evento",
+              },
+            },
+          );
+          const luRows = await luResp.json();
+          const insId = luRows && luRows[0] && luRows[0].inscripcion_id;
+          if (!insId)
+            return showErr(
+              "Credencial no encontrada",
+              "No hay ninguna inscripción con ese código. Verificá el link.",
+            );
+
+          const r = await fetch(
+            SB_URL +
+              "/rest/v1/inscripciones?id=eq." +
+              encodeURIComponent(insId) +
+              "&select=*",
+            {
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+              },
+            },
+          );
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const rows = await r.json();
+          const ins = rows[0];
+          if (!ins)
+            return showErr(
+              "Credencial no encontrada",
+              "No hay ninguna inscripción con ese código. Verificá el link.",
+            );
+
+          const integrantes = parseIntegrantes(ins.integrantes);
+          const persona = integrantes[idx - 1];
+          if (!persona)
+            return showErr(
+              "Integrante no encontrado",
+              "Este código no corresponde a ningún integrante cargado en la inscripción.",
+            );
+
+          renderSub(ins, persona, sub);
+        } catch (e) {
+          showErr(
+            "Error de conexión",
+            "No pudimos consultar la base de datos. Intentá de nuevo más tarde.",
+          );
+          console.error(e);
+        }
+      }
+
+      function renderSub(ins, persona, subCode) {
+        const cfg = INSTANCIA_CFG[(ins.instancia || "").toLowerCase()] || {
+          label: (ins.instancia || "").toUpperCase(),
+        };
+        const grupo = ins.nombre_grupo || ins.nombre || "";
+        const nombre = persona.nombre || persona.name || "—";
+        const qrUrl =
+          "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+          encodeURIComponent(location.href);
+
+        const html =
+          '<div class="tarjeta">' +
+          '<div class="ep-label"><div class="ep-dot"></div>Credencial individual</div>' +
+          '<div class="codigo-grande">' +
+          esc(subCode) +
+          "</div>" +
+          '<div class="nombre-grande">' +
+          esc(nombre) +
+          "</div>" +
+          '<div class="info-base">' +
+          esc(grupo) +
+          (cfg.label ? " · " + esc(cfg.label) : "") +
+          (ins.pais ? " · " + esc(ins.pais) : "") +
+          "</div>" +
+          "</div>" +
+          '<div class="card"><div class="card-title">Código QR de esta credencial</div>' +
+          '<div class="qr-self"><img src="' +
+          qrUrl +
+          '" alt="QR" /></div>' +
+          '<div class="qr-text">Tu QR es personal e intransferible. El staff lo escanea para acreditarte a vos, no al grupo.</div>' +
+          "</div>";
+
+        document.getElementById("content").innerHTML = html;
+      }
+
       async function init() {
         const params = new URLSearchParams(location.search);
         const id = params.get("id");
+        const sub = params.get("sub");
+        // Las credenciales individuales (una por integrante, con su propio
+        // QR "personal e intransferible") llegan por /check?sub=<código>,
+        // ej. JAM-NAC-0200-2 — esta página nunca sabía leer ese parámetro,
+        // así que cualquier integrante que no fuera el responsable veía
+        // "Falta el parámetro ID" al abrir su propio mail de credencial.
+        if (sub) return initSub(sub);
         if (!id)
           return showErr(
             "Falta el parámetro ID",
