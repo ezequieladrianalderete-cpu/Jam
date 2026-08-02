@@ -1760,8 +1760,18 @@
             body: JSON.stringify({ id }),
           });
           const d = await r.json();
+          // /api/notify devuelve HTTP 200 con ok:true incluso si el envío
+          // real a Resend falló (clave vencida, dominio no verificado,
+          // etc.) — el resultado real está en mail_participante.ok, no en
+          // el nivel superior. Este catch leía d.error (que en ese caso no
+          // existe) y siempre mostraba "Error: desconocido" en vez del
+          // motivo real.
           if (d.mail_participante?.ok) toast("ok", "Mail reenviado ✓");
-          else toast("err", "Error: " + (d.error || "desconocido"));
+          else
+            toast(
+              "err",
+              "Error: " + (d.mail_participante?.error || d.error || "desconocido"),
+            );
         } catch (e) {
           toast("err", "Error: " + e.message);
         }
