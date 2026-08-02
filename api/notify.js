@@ -61,14 +61,14 @@ function esc(s) {
 }
 
 // === Supabase REST API helper (sin SDK) ===
-async function supaSelect(table, query) {
+async function supaSelect(table, query, schema) {
   const url = `${process.env.SUPABASE_URL}/rest/v1/${table}?${query}`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
-    },
-  });
+  const headers = {
+    apikey: process.env.SUPABASE_SERVICE_KEY,
+    Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+  };
+  if (schema) headers["Accept-Profile"] = schema;
+  const res = await fetch(url, { headers });
   if (!res.ok)
     throw new Error(`Supabase ${table} ${res.status}: ${await res.text()}`);
   return res.json();
@@ -200,19 +200,41 @@ export default async function handler(req, res) {
     if (!ins)
       return res.status(404).json({ error: "Inscripción no encontrada" });
 
-    // 2) Calcular código (instancia + offset + posición)
+    // 2) Código: leer el real y fijo desde evento.lineup (generado una sola
+    // vez, de forma atómica, por un trigger en el mismo INSERT que crea la
+    // inscripción — ver fix-codigo-id-atomico.sql). Antes este código se
+    // recalculaba acá contando filas por created_at, el mismo esquema
+    // inseguro que ese archivo fue escrito para eliminar: cualquier
+    // inscripción borrada corría el conteo de las que venían después, y el
+    // código que terminaba en el mail del participante podía no coincidir
+    // con el código real que usa el resto del sistema (lineup, scoring,
+    // acreditación). El cálculo por posición queda solo como respaldo, por
+    // si el trigger todavía no llegó a correr cuando se llama a /api/notify.
     const cfg = INSTANCIA_CFG[ins.instancia] || INSTANCIA_CFG.reg;
-    const allInst = await supaSelect(
-      "inscripciones",
-      `instancia=eq.${ins.instancia}&select=id,created_at&order=created_at.asc`,
-    );
-    let pos = 1;
-    if (Array.isArray(allInst)) {
-      const idx = allInst.findIndex((x) => x.id === ins.id);
-      pos = idx >= 0 ? idx + 1 : 1;
+    let codigo_legible = null;
+    try {
+      const luRows = await supaSelect(
+        "lineup",
+        `inscripcion_id=eq.${ins.id}&select=codigo_id&limit=1`,
+        "evento",
+      );
+      if (Array.isArray(luRows) && luRows[0] && luRows[0].codigo_id) {
+        codigo_legible = luRows[0].codigo_id;
+      }
+    } catch (e) {}
+    if (!codigo_legible) {
+      const allInst = await supaSelect(
+        "inscripciones",
+        `instancia=eq.${ins.instancia}&select=id,created_at&order=created_at.asc`,
+      );
+      let pos = 1;
+      if (Array.isArray(allInst)) {
+        const idx = allInst.findIndex((x) => x.id === ins.id);
+        pos = idx >= 0 ? idx + 1 : 1;
+      }
+      const num = String(cfg.offset + (Math.max(pos, 1) - 1)).padStart(4, "0");
+      codigo_legible = cfg.code + "-" + num;
     }
-    const num = String(cfg.offset + (Math.max(pos, 1) - 1)).padStart(4, "0");
-    const codigo_legible = cfg.code + "-" + num;
 
     // 3) Parse integrantes y categorías
     let integrantes = [];
