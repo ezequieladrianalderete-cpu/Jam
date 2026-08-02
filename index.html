@@ -4378,8 +4378,21 @@
         });
 
         if (INST === "nac") {
+          // El descuento (2da categoría 10% off, 3ra en adelante 20% off)
+          // se aplicaba según el ORDEN en que se tocaron las categorías
+          // (vals venía de un Set, que itera en orden de inserción), no
+          // según el precio. Con una categoría cara y una barata, el
+          // descuento caía en la que el usuario haya tocado segunda,
+          // pudiendo cobrar de más o de menos según el orden de clics para
+          // el mismo conjunto de categorías. Ahora se ordena de mayor a
+          // menor precio primero, así el descuento siempre cae en las
+          // categorías más baratas — resultado estable sin importar el
+          // orden en que se seleccionaron.
+          var valsDesc = vals.slice().sort(function (a, b) {
+            return b - a;
+          });
           var nt = 0;
-          vals.forEach(function (val, idx) {
+          valsDesc.forEach(function (val, idx) {
             if (idx === 0) nt += val;
             else if (idx === 1) nt += Math.round(val * 0.9);
             else nt += Math.round(val * 0.8);

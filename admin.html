@@ -948,11 +948,22 @@
             i.musica_estado !== "cargada" ||
             !i.comprobante_url,
         ).length;
+        // "A recaudar" sumaba el monto_total de TODAS las inscripciones sin
+        // mirar pago_estado — incluía lo ya cobrado, así que en realidad
+        // mostraba el total facturado, no el saldo pendiente real. Como la
+        // base no guarda "cuánto se pagó" (solo el estado), se asume 0
+        // pendiente si está confirmado y mitad pendiente si es una seña
+        // (coincide con la opción "Seña 50%" que se ofrece en el
+        // formulario) — el resto de los estados deben el monto completo.
         let ars = 0,
           usd = 0;
         allInscriptos.forEach((i) => {
-          if (i.moneda === "ARS") ars += Number(i.monto_total || 0);
-          else if (i.moneda === "USD") usd += Number(i.monto_total || 0);
+          const monto = Number(i.monto_total || 0);
+          let debe = monto;
+          if (i.pago_estado === "confirmado") debe = 0;
+          else if (i.pago_estado === "senia") debe = monto / 2;
+          if (i.moneda === "ARS") ars += debe;
+          else if (i.moneda === "USD") usd += debe;
         });
         $("cnt-ins").textContent = total;
         $("stats").innerHTML =
