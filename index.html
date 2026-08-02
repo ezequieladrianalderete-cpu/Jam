@@ -5702,7 +5702,7 @@
               "</div></div></div>" +
               '<div style="font-size:15px;font-weight:600;color:rgba(28,28,22,.50);margin:12px">\u00bfCu\u00e1nto abon\u00e1s ahora?</div>' +
               '<div class="mopts">' +
-              '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total: - </div><div class="mod" id="mo-tv">' +
+              '<button class="mopt" id="mo-t" onclick="selM(&apos;total&apos;)"><div class="mol">Total</div><div class="mod" id="mo-tv">' +
               // fT +
               "</div></button>" +
               '<button class="mopt" id="mo-s" onclick="selM(&apos;senia&apos;)"><div class="mol">Se\u00f1a 50%</div><div class="mod" id="mo-sv">' +
@@ -5966,7 +5966,7 @@
                   );
                 })
                 .join("") +
-              '<div class="rtot"><span class="rtotl">Total: - </span><span class="rtotv" style="color:#0d9488">' +
+              '<div class="rtot"><span class="rtotl">Total</span><span class="rtotv" style="color:#0d9488">' +
               // fT +
               "</span></div>" +
               // (sal > 0
@@ -7198,13 +7198,6 @@
             ev.target.value = "";
             return;
           }
-<<<<<<< HEAD
-          if (
-            !f.type.startsWith("audio/") &&
-            !/\.(mp3|wav|m4a|aac|ogg|flac|mp4|opus|wma|aiff)$/i.test(f.name)
-          ) {
-            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
-=======
           // En iPhone, los archivos elegidos desde la app Archivos (iCloud) o
           // compartidos desde WhatsApp suelen llegar con file.type vacío o
           // genérico ("application/octet-stream"), y con extensiones que no
@@ -7219,7 +7212,6 @@
             pickedType === "application/pdf";
           if (esClaramenteNoAudio) {
             alert("El archivo debe ser audio (MP3, WAV, M4A, OGG, etc.).");
->>>>>>> 03b85e56efd07a387dde14de196c5eb9e4c47ebe
             ev.target.value = "";
             pendingSlotEl = null;
             return;
