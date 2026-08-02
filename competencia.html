@@ -6511,6 +6511,7 @@
         }
       }
 
+      let _reenviarQRBusy = false;
       async function editReenviarQR() {
         const ins = window._editSeleccionada;
         if (!ins) return;
@@ -6520,6 +6521,14 @@
           )
         )
           return;
+        // /api/reenviar-qr genera una idempotency key nueva en CADA llamado
+        // (a propósito, para que los reenvíos genuinos siempre salgan) —
+        // eso significa que no tiene ninguna protección propia contra un
+        // doble clic o una respuesta lenta seguida de un segundo intento:
+        // cada llamado manda mails de verdad. El guard va acá, del lado
+        // del botón.
+        if (_reenviarQRBusy) return;
+        _reenviarQRBusy = true;
         try {
           const r = await fetch("/api/reenviar-qr", {
             method: "POST",
@@ -6542,6 +6551,8 @@
           );
         } catch (e) {
           toast("Error: " + e.message, "err");
+        } finally {
+          _reenviarQRBusy = false;
         }
       }
 

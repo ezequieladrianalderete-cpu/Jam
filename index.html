@@ -1901,8 +1901,6 @@
         },
       };
 
-      var ID_COUNTERS = { reg: 0, nac: 0, int: 0, rep: 0 };
-
       var CATS = [
         // ─── SALSA — 100-184 ───
         {
@@ -4271,29 +4269,14 @@
       }
 
       // ── IDs ──────────────────────────────────────────────────────────
-      function getSedeCode() {
-        var i = STATE.sede_idx;
-        if (i == null) return "OTR";
-        var codes = {
-          "Sede Tucumán": "TUC",
-          "Zona Norte": "ZNO",
-          "Zona Sur": "ZSU",
-          "Sede Puerto Madryn": "PMD",
-        };
-        return codes[SEDES[i]] || "OTR";
-      }
-      function genId(inst) {
-        ID_COUNTERS[inst] = (ID_COUNTERS[inst] || 0) + 1;
-        var n = String(ID_COUNTERS[inst]).padStart(4, "0");
-        if (inst === "reg") return "JAM-REG-" + getSedeCode() + "-" + n;
-        if (inst === "nac") return "JAM-NAC-" + n;
-        if (inst === "int") return "JAM-INT-" + n;
-        if (inst === "rep") return "JAM-REP-" + n;
-        return "JAM-" + n;
-      }
-      function genMemberId(base, num) {
-        return base + "-" + num;
-      }
+      // getSedeCode()/genId()/genMemberId() (generación de codigo_id por
+      // contador en memoria) se eliminaron: no las llamaba nada, y son
+      // exactamente el
+      // esquema inseguro que fix-codigo-id-atomico.sql fue escrito para
+      // reemplazar (el código real y único ahora lo genera la base con una
+      // secuencia atómica, ver evento.lineup / lineup_insertar_auto). Se
+      // dejaban ahí sin usar, listas para que alguien las reconectara sin
+      // conocer esa historia.
 
       // ── PRECIOS ──────────────────────────────────────────────────────
       function getPeriodo() {
@@ -4338,9 +4321,20 @@
           if (selC.size === 0) return { v: 50000 * np, m: "ARS" };
           var repV = 0;
           selC.forEach(function (id) {
+            // A diferencia de las demás ramas de esta función, acá no se
+            // filtraba x.inst !== "int" — dependía de que las categorías
+            // nac/reg con ese mismo código numérico aparecieran ANTES que
+            // las de Inter América en el array CATS para que .find() "le
+            // pegue" por casualidad. Si el array se reordena, repesca podría
+            // empezar a cobrar con el tipo (solista/pareja/grupo) de la
+            // categoría internacional equivocada.
             var c = CATS.find(function (x) {
-              return x.c === id;
+              return x.c === id && x.inst !== "int";
             });
+            if (!c)
+              c = CATS.find(function (x) {
+                return x.c === id;
+              });
             if (!c) return;
             repV += c.t === "gr" || c.t === "par" ? 50000 * np : 50000;
           });
@@ -4522,6 +4516,16 @@
           if (!eml2) {
             toast("Confirmá tu email", "err");
             markErr("f-email2");
+            return;
+          }
+          // Antes solo se chequeaba que no estuviera vacío y que coincidiera
+          // con la confirmación — un typo tipo "nombregmail.com" (sin @) o
+          // "nombre@gmail" (sin dominio) pasaba todo el formulario sin
+          // aviso, y esa persona nunca recibía el mail de confirmación ni
+          // se enteraba de que algo había fallado.
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eml)) {
+            toast("El email no tiene un formato válido", "err");
+            markErr("f-email");
             return;
           }
           if (eml !== eml2) {
@@ -6712,7 +6716,24 @@
         if (nacMsg) nacMsg.style.display = INST === "nac" ? "block" : "none";
         var intMsg = document.getElementById("ok-intl-message");
         if (intMsg) intMsg.style.display = INST === "int" ? "block" : "none";
-        document.getElementById("sok").style.display = "block";
+        var sokEl = document.getElementById("sok");
+        if (sokEl) {
+          sokEl.style.display = "block";
+          // El mail de confirmación se manda solo (por duplicado, desde el
+          // navegador y desde la base, como respaldo) — pero si ambos
+          // fallan (ej. el usuario perdió conexión justo después de
+          // inscribirse) no había ninguna señal en pantalla de que el mail
+          // no llegó. Este aviso da al menos un contacto de respaldo.
+          if (!document.getElementById("ok-mail-note")) {
+            var mailNote = document.createElement("div");
+            mailNote.id = "ok-mail-note";
+            mailNote.style.cssText =
+              "font-size:12px;color:rgba(28,28,22,.55);text-align:center;margin-top:16px;line-height:1.5";
+            mailNote.textContent =
+              "¿No te llegó el mail de confirmación en unos minutos? Revisá spam, o escribinos a info@jamcompetencia.com.";
+            sokEl.appendChild(mailNote);
+          }
+        }
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
