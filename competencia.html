@@ -3231,6 +3231,18 @@
 
       function buildItemsJurado() {
         const items = currentUser.items || ["Ítem 1", "Ítem 2"];
+        // El polling de abajo (_jurItemsPoll) actualiza currentUser.items en
+        // segundo plano si el director reconfigura los jurados — pero si
+        // eso pasa mientras este jurado tiene una planilla a medio llenar
+        // en pantalla, getItemsValues() (llamada al cerrar) terminaba
+        // leyendo una cantidad de ítems distinta a la que realmente está
+        // dibujada: un ítem nuevo se mandaba en cero sin que el jurado lo
+        // viera, o uno que sí completó se descartaba del total. Guardando
+        // acá una foto de los ítems con los que se renderizó ESTA
+        // planilla, y usando esa foto (no currentUser.items en vivo) para
+        // leer/escribir, lo que se lee siempre coincide con lo que está
+        // en pantalla, sin importar qué cambie currentUser.items después.
+        window._itemsRenderizados = items.slice();
         const maxVal = 10;
         const cont = document.getElementById("j-items-container");
         cont.innerHTML = "";
@@ -3383,7 +3395,15 @@
         document.getElementById("j-cerrar-btn").style.display = "none";
         document.getElementById("j-cerrado").style.display = "block";
         document.getElementById("j-sub-final").textContent = miPuntaje.subtotal;
-        const maxPts = (currentUser?.items?.length || 2) * 10;
+        // Mismo motivo que en getItemsValues(): usar la cantidad de ítems
+        // que realmente se guardaron en este puntaje (miPuntaje.items), no
+        // currentUser.items en vivo, que puede haber cambiado desde que se
+        // cerró esta planilla y mostraría un "/ X" que no corresponde al
+        // puntaje real.
+        const itemCount = miPuntaje?.items
+          ? Object.keys(miPuntaje.items).length
+          : currentUser?.items?.length || 2;
+        const maxPts = itemCount * 10;
         document.getElementById("j-sub-final-max").textContent = "/ " + maxPts;
         document.getElementById("j-estado-badge").textContent = "✓ Cerrado";
         document.getElementById("j-estado-badge").className = "bdg bdg-green";
@@ -3404,7 +3424,12 @@
       }
 
       function getItemsValues() {
-        const userItems = currentUser?.items || ["Ítem 1", "Ítem 2"];
+        // Usa la foto de los ítems con los que se dibujó la planilla
+        // (window._itemsRenderizados, seteada en buildItemsJurado), no
+        // currentUser.items en vivo — ver el comentario ahí para el motivo.
+        const userItems =
+          window._itemsRenderizados ||
+          currentUser?.items || ["Ítem 1", "Ítem 2"];
         const count = userItems.length;
         const items = {};
         let total = 0;
@@ -3761,7 +3786,11 @@
         }
         const activos = juradosConfig.filter((j) => j.activo);
         const maxJueces =
-          activos.length || (sesionActiva.instancia === "int" ? 3 : 5);
+          activos.length ||
+          (sesionActiva.instancia === "int" ||
+          sesionActiva.instancia === "inter"
+            ? 3
+            : 5);
         const esUnanime = cant >= maxJueces;
         panel.style.display = "block";
         const txt = document.getElementById("d-descalif-txt");
@@ -3816,7 +3845,9 @@
           (s.instancia || "").toUpperCase() +
           (catName ? " · " + catName : "");
         const activos = juradosConfig.filter((j) => j.activo);
-        const nJueces = activos.length || (s.instancia === "int" ? 3 : 5);
+        const nJueces =
+          activos.length ||
+          (s.instancia === "int" || s.instancia === "inter" ? 3 : 5);
         const itemsPorJuez = activos[0]?.items?.length || 2;
         const label =
           nJueces +
@@ -3843,7 +3874,11 @@
         grid.innerHTML = "";
         const activos = juradosConfig.filter((j) => j.activo);
         const maxJueces =
-          activos.length || (sesionActiva?.instancia === "int" ? 3 : 5);
+          activos.length ||
+          (sesionActiva?.instancia === "int" ||
+          sesionActiva?.instancia === "inter"
+            ? 3
+            : 5);
         let total = 0,
           cerrados = 0;
 
@@ -5195,16 +5230,24 @@
         )
           return;
         try {
-          await db
+          // Ni acá ni en saResetTotal se chequeaba {error} de estos
+          // borrados — una respuesta de Supabase con error no tira
+          // excepción (el try/catch de al lado no la agarra), así que un
+          // borrado bloqueado (constraint, error transitorio) podía dejar
+          // "Scoring reseteado correctamente" en pantalla con datos
+          // todavía presentes. saResetLineup, al lado, ya lo hacía bien.
+          const { error: errP } = await db
             .schema("scoring")
             .from("puntajes")
             .delete()
             .not("id", "is", null);
-          await db
+          if (errP) throw errP;
+          const { error: errS } = await db
             .schema("scoring")
             .from("sesiones")
             .delete()
             .not("id", "is", null);
+          if (errS) throw errS;
           toast("Scoring reseteado correctamente", "ok");
           saRefreshStats();
         } catch (e) {
@@ -5340,20 +5383,23 @@
         )
           return;
         try {
-          await db
+          const { error: errP } = await db
             .schema("scoring")
             .from("puntajes")
             .delete()
             .not("id", "is", null);
-          await db
+          if (errP) throw errP;
+          const { error: errS } = await db
             .schema("scoring")
             .from("sesiones")
             .delete()
             .not("id", "is", null);
-          await db
+          if (errS) throw errS;
+          const { error: errI } = await db
             .from("inscripciones")
             .delete()
             .neq("id", "00000000-0000-0000-0000-000000000000");
+          if (errI) throw errI;
           // El CASCADE borra el lineup
           toast("Sistema reseteado completamente", "ok");
           document.getElementById("sa-confirm-reset").value = "";
@@ -7389,7 +7435,13 @@
         '<svg width="22" height="14" viewBox="0 0 22 14" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;border-radius:2px"><rect width="22" height="4.67" fill="#74ACDF"/><rect width="22" height="4.67" y="4.67" fill="#fff"/><rect width="22" height="4.67" y="9.33" fill="#74ACDF"/><circle cx="11" cy="7" r="2.2" fill="#F6B40E"/></svg>';
 
       function setTema(instancia) {
-        const isInter = instancia === "int";
+        // Un participante de Inter América cargado a mano en evento.html
+        // (alta manual o CSV) queda guardado como instancia:"inter", no
+        // "int" — otros lugares del código ya tratan ambos como alias
+        // (ej. dPonerEnPista, buildRankings), pero este chequeo estricto
+        // se quedó afuera: esas sesiones se veían con el tema dorado de
+        // Nacional en vez del de Inter América.
+        const isInter = instancia === "int" || instancia === "inter";
         document.body.classList.toggle("tema-inter", isInter);
         const nombreEv = nombreEventoActual();
         const icon = instancia === "reg" ? "🏆" : isInter ? "🌎" : SVG_FLAG_AR;
@@ -7662,9 +7714,18 @@
         const cant = parseInt(
           document.getElementById("cfg-cant-jurados").value,
         );
-        // Primero desactivar todos
-        await db.rpc("resetear_jurados");
+        // Ninguna de las dos llamadas de acá chequeaba {error} — un fallo
+        // (red, permisos) dejaba a un jurado desactivado o con ítems
+        // vacíos/viejos mientras el toast igual decía "configurados
+        // correctamente", sin ninguna señal de que algo salió mal a mitad
+        // de la competencia.
+        const { error: errReset } = await db.rpc("resetear_jurados");
+        if (errReset) {
+          toast("Error al resetear jurados: " + errReset.message, "err");
+          return;
+        }
         let saved = 0;
+        let failed = 0;
         for (let i = 1; i <= cant; i++) {
           const estadoEl = document.getElementById("jcfg-estado-" + i);
           const activo = estadoEl?.textContent?.includes("Activo") ?? true;
@@ -7679,14 +7740,26 @@
             );
             continue;
           }
-          await db.rpc("configurar_jurado", {
+          const { error: errCfg } = await db.rpc("configurar_jurado", {
             p_juez_num: i,
             p_items: items,
             p_activo: activo,
           });
+          if (errCfg) {
+            failed++;
+            toast("Error al configurar Jurado " + i + ": " + errCfg.message, "err");
+            continue;
+          }
           saved++;
         }
-        toast(saved + " jurados configurados correctamente", "ok");
+        if (failed > 0) {
+          toast(
+            saved + " jurados guardados, " + failed + " con error — revisá arriba",
+            "warn",
+          );
+        } else {
+          toast(saved + " jurados configurados correctamente", "ok");
+        }
         await dCargarJurados();
       }
 

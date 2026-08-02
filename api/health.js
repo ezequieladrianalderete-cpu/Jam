@@ -37,8 +37,17 @@ module.exports = async function handler(req, res) {
     const estados = {};
     lineup.forEach(r => { estados[r.estado] = (estados[r.estado] || 0) + 1; });
     const inscrCount = checks.inscripciones?.total || 0;
-    const diff = Math.abs(lineup.length - inscrCount);
-    checks.lineup = { ok: diff <= 1, total: lineup.length, estados, diff_with_inscripciones: diff };
+    // Comparar el total crudo de lineup contra inscripciones generaba
+    // ruido constante: el Staff puede cargar participantes directo en
+    // evento.lineup (alta manual, CSV) sin ninguna fila en inscripciones
+    // — un patrón normal en un evento en vivo, no un problema de datos.
+    // Ahora solo se compara la porción de lineup que SÍ viene de una
+    // inscripción online (inscripcion_id no nulo) contra el total de
+    // inscripciones, que es la relación que debería coincidir siempre.
+    const conInscripcion = lineup.filter(r => r.inscripcion_id).length;
+    const manual = lineup.length - conInscripcion;
+    const diff = Math.abs(conInscripcion - inscrCount);
+    checks.lineup = { ok: diff <= 1, total: lineup.length, con_inscripcion: conInscripcion, altas_manuales: manual, estados, diff_with_inscripciones: diff };
     if (diff > 1) warnings++;
   } catch (e) { checks.lineup = { ok: false, error: e.message }; errors++; }
 
@@ -46,7 +55,11 @@ module.exports = async function handler(req, res) {
   try {
     const lineup = await supaFetch('lineup?select=codigo_id,instancia', 'evento');
     const bad = lineup.filter(l => {
-      if (l.instancia === 'int' && !l.codigo_id.startsWith('JAM-INTER-')) return true;
+      // Un alta manual de Inter América (evento.html, carga manual o CSV)
+      // guarda instancia:"inter", no "int" — este chequeo solo miraba
+      // "int", así que las filas más propensas a tener el código mal
+      // (cargadas a mano) eran justo las que se salteaba.
+      if ((l.instancia === 'int' || l.instancia === 'inter') && !l.codigo_id.startsWith('JAM-INTER-')) return true;
       if (l.instancia === 'nac' && !l.codigo_id.startsWith('JAM-NAC-')) return true;
       if (l.instancia === 'reg') {
         if (!l.codigo_id.startsWith('JAM-REG-')) return true;

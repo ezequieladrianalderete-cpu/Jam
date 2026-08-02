@@ -132,11 +132,17 @@ module.exports = async function handler(req, res) {
 
     // 5. Calcular totales
     const totalPts = puntajes.reduce((s, p) => s + (p.subtotal || 0), 0);
-    const maxPorJurado =
-      puntajes.length > 0
-        ? Object.keys(puntajes[0].items || {}).length * 10
-        : 20;
-    const maxTotal = puntajes.length * maxPorJurado;
+    // Antes se asumía que todos los jurados puntuaban con la misma
+    // cantidad de ítems (se tomaba solo del primer puntaje) — pero
+    // dPresetRegional permite configurar cada jurado con una cantidad
+    // distinta, así que el "/ X puntos" que recibía el participante podía
+    // quedar mal si los jurados no eran todos iguales. Ahora se suma la
+    // cantidad real de ítems de CADA jurado.
+    const maxTotal =
+      puntajes.reduce(
+        (s, p) => s + Object.keys(p.items || {}).length * 10,
+        0,
+      ) || puntajes.length * 20;
 
     // 6. Construir tabla de puntajes con nombres reales
     const instLabel =

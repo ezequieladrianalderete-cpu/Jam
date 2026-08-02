@@ -3193,17 +3193,30 @@
       async function luCambiarEstado(id, nuevoEstado) {
         const p = luData.find((x) => x.id === id);
         if (!p) return;
+        // A diferencia de acrConfirmar (arreglada antes por el mismo
+        // motivo), acá se mutaba p.estado en memoria y se llamaba a
+        // luRender() SIN chequear {error} de la escritura — un fallo
+        // (red, permisos) dejaba la pantalla mostrando "Presente"/"En
+        // pista" mientras la base seguía con el estado viejo, y el staff
+        // no reintentaba porque en pantalla se veía todo bien.
+        const estadoPrevio = p.estado;
 
         // Finalizar: si quedan categorías sin evaluar, vuelve a 'presente' en vez de cerrarse del todo
         if (nuevoEstado === "listo") {
           const pendientes = await luCategoriasPendientes(p);
           if (pendientes.length > 0) {
             p.estado = "presente";
-            await db
+            const { error: err1 } = await db
               .schema("evento")
               .from("lineup")
               .update({ estado: "presente" })
               .eq("id", id);
+            if (err1) {
+              p.estado = estadoPrevio;
+              luRender();
+              toast("Error al guardar: " + err1.message, "err");
+              return;
+            }
             luRender();
             toast(
               p.nombre_grupo +
@@ -3215,11 +3228,17 @@
             return;
           }
           p.estado = "listo";
-          await db
+          const { error: err2 } = await db
             .schema("evento")
             .from("lineup")
             .update({ estado: "listo", listo_at: new Date().toISOString() })
             .eq("id", id);
+          if (err2) {
+            p.estado = estadoPrevio;
+            luRender();
+            toast("Error al guardar: " + err2.message, "err");
+            return;
+          }
           luRender();
           toast(p.nombre_grupo + " marcado como finalizado", "ok");
           return;
@@ -3230,7 +3249,17 @@
         const update = { estado: nuevoEstado };
         if (nuevoEstado === "presente")
           update.acreditado_at = new Date().toISOString();
-        await db.schema("evento").from("lineup").update(update).eq("id", id);
+        const { error: err3 } = await db
+          .schema("evento")
+          .from("lineup")
+          .update(update)
+          .eq("id", id);
+        if (err3) {
+          p.estado = estadoPrevio;
+          luRender();
+          toast("Error al guardar: " + err3.message, "err");
+          return;
+        }
         luRender();
         const msgs = {
           presente: "marcado como presente",
@@ -4210,7 +4239,25 @@
         }
       }
 
+      // El rol "ayudante_lineup" solo tiene botones de acción ocultos en
+      // esta pestaña (ve la misma tab "categorias" que "lineup", pero en
+      // modo solo lectura) — la restricción vivía únicamente en qué
+      // botones se dibujan, así que llamando a estas funciones directo
+      // desde la consola (con un login válido de ayudante) se podía poner
+      // a alguien en pista o anularlo igual. Ahora también se valida acá.
+      function _soloEncargadoLineup() {
+        if (currentRol !== "lineup") {
+          toast(
+            "Tu acceso es de solo lectura. Pedile al encargado de Line Up que haga este cambio.",
+            "err",
+          );
+          return false;
+        }
+        return true;
+      }
+
       async function catMover(lineupId, catKey, direccion) {
+        if (!_soloEncargadoLineup()) return;
         try {
           const { data, error } = await db.rpc("mover_pasada", {
             p_lineup_id: lineupId,
@@ -4232,6 +4279,7 @@
       // Anular pista desde la vista de categorías (encargado). Igual que
       // luAnularPista pero operando por lineup_id y refrescando esta vista.
       async function catAnularPista(lineupId, catKey) {
+        if (!_soloEncargadoLineup()) return;
         // Buscar datos del participante: primero en memoria, sino en la base
         let p = (luData || []).find((x) => x.id === lineupId);
         let codigo = p ? p.codigo_id : null;
@@ -4304,6 +4352,7 @@
       }
 
       async function catPonerEnPista(lineupId, catKey) {
+        if (!_soloEncargadoLineup()) return;
         if (
           !confirm(
             "Poner este participante en pista AHORA?\n\n• Se crea una sesión de scoring nueva (sólo para esta categoría)\n• Los jurados podrán evaluarlo desde la app\n• La sesión anterior se cierra automáticamente",
