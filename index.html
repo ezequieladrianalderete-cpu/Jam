@@ -1725,7 +1725,7 @@
 
       // ── CONFIGURACIÓN DE INSCRIPCIONES ───────────────────────────────
       // Cambiar a true para habilitar las inscripciones al Final Nacional
-      var NAC_OPEN = false;
+      var NAC_OPEN = true;
 
       // ── DATOS ────────────────────────────────────────────────────────
       var SEDES = [
@@ -4306,24 +4306,18 @@
       // ── PRECIOS ──────────────────────────────────────────────────────
       function getPeriodo() {
         var m = new Date().getMonth();
-        if (INST === "int") return m <= 5 ? 0 : m === 6 ? 1 : 2;
-        if (m <= 1) return 0;
-        if (m <= 3) return 1;
-        if (m <= 5) return 2;
-        return 3;
+        return m <= 5 ? 0 : m === 6 ? 1 : 2;
       }
       function getPrecioBase(cat) {
         if (cat.c === 184 || cat.c === 284) return { v: 0, m: "GRATIS" };
         if (INST === "int") {
-          var m = new Date().getMonth();
-          var p = m <= 4 ? 0 : m <= 6 ? 1 : 2;
+          var p = getPeriodo();
           if (cat.t === "sol") return { v: [45, 50, 55][p], m: "USD" };
           if (cat.t === "par") return { v: [80, 85, 90][p], m: "USD" };
           if (cat.t === "gr") return { v: [35, 40, 45][p], m: "USD" };
           return { v: [45, 50, 55][p], m: "USD" };
         }
-        var p2 = getPeriodo();
-        return { v: [60000, 70000, 80000, 90000][p2] || 90000, m: "ARS" };
+        return { v: 80000, m: "ARS" };
       }
       function numPersonas() {
         var el = document.getElementById("f-cant");
@@ -4760,7 +4754,7 @@
               return c ? c.n : "";
             })
             .filter(Boolean);
-          if (INST === "rep" || INST === "int") {
+          if (INST === "rep" || INST === "int" || INST === "nac") {
             tb.className += " list";
             tv.className = "tval list";
             tv.textContent = names.length ? names.join("\n") : "—";
@@ -4772,40 +4766,6 @@
                 : tot.m === "ARS"
                   ? "ARS $" + tot.v.toLocaleString("es-AR")
                   : "U$S " + tot.v;
-          }
-          if (INST === "nac" && selC.size > 1 && tot.m === "ARS") {
-            var np2 = numPersonas();
-            var vals = [];
-            selC.forEach(function (id) {
-              var c = CATS.find(function (x) {
-                return x.c === id && x.inst !== "int";
-              });
-              if (!c)
-                c = CATS.find(function (x) {
-                  return x.c === id;
-                });
-              if (!c) return;
-              var pr = getPrecioBase(c);
-              if (pr.m === "GRATIS") return;
-              vals.push(c.t === "gr" || c.t === "par" ? pr.v * np2 : pr.v);
-            });
-            if (vals.length > 1) {
-              var parts = vals.map(function (val, idx) {
-                var adj =
-                  idx === 0
-                    ? val
-                    : idx === 1
-                      ? Math.round(val * 0.9)
-                      : Math.round(val * 0.8);
-                return "ARS $" + adj.toLocaleString("es-AR");
-              });
-              tv.textContent =
-                "ARS $" +
-                tot.v.toLocaleString("es-AR") +
-                " (" +
-                parts.join(" + ") +
-                ")";
-            }
           }
         }
         var tcnt = document.getElementById("tcnt");
@@ -4924,43 +4884,38 @@
           return;
         }
         // Nacional
-        var p2 = getPeriodo();
         var rows2 = [
-          { l: "Promo Enero y Febrero", v: "$60.000", i: 0 },
-          { l: "Promo Marzo y Abril", v: "$70.000", i: 1 },
-          { l: "Pre-venta Mayo y Junio", v: "$80.000", i: 2 },
-          { l: "Pre-venta Julio y Agosto", v: "$90.000", i: 3 },
+          { l: "1ª categoría", v: 80000 },
+          { l: "2ª categoría", v: Math.round(80000 * 0.9), badge: "10% OFF" },
+          {
+            l: "3ª categoría o más (c/u)",
+            v: Math.round(80000 * 0.8),
+            badge: "20% OFF",
+          },
         ]
           .map(function (r) {
-            var act = r.i === p2;
-            var bg = act ? "background:rgba(212, 175, 55, 0.12)" : "";
-            var cl = act ? "color:#d97706" : "color:rgba(28,28,22,.45)";
-            var badge = act
-              ? '<span style="background:#d97706;color:#000;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">ACTUAL</span>'
+            var badge = r.badge
+              ? '<span style="background:#d97706;color:#000;font-size:11px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:6px">' +
+                r.badge +
+                "</span>"
               : "";
             return (
-              '<tr style="' +
-              bg +
-              '"><td style="padding:7px 10px;font-size:14px;' +
-              cl +
-              ';border-bottom:1px solid rgba(0,0,0,.05)">' +
+              '<tr><td style="padding:7px 10px;font-size:14px;color:rgba(28,28,22,.65);border-bottom:1px solid rgba(0,0,0,.05)">' +
               r.l +
               badge +
               "</td>" +
-              '<td style="padding:7px 10px;font-size:14px;font-weight:700;' +
-              cl +
-              ';text-align:right;border-bottom:1px solid rgba(0,0,0,.05)">ARS ' +
-              r.v +
+              '<td style="padding:7px 10px;font-size:14px;font-weight:700;color:#d97706;text-align:right;border-bottom:1px solid rgba(0,0,0,.05)">ARS $' +
+              r.v.toLocaleString("es-AR") +
               "</td></tr>"
             );
           })
           .join("");
         box.innerHTML =
-          '<div class="cg"><div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:9px">VALOR INSCRIPCIÓN FINAL NACIONAL</div>' +
+          '<div class="cg" style="margin-bottom:10px"><div style="font-size:14px;font-weight:700;color:#d97706;margin-bottom:9px">PRECIOS FINAL NACIONAL 2026</div>' +
           '<table style="width:100%;border-collapse:collapse">' +
           rows2 +
           "</table>" +
-          '<div style="font-size:13px;color:rgba(28,28,22,.45);margin-top:7px">Saldo: <strong style="color:#1c1c16">5 sep</strong> · Cierre: <strong style="color:#1c1c16">8 sep 2026</strong></div></div>';
+          '<div style="margin-bottom:3px;font-size:14px;color:rgba(28,28,22,.75);margin-top:7px">ACLARACIÓN: Precio por persona y por categoría. La 1ª categoría no tiene descuento; la 2ª tiene un 10%, desde la 3ª en adelante un 20%.</div>';
       }
 
       // ── INTEGRANTES ──────────────────────────────────────────────────
@@ -5669,12 +5624,12 @@
             w.appendChild(d);
           },
           3: function (w) {
-            buildPrecBox();
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
               '<div class="sh"><div class="st">Categor\u00edas y comprobante</div>' +
               '<div class="ss">Seleccion\u00e1 las categor\u00edas y adjunt\u00e1 tu comprobante de clasificaci\u00f3n de la sede.</div></div>' +
+              '<div id="precbox"></div>' +
               '<div class="card mb3">' +
               '<div class="csrch"><input type="text" id="cq" placeholder="Buscar por nombre o n\u00famero..." oninput="filterC(this.value)"></div>' +
               '<div class="chips">' +
@@ -5687,7 +5642,6 @@
               // '<button class="chip" onclick="chipN(&apos;grupo&apos;,this)">Grupos</button>' +
               '<button class="chip" onclick="chipG(&apos;open&apos;,this)">Latin JAM</button>' +
               "</div>" +
-              '<div style="font-size:14px;color:rgba(28,28,22,.60);margin:8px 0 2px">Final Nacional: 2da coreografia 10% OFF, 3ra o mas 20% OFF.</div>' +
               '<div class="clist" id="clist"></div>' +
               '<div class="tbox" id="tbox" style="display:none">' +
               '<div><div class="tlbl">Total</div><div class="tcnt" id="tcnt"></div></div>' +
@@ -5704,6 +5658,7 @@
               '<div class="sf"><button class="btn bo" onclick="goTo(2)">\u2190 Atr\u00e1s</button>' +
               '<button class="btn bg" onclick="goTo(4)">Continuar \u2192</button></div>';
             w.appendChild(d);
+            buildPrecBox();
             renderCatList("clist");
           },
           4: function (w) {
@@ -7203,7 +7158,7 @@
           }
           if (
             !f.type.startsWith("audio/") &&
-            !/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name)
+            !/\.(mp3|wav|m4a|aac|ogg|flac|mp4|opus|wma|aiff)$/i.test(f.name)
           ) {
             alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
             ev.target.value = "";
