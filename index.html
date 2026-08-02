@@ -4542,6 +4542,35 @@
             markErr("f-grupo");
             return;
           }
+          // Nombre y DNI de cada integrante están marcados como
+          // obligatorios (*) en el formulario pero nunca se chequeaban acá
+          // — se podía avanzar con esos campos en blanco.
+          var iboxes = document.querySelectorAll(".ibox");
+          for (var ibx = 0; ibx < iboxes.length; ibx++) {
+            var iname = iboxes[ibx].querySelector(".iname");
+            var idni = iboxes[ibx].querySelector(".idni");
+            if (iname && !iname.value.trim()) {
+              toast(
+                "Falta el nombre del integrante #" + (ibx + 1),
+                "err",
+              );
+              markErrEl(iname);
+              return;
+            }
+            if (idni && !idni.value.trim()) {
+              toast("Falta el DNI del integrante #" + (ibx + 1), "err");
+              markErrEl(idni);
+              return;
+            }
+            if (ibx === 0) {
+              var iemail = iboxes[ibx].querySelector(".iemail");
+              if (iemail && !iemail.value.trim()) {
+                toast("Falta el email del responsable", "err");
+                markErrEl(iemail);
+                return;
+              }
+            }
+          }
         }
         // Validar categoría seleccionada al avanzar del paso 3 (todas las instancias)
         if (n > 3 && selC.size === 0) {
@@ -4907,13 +4936,23 @@
       function toggleModalidad(val) {
         STATE.modalidad = val;
         STATE.ints = [];
+        // Las categorías tienen un tipo (solista/pareja/grupo/trío) que debe
+        // coincidir con la modalidad. Sin este clear, una categoría de
+        // grupo elegida antes de volver atrás y cambiar a "Individual"
+        // quedaba pegada, y la inscripción terminaba con 1 persona pero una
+        // categoría que exige grupo.
+        selC.clear();
         var wrap = document.getElementById("ints-wrap");
         if (!wrap) return;
         wrap.style.display = "none";
         wrap.innerHTML = "";
         if (val === "1") {
+          // Antes cortaba acá sin renderizar el ibox — la única forma de
+          // pedir el DNI en el formulario — así que un solista nunca lo
+          // cargaba pese a que la Declaración Jurada lo exige.
           STATE.cant = "1";
-          updTotal();
+          wrap.style.display = "block";
+          buildInts(1);
           return;
         }
         wrap.style.display = "block";
@@ -4955,13 +4994,15 @@
       function toggleModalidadNacRep(val) {
         STATE.modalidad = val;
         STATE.ints = [];
+        selC.clear();
         var wrap = document.getElementById("ints-wrap");
         if (!wrap) return;
         wrap.style.display = "none";
         wrap.innerHTML = "";
         if (val === "1") {
           STATE.cant = "1";
-          updTotal();
+          wrap.style.display = "block";
+          buildInts(1);
           return;
         }
         wrap.style.display = "block";
@@ -4994,12 +5035,15 @@
       function toggleModalidadReg(val) {
         STATE.modalidad = val;
         STATE.ints = [];
+        selC.clear();
         var wrap = document.getElementById("reg-ints-wrap");
         if (!wrap) return;
         wrap.style.display = "none";
         wrap.innerHTML = "";
         if (val === "1") {
           STATE.cant = "1";
+          wrap.style.display = "block";
+          buildIntsReg(1);
           return;
         }
         wrap.style.display = "block";
@@ -6309,6 +6353,13 @@
         }
         showSaving(false);
         _submitting = false;
+        if (dbRecord === "DUPLICATE_EMAIL") {
+          toast(
+            "Este email ya tiene una inscripci\u00f3n registrada para esta instancia. Si ya te hab\u00edas anotado, revis\u00e1 tu mail de confirmaci\u00f3n.",
+            "err",
+          );
+          return;
+        }
         if (!dbRecord) {
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
@@ -6438,6 +6489,24 @@
         if (!sb) {
           console.error("Supabase no disponible");
           return null;
+        }
+
+        // Si el guardado tarda más de lo que el cliente espera, confirmar()
+        // muestra "hubo un problema" aunque el insert haya llegado a
+        // completarse igual del lado del servidor — sin este chequeo, un
+        // usuario que reintenta ante ese falso error termina con DOS
+        // inscripciones reales para el mismo email.
+        var emailChk = sv("f-email") || "";
+        try {
+          var dupCheck = await sb
+            .from("inscripciones")
+            .select("id")
+            .eq("email", emailChk)
+            .eq("instancia", INST)
+            .maybeSingle();
+          if (dupCheck && dupCheck.data) return "DUPLICATE_EMAIL";
+        } catch (e) {
+          console.warn("Chequeo de email duplicado falló:", e);
         }
 
         var np = parseInt(STATE.cant) || 1;
@@ -6671,6 +6740,13 @@
         }
         showSaving(false);
         _submitting = false;
+        if (dbRecord === "DUPLICATE_EMAIL") {
+          toast(
+            "Este email ya tiene una inscripción registrada para esta instancia. Si ya te habías anotado, revisá tu mail de confirmación.",
+            "err",
+          );
+          return;
+        }
         if (dbRecord === "UPLOAD_FAILED_COMPROBANTE") {
           toast(
             "No pudimos subir tu comprobante de pago. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
@@ -6741,6 +6817,15 @@
 
       function markErr(id) {
         var el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add("err");
+        el.focus();
+        setTimeout(function () {
+          el.classList.remove("err");
+        }, 2500);
+      }
+
+      function markErrEl(el) {
         if (!el) return;
         el.classList.add("err");
         el.focus();
