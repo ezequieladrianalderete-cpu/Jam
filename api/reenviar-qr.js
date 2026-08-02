@@ -101,7 +101,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No hay emails a quien enviar" });
     }
 
-    const FROM = "JAM 2026 <noreply@jam-inscripciones.com>";
+    // "jam-inscripciones.com" es el nombre viejo del proyecto (ver
+    // package.json) y nunca fue un dominio verificado en Resend — Resend
+    // rechaza el envío si el remitente no es de un dominio autorizado en la
+    // cuenta, así que estos mails salían con error silencioso (results
+    // marcaba ok:false, "0 de N enviados") mientras el resto del sistema
+    // (api/notify.js, api/enviar-devolucion.js) sí manda bien porque usa
+    // jamcompetencia.com.
+    const FROM = "JAM Producciones <info@jamcompetencia.com>";
     const subject = "Tu QR actualizado · " + nombreEvento + " — " + codigo;
 
     const html = `<!doctype html>

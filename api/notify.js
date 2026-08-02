@@ -7,6 +7,20 @@
 const SENDER = "JAM Producciones <info@jamcompetencia.com>";
 const ADMIN_EMAIL = "info@jamcompetencia.com";
 
+// Cada inscripción nueva dispara /api/notify DOS VECES casi al mismo
+// tiempo: una vez desde el navegador (sendNotify() en index.html) y otra
+// vez desde un trigger de la base (notify_inscripcion → net.http_post),
+// como red de seguridad por si el navegador se cierra antes de llamar.
+// Sin agrupar por ventana de tiempo, un Date.now() distinto en cada
+// llamado hace que Resend las trate como dos pedidos genuinos y mande el
+// mail duplicado. Redondeando a bloques de 3 minutos, esas dos llamadas
+// casi simultáneas caen en el mismo bloque (se deduplican como una sola),
+// pero un reenvío real más tarde (el botón de /admin, o después de
+// reemplazar un integrante) cae en un bloque distinto y sí sale.
+function ventanaEnvio() {
+  return Math.floor(Date.now() / (3 * 60 * 1000));
+}
+
 const INSTANCIA_CFG = {
   reg: { label: "Sedes", code: "JAM-REG", offset: 1 },
   rep: { label: "Repechaje", code: "JAM-REP", offset: 10 },
@@ -544,13 +558,20 @@ export default async function handler(req, res) {
       checkUrl;
 
     // === ENVIAR MAIL AL PARTICIPANTE ===
+    // La idempotency key de Resend evita que UN MISMO click duplique el
+    // envío (ej. doble tap), pero si es fija por inscripción para siempre,
+    // Resend trata cualquier reenvío posterior (el botón "Reenviar mail"
+    // en /admin, días u horas después) como el mismo pedido de la vez
+    // anterior y no manda nada nuevo — sin error visible, el mail
+    // simplemente no vuelve a salir. Se agrega Date.now() para que cada
+    // invocación sea su propio envío, igual que ya hace reenviar-qr.js.
     const mail_participante = await sendMail({
       from: SENDER,
       to: ins.email,
       subject: subj,
       html: htmlParticipante,
       text: textParticipante,
-      idempotencyKey: `${ins.id}-participant`,
+      idempotencyKey: `${ins.id}-participant-${ventanaEnvio()}`,
     });
 
     // === MAILS INDIVIDUALES POR INTEGRANTE (con su QR propio) ===
@@ -600,7 +621,13 @@ export default async function handler(req, res) {
               subject: "Tu credencial · " + subCode,
               html: htmlInt,
               text: textInt,
-              idempotencyKey: `${ins.id}-int-${idx + 1}`,
+              // Antes esta key era fija por posición del integrante
+              // (ins.id + índice). Si alguien reemplazaba al competidor #3
+              // por otra persona y se reenviaba el mail, la nueva persona
+              // en la posición #3 recibía la MISMA key que ya se había
+              // usado para el competidor original — Resend la trataba como
+              // duplicada y el reemplazo nunca recibía su credencial.
+              idempotencyKey: `${ins.id}-int-${idx + 1}-${ventanaEnvio()}`,
             });
             mails_integrantes.push({ sub: subCode, to: itEmail, ok: true, id: r?.id });
           } catch (e) {
@@ -644,7 +671,7 @@ export default async function handler(req, res) {
         to: ins.sede_email_org,
         subject: "Nueva inscripción " + codigo_legible + " — " + nombre_grupo,
         html: sedeHtml,
-        idempotencyKey: `${ins.id}-sede`,
+        idempotencyKey: `${ins.id}-sede-${ventanaEnvio()}`,
         text:
           "Nueva inscripción en sede " +
           (ins.sede_nombre || "") +
@@ -741,7 +768,7 @@ export default async function handler(req, res) {
     const mail_admin = await sendMail({
       from: SENDER,
       to: ADMIN_EMAIL,
-      idempotencyKey: `${ins.id}-admin`,
+      idempotencyKey: `${ins.id}-admin-${ventanaEnvio()}`,
       subject:
         "[Admin JAM] Nueva inscripción " +
         codigo_legible +

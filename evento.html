@@ -2320,14 +2320,22 @@
         const err = document.getElementById("e-err");
         err.style.display = "none";
 
-        // Verificar PIN contra la BD
-        const { data, error } = await db
+        // Antes había un solo PIN para TODOS los roles (staff, lineup,
+        // acreditación, dj, presentador, proyección): quien conociera el
+        // PIN podía entrar como cualquiera de ellos eligiéndolo en el
+        // desplegable. Ahora se busca primero un PIN propio del rol
+        // (pin_staff, pin_lineup, etc.) y sólo si no existe se usa el PIN
+        // general como respaldo, para no romper instalaciones que todavía
+        // no configuraron PINs separados.
+        const { data: cfgRows } = await db
           .schema("evento")
           .from("config")
-          .select("valor")
-          .eq("clave", "pin_evento")
-          .single();
-        if (error || !data || data.valor !== pin) {
+          .select("clave,valor")
+          .in("clave", ["pin_" + rol, "pin_evento"]);
+        const porRol = (cfgRows || []).find((r) => r.clave === "pin_" + rol);
+        const general = (cfgRows || []).find((r) => r.clave === "pin_evento");
+        const pinEsperado = porRol?.valor ?? general?.valor;
+        if (!pinEsperado || pinEsperado !== pin) {
           err.style.display = "block";
           err.textContent = "PIN incorrecto.";
           return;
@@ -2344,6 +2352,19 @@
           await loadSesionActivaForProy();
           await buildPfRanking();
           subscribeRealtimeSesion();
+          // A diferencia de las demás pantallas, proyección nunca pasaba por
+          // initEvento() y se quedaba sin ningún respaldo de polling — solo
+          // el WebSocket. Es la pantalla que el público mira horas seguidas
+          // sin que nadie la toque, así que si el socket muere en silencio
+          // el ranking queda congelado sin que nadie se entere. Este
+          // refresco silencioso (sin indicador visible) cubre ese hueco.
+          if (window._proyPoll) clearInterval(window._proyPoll);
+          window._proyPoll = setInterval(async () => {
+            try {
+              await loadSesionActivaForProy();
+              await buildPfRanking();
+            } catch (e) {}
+          }, 8000);
           return;
         }
 
@@ -2593,6 +2614,24 @@
         const hasId =
           headers[0].toLowerCase() === "id" ||
           headers[0].toLowerCase().includes("jam-");
+        // Las columnas se leen por POSICIÓN fija (sin mirar el nombre del
+        // encabezado), así que un CSV con menos columnas de las esperadas
+        // no tira error: simplemente lee "pais"/"instancia"/"pago" de una
+        // columna que no existe y sigue de largo con datos mal armados.
+        // No hay una plantilla canónica para validar los nombres exactos
+        // de encabezado, pero al menos se avisa si faltan columnas.
+        const minCols = (hasId ? 1 : 0) + 8;
+        if (headers.length < minCols) {
+          toast(
+            "El CSV tiene menos columnas de las esperadas (" +
+              headers.length +
+              " de " +
+              minCols +
+              "). Revisá el archivo antes de importar.",
+            "err",
+          );
+          return;
+        }
         importRows = [];
         // Si el CSV no trae IDs propios, codigo_id y posicion se generan
         // atómicamente en la base al confirmar (uno por uno, vía
@@ -3112,37 +3151,37 @@
         // Recordar el estado en que estaba cada uno ANTES de tocar pista,
         // para poder "volver atrás" fielmente si el encargado se equivoca.
         if (!window._estadoAntesPista) window._estadoAntesPista = {};
-        luData.forEach((x) => {
-          if (x.estado === "pista") x.estado = "presente";
-        });
         window._estadoAntesPista[id] = p.estado; // estado previo real (normalmente "presente")
-        p.estado = "pista";
-        await db
-          .schema("evento")
-          .from("lineup")
-          .update({ estado: "pista", pista_desde: new Date().toISOString() })
-          .eq("id", id);
 
-        // Crear sesión en scoring, acotada a la categoría elegida, para que los jurados la vean
+        // "Poner en pista" antes se hacía acá con 3 llamadas sueltas
+        // (desactivar sesión vieja, insertar la nueva, actualizar lineup) sin
+        // ninguna transacción que las una — si el rol "lineup" y el rol
+        // "categorías" (que sí usa la función poner_en_pista de la base)
+        // tocaban pista casi al mismo tiempo, se podían pisar entre sí y
+        // dejar una sesión de jurados colgada. Ahora usa la misma función
+        // atómica que ya usa el panel de categorías.
+        const instNorm = ["int", "inter"].includes(p.instancia)
+          ? "int"
+          : p.instancia === "reg"
+            ? "reg"
+            : p.instancia === "rep"
+              ? "rep"
+              : "nac";
+        const catKey =
+          (categoria.g || "sin") + "|" + (categoria.n || "sin") + "|" + instNorm;
         try {
-          await db
-            .schema("scoring")
-            .from("sesiones")
-            .update({ activa: false })
-            .eq("activa", true);
-          await db
-            .schema("scoring")
-            .from("sesiones")
-            .insert({
-              codigo_id: p.codigo_id,
-              nombre_grupo: p.nombre_grupo,
-              instancia: p.instancia || "nac",
-              activa: true,
-              pais: p.pais,
-              categoria: JSON.stringify(categoria),
-            });
+          const { data, error } = await db.rpc("poner_en_pista", {
+            p_lineup_id: id,
+            p_categoria_key: catKey,
+          });
+          if (error) throw error;
+          if (!data?.ok) {
+            toast(data?.error || "No se pudo poner en pista", "err");
+            return;
+          }
         } catch (e) {
-          console.error("Error creando sesión:", e);
+          toast("Error: " + e.message, "err");
+          return;
         }
 
         await luRefreshCatsHechas();
@@ -3230,11 +3269,12 @@
         try {
           // 1. Restaurar estado del participante y limpiar pista_desde
           p.estado = estadoPrevio;
-          await db
+          const { error: errLu } = await db
             .schema("evento")
             .from("lineup")
             .update({ estado: estadoPrevio, pista_desde: null })
             .eq("id", id);
+          if (errLu) throw errLu;
 
           // 2. Desactivar la sesión de scoring de ESTE participante (sin borrarla)
           //    para que jurados y director dejen de verlo. Buscamos primero la
@@ -3247,11 +3287,12 @@
             .eq("activa", true);
           if (sesAct && sesAct.length) {
             for (const s of sesAct) {
-              await db
+              const { error: errSes } = await db
                 .schema("scoring")
                 .from("sesiones")
                 .update({ activa: false })
                 .eq("id", s.id);
+              if (errSes) throw errSes;
             }
           }
 
@@ -3716,6 +3757,28 @@
       }
 
       async function acrConfirmar(id, nombre) {
+        // Antes se mostraba la pantalla de "✓ acreditado" ANTES de guardar
+        // en la base, y sin chequear el error de esa escritura — si fallaba
+        // (red, permisos), el staff de acreditación veía éxito igual y
+        // nadie se enteraba de que esa persona no quedó acreditada de
+        // verdad. Ahora se guarda primero y solo se muestra éxito si
+        // realmente se guardó.
+        const p = luData.find((x) => x.id === id);
+        if (p && p.estado === "pendiente") {
+          // luCambiarEstado ya maneja y avisa sus propios errores.
+          await luCambiarEstado(id, "presente");
+        } else {
+          const { error } = await db
+            .schema("evento")
+            .from("lineup")
+            .update({ acreditado_at: new Date().toISOString() })
+            .eq("id", id);
+          if (error) {
+            toast("Error al acreditar: " + error.message, "err");
+            return;
+          }
+        }
+
         const h = new Date().toLocaleTimeString("es-AR", {
           hour: "2-digit",
           minute: "2-digit",
@@ -3725,17 +3788,6 @@
           nombre + ' · <span id="acr-hora">' + h + "hs</span>";
         document.getElementById("acr-res").style.display = "none";
         document.getElementById("acr-ok").style.display = "block";
-        // Actualizar en BD
-        const p = luData.find((x) => x.id === id);
-        if (p && p.estado === "pendiente")
-          await luCambiarEstado(id, "presente");
-        else {
-          await db
-            .schema("evento")
-            .from("lineup")
-            .update({ acreditado_at: new Date().toISOString() })
-            .eq("id", id);
-        }
         toast("Presencia confirmada", "ok");
       }
 
@@ -4213,11 +4265,12 @@
             (window._estadoAntesPista && window._estadoAntesPista[lineupId]) ||
             "presente";
           // 1. Restaurar estado del participante y limpiar pista_desde
-          await db
+          const { error: errLu } = await db
             .schema("evento")
             .from("lineup")
             .update({ estado: estadoPrevio, pista_desde: null })
             .eq("id", lineupId);
+          if (errLu) throw errLu;
           if (p) p.estado = estadoPrevio;
           // 2. Desactivar la sesión de scoring de ese código (sin borrarla)
           if (codigo) {
@@ -4229,11 +4282,12 @@
               .eq("activa", true);
             if (sesAct && sesAct.length) {
               for (const s of sesAct) {
-                await db
+                const { error: errSes } = await db
                   .schema("scoring")
                   .from("sesiones")
                   .update({ activa: false })
                   .eq("id", s.id);
+                if (errSes) throw errSes;
               }
             }
           }
@@ -4358,7 +4412,15 @@
             },
           )
           .subscribe((status) => {
-            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            // El navegador reporta "CLOSED" (no CHANNEL_ERROR/TIMED_OUT) al
+            // cortar el WebSocket con la pantalla apagada o la pestaña en
+            // segundo plano — sin este caso el canal quedaba muerto en
+            // silencio hasta un F5 manual (mismo bug ya resuelto en jurados).
+            if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
               setTimeout(() => subscribeRealtimeCategorias(), 3000);
             }
           });
@@ -5220,7 +5282,11 @@
             },
           )
           .subscribe((status) => {
-            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
               setTimeout(() => subscribeRealtimeSesion(), 3000);
             }
           });
@@ -5273,12 +5339,44 @@
           )
           .subscribe((status) => {
             // Reconexión automática si pierde conexión
-            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
               setTimeout(() => subscribeRealtimeEvento(), 3000);
             }
           });
         subscribeRealtimeSesion();
       }
+
+      // La pantalla de proyección (la que ve el público) es la más crítica:
+      // corre horas seguidas sin que nadie la toque, así que si el WebSocket
+      // muere en silencio nadie se entera hasta que alguien mira el
+      // ranking congelado. Al volver de segundo plano, forzamos reconectar
+      // y releer el estado real en vez de esperar a que algo lo note.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible") return;
+        try {
+          if (window._catChannel && typeof subscribeRealtimeCategorias === "function") {
+            subscribeRealtimeCategorias();
+            if (typeof catCargar === "function") catCargar();
+          }
+          if (window._luChannel && typeof subscribeRealtimeEvento === "function") {
+            subscribeRealtimeEvento();
+            if (typeof loadLineup === "function") loadLineup();
+          }
+          if (
+            currentRol === "proyeccion" &&
+            typeof subscribeRealtimeSesion === "function"
+          ) {
+            subscribeRealtimeSesion();
+            if (typeof loadSesionActivaForProy === "function")
+              loadSesionActivaForProy();
+            if (typeof buildPfRanking === "function") buildPfRanking();
+          }
+        } catch (e) {}
+      });
 
       // ═══════════════════════════════════════════════════════════
       // PROYECCIÓN MODO

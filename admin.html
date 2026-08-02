@@ -886,14 +886,21 @@
             },
           );
           allInscriptos = await r.json();
-          computeAllCodes();
+          await computeAllCodes();
           updateStats();
         } catch (e) {
           toast("err", "Error cargando: " + e.message);
         }
       }
-      function computeAllCodes() {
+      async function computeAllCodes() {
         codesById = {};
+        // Respaldo por posición: se calcula primero para no dejar
+        // "JAM-???" mientras carga, pero NO es el código real — si se
+        // borra una inscripción del medio, esta cuenta se corre para las
+        // siguientes y deja de coincidir con el código que el participante
+        // ya tiene impreso/en su mail (generado de forma atómica al
+        // inscribirse). Se pisa abajo con el valor real de evento.lineup
+        // en cuanto se puede leer.
         const groups = { reg: [], rep: [], nac: [], int: [] };
         allInscriptos.forEach((ins) => {
           if (groups[ins.instancia]) groups[ins.instancia].push(ins);
@@ -905,6 +912,26 @@
             codesById[ins.id] = cfg.code + "-" + num;
           });
         });
+        try {
+          const r = await fetch(
+            SB_URL + "/rest/v1/lineup?select=inscripcion_id,codigo_id",
+            {
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Accept-Profile": "evento",
+              },
+            },
+          );
+          const lineup = await r.json();
+          (Array.isArray(lineup) ? lineup : []).forEach((row) => {
+            if (row.inscripcion_id && row.codigo_id) {
+              codesById[row.inscripcion_id] = row.codigo_id;
+            }
+          });
+        } catch (e) {
+          console.warn("No se pudo leer el código real desde evento.lineup:", e);
+        }
       }
       function getCodigo(ins) {
         return codesById[ins.id] || "JAM-???";
@@ -1204,9 +1231,11 @@
         const pagoPill =
           pagoState === "confirmado"
             ? '<span class="status-pill ok" title="Pago confirmado"><span class="ico">✓</span>Pago</span>'
-            : pagoState === "rechazado"
-              ? '<span class="status-pill err" title="Pago rechazado"><span class="ico">✗</span>Pago</span>'
-              : '<span class="status-pill pend" title="Pago pendiente"><span class="ico">⏳</span>Pago</span>';
+            : pagoState === "senia"
+              ? '<span class="status-pill pend" title="Seña confirmada (50%)"><span class="ico">½</span>Seña</span>'
+              : pagoState === "rechazado"
+                ? '<span class="status-pill err" title="Pago rechazado"><span class="ico">✗</span>Pago</span>'
+                : '<span class="status-pill pend" title="Pago pendiente"><span class="ico">⏳</span>Pago</span>';
 
         const musState = ins.musica_estado || "pendiente";
         const musPill =
@@ -1310,6 +1339,9 @@
           esc(ins.id) +
           "')\">🎵 Música</button>" +
           compBtn +
+          '<button class="btn-icon" onclick="confirmarSenia(\'' +
+          esc(ins.id) +
+          "')\">½ Seña</button>" +
           '<button class="btn-icon" onclick="confirmarPago(\'' +
           esc(ins.id) +
           "')\">✓ Pago</button>" +
@@ -1674,7 +1706,20 @@
         }
       }
       async function confirmarPago(id) {
-        if (!confirm("¿Confirmar pago?")) return;
+        if (!confirm("¿Confirmar pago COMPLETO?")) return;
+        await _setPagoEstado(id, "confirmado", "Pago confirmado ✓");
+      }
+      async function confirmarSenia(id) {
+        // Antes el único botón era "todo o nada": alguien que mandó el
+        // comprobante de una seña del 50% quedaba marcado igual que un pago
+        // completo, o el staff lo dejaba sin tocar y perdía el registro de
+        // que ya había una seña pagada. 'senia' es el mismo valor que ya usa
+        // evento.lineup para altas manuales con pago parcial.
+        if (!confirm("¿Confirmar SEÑA (50%)? No marca el pago como completo."))
+          return;
+        await _setPagoEstado(id, "senia", "Seña confirmada ✓");
+      }
+      async function _setPagoEstado(id, estado, msgOk) {
         try {
           const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
             method: "PATCH",
@@ -1683,14 +1728,14 @@
               Authorization: "Bearer " + SB_ANON,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ pago_estado: "confirmado" }),
+            body: JSON.stringify({ pago_estado: estado }),
           });
           if (!r.ok) throw new Error("HTTP " + r.status);
           const i = allInscriptos.find((x) => x.id === id);
-          if (i) i.pago_estado = "confirmado";
+          if (i) i.pago_estado = estado;
           updateStats();
           renderActiveTab();
-          toast("ok", "Pago confirmado ✓");
+          toast("ok", msgOk);
         } catch (e) {
           toast("err", "Error: " + e.message);
         }
@@ -1717,13 +1762,38 @@
           return;
         }
         try {
+          // scoring.sesiones/puntajes se unen a la inscripción solo por
+          // codigo_id (texto, sin foreign key) — sin borrarlas acá quedan
+          // huérfanas, y si ese código se reutiliza más adelante sus
+          // puntajes viejos pueden resurgir mezclados con el participante
+          // nuevo (mismo tipo de problema que fix-codigo-id-atomico.sql
+          // documentó para códigos duplicados).
+          if (codigo && codigo !== "JAM-???") {
+            try {
+              await fetch(
+                SB_URL +
+                  "/rest/v1/sesiones?codigo_id=eq." +
+                  encodeURIComponent(codigo),
+                {
+                  method: "DELETE",
+                  headers: {
+                    apikey: SB_ANON,
+                    Authorization: "Bearer " + SB_ANON,
+                    "Content-Profile": "scoring",
+                  },
+                },
+              );
+            } catch (e) {
+              console.warn("No se pudieron borrar sesiones de scoring:", e);
+            }
+          }
           const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
             method: "DELETE",
             headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
           });
           if (!r.ok) throw new Error("HTTP " + r.status);
           allInscriptos = allInscriptos.filter((x) => x.id !== id);
-          computeAllCodes();
+          await computeAllCodes();
           updateStats();
           renderActiveTab();
           toast("ok", "Inscripción " + codigo + " eliminada ✓");
@@ -1785,7 +1855,7 @@
           const m = await clean("musica");
           const c = await clean("comprobantes");
           allInscriptos = [];
-          computeAllCodes();
+          await computeAllCodes();
           updateStats();
           renderActiveTab();
           toast(

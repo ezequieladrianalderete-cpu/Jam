@@ -4188,8 +4188,6 @@
         // Selects
         var sede = document.getElementById("f-sede");
         if (sede) STATE.sede_idx = sede.selectedIndex;
-        var sedeV = document.getElementById("f-sede-virtual");
-        if (sedeV && sedeV.value) STATE.sede_virtual = sedeV.value;
         var pais = document.getElementById("f-pais");
         if (pais) STATE.pais_idx = pais.selectedIndex;
         var mod = document.getElementById("f-modalidad");
@@ -4242,13 +4240,7 @@
         var sede = document.getElementById("f-sede");
         if (sede && STATE.sede_idx != null) {
           sede.selectedIndex = STATE.sede_idx;
-          var wrap = document.getElementById("virtual-sede-wrap");
-          if (wrap)
-            wrap.style.display =
-              SEDES[STATE.sede_idx] === "Sede Virtual" ? "block" : "none";
         }
-        var sedeV = document.getElementById("f-sede-virtual");
-        if (sedeV && STATE.sede_virtual) sedeV.value = STATE.sede_virtual;
         var pais = document.getElementById("f-pais");
         if (pais && STATE.pais_idx != null) pais.selectedIndex = STATE.pais_idx;
         var mod = document.getElementById("f-modalidad");
@@ -4418,15 +4410,8 @@
           );
         }).join("");
       }
-      function sedesVirtualesOpts() {
-        return "";
-      }
       function onSedeChange(sel) {
-        var isVirtual = sel.value === "Sede Virtual";
-        var wrap = document.getElementById("virtual-sede-wrap");
-        if (wrap) wrap.style.display = isVirtual ? "block" : "none";
         STATE.sede_idx = sel.selectedIndex;
-        STATE.sede_virtual = null;
       }
       function paisesOpts() {
         return PAISES.map(function (p, i) {
@@ -5362,6 +5347,44 @@
           '</div><div style="font-size:13px;color:rgba(28,28,22,.35);margin-top:3px">Clic para cambiar</div>';
       }
 
+      // Vuelve a pintar el estado "✓ subido" al reconstruir un paso
+      // (el HTML del paso se arma desde cero cada vez que navegás,
+      // así que sin esto la zona de carga parece vacía aunque el
+      // archivo siga guardado en STATE)
+      function restoreClasifUI() {
+        var file = STATE.clasif_file;
+        if (!file) return;
+        var el = document.getElementById("comp-clasif");
+        if (!el) return;
+        el.style.borderStyle = "solid";
+        el.style.borderColor = "rgba(22,163,74,.30)";
+        el.style.background = "rgba(22, 163, 74, 0.08)";
+        el.dataset.uploaded = "1";
+        el.onclick = function () {
+          var input = document.getElementById("clasif-file");
+          if (input) input.click();
+        };
+        el.innerHTML =
+          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#16a34a">' +
+          file.name +
+          '</div><div style="font-size:13px;color:rgba(28,28,22,.35);margin-top:3px">Clic para cambiar</div>';
+      }
+      function restoreCompUI() {
+        var file = STATE.comp_file;
+        if (!file) return;
+        var z = document.getElementById("uzone");
+        if (!z) return;
+        z.className = "uzone done";
+        z.onclick = function () {
+          var input = document.getElementById("uzone-file");
+          if (input) input.click();
+        };
+        z.innerHTML =
+          '<div style="font-size:24px;margin-bottom:5px">&#9989;</div><div style="font-size:15px;color:#16a34a">' +
+          file.name +
+          '</div><div style="font-size:13px;color:rgba(28,28,22,.35);margin-top:3px">Clic para cambiar</div>';
+      }
+
       // ── TÉRMINOS Y CONDICIONES NACIONAL ──────────────────────────────
       function tcNac() {
         return (
@@ -5450,10 +5473,6 @@
               '<div class="fld"><label>Sede regional *</label>' +
               '<select id="f-sede" onchange="onSedeChange(this)">' +
               sedesOpts() +
-              "</select></div>" +
-              '<div class="fld" id="virtual-sede-wrap" style="display:none"><label>Provincia / Sede virtual *</label>' +
-              '<select id="f-sede-virtual">' +
-              sedesVirtualesOpts() +
               "</select></div>" +
               '<div class="fld" style="margin-bottom:0"><label>Ciudad / Procedencia</label>' +
               '<input type="text" id="f-ciudad" placeholder="Ciudad de donde venís"></div>' +
@@ -5596,9 +5615,6 @@
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
               sedesOpts() +
               "</select></div>" +
-              '<div class="fld" id="virtual-sede-wrap" style="display:none;margin-bottom:0"><label>Provincia / Sede virtual *</label><select id="f-sede-virtual">' +
-              sedesVirtualesOpts() +
-              "</select></div>" +
               "</div>" +
               '<div class="cg mt3"><p style="font-size:14px;color:rgba(28,28,22,.60)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#d97706">$25.000 por participante</strong>.</p></div>' +
               '<div class="sf"><div></div><button class="btn bg" onclick="goTo(2)">Continuar \u2192</button></div>';
@@ -5660,6 +5676,7 @@
             w.appendChild(d);
             buildPrecBox();
             renderCatList("clist");
+            restoreClasifUI();
           },
           4: function (w) {
             var tot = getTotal();
@@ -5715,6 +5732,7 @@
             w.appendChild(d);
             buildTrDatos("tr-datos");
             buildMSlots("mslots");
+            restoreCompUI();
           },
           5: function (w) {
             var email = sv("f-email"),
@@ -5900,6 +5918,7 @@
             w.appendChild(d);
             buildTrDatos("tr-datos");
             buildMSlots("mslots");
+            restoreCompUI();
           },
           5: function (w) {
             var email = sv("f-email"),
@@ -5984,9 +6003,6 @@
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
               sedesOpts() +
-              "</select></div>" +
-              '<div class="fld" id="virtual-sede-wrap" style="display:none;margin-bottom:0"><label>Provincia / Sede virtual *</label><select id="f-sede-virtual">' +
-              sedesVirtualesOpts() +
               "</select></div>" +
               "</div>" +
               '<div class="cw mt3"><p style="font-size:16px;color:rgba(28,28,22,.60)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
@@ -6139,6 +6155,7 @@
             // Insertar el trBox en el card
             var card = document.getElementById("rp4-card");
             if (card) card.appendChild(trBox);
+            restoreCompUI();
             // Eventos botones copiar (sin comillas problemáticas)
             var btnA = document.getElementById("rp4-btn-alias");
             if (btnA)
@@ -6381,6 +6398,8 @@
       }
 
       // Upload de archivo a Storage
+      // Devuelve: URL pública si sale bien, null si no había archivo,
+      // "UPLOAD_FAILED" si había archivo pero la subida falló (red, timeout, etc.)
       async function sbUpload(bucket, path, file) {
         var sb = getSb();
         if (!sb || !file) return null;
@@ -6394,12 +6413,12 @@
           );
           if (res.error) {
             console.error("Upload err:", res.error);
-            return null;
+            return "UPLOAD_FAILED";
           }
           return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
         } catch (e) {
           console.error("Upload exception:", e.message);
-          return null;
+          return "UPLOAD_FAILED";
         }
       }
 
@@ -6473,7 +6492,9 @@
             );
           } catch (e) {
             console.error("clasif upload:", e);
+            clasifUrl = "UPLOAD_FAILED";
           }
+          if (clasifUrl === "UPLOAD_FAILED") return "UPLOAD_FAILED_CLASIF";
         }
 
         // Upload comprobante de pago
@@ -6487,7 +6508,9 @@
             );
           } catch (e) {
             console.error("comp upload:", e);
+            compUrl = "UPLOAD_FAILED";
           }
+          if (compUrl === "UPLOAD_FAILED") return "UPLOAD_FAILED_COMPROBANTE";
         }
 
         // Música a nivel de inscripción: espejo de la primera categoría con canción,
@@ -6648,6 +6671,20 @@
         }
         showSaving(false);
         _submitting = false;
+        if (dbRecord === "UPLOAD_FAILED_COMPROBANTE") {
+          toast(
+            "No pudimos subir tu comprobante de pago. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
+            "err",
+          );
+          return;
+        }
+        if (dbRecord === "UPLOAD_FAILED_CLASIF") {
+          toast(
+            "No pudimos subir tu comprobante de clasificaci\u00f3n. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
+            "err",
+          );
+          return;
+        }
         if (!dbRecord) {
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
@@ -7054,7 +7091,12 @@
           if (!i) {
             i = document.createElement("input");
             i.type = "file";
-            i.accept = "audio/*";
+            // Sin "accept": un MP3 descargado de internet y guardado en
+            // Archivos suele quedar con un tipo genérico en iOS, y con
+            // accept="audio/*" el selector de Archivos lo mostraba en gris,
+            // sin dejar elegirlo. Ahora se puede elegir cualquier archivo y
+            // el chequeo real (bloquear solo lo que es CLARAMENTE no-audio)
+            // pasa después, en onPicked.
             i.id = "__jam_audio_in";
             i.style.cssText = "position:fixed;left:-9999px;top:-9999px";
             document.body.appendChild(i);
@@ -7156,11 +7198,28 @@
             ev.target.value = "";
             return;
           }
+<<<<<<< HEAD
           if (
             !f.type.startsWith("audio/") &&
             !/\.(mp3|wav|m4a|aac|ogg|flac|mp4|opus|wma|aiff)$/i.test(f.name)
           ) {
             alert("El archivo debe ser audio (MP3, WAV, M4A, OGG).");
+=======
+          // En iPhone, los archivos elegidos desde la app Archivos (iCloud) o
+          // compartidos desde WhatsApp suelen llegar con file.type vacío o
+          // genérico ("application/octet-stream"), y con extensiones que no
+          // están en ninguna lista fija (.opus, .caf, etc.). Antes esto
+          // rechazaba música real. Ahora solo bloqueamos si el tipo indica
+          // con certeza que NO es audio (imagen, video, texto, PDF).
+          var pickedType = (f.type || "").toLowerCase();
+          var esClaramenteNoAudio =
+            pickedType.startsWith("image/") ||
+            pickedType.startsWith("video/") ||
+            pickedType.startsWith("text/") ||
+            pickedType === "application/pdf";
+          if (esClaramenteNoAudio) {
+            alert("El archivo debe ser audio (MP3, WAV, M4A, OGG, etc.).");
+>>>>>>> 03b85e56efd07a387dde14de196c5eb9e4c47ebe
             ev.target.value = "";
             pendingSlotEl = null;
             return;

@@ -1281,6 +1281,35 @@
             <div class="jgrid mb3" id="d-jgrid"></div>
 
             <div
+              id="d-descalif"
+              class="cw mb3"
+              style="
+                display: none;
+                border-color: rgba(224, 82, 76, 0.5);
+                text-align: center;
+                padding: 12px;
+              "
+            >
+              <div
+                id="d-descalif-txt"
+                style="color: #e05252; font-weight: 700; margin-bottom: 8px"
+              ></div>
+              <button
+                id="d-descalif-btn"
+                class="btn"
+                style="
+                  display: none;
+                  background: #e05252;
+                  color: #fff;
+                  font-weight: 700;
+                "
+                onclick="dConfirmarDescalificacion()"
+              >
+                Confirmar descalificación →
+              </button>
+            </div>
+
+            <div
               style="
                 background: #0d1200;
                 border: 1px solid rgba(201, 168, 76, 0.15);
@@ -3087,6 +3116,31 @@
             }
           } catch (e) {}
         }, 4000);
+
+        // currentUser.items (los ítems que le toca puntuar a este jurado)
+        // se guardaba en sessionStorage al loguearse y nunca se volvía a
+        // leer — si el director reconfiguraba los jurados a mitad de
+        // evento (dGuardarTodosJurados), un jurado ya logueado seguía
+        // puntuando con los ítems viejos hasta que cerrara sesión y
+        // volviera a entrar. obtener_jurados() no expone contraseñas, así
+        // que es seguro llamarlo periódicamente desde acá.
+        if (window._jurItemsPoll) clearInterval(window._jurItemsPoll);
+        window._jurItemsPoll = setInterval(async () => {
+          try {
+            const { data } = await db.rpc("obtener_jurados");
+            const mine = (data || []).find(
+              (j) => j.juez_num === currentUser.juez_num,
+            );
+            if (
+              mine &&
+              JSON.stringify(mine.items || []) !==
+                JSON.stringify(currentUser.items || [])
+            ) {
+              currentUser.items = mine.items;
+              sessionStorage.setItem("jam_user", JSON.stringify(currentUser));
+            }
+          } catch (e) {}
+        }, 30000);
       }
 
       async function loadSesionJurado() {
@@ -3138,8 +3192,15 @@
       }
 
       function mostrarSinSesion() {
+        sesionActiva = null;
         document.getElementById("j-scoring-panel").style.display = "none";
         document.getElementById("j-btns").style.display = "none";
+        // "j-cerrado" (evaluación cerrada) es un bloque aparte que
+        // mostrarCerrado() deja visible — sin ocultarlo acá, el jurado
+        // seguía viendo "evaluación cerrada" del participante anterior
+        // en vez de "esperando siguiente" cuando el director pasaba de
+        // participante.
+        document.getElementById("j-cerrado").style.display = "none";
         document.getElementById("j-sin-sesion").style.display = "block";
       }
 
@@ -3392,8 +3453,16 @@
           return;
         }
         const { items, total } = getItemsValues();
-        if (total === 0) {
-          toast("Ingresá al menos un puntaje antes de cerrar", "err");
+        // Antes esto bloqueaba SIEMPRE con total 0, asumiendo que el
+        // jurado se olvidó de puntuar. Pero un puntaje 0 en todos los
+        // ítems puede ser una evaluación real y válida — ahora se pide
+        // una confirmación extra en vez de impedirlo directamente.
+        if (
+          total === 0 &&
+          !confirm(
+            "Vas a cerrar con puntaje 0 en todos los ítems. ¿Es intencional?",
+          )
+        ) {
           return;
         }
         const payload = {
@@ -3458,22 +3527,34 @@
             { event: "*", schema: "scoring", table: "sesiones" },
             async (payload) => {
               if (payload.new && payload.new.activa) {
+                // Sin este chequeo, CUALQUIER edición a la sesión ya activa
+                // (arreglar un nombre, ajustar la categoría) llegaba acá
+                // como si fuera "sesión nueva" y reseteaba a cero la
+                // planilla que el jurado ya venía completando. Solo se
+                // trata como sesión nueva si el id realmente cambió.
+                const esSesionNueva =
+                  !sesionActiva || sesionActiva.id !== payload.new.id;
                 sesionActiva = payload.new;
-                jCerradoFlag = false;
-                miPuntaje = null;
-                document.getElementById("j-cerrar-btn").style.display = "flex";
-                document.getElementById("j-cerrado").style.display = "none";
-                document.getElementById("j-estado-badge").textContent =
-                  "Sin cerrar";
-                document.getElementById("j-estado-badge").className =
-                  "bdg bdg-amber";
-                renderTarjetaJurado();
-                if (payload.new.instancia === "rep") {
-                  mostrarPanelRepesca();
+                if (esSesionNueva) {
+                  jCerradoFlag = false;
+                  miPuntaje = null;
+                  document.getElementById("j-cerrar-btn").style.display =
+                    "flex";
+                  document.getElementById("j-cerrado").style.display = "none";
+                  document.getElementById("j-estado-badge").textContent =
+                    "Sin cerrar";
+                  document.getElementById("j-estado-badge").className =
+                    "bdg bdg-amber";
+                  renderTarjetaJurado();
+                  if (payload.new.instancia === "rep") {
+                    mostrarPanelRepesca();
+                  } else {
+                    mostrarPanelScoring();
+                  }
+                  toast("Nueva sesión: " + payload.new.nombre_grupo, "ok");
                 } else {
-                  mostrarPanelScoring();
+                  renderTarjetaJurado();
                 }
-                toast("Nueva sesión: " + payload.new.nombre_grupo, "ok");
               }
               if (payload.new && !payload.new.activa) {
                 mostrarSinSesion();
@@ -3504,11 +3585,34 @@
             },
           )
           .subscribe((status) => {
-            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            // "CLOSED" pasa seguido en las tablets Android: el navegador corta
+            // el WebSocket cuando la pantalla se apaga o la pestaña queda en
+            // segundo plano, y sin este caso el canal quedaba muerto hasta
+            // que el jurado hacía F5 a mano.
+            if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
               setTimeout(() => subscribeRealtimeJurado(), 3000);
             }
           });
       }
+
+      // Cuando la tablet vuelve de segundo plano (pantalla bloqueada, cambio
+      // de app, etc.) el WebSocket puede haber muerto en silencio sin que el
+      // cliente lo note todavía. Forzamos una resincronización completa acá
+      // en vez de esperar al polling de 4s o a que el jurado note el atraso.
+      document.addEventListener("visibilitychange", () => {
+        if (
+          document.visibilityState === "visible" &&
+          typeof currentUser !== "undefined" &&
+          currentUser?.rol === "jurado"
+        ) {
+          subscribeRealtimeJurado();
+          loadSesionJurado();
+        }
+      });
 
       // ═══════════════════════════════════════════════════════════
       // DIRECTOR
@@ -3569,6 +3673,7 @@
                 await loadSesionDirector();
               } else {
                 await loadPuntajesDirector();
+                await loadDescalificaciones();
               }
             }
           } catch (e) {}
@@ -3629,6 +3734,74 @@
         sesionActiva = sesiones[0];
         renderSesionDirector(sesionActiva);
         await loadPuntajesDirector();
+        await loadDescalificaciones();
+      }
+
+      // Los jurados podían votar "descalificar" (jVotarDesc, arriba) pero
+      // nada del lado del director leía esos votos ni hacía nada con ellos
+      // — un participante descalificado por unanimidad seguía compitiendo
+      // normal. Esto muestra el conteo en vivo y deja que el director
+      // confirme la descalificación a mano (no se aplica sola).
+      async function loadDescalificaciones() {
+        const panel = document.getElementById("d-descalif");
+        if (!panel) return;
+        if (!sesionActiva) {
+          panel.style.display = "none";
+          return;
+        }
+        const { data: votos } = await db
+          .schema("scoring")
+          .from("descalificaciones")
+          .select("juez_num")
+          .eq("sesion_id", sesionActiva.id);
+        const cant = (votos || []).length;
+        if (cant === 0) {
+          panel.style.display = "none";
+          return;
+        }
+        const activos = juradosConfig.filter((j) => j.activo);
+        const maxJueces =
+          activos.length || (sesionActiva.instancia === "int" ? 3 : 5);
+        const esUnanime = cant >= maxJueces;
+        panel.style.display = "block";
+        const txt = document.getElementById("d-descalif-txt");
+        if (txt)
+          txt.textContent =
+            "⚠ " +
+            cant +
+            " de " +
+            maxJueces +
+            " jueces votaron descalificar" +
+            (esUnanime ? " · UNANIMIDAD" : "");
+        const btn = document.getElementById("d-descalif-btn");
+        if (btn)
+          btn.style.display =
+            esUnanime && !sesionActiva.descalificada ? "block" : "none";
+      }
+
+      async function dConfirmarDescalificacion() {
+        if (!sesionActiva) return;
+        if (
+          !confirm(
+            "¿Confirmás descalificar a " +
+              sesionActiva.nombre_grupo +
+              "? Queda fuera del ranking de esta categoría.",
+          )
+        )
+          return;
+        const { error } = await db
+          .schema("scoring")
+          .from("sesiones")
+          .update({ descalificada: true })
+          .eq("id", sesionActiva.id);
+        if (error) {
+          toast("Error al descalificar: " + error.message, "err");
+          return;
+        }
+        sesionActiva.descalificada = true;
+        toast("Participante descalificado", "ok");
+        await loadDescalificaciones();
+        await buildRankings();
       }
 
       function renderSesionDirector(s) {
@@ -3711,7 +3884,19 @@
 
       async function dForzar(juezNum) {
         if (!sesionActiva) return;
-        const subtotal = 8.25; // promedio neutro
+        // Puntaje neutro = mitad de la escala (5.0) en cada ítem que le
+        // toca a ESTE jurado según su configuración real. Antes era un
+        // valor fijo (8.25 sobre 2 ítems) calibrado para Nacional — al
+        // usarlo en Inter América (5 ítems, máx 50) el forzado hundía el
+        // promedio del participante muy por debajo de un puntaje neutro real.
+        const jcfg = juradosConfig.find((j) => j.juez_num === juezNum);
+        const nItems = jcfg?.items?.length || 2;
+        const items = {};
+        let subtotal = 0;
+        for (let i = 1; i <= nItems; i++) {
+          items["item" + i] = 5.0;
+          subtotal += 5.0;
+        }
         const { error } = await db
           .schema("scoring")
           .from("puntajes")
@@ -3719,7 +3904,7 @@
             {
               sesion_id: sesionActiva.id,
               juez_num: juezNum,
-              items: { item1: 4.25, item2: 4.0 },
+              items,
               subtotal,
               cerrado: true,
               cerrado_at: new Date().toISOString(),
@@ -3728,6 +3913,7 @@
             { onConflict: "sesion_id,juez_num" },
           );
         if (!error) toast("Cierre forzado en Jurado " + juezNum, "ok");
+        else toast("Error al forzar cierre: " + error.message, "err");
         await loadPuntajesDirector();
       }
 
@@ -3746,7 +3932,7 @@
           : 0;
 
         // Cerrar sesión actual
-        await db
+        const { error: errCerrar } = await db
           .schema("scoring")
           .from("sesiones")
           .update({
@@ -3755,6 +3941,14 @@
             total_final: total,
           })
           .eq("id", sesId);
+        if (errCerrar) {
+          // Si esto falla, la sesión sigue activa en la base aunque la
+          // pantalla del director muestre "listo para siguiente" — antes
+          // no se avisaba, y el director podía pasar al siguiente
+          // participante creyendo que ya había cerrado la sesión anterior.
+          toast("Error al cerrar la sesión: " + errCerrar.message, "err");
+          return;
+        }
 
         // Actualizar el estado del participante en el lineup segun si le quedan
         // categorias por evaluar. Cierra el "bache": no queda colgado en "pista".
@@ -3990,26 +4184,39 @@
           categoria =
             arr.find((c) => String(c.c) === String(catCode)) ?? arr[0] ?? null;
         }
-        // Desactivar sesión actual
-        await db
+        // Mismo motivo que en evento.html: desactivar + insertar como dos
+        // llamadas sueltas podía chocar con otra pantalla haciendo lo mismo
+        // a la vez. Se usa la función atómica poner_en_pista de la base
+        // (la misma que ya usa el panel de categorías) en vez de repetir la
+        // lógica acá.
+        const instNorm = ["int", "inter"].includes(instancia)
+          ? "int"
+          : instancia === "reg"
+            ? "reg"
+            : instancia === "rep"
+              ? "rep"
+              : "nac";
+        const catKey =
+          (categoria?.g || "sin") + "|" + (categoria?.n || "sin") + "|" + instNorm;
+        const { data: rpcData, error } = await db.rpc("poner_en_pista", {
+          p_lineup_id: lineupId,
+          p_categoria_key: catKey,
+        });
+        if (error || !rpcData?.ok) {
+          toast(
+            rpcData?.error || error?.message || "No se pudo poner en pista",
+            "err",
+          );
+          return;
+        }
+        const { data: sesRows } = await db
           .schema("scoring")
           .from("sesiones")
-          .update({ activa: false })
-          .eq("activa", true);
-        // Crear nueva sesión
-        const { data } = await db
-          .schema("scoring")
-          .from("sesiones")
-          .insert({
-            codigo_id: codigo,
-            nombre_grupo: nombre,
-            instancia,
-            activa: true,
-            categoria: categoria ? JSON.stringify(categoria) : null,
-          })
-          .select();
-        if (data) {
-          sesionActiva = data[0];
+          .select("*")
+          .eq("id", rpcData.sesion_id)
+          .limit(1);
+        if (sesRows && sesRows[0]) {
+          sesionActiva = sesRows[0];
           renderSesionDirector(sesionActiva);
           buildJuecesGrid([]);
           await dRefreshCatsHechas();
@@ -4424,6 +4631,23 @@
           if (si > no) resultado = "paso";
           else if (no > si) resultado = "no_paso";
           else resultado = "empate";
+          // Antes se calculaba el resultado con los votos que hubiera,
+          // sin chequear contra la cantidad de jurados de repesca
+          // configurada — cerrar con 1 de 3 jueces votados ya daba un
+          // resultado "definitivo". Ahora al menos se avisa fuerte si
+          // falta gente por votar, para que el director no lo cierre por
+          // error pensando que ya votaron todos.
+          const jurRep = window._jurRepCount || 3;
+          const totalVotos = si + no;
+          const faltan = jurRep - totalVotos;
+          const avisoIncompleto =
+            faltan > 0
+              ? "\n\n⚠️ FALTAN " +
+                faltan +
+                " DE " +
+                jurRep +
+                " JURADOS POR VOTAR. Este resultado NO es definitivo."
+              : "";
           if (
             !confirm(
               "Cerrar votación:\n" +
@@ -4436,6 +4660,7 @@
                   : resultado === "no_paso"
                     ? "NO PASA"
                     : "EMPATE (desempatar en vivo)") +
+                avisoIncompleto +
                 "\n\n¿Confirmar?",
             )
           )
@@ -4810,12 +5035,38 @@
               }
             },
           )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "scoring", table: "descalificaciones" },
+            async () => {
+              if (typeof loadDescalificaciones === "function")
+                await loadDescalificaciones();
+            },
+          )
           .subscribe((status) => {
-            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            // Mismo caso que en el jurado: el navegador reporta "CLOSED"
+            // al cortar el WebSocket con la pantalla apagada, y sin
+            // reintentar ahí el canal del director quedaba muerto.
+            if (
+              status === "CHANNEL_ERROR" ||
+              status === "TIMED_OUT" ||
+              status === "CLOSED"
+            ) {
               setTimeout(() => subscribeRealtimeDirector(), 3000);
             }
           });
       }
+
+      document.addEventListener("visibilitychange", () => {
+        if (
+          document.visibilityState === "visible" &&
+          typeof currentUser !== "undefined" &&
+          currentUser?.rol === "director"
+        ) {
+          subscribeRealtimeDirector();
+          loadSesionDirector();
+        }
+      });
 
       function dTab(id, btn) {
         document
@@ -5054,6 +5305,17 @@
             return;
           }
           const insId = lu[0].inscripcion_id;
+          // scoring.sesiones/puntajes no tienen foreign key a inscripciones
+          // (se unen solo por codigo_id, un texto) — borrar la inscripción
+          // sin esto las dejaba huérfanas, y si ese código se reutilizaba
+          // más adelante, esos puntajes viejos podían resurgir mezclados
+          // con el participante nuevo. Mismo tipo de problema que
+          // fix-codigo-id-atomico.sql documentó para códigos duplicados.
+          await db
+            .schema("scoring")
+            .from("sesiones")
+            .delete()
+            .eq("codigo_id", codigo);
           const { error } = await db
             .from("inscripciones")
             .delete()
@@ -6216,14 +6478,27 @@
             updates.nombre_grupo &&
             updates.nombre_grupo !== ins.nombre_grupo
           ) {
-            await db
+            const { data: luRows } = await db
               .schema("evento")
               .from("lineup")
               .update({
                 nombre_grupo: updates.nombre_grupo,
                 responsable: updates.nombre,
               })
-              .eq("inscripcion_id", ins.id);
+              .eq("inscripcion_id", ins.id)
+              .select("codigo_id");
+            // Propagar también a las sesiones de scoring ya creadas para
+            // este código — si no, un participante cuyo nombre se corrige
+            // DESPUÉS de haber pasado por pista quedaba con el nombre
+            // viejo en la pantalla del jurado/director para esa sesión.
+            const codigoId = luRows && luRows[0] && luRows[0].codigo_id;
+            if (codigoId) {
+              await db
+                .schema("scoring")
+                .from("sesiones")
+                .update({ nombre_grupo: updates.nombre_grupo })
+                .eq("codigo_id", codigoId);
+            }
           }
 
           auditLog("editar_inscripcion", "inscripcion", ins.id, {
