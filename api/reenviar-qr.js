@@ -82,24 +82,6 @@ export default async function handler(req, res) {
     const nombreGrupo = ins.nombre_grupo || (luArr && luArr[0]?.nombre_grupo) || "—";
 
     const SITE = process.env.SITE_URL || "https://jam-inscripciones.vercel.app";
-    const checkUrl = SITE + "/check?id=" + ins.id;
-    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(checkUrl);
-
-    // Construir lista de destinatarios
-    const destinatarios = new Set();
-    if (ins.email) destinatarios.add(ins.email.trim().toLowerCase());
-    let integrantes = [];
-    try {
-      integrantes = Array.isArray(ins.integrantes) ? ins.integrantes
-        : (typeof ins.integrantes === "string" ? JSON.parse(ins.integrantes) : []);
-    } catch { integrantes = []; }
-    integrantes.forEach(it => {
-      if (it?.email && /@/.test(it.email)) destinatarios.add(it.email.trim().toLowerCase());
-    });
-
-    if (destinatarios.size === 0) {
-      return res.status(400).json({ error: "No hay emails a quien enviar" });
-    }
 
     // "jam-inscripciones.com" es el nombre viejo del proyecto (ver
     // package.json) y nunca fue un dominio verificado en Resend — Resend
@@ -109,14 +91,88 @@ export default async function handler(req, res) {
     // (api/notify.js, api/enviar-devolucion.js) sí manda bien porque usa
     // jamcompetencia.com.
     const FROM = "JAM Producciones <info@jamcompetencia.com>";
-    const subject = "Tu QR actualizado · " + nombreEvento + " — " + codigo;
 
-    const html = `<!doctype html>
+    let integrantes = [];
+    try {
+      integrantes = Array.isArray(ins.integrantes) ? ins.integrantes
+        : (typeof ins.integrantes === "string" ? JSON.parse(ins.integrantes) : []);
+    } catch { integrantes = []; }
+
+    const results = [];
+    const emailsIndividuales = new Set();
+
+    // ANTES este endpoint mandaba el MISMO QR de grupo (código base, sin
+    // sub-código) a todos los emails — responsable e integrantes por
+    // igual. Eso rompe el propósito real del botón ("hubo un reemplazo de
+    // bailarines y hay que notificar nuevos"): la persona nueva recibía un
+    // QR que no la identifica ni dice en qué grupo está, idéntico al que
+    // tendría cualquier otro integrante. Cada integrante necesita SU
+    // PROPIO sub-código (ej. JAM-REG-0114-1) — el mismo esquema que ya usa
+    // el mail de confirmación original (api/notify.js) y que check.html ya
+    // sabe mostrar (/check?sub=...).
+    for (let idx = 0; idx < integrantes.length; idx++) {
+      const it = integrantes[idx] || {};
+      const itEmail = (it.email || it.mail || "").trim().toLowerCase();
+      if (!itEmail || !/@/.test(itEmail)) continue;
+      emailsIndividuales.add(itEmail);
+
+      const subCode = codigo + "-" + (idx + 1);
+      const itNombre = it.nombre || it.name || "Integrante " + (idx + 1);
+      const subCheckUrl = SITE + "/check?sub=" + encodeURIComponent(subCode);
+      const subQrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(subCheckUrl);
+      const subject = "Tu credencial actualizada · " + subCode;
+
+      const html = `<!doctype html>
+<html><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif">
+<div style="max-width:600px;margin:24px auto;background:#fff;padding:32px;border-radius:8px">
+  <h1 style="font-family:Georgia,serif;color:#C9A84C;font-size:24px;margin:0 0 16px">${esc(nombreEvento)}</h1>
+  <h3 style="color:#333;font-size:16px;margin:0 0 12px">📨 Credencial actualizada</h3>
+  <p style="color:#444;line-height:1.5">Hola <strong>${esc(itNombre)}</strong>, te reenviamos tu credencial personal para <strong>${esc(nombreGrupo)}</strong>.</p>
+  <div style="background:#f8f5ee;padding:16px;border-radius:6px;margin:16px 0">
+    <p style="margin:0;color:#666;font-size:13px">Tu código:</p>
+    <p style="margin:4px 0 0;font-family:monospace;font-size:22px;color:#C9A84C;font-weight:700">${esc(subCode)}</p>
+  </div>
+  <p style="text-align:center"><img src="${subQrUrl}" alt="QR" style="border:6px solid #fff;border-radius:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1)" /></p>
+  <p style="color:#888;font-size:12px;text-align:center;margin-top:16px;border-top:1px solid #eee;padding-top:12px">Tu QR es personal e intransferible. El staff lo escanea para acreditarte a vos, no al grupo.</p>
+</div>
+</body></html>`;
+
+      const text = `${nombreEvento}
+Credencial actualizada
+
+Hola ${itNombre},
+Tu código: ${subCode}
+Grupo: ${nombreGrupo}
+
+Mostrá este código el día del evento para acreditarte:
+${subCheckUrl}`;
+
+      try {
+        const r = await sendMail({
+          from: FROM, to: itEmail, subject, html, text,
+          idempotencyKey: "reenviar-sub-" + id + "-" + (idx + 1) + "-" + Date.now(),
+        });
+        results.push({ to: itEmail, sub: subCode, ok: true, id: r.id });
+      } catch (e) {
+        results.push({ to: itEmail, sub: subCode, ok: false, error: e.message });
+      }
+    }
+
+    // El responsable de la inscripción (si su email de cuenta no quedó ya
+    // cubierto arriba como uno de los integrantes) sigue recibiendo el QR
+    // general del grupo — sigue siendo válido para acreditar la
+    // inscripción completa, no a una persona puntual.
+    const respEmail = (ins.email || "").trim().toLowerCase();
+    if (respEmail && /@/.test(respEmail) && !emailsIndividuales.has(respEmail)) {
+      const checkUrl = SITE + "/check?id=" + ins.id;
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(checkUrl);
+      const subject = "Tu QR actualizado · " + nombreEvento + " — " + codigo;
+      const html = `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:24px auto;background:#fff;padding:32px;border-radius:8px">
   <h1 style="font-family:Georgia,serif;color:#C9A84C;font-size:24px;margin:0 0 16px">${esc(nombreEvento)}</h1>
   <h3 style="color:#333;font-size:16px;margin:0 0 12px">📨 QR reenviado</h3>
-  <p style="color:#444;line-height:1.5">Te reenviamos el QR de tu inscripción. Esto puede ser por una actualización de integrantes o porque lo solicitaste.</p>
+  <p style="color:#444;line-height:1.5">Te reenviamos el QR de tu inscripción como responsable del grupo.</p>
   <div style="background:#f8f5ee;padding:16px;border-radius:6px;margin:16px 0">
     <p style="margin:0;color:#666;font-size:13px">Código:</p>
     <p style="margin:4px 0 12px;font-family:monospace;font-size:18px;color:#C9A84C;font-weight:700">${esc(codigo)}</p>
@@ -128,8 +184,7 @@ export default async function handler(req, res) {
   <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #eee;padding-top:12px">Si recibiste este email por error, ignoralo. Tu código y QR siguen siendo válidos.</p>
 </div>
 </body></html>`;
-
-    const text = `${nombreEvento}
+      const text = `${nombreEvento}
 QR reenviado
 
 Código: ${codigo}
@@ -137,19 +192,19 @@ Grupo: ${nombreGrupo}
 
 Mostrá este QR el día del evento para acreditarte:
 ${checkUrl}`;
-
-    // Enviar a cada destinatario
-    const results = [];
-    for (const to of destinatarios) {
       try {
         const r = await sendMail({
-          from: FROM, to, subject, html, text,
-          idempotencyKey: "reenviar-" + id + "-" + to + "-" + Date.now(),
+          from: FROM, to: respEmail, subject, html, text,
+          idempotencyKey: "reenviar-grupo-" + id + "-" + Date.now(),
         });
-        results.push({ to, ok: true, id: r.id });
+        results.push({ to: respEmail, sub: null, ok: true, id: r.id });
       } catch (e) {
-        results.push({ to, ok: false, error: e.message });
+        results.push({ to: respEmail, sub: null, ok: false, error: e.message });
       }
+    }
+
+    if (results.length === 0) {
+      return res.status(400).json({ error: "No hay emails a quien enviar" });
     }
 
     return res.status(200).json({
