@@ -6370,13 +6370,6 @@
         }
         showSaving(false);
         _submitting = false;
-        if (dbRecord === "DUPLICATE_EMAIL") {
-          toast(
-            "Este email ya tiene una inscripci\u00f3n registrada para esta instancia. Si ya te hab\u00edas anotado, revis\u00e1 tu mail de confirmaci\u00f3n.",
-            "err",
-          );
-          return;
-        }
         if (!dbRecord) {
           toast("Error al guardar. Intent\u00e1 nuevamente.", "err");
           return;
@@ -6508,24 +6501,11 @@
           return null;
         }
 
-        // Si el guardado tarda más de lo que el cliente espera, confirmar()
-        // muestra "hubo un problema" aunque el insert haya llegado a
-        // completarse igual del lado del servidor — sin este chequeo, un
-        // usuario que reintenta ante ese falso error termina con DOS
-        // inscripciones reales para el mismo email.
-        var emailChk = sv("f-email") || "";
-        try {
-          var dupCheck = await sb
-            .from("inscripciones")
-            .select("id")
-            .eq("email", emailChk)
-            .eq("instancia", INST)
-            .maybeSingle();
-          if (dupCheck && dupCheck.data) return "DUPLICATE_EMAIL";
-        } catch (e) {
-          console.warn("Chequeo de email duplicado falló:", e);
-        }
-
+        // El chequeo de email duplicado (mismo email + misma instancia) que
+        // había acá se sacó: bloqueaba inscripciones legítimas cuando la
+        // misma persona anotaba varios equipos distintos con su mismo mail
+        // de contacto. Queda a criterio del staff detectar y resolver
+        // duplicados reales a mano desde /admin.
         var np = parseInt(STATE.cant) || 1;
         var sedeData =
           INST === "reg" && STATE.sede_idx != null
@@ -6774,13 +6754,6 @@
         }
         showSaving(false);
         _submitting = false;
-        if (dbRecord === "DUPLICATE_EMAIL") {
-          toast(
-            "Este email ya tiene una inscripción registrada para esta instancia. Si ya te habías anotado, revisá tu mail de confirmación.",
-            "err",
-          );
-          return;
-        }
         if (dbRecord === "UPLOAD_FAILED_COMPROBANTE") {
           toast(
             "No pudimos subir tu comprobante de pago. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
