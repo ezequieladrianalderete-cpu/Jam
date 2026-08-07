@@ -10,6 +10,9 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <!-- Misma librería y versión que ya usa /competencia para sus
+         exportaciones a Excel (Lineup, Categorías, Rankings, Auditoría) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
       * {
         margin: 0;
@@ -1128,7 +1131,7 @@
           '<span class="f-count" id="filterCount"></span>' +
           "</div>" +
           '<div class="toolbar">' +
-          '<button class="btn-primary" onclick="exportCsv()">📥 Exportar CSV</button>' +
+          '<button class="btn-primary" onclick="exportExcel()">📥 Exportar Excel</button>' +
           '<button class="btn-secondary" onclick="loadInscriptos().then(renderActiveTab)">↻ Refrescar</button>' +
           "</div>" +
           '<div id="ins-list"></div>';
@@ -1893,68 +1896,62 @@
           toast("err", "Error: " + e.message);
         }
       }
-      function exportCsv() {
-        const headers = [
-          "Codigo",
-          "Instancia",
-          "Sede",
-          "Pais",
-          "Nombre",
-          "Grupo",
-          "Email",
-          "Celular",
-          "Modalidad",
-          "Categorias",
-          "Monto",
-          "Moneda",
-          "Pago",
-          "Musica",
-          "RecargoMusica",
-          "Comprobante",
-          "Fecha",
-        ];
+      // Antes esto exportaba un .csv de texto — al abrirlo con doble clic,
+      // Excel en configuración regional Argentina (donde la coma es el
+      // separador decimal) muchas veces no separa las columnas solo, y
+      // los clientes no sabían cómo delimitarlo a mano. Ahora genera un
+      // .xlsx real (misma librería que ya usa /competencia para sus
+      // exportaciones), que abre con las columnas ya armadas.
+      function exportExcel() {
+        if (typeof XLSX === "undefined") {
+          toast("err", "Librería Excel no cargada, recargá la página");
+          return;
+        }
         const filtered = allInscriptos.filter(matchesFilters);
         const data = filtered.length ? filtered : allInscriptos;
         const rows = data.map((ins) => {
           const catsTxt = (ins.categorias || [])
             .map((c) => "#" + c.c + (c.g ? "/" + c.g : ""))
             .join(" ");
-          return [
-            getCodigo(ins),
-            INSTANCIAS[ins.instancia]?.label || ins.instancia,
-            ins.sede_nombre || "",
-            ins.pais || "",
-            ins.nombre || "",
-            ins.nombre_grupo || "",
-            ins.email || "",
-            ins.celular || "",
-            ins.modalidad || "",
-            catsTxt,
-            ins.monto_total || 0,
-            ins.moneda || "",
-            ins.pago_estado || "",
-            ins.musica_estado || "",
-            ins.musica_fuera_termino ? "sí" : "no",
-            ins.comprobante_url ? "sí" : "no",
-            (ins.created_at || "").substring(0, 19),
+          return {
+            Codigo: getCodigo(ins),
+            Instancia: INSTANCIAS[ins.instancia]?.label || ins.instancia,
+            Sede: ins.sede_nombre || "",
+            Pais: ins.pais || "",
+            Nombre: ins.nombre || "",
+            Grupo: ins.nombre_grupo || "",
+            Email: ins.email || "",
+            Celular: ins.celular || "",
+            Modalidad: ins.modalidad || "",
+            Categorias: catsTxt,
+            Monto: Number(ins.monto_total || 0),
+            Moneda: ins.moneda || "",
+            Pago: ins.pago_estado || "",
+            Musica: ins.musica_estado || "",
+            RecargoMusica: ins.musica_fuera_termino ? "sí" : "no",
+            Comprobante: ins.comprobante_url ? "sí" : "no",
+            Fecha: ins.created_at
+              ? new Date(ins.created_at).toLocaleString("es-AR")
+              : "",
+          };
+        });
+        try {
+          const ws = XLSX.utils.json_to_sheet(rows);
+          ws["!cols"] = [
+            { wch: 16 }, { wch: 12 }, { wch: 18 }, { wch: 14 },
+            { wch: 25 }, { wch: 25 }, { wch: 28 }, { wch: 16 },
+            { wch: 12 }, { wch: 30 }, { wch: 12 }, { wch: 8 },
+            { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
+            { wch: 18 },
           ];
-        });
-        const csv = [headers, ...rows]
-          .map((r) =>
-            r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(","),
-          )
-          .join("\n");
-        const blob = new Blob(["\ufeff" + csv], {
-          type: "text/csv;charset=utf-8",
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download =
-          "inscriptos-jam-" +
-          new Date().toISOString().substring(0, 10) +
-          ".csv";
-        a.click();
-        toast("ok", "CSV exportado (" + data.length + " filas) ✓");
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Inscriptos");
+          const fecha = new Date().toISOString().substring(0, 10);
+          XLSX.writeFile(wb, "inscriptos-jam-" + fecha + ".xlsx");
+          toast("ok", "Excel exportado (" + data.length + " filas) ✓");
+        } catch (e) {
+          toast("err", "Error: " + e.message);
+        }
       }
       function renderDJ() {
         // Cada categoría puede tener su propia canción: una fila por
