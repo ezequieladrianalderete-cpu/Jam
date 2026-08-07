@@ -1913,6 +1913,15 @@
           const catsTxt = (ins.categorias || [])
             .map((c) => "#" + c.c + (c.g ? "/" + c.g : ""))
             .join(" ");
+          const integrantesArr = Array.isArray(ins.integrantes)
+            ? ins.integrantes
+            : [];
+          const cantIntegrantes =
+            Number(ins.cant_personas) || integrantesArr.length || 1;
+          const nombresIntegrantes = integrantesArr
+            .map((i) => i.nombre || "")
+            .filter(Boolean)
+            .join("; ");
           return {
             Codigo: getCodigo(ins),
             Instancia: INSTANCIAS[ins.instancia]?.label || ins.instancia,
@@ -1923,6 +1932,8 @@
             Email: ins.email || "",
             Celular: ins.celular || "",
             Modalidad: ins.modalidad || "",
+            CantIntegrantes: cantIntegrantes,
+            Integrantes: nombresIntegrantes,
             Categorias: catsTxt,
             Monto: Number(ins.monto_total || 0),
             Moneda: ins.moneda || "",
@@ -1940,9 +1951,9 @@
           ws["!cols"] = [
             { wch: 16 }, { wch: 12 }, { wch: 18 }, { wch: 14 },
             { wch: 25 }, { wch: 25 }, { wch: 28 }, { wch: 16 },
-            { wch: 12 }, { wch: 30 }, { wch: 12 }, { wch: 8 },
-            { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 14 },
-            { wch: 18 },
+            { wch: 12 }, { wch: 14 }, { wch: 40 }, { wch: 30 },
+            { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 12 },
+            { wch: 14 }, { wch: 14 }, { wch: 18 },
           ];
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Inscriptos");
