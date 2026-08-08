@@ -232,11 +232,33 @@ module.exports = async function handler(req, res) {
       sesion.instancia === "int" ||
       sesion.instancia === "inter";
 
-    const certBuffer = esConPlantilla
-      ? await generarCertificadoConPlantilla(sesion)
-      : await generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal);
+    // Un certificado por persona, con su propio nombre — no uno solo con
+    // el nombre del grupo/pareja/trío. Si hay integrantes cargados (pareja,
+    // trío, grupo) se genera uno por integrante; si no (individual, o dato
+    // legado sin integrantes) se usa nombre_grupo, que para un individual
+    // ya es su propio nombre.
+    const nombresCertificado =
+      integrantesDev.length > 0
+        ? integrantesDev.map((it) => (it?.nombre || "").trim()).filter(Boolean)
+        : [];
+    if (nombresCertificado.length === 0)
+      nombresCertificado.push(sesion.nombre_grupo || "—");
 
-    async function generarCertificadoConPlantilla(sesion) {
+    const certBuffers = await Promise.all(
+      nombresCertificado.map((nombreCert) =>
+        esConPlantilla
+          ? generarCertificadoConPlantilla(sesion, nombreCert)
+          : generarCertificadoRegional(
+              sesion,
+              instLabel,
+              totalPts,
+              maxTotal,
+              nombreCert,
+            ),
+      ),
+    );
+
+    async function generarCertificadoConPlantilla(sesion, nombreCert) {
       const esNac = sesion.instancia === "nac";
       const esReg = sesion.instancia === "reg";
       const templatePath = path.join(
@@ -249,8 +271,8 @@ module.exports = async function handler(req, res) {
             ? "certificado-reg.jpg"
             : "certificado-inter.jpeg",
       );
-      const imgW = esNac ? 1684 : esReg ? 2412 : 1536;
-      const imgH = esNac ? 1232 : esReg ? 1760 : 1024;
+      const imgW = esNac ? 1684 : esReg ? 1600 : 1536;
+      const imgH = esNac ? 1232 : esReg ? 1167 : 1024;
       const pageW = 800;
       const pageH = pageW * (imgH / imgW);
 
@@ -262,7 +284,7 @@ module.exports = async function handler(req, res) {
 
         doc.image(templatePath, 0, 0, { width: pageW, height: pageH });
 
-        const nombre = sesion.nombre_grupo || "—";
+        const nombre = nombreCert || sesion.nombre_grupo || "—";
 
         if (esNac || esReg) {
           doc
@@ -326,7 +348,7 @@ module.exports = async function handler(req, res) {
 
     // Pese al nombre, ya solo se usa para Repechaje — Regional/Sedes pasó a
     // la plantilla de imagen (generarCertificadoConPlantilla).
-    async function generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal) {
+    async function generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal, nombreCert) {
      return new Promise((resolve) => {
       const doc = new PDFDocument({
         size: "A4",
@@ -382,7 +404,7 @@ module.exports = async function handler(req, res) {
       doc
         .fontSize(36)
         .fillColor("#F8F5EE")
-        .text(sesion.nombre_grupo || "—", 0, 240, { align: "center" });
+        .text(nombreCert || sesion.nombre_grupo || "—", 0, 240, { align: "center" });
 
       // Código y categoría
       doc
@@ -487,10 +509,19 @@ module.exports = async function handler(req, res) {
 
     const audioCount = attachments.length;
 
-    // Agregar certificado PDF a attachments
-    attachments.push({
-      filename: `Certificado-JAM-2026-${sesion.codigo_id}.pdf`,
-      content: certBuffer,
+    // Agregar los certificados PDF a attachments — uno por persona
+    certBuffers.forEach((buf, idx) => {
+      const nombreArchivo =
+        nombresCertificado[idx]
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "") // sin acentos
+          .replace(/[^a-zA-Z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 40) || "participante";
+      attachments.push({
+        filename: `Certificado-JAM-2026-${sesion.codigo_id}-${nombreArchivo}.pdf`,
+        content: buf,
+      });
     });
 
     const audioNote =
