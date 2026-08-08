@@ -4175,7 +4175,7 @@
           const catsArr = dParseCatArr(p.categoria);
           const hechasSet = dCatsHechas.get(p.codigo_id) || new Set();
           const pendientes = dCategoriasPendientes(p);
-          const safeNombre = p.nombre_grupo.replace(/'/g, "\\'");
+          const safeNombre = escJs(p.nombre_grupo);
           const progresoHtml =
             catsArr.length > 1
               ? `<div class="muted text-xs" style="margin-top:2px">${catsArr.filter((c) => hechasSet.has(c.c)).length}/${catsArr.length} categorías evaluadas</div>`
@@ -4200,7 +4200,7 @@
             p.estado_pago === "confirmado"
               ? '<span class="bdg bdg-green text-xs">Pago ✓</span>'
               : '<span class="bdg bdg-amber text-xs">Pago pendiente</span>';
-          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs">${parseCat(p.categoria)} ${pgBdg}</div>${progresoHtml}</div></div><div style="flex-shrink:0">${badge}</div>`;
+          div.innerHTML = `<div style="display:flex;align-items:center;gap:12px;min-width:0"><span class="muted mono" style="width:24px;flex-shrink:0;font-size:13px">${p.posicion}</span><div><div><span class="mono gold text-xs">${p.codigo_id}</span> <span class="fw6">${esc(p.nombre_grupo)}</span> <span class="muted text-xs">${esc(p.pais || "")}</span></div><div class="muted text-xs">${parseCat(p.categoria)} ${pgBdg}</div>${progresoHtml}</div></div><div style="flex-shrink:0">${badge}</div>`;
           cont.appendChild(div);
         });
       }
@@ -4547,7 +4547,7 @@
           cont.innerHTML = "";
           data.forEach((p) => {
             const ses = sesMap.get(p.codigo_id);
-            const safeNombre = (p.nombre_grupo || "").replace(/'/g, "\\'");
+            const safeNombre = escJs(p.nombre_grupo || "");
             let estadoHtml = "";
             if (ses && ses.resultado_repesca) {
               // Ya votado y cerrado
@@ -4608,9 +4608,9 @@
               '<div style="min-width:0"><span class="mono gold text-xs">' +
               p.codigo_id +
               '</span> <span class="fw6">' +
-              p.nombre_grupo +
+              esc(p.nombre_grupo) +
               '</span> <span class="muted text-xs">' +
-              (p.pais || "") +
+              esc(p.pais || "") +
               "</span></div>" +
               '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
               estadoHtml +
@@ -4637,7 +4637,7 @@
               '<div><span class="mono gold text-xs">' +
               s.codigo_id +
               '</span> <span class="fw6">' +
-              s.nombre_grupo +
+              esc(s.nombre_grupo) +
               "</span></div>" +
               '<span class="bdg bdg-green text-xs">' +
               (s.votos_si || 0) +
@@ -4962,7 +4962,7 @@
           const scoreCell = cfg.mostrar_puntaje
             ? `<td><span class="fw7 gold">${r.subtotal_parcial || "—"}</span></td>`
             : "";
-          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${r.nombre_grupo}</td><td class="muted">${catDisplay}</td>${scoreCell}</tr>`;
+          tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${esc(r.nombre_grupo)}</td><td class="muted">${catDisplay}</td>${scoreCell}</tr>`;
         });
       }
 
@@ -6101,7 +6101,7 @@
                 (p.codigo_id || "—") +
                 "</span>" +
                 '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
-                (p.nombre_grupo || "—") +
+                esc(p.nombre_grupo || "—") +
                 "</span>" +
                 '<span style="font-size:9px;color:' +
                 (presente ? "#4CAF7D" : "#888") +
@@ -6175,9 +6175,9 @@
                   '">' +
                   d.codigo_id +
                   " · " +
-                  (d.nombre_grupo || "—") +
+                  esc(d.nombre_grupo || "—") +
                   " (" +
-                  (d.pais || "") +
+                  esc(d.pais || "") +
                   ")</option>",
               )
               .join("");
@@ -6325,12 +6325,12 @@
               (l.codigo_id || "—") +
               "</span>" +
               '<span style="flex:1">' +
-              (l.nombre_grupo || "—") +
+              esc(l.nombre_grupo || "—") +
               "</span>" +
               '<span class="muted" style="font-size:10px">' +
               (l.instancia || "").toUpperCase() +
               " · " +
-              (l.pais || "") +
+              esc(l.pais || "") +
               "</span>" +
               '<span style="color:#C9A84C">→</span>' +
               "</div>";
@@ -6388,19 +6388,19 @@
             '<div class="muted text-xs mb3">Los cambios se guardan inmediatamente al hacer click en "💾 Guardar". El reenvío de QR es independiente.</div>' +
             '<div style="display:flex;flex-direction:column;gap:8px">' +
             '<div><label class="text-xs muted">Nombre del grupo / participante</label><input id="edit-nombre_grupo" class="cfg-input" value="' +
-            (ins.nombre_grupo || "").replace(/"/g, "&quot;") +
+            esc(ins.nombre_grupo || "") +
             '"></div>' +
             '<div><label class="text-xs muted">Responsable (nombre)</label><input id="edit-nombre" class="cfg-input" value="' +
-            (ins.nombre || "").replace(/"/g, "&quot;") +
+            esc(ins.nombre || "") +
             '"></div>' +
             '<div><label class="text-xs muted">Email responsable</label><input id="edit-email" class="cfg-input" type="email" value="' +
-            (ins.email || "").replace(/"/g, "&quot;") +
+            esc(ins.email || "") +
             '"></div>' +
             '<div><label class="text-xs muted">Teléfono / Celular</label><input id="edit-cel" class="cfg-input" value="' +
-            (ins.celular || "").replace(/"/g, "&quot;") +
+            esc(ins.celular || "") +
             '"></div>' +
             '<div><label class="text-xs muted">País</label><input id="edit-pais" class="cfg-input" value="' +
-            (ins.pais || "").replace(/"/g, "&quot;") +
+            esc(ins.pais || "") +
             '"></div>' +
             '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
             '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' +
@@ -6446,22 +6446,22 @@
             '<input data-int-idx="' +
             i +
             '" data-int-field="nombre" placeholder="Nombre completo" class="cfg-input" style="font-size:11px;padding:6px" value="' +
-            (it.nombre || "").replace(/"/g, "&quot;") +
+            esc(it.nombre || "") +
             '">' +
             '<input data-int-idx="' +
             i +
             '" data-int-field="dni" placeholder="DNI / ID" class="cfg-input" style="font-size:11px;padding:6px" value="' +
-            (it.dni || "").replace(/"/g, "&quot;") +
+            esc(it.dni || "") +
             '">' +
             '<input data-int-idx="' +
             i +
             '" data-int-field="email" placeholder="Email" class="cfg-input" style="font-size:11px;padding:6px" value="' +
-            (it.email || "").replace(/"/g, "&quot;") +
+            esc(it.email || "") +
             '">' +
             '<input data-int-idx="' +
             i +
             '" data-int-field="cel" placeholder="Celular" class="cfg-input" style="font-size:11px;padding:6px" value="' +
-            (it.cel || "").replace(/"/g, "&quot;") +
+            esc(it.cel || "") +
             '">' +
             "</div>" +
             "</div>";
@@ -7761,6 +7761,29 @@
           toast(saved + " jurados configurados correctamente", "ok");
         }
         await dCargarJurados();
+      }
+
+      // Escapa texto para insertarlo de forma segura como HTML (innerHTML) o
+      // dentro de un atributo HTML entre comillas dobles.
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      // Escapa texto para insertarlo como literal string JS de comillas
+      // simples (p. ej. dentro de un onclick="fn('...')"). Aplica el escape
+      // de JS primero y luego el de HTML, en ese orden, para que sobreviva
+      // ambos niveles de parseo (el navegador decodifica el HTML antes de
+      // que el motor JS lea el string).
+      function escJs(s) {
+        return esc(
+          String(s == null ? "" : s)
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'"),
+        );
       }
 
       function toast(msg, tipo = "ok") {

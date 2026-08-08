@@ -2502,7 +2502,7 @@
           const acrBdg = p.acreditado_at
             ? '<span class="bdg bdg-green">✓ Acreditado</span>'
             : '<span class="bdg bdg-gray">Sin acreditar</span>';
-          div.innerHTML = `<div style="min-width:0"><div><span class="mono gold text-xs">${p.codigo_id}</span> <span style="font-weight:600">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="muted text-xs mt2">${parseCat(p.categoria)}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${pgBdg}${acrBdg}</div>`;
+          div.innerHTML = `<div style="min-width:0"><div><span class="mono gold text-xs">${p.codigo_id}</span> <span style="font-weight:600">${esc(p.nombre_grupo)}</span> <span class="muted text-xs">${esc(p.pais || "")}</span></div><div class="muted text-xs mt2">${parseCat(p.categoria)}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${pgBdg}${acrBdg}</div>`;
           cont.appendChild(div);
         });
         if (!lista.length)
@@ -2682,7 +2682,7 @@
                   : r.estado_pago === "senia"
                     ? '<span style="color:#E8A838;font-size:11px">50%</span>'
                     : '<span style="color:#E05252;font-size:11px">Sin pago</span>';
-              return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${r.codigo_id || "(automático)"}</td><td style="padding:6px 10px;font-size:12px">${r.nombre_grupo}</td><td style="padding:6px 10px;font-size:12px;color:rgba(248,245,238,.5)">${r.pais}</td><td style="padding:6px 10px">${pg}</td></tr>`;
+              return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)"><td style="padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${esc(r.codigo_id || "(automático)")}</td><td style="padding:6px 10px;font-size:12px">${esc(r.nombre_grupo)}</td><td style="padding:6px 10px;font-size:12px;color:rgba(248,245,238,.5)">${esc(r.pais)}</td><td style="padding:6px 10px">${pg}</td></tr>`;
             })
             .join("") +
           (importRows.length > 10
@@ -3030,7 +3030,7 @@
           info.className = "lu-info";
           const catLabel = cat ? cat.c + ": " + cat.n : parseCat(p.categoria);
           const instColor = luInstColor(p.instancia);
-          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${p.nombre_grupo}</span> <span class="muted text-xs">${p.pais || ""}</span></div><div class="lu-cat" style="color:${instColor}">${catLabel}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[estado] || "#555"}">${LU_LBL[estado] || estado}${bloqueado ? " · en pista en otra categoría" : ""}</div>`;
+          info.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${p.codigo_id}</div><div><span class="lu-nombre">${esc(p.nombre_grupo)}</span> <span class="muted text-xs">${esc(p.pais || "")}</span></div><div class="lu-cat" style="color:${instColor}">${catLabel}</div><div style="margin-top:4px;font-size:10px;font-weight:600;color:${LU_DOT[estado] || "#555"}">${LU_LBL[estado] || estado}${bloqueado ? " · en pista en otra categoría" : ""}</div>`;
           const ctrl = document.createElement("div");
           ctrl.className = "lu-ctrl";
           const eBtn = document.createElement("button");
@@ -3673,22 +3673,22 @@
           it.estado === "acreditado"
             ? '<span class="bdg bdg-green">✓ Ya acreditado</span>'
             : "";
-        const nombreEsc = (it.nombre || "").replace(/'/g, "\\'");
+        const nombreEsc = escJs(it.nombre || "");
         cont.innerHTML = `
     <div class="tarjeta">
       <div class="ep-label"><div class="ep-dot"></div>ACREDITACIÓN INDIVIDUAL</div>
       <div class="mono gold text-xs mb2">${it.sub_codigo}</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:4px">${it.nombre || "—"}</div>
-      <div class="muted text-sm mb2">DNI: ${it.dni || "—"}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:4px">${esc(it.nombre || "—")}</div>
+      <div class="muted text-sm mb2">DNI: ${esc(it.dni || "—")}</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${yaAcr}</div>
     </div>
     <div class="card sy2">
-      <div class="row"><span class="muted text-xs">Grupo</span><span>${it.grupo_nombre || "—"}</span></div>
+      <div class="row"><span class="muted text-xs">Grupo</span><span>${esc(it.grupo_nombre || "—")}</span></div>
       <div class="row"><span class="muted text-xs">Integrante N°</span><span>${it.orden} · ${it.codigo_id}</span></div>
-      <div class="row"><span class="muted text-xs">País</span><span>${it.grupo_pais || "—"}</span></div>
+      <div class="row"><span class="muted text-xs">País</span><span>${esc(it.grupo_pais || "—")}</span></div>
       <div class="row" style="border-bottom:none"><span class="muted text-xs">Instancia</span><span>${(it.grupo_instancia || "").toUpperCase()}</span></div>
     </div>
-    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmarIntegrante('${it.id}','${nombreEsc}')">✓ Acreditar a ${it.nombre || "este participante"}</button>
+    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmarIntegrante('${it.id}','${nombreEsc}')">✓ Acreditar a ${esc(it.nombre || "este participante")}</button>
     <button class="btn bo bfull" onclick="acrReset()">↻ Escanear otro</button>`;
       }
 
@@ -3703,7 +3703,7 @@
             minute: "2-digit",
           });
           document.getElementById("acr-nombre-ok").innerHTML =
-            nombre + ' · <span id="acr-hora">' + h + "hs</span>";
+            esc(nombre) + ' · <span id="acr-hora">' + h + "hs</span>";
           document.getElementById("acr-res").style.display = "none";
           document.getElementById("acr-ok").style.display = "block";
           toast("✓ " + nombre + " acreditado/a", "ok");
@@ -3745,17 +3745,17 @@
     <div class="tarjeta">
       <div class="ep-label"><div class="ep-dot"></div>CREDENCIAL ENCONTRADA</div>
       <div class="mono gold text-xs mb2">${p.codigo_id}</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:4px">${p.nombre_grupo}</div>
-      <div class="muted text-sm mb3">${p.pais || ""}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:4px">${esc(p.nombre_grupo)}</div>
+      <div class="muted text-sm mb3">${esc(p.pais || "")}</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">${pgBdg}${acrBdg}<span class="bdg bdg-blue">${parseCat(p.categoria)}</span></div>
     </div>
     <div class="card sy2">
-      <div class="row"><span class="muted text-xs">Responsable</span><span>${p.responsable || "—"}</span></div>
+      <div class="row"><span class="muted text-xs">Responsable</span><span>${esc(p.responsable || "—")}</span></div>
       <div class="row"><span class="muted text-xs">Instancia</span><span>${p.instancia?.toUpperCase() || "—"}</span></div>
       <div class="row"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado] || p.estado}</span></div>
       <div class="row" id="acr-contador-row" style="border-bottom:none"><span class="muted text-xs">Integrantes acreditados</span><span id="acr-contador">…</span></div>
     </div>
-    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${(p.nombre_grupo || "").replace(/'/g, "\\'")}')">✓ Confirmar presencia y acreditar</button>
+    <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${escJs(p.nombre_grupo || "")}')">✓ Confirmar presencia y acreditar</button>
     <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
         // Cargar contador de integrantes acreditados (asíncrono, no bloquea)
         acrCargarContador(p.inscripcion_id);
@@ -3814,7 +3814,7 @@
         });
         document.getElementById("acr-hora").textContent = h + "hs";
         document.getElementById("acr-nombre-ok").innerHTML =
-          nombre + ' · <span id="acr-hora">' + h + "hs</span>";
+          esc(nombre) + ' · <span id="acr-hora">' + h + "hs</span>";
         document.getElementById("acr-res").style.display = "none";
         document.getElementById("acr-ok").style.display = "block";
         toast("Presencia confirmada", "ok");
@@ -4164,12 +4164,10 @@
                     : '<span class="bdg bdg-gray" style="font-size:10px">○ Pendiente</span>';
               const posMostrar = p.posicion === 999 ? "—" : p.posicion;
               // Escapar para uso seguro dentro de onclick="..." (comillas dobles).
-              // Comillas simples escapadas: evita que categorias con comillas
-              // rompan el onclick (bug que dejaba los botones sin funcionar).
-              const _escOnclick = (v) =>
-                "'" +
-                String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'") +
-                "'";
+              // Escapa primero como string JS de comillas simples y luego
+              // como HTML, para que también sobreviva si el valor trae
+              // comillas dobles (si no, rompe el atributo onclick="...").
+              const _escOnclick = (v) => "'" + escJs(v) + "'";
               const catKeyEsc = _escOnclick(cat.categoria_key);
               const idEsc = _escOnclick(p.lineup_id);
 
@@ -4187,10 +4185,10 @@
                 (p.codigo_id || "—") +
                 "</td>" +
                 '<td style="padding:8px 4px">' +
-                (p.nombre_grupo || "—") +
+                esc(p.nombre_grupo || "—") +
                 "</td>" +
                 '<td style="padding:8px 4px" class="muted">' +
-                (p.pais || "—") +
+                esc(p.pais || "—") +
                 "</td>";
 
               if (esEncargado) {
@@ -4603,8 +4601,8 @@
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <button onclick="djTogglePlay()" id="dj-play-btn" style="width:48px;height:48px;border-radius:50%;background:#C9A84C;border:none;cursor:pointer;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>
             <div style="flex:1">
-              <div class="fw6">${cancion.nombre}</div>
-              <div class="muted text-xs">${m.codigo_id} · ${m.nombre_grupo}</div>
+              <div class="fw6">${esc(cancion.nombre)}</div>
+              <div class="muted text-xs">${m.codigo_id} · ${esc(m.nombre_grupo)}</div>
             </div>
             <button onclick="djStop()" style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:16px;color:#E05252;display:flex;align-items:center;justify-content:center">⏹</button>
           </div>
@@ -4623,7 +4621,7 @@
         </div>`;
           } else if (m) {
             document.getElementById("dj-musica-activa").innerHTML =
-              `<div style="background:#1a0000;border:1px solid rgba(224,82,82,.2);border-radius:12px;padding:14px;text-align:center;color:#E05252;font-size:13px">⚠️ ${m.nombre_grupo} no tiene música cargada</div>`;
+              `<div style="background:#1a0000;border:1px solid rgba(224,82,82,.2);border-radius:12px;padding:14px;text-align:center;color:#E05252;font-size:13px">⚠️ ${esc(m.nombre_grupo)} no tiene música cargada</div>`;
           }
         }
 
@@ -4661,13 +4659,13 @@
           div.innerHTML =
             `<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(248,245,238,.35);width:22px;flex-shrink:0">${t.posicion || ""}</div>` +
             `<div style="flex:1;min-width:0"><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C9A84C">${t.codigo_id}</div>` +
-            `<div style="font-weight:600;font-size:13px">${t.nombre_grupo}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div>` +
-            `<div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${label}</div></div>` +
+            `<div style="font-weight:600;font-size:13px">${esc(t.nombre_grupo)}${t.activo_dj ? ' <span class="bdg bdg-gold" style="font-size:9px">En pista</span>' : ""}</div>` +
+            `<div style="font-size:11px;color:${r.verificado ? "#4CAF7D" : "#E05252"};margin-top:2px">${esc(label)}</div></div>` +
             (r.url
               ? "<button onclick=\"djPreview('" +
-                r.url.replace(/'/g, "\\'") +
+                escJs(r.url) +
                 "','" +
-                (t.nombre_grupo || "").replace(/'/g, "\\'") +
+                escJs(t.nombre_grupo || "") +
                 '\');event.stopPropagation()" style="width:32px;height:32px;border-radius:50%;background:#1a1600;border:1px solid rgba(201,168,76,.3);cursor:pointer;font-size:14px;color:#C9A84C;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>'
               : '<div style="width:32px"></div>');
           return div;
@@ -4843,7 +4841,7 @@
             .slice(0, 5)
             .map(
               (p) =>
-                `<div class="row"><span><span class="mono gold text-xs">${p.codigo_id}</span> ${p.nombre_grupo}</span><button class="btn bsm" style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:#F8F5EE;font-size:11px" onclick="toast('Notificación enviada','ok')">Notificar</button></div>`,
+                `<div class="row"><span><span class="mono gold text-xs">${p.codigo_id}</span> ${esc(p.nombre_grupo)}</span><button class="btn bsm" style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);color:#F8F5EE;font-size:11px" onclick="toast('Notificación enviada','ok')">Notificar</button></div>`,
             )
             .join("");
         }
@@ -4930,7 +4928,7 @@
         document.getElementById("pres-codigo").textContent = codigo;
         document.getElementById("pres-nombre").textContent = nombre;
         document.getElementById("pres-pais").innerHTML = pais
-          ? "🌎 " + pais
+          ? "🌎 " + esc(pais)
           : "—";
         document.getElementById("pres-extra").innerHTML =
           `<div><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(248,245,238,.4);text-transform:uppercase;margin-bottom:5px">Categoría</div><div style="font-size:clamp(14px,2.5vw,18px);font-weight:600">${cat}</div></div><div><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(248,245,238,.4);text-transform:uppercase;margin-bottom:5px">Instancia</div><div style="font-size:clamp(14px,2.5vw,18px);font-weight:600;color:#C9A84C">${(s?.instancia || "").toUpperCase()}</div></div>`;
@@ -4946,7 +4944,7 @@
         });
         ["pe-pais-el", "pf-pais-el"].forEach((id) => {
           const el = document.getElementById(id);
-          if (el) el.innerHTML = pais ? "🌎 " + pais : "—";
+          if (el) el.innerHTML = pais ? "🌎 " + esc(pais) : "—";
         });
         ["pe-cat"].forEach((id) => {
           const el = document.getElementById(id);
@@ -5538,6 +5536,29 @@
           btn.style.background = "#E8A838";
         }
         toast("Reproduciendo: " + nombre, "ok");
+      }
+
+      // Escapa texto para insertarlo de forma segura como HTML (innerHTML) o
+      // dentro de un atributo HTML entre comillas dobles.
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      // Escapa texto para insertarlo como literal string JS de comillas
+      // simples (p. ej. dentro de un onclick="fn('...')"). Aplica el escape
+      // de JS primero y luego el de HTML, en ese orden, para que sobreviva
+      // ambos niveles de parseo (el navegador decodifica el HTML antes de
+      // que el motor JS lea el string).
+      function escJs(s) {
+        return esc(
+          String(s == null ? "" : s)
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'"),
+        );
       }
 
       function toast(msg, tipo = "ok") {
