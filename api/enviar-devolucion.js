@@ -221,29 +221,36 @@ module.exports = async function handler(req, res) {
     const PDFDocument = require("pdfkit");
     const path = require("path");
 
-    // Nacional e Inter América usan una plantilla con imagen de fondo,
-    // donde solo varía el nombre del participante (y, en Inter América,
-    // la fecha — el diseño de Nacional ya la trae impresa en la imagen).
-    // Regional/Sedes conserva el certificado vectorial de siempre.
-    const esNacOInter =
+    // Nacional, Regional/Sedes e Inter América usan una plantilla con imagen
+    // de fondo, donde solo varía el nombre del participante (y, en Inter
+    // América, la fecha — el diseño de Nacional y Regional ya la trae
+    // impresa en la imagen). Repechaje conserva el certificado vectorial
+    // de siempre.
+    const esConPlantilla =
       sesion.instancia === "nac" ||
+      sesion.instancia === "reg" ||
       sesion.instancia === "int" ||
       sesion.instancia === "inter";
 
-    const certBuffer = esNacOInter
+    const certBuffer = esConPlantilla
       ? await generarCertificadoConPlantilla(sesion)
       : await generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal);
 
     async function generarCertificadoConPlantilla(sesion) {
       const esNac = sesion.instancia === "nac";
+      const esReg = sesion.instancia === "reg";
       const templatePath = path.join(
         __dirname,
         "..",
         "imgs",
-        esNac ? "certificado-nac.jpg" : "certificado-inter.jpeg",
+        esNac
+          ? "certificado-nac.jpg"
+          : esReg
+            ? "certificado-reg.jpg"
+            : "certificado-inter.jpeg",
       );
-      const imgW = esNac ? 1684 : 1536;
-      const imgH = esNac ? 1232 : 1024;
+      const imgW = esNac ? 1684 : esReg ? 2412 : 1536;
+      const imgH = esNac ? 1232 : esReg ? 1760 : 1024;
       const pageW = 800;
       const pageH = pageW * (imgH / imgW);
 
@@ -257,12 +264,35 @@ module.exports = async function handler(req, res) {
 
         const nombre = sesion.nombre_grupo || "—";
 
-        if (esNac) {
+        if (esNac || esReg) {
           doc
             .font("Times-Bold")
             .fontSize(30)
             .fillColor("#1a1a1a")
             .text(nombre, 0, pageH * 0.555 - 5, { align: "center", width: pageW });
+
+          if (esReg) {
+            // La plantilla trae "29 de Agosto" impreso, pero cada sede
+            // regional corre en su propia fecha. Se tapa esa línea con un
+            // rectángulo blanco (el fondo de la plantilla ahí es blanco
+            // liso) y se dibuja encima la fecha real de la sesión.
+            const fecha = new Date(
+              sesion.finalizada_at || Date.now(),
+            ).toLocaleDateString("es-AR", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            });
+            doc.rect(140, 381, 520, 26).fill("#ffffff");
+            doc
+              .font("Helvetica")
+              .fontSize(14)
+              .fillColor("#1a1a1a")
+              .text(`REALIZADA EL ${fecha.toUpperCase()}`, 0, 386, {
+                align: "center",
+                width: pageW,
+              });
+          }
         } else {
           doc
             .font("Times-Bold")
@@ -294,6 +324,8 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // Pese al nombre, ya solo se usa para Repechaje — Regional/Sedes pasó a
+    // la plantilla de imagen (generarCertificadoConPlantilla).
     async function generarCertificadoRegional(sesion, instLabel, totalPts, maxTotal) {
      return new Promise((resolve) => {
       const doc = new PDFDocument({
