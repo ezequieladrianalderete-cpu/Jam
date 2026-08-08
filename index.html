@@ -4555,7 +4555,7 @@
         if (n === 3) {
           var grupo = sv("f-grupo");
           if (!grupo.trim()) {
-            toast("Ingresá el nombre artístico o del grupo", "err");
+            toast("Ingresá el nombre de los participantes", "err");
             markErr("f-grupo");
             return;
           }
@@ -4567,10 +4567,7 @@
             var iname = iboxes[ibx].querySelector(".iname");
             var idni = iboxes[ibx].querySelector(".idni");
             if (iname && !iname.value.trim()) {
-              toast(
-                "Falta el nombre del integrante #" + (ibx + 1),
-                "err",
-              );
+              toast("Falta el nombre del integrante #" + (ibx + 1), "err");
               markErrEl(iname);
               return;
             }
@@ -5546,11 +5543,11 @@
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">Nombre artístico / del grupo</div>' +
+              '<div class="sh"><div class="st">Nombre de los participantes</div>' +
               '<div class="ss">Una inscripción = una categoría. Para más, registá nuevamente.</div></div>' +
               '<div class="card">' +
-              '<div class="fld"><label>Nombre artístico / del grupo *</label>' +
-              '<input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
+              '<div class="fld"><label>Nombre de los participantes *</label>' +
+              '<input type="text" id="f-grupo" placeholder="Nombre y apellido según DNI"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
               '<select id="f-modalidad-reg" onchange="toggleModalidadReg(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
@@ -5685,10 +5682,10 @@
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">Nombre art\u00edstico / del grupo</div>' +
+              '<div class="sh"><div class="st">Nombre de los participantes</div>' +
               '<div class="ss">Individual por defecto. Si sois m\u00e1s, seleccion\u00e1 la modalidad grupal.</div></div>' +
               '<div class="card">' +
-              '<div class="fld"><label>Nombre art\u00edstico / del grupo *</label><input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
+              '<div class="fld"><label>Nombre de los participantes *</label><input type="text" id="f-grupo" placeholder="Nombre y apellido según DNI"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
               '<select id="f-modalidad" onchange="toggleModalidadNacRep(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
@@ -5892,10 +5889,10 @@
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">Nombre art\u00edstico / del grupo</div>' +
+              '<div class="sh"><div class="st">Nombre de los participantes</div>' +
               '<div class="ss">Individual por defecto. Si son m\u00e1s, seleccion\u00e1 la modalidad grupal.</div></div>' +
               '<div class="card">' +
-              '<div class="fld"><label>Nombre art\u00edstico / del grupo *</label><input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
+              '<div class="fld"><label>Nombre de los participantes *</label><input type="text" id="f-grupo" placeholder="Nombre y apellido según DNI"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
               '<select id="f-modalidad" onchange="toggleModalidad(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
@@ -6074,10 +6071,10 @@
             var d = document.createElement("div");
             d.className = "step show";
             d.innerHTML =
-              '<div class="sh"><div class="st">Nombre art\u00edstico / del grupo</div>' +
+              '<div class="sh"><div class="st">Nombre de los participantes</div>' +
               '<div class="ss">Individual por defecto. Si sois m\u00e1s, seleccion\u00e1 la modalidad grupal.</div></div>' +
               '<div class="card">' +
-              '<div class="fld"><label>Nombre art\u00edstico / del grupo *</label><input type="text" id="f-grupo" placeholder="Nombre según DNI en caso de participar individualmente"></div>' +
+              '<div class="fld"><label>Nombre de los participantes *</label><input type="text" id="f-grupo" placeholder="Nombre y apellido según DNI"></div>' +
               '<div class="fld" style="margin-bottom:0"><label>Modalidad *</label>' +
               '<select id="f-modalidad" onchange="toggleModalidadNacRep(this.value)">' +
               '<option value="1">Individual (1 persona)</option>' +
