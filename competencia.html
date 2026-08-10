@@ -4051,8 +4051,34 @@
         })
           .then((r) => r.json())
           .then((r) => {
-            if (r.ok) toast("Devolución enviada a " + r.to, "ok");
-            else console.warn("Email no enviado:", r.error);
+            if (r.ok) {
+              const okCount = r.enviados.filter((e) => e.ok).length;
+              const failCount = r.enviados.length - okCount;
+              if (failCount > 0) {
+                toast(
+                  "Devolución enviada a " +
+                    okCount +
+                    "/" +
+                    r.enviados.length +
+                    " — revisar " +
+                    failCount +
+                    " que falló" +
+                    (failCount > 1 ? "aron" : ""),
+                  "warn",
+                );
+                console.warn(
+                  "Envíos fallidos:",
+                  r.enviados.filter((e) => !e.ok),
+                );
+              } else {
+                toast(
+                  "Devolución enviada a " +
+                    okCount +
+                    (okCount === 1 ? " destinatario" : " destinatarios"),
+                  "ok",
+                );
+              }
+            } else console.warn("Email no enviado:", r.error);
           })
           .catch((e) => console.warn("Error email:", e));
 

@@ -105,14 +105,6 @@ module.exports = async function handler(req, res) {
         .status(404)
         .json({ error: "Email del participante no encontrado" });
 
-    // Lista de destinatarios: titular + cada integrante con email válido (sin duplicar)
-    const destinatariosDev = new Set();
-    if (email) destinatariosDev.add(email.trim().toLowerCase());
-    integrantesDev.forEach((it) => {
-      const e = (it?.email || it?.mail || "").trim().toLowerCase();
-      if (e && /@/.test(e)) destinatariosDev.add(e);
-    });
-
     // 4. Obtener nombres de ítems de cada jurado
     const juradoNums = puntajes.map((p) => p.juez_num);
     let juradoItems = {};
@@ -234,26 +226,35 @@ module.exports = async function handler(req, res) {
 
     // Un certificado por persona, con su propio nombre — no uno solo con
     // el nombre del grupo/pareja/trío. Si hay integrantes cargados (pareja,
-    // trío, grupo) se genera uno por integrante; si no (individual, o dato
-    // legado sin integrantes) se usa nombre_grupo, que para un individual
-    // ya es su propio nombre.
-    const nombresCertificado =
+    // trío, grupo) se genera uno por integrante, emparejado con su propio
+    // email (para el envío individual del paso 8); si no (individual, o
+    // dato legado sin integrantes) se usa nombre_grupo + el email de
+    // contacto de la inscripción, como siempre.
+    const personasCertificado =
       integrantesDev.length > 0
-        ? integrantesDev.map((it) => (it?.nombre || "").trim()).filter(Boolean)
+        ? integrantesDev
+            .map((it) => ({
+              nombre: (it?.nombre || "").trim(),
+              email: (it?.email || it?.mail || "").trim().toLowerCase(),
+            }))
+            .filter((p) => p.nombre)
         : [];
-    if (nombresCertificado.length === 0)
-      nombresCertificado.push(sesion.nombre_grupo || "—");
+    if (personasCertificado.length === 0)
+      personasCertificado.push({
+        nombre: sesion.nombre_grupo || "—",
+        email: (email || "").trim().toLowerCase(),
+      });
 
     const certBuffers = await Promise.all(
-      nombresCertificado.map((nombreCert) =>
+      personasCertificado.map((p) =>
         esConPlantilla
-          ? generarCertificadoConPlantilla(sesion, nombreCert)
+          ? generarCertificadoConPlantilla(sesion, p.nombre)
           : generarCertificadoRegional(
               sesion,
               instLabel,
               totalPts,
               maxTotal,
-              nombreCert,
+              p.nombre,
             ),
       ),
     );
@@ -471,8 +472,10 @@ module.exports = async function handler(req, res) {
     const { Resend } = require("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // Preparar attachments (audio si existe)
-    const attachments = [];
+    // Adjuntos de audio: son la devolución del jurado sobre la performance
+    // completa (no de una persona en particular), así que van igual en el
+    // email de todos.
+    const audioAttachments = [];
     for (const p of puntajes) {
       if (p.audio_url) {
         try {
@@ -487,7 +490,7 @@ module.exports = async function handler(req, res) {
                   : "m4a";
             const b64 = p.audio_url.split(",")[1];
             if (b64 && b64.length > 100) {
-              attachments.push({
+              audioAttachments.push({
                 filename: `evaluacion-jurado-${p.juez_num}.${ext}`,
                 content: Buffer.from(b64, "base64"),
               });
@@ -495,7 +498,7 @@ module.exports = async function handler(req, res) {
           } else if (p.audio_url.startsWith("http")) {
             const audioRes = await fetch(p.audio_url);
             if (audioRes.ok) {
-              attachments.push({
+              audioAttachments.push({
                 filename: `evaluacion-jurado-${p.juez_num}.m4a`,
                 content: Buffer.from(await audioRes.arrayBuffer()),
               });
@@ -507,45 +510,130 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const audioCount = attachments.length;
-
-    // Agregar los certificados PDF a attachments — uno por persona
-    certBuffers.forEach((buf, idx) => {
-      const nombreArchivo =
-        nombresCertificado[idx]
-          .normalize("NFD")
-          .replace(/[̀-ͯ]/g, "") // sin acentos
-          .replace(/[^a-zA-Z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "")
-          .slice(0, 40) || "participante";
-      attachments.push({
-        filename: `Certificado-JAM-2026-${sesion.codigo_id}-${nombreArchivo}.pdf`,
-        content: buf,
-      });
-    });
-
+    const audioCount = audioAttachments.length;
     const audioNote =
       audioCount > 0
         ? `<div style="background:#141414;border:1px solid rgba(76,175,125,.2);border-radius:16px;padding:20px;margin-bottom:24px;text-align:center"><div style="font-size:14px;font-weight:600;margin-bottom:8px">🎙 Devoluciones en audio</div><div style="font-size:13px;color:rgba(248,245,238,.5)">${audioCount} audio/s adjunto/s. Revisá los archivos de este email.</div></div>`
         : "";
+    const htmlFinal = audioNote
+      ? html.replace("JAM Producciones", audioNote + "JAM Producciones")
+      : html;
+    const subject = mailT.asunto_devolucion
+      ? `${mailT.asunto_devolucion} — ${sesion.nombre_grupo} (${sesion.codigo_id})`
+      : `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`;
 
-    const sendResult = await resend.emails.send({
-      from: SENDER,
-      to: Array.from(destinatariosDev),
-      subject: mailT.asunto_devolucion
-        ? `${mailT.asunto_devolucion} — ${sesion.nombre_grupo} (${sesion.codigo_id})`
-        : `JAM 2026 — Devolución: ${sesion.nombre_grupo} (${sesion.codigo_id})`,
-      html: audioNote
-        ? html.replace("JAM Producciones", audioNote + "JAM Producciones")
-        : html,
-      attachments: attachments.length > 0 ? attachments : undefined,
+    function slugify(nombre) {
+      return (
+        nombre
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "") // sin acentos
+          .replace(/[^a-zA-Z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 40) || "participante"
+      );
+    }
+
+    // Un email por persona, con SOLO su propio certificado adjunto — nadie
+    // del grupo ve el certificado de sus compañeros.
+    // Agrupar por email (no por persona): si dos integrantes comparten la
+    // misma casilla (p. ej. hermanos sin mail propio), van juntos en UN
+    // email con AMBOS certificados adjuntos, en vez de que el segundo se
+    // pierda o le llegue un mail duplicado a la misma casilla.
+    const gruposPorEmail = new Map();
+    personasCertificado.forEach((persona, i) => {
+      if (!persona.email || !/@/.test(persona.email)) return;
+      if (!gruposPorEmail.has(persona.email)) gruposPorEmail.set(persona.email, []);
+      gruposPorEmail.get(persona.email).push({ nombre: persona.nombre, buf: certBuffers[i] });
     });
+
+    // Armar todos los envíos primero y despacharlos en paralelo (en vez de
+    // un await secuencial por persona) — con un grupo grande, esperar cada
+    // send uno detrás del otro puede sumar varios segundos y arriesgar el
+    // timeout de la function serverless. Antes esto era siempre UN solo
+    // envío sin importar el tamaño del grupo; ahora que es uno por
+    // persona, el tiempo total tiene que mantenerse acotado al del envío
+    // más lento, no a la suma de todos.
+    const envios = Array.from(gruposPorEmail, ([destEmail, personas]) => ({
+      to: destEmail,
+      nombres: personas.map((p) => p.nombre),
+      attachments: [
+        ...audioAttachments,
+        ...personas.map((p) => ({
+          filename: `Certificado-JAM-2026-${sesion.codigo_id}-${slugify(p.nombre)}.pdf`,
+          content: p.buf,
+        })),
+      ],
+    }));
+
+    // Salvaguarda: si el email de contacto de la inscripción no coincide
+    // con el de ningún integrante (p. ej. lo cargó un responsable que no
+    // baila), igual se le avisa — con todos los certificados, porque no es
+    // "otro participante" sino quien gestionó la inscripción.
+    const emailsCubiertos = new Set(gruposPorEmail.keys());
+    const contacto = (email || "").trim().toLowerCase();
+    if (contacto && /@/.test(contacto) && !emailsCubiertos.has(contacto)) {
+      envios.push({
+        to: contacto,
+        nombres: [nombreResp || "Responsable"],
+        contactoFallback: true,
+        attachments: [
+          ...audioAttachments,
+          ...certBuffers.map((buf, i) => ({
+            filename: `Certificado-JAM-2026-${sesion.codigo_id}-${slugify(personasCertificado[i].nombre)}.pdf`,
+            content: buf,
+          })),
+        ],
+      });
+    }
+
+    const resultados = await Promise.allSettled(
+      envios.map((envio) =>
+        resend.emails.send({
+          from: SENDER,
+          to: [envio.to],
+          subject,
+          html: htmlFinal,
+          attachments: envio.attachments,
+        }),
+      ),
+    );
+
+    // El SDK de Resend NO rechaza la promesa ante errores de la API (email
+    // inválido, rate limit, remitente no verificado, etc.) — siempre
+    // resuelve, y hay que revisar el campo `.error` a mano. Un
+    // Promise.allSettled con status "fulfilled" no alcanza solo: eso
+    // únicamente detecta fallas de red (promesa rechazada). Sin este
+    // chequeo, un envío rechazado por la API figuraría como exitoso.
+    const enviados = resultados.map((r, i) => {
+      const envio = envios[i];
+      if (r.status === "fulfilled" && !r.value.error) {
+        return {
+          to: envio.to,
+          nombres: envio.nombres,
+          ok: true,
+          emailId: r.value.data?.id,
+          contactoFallback: envio.contactoFallback || undefined,
+        };
+      }
+      const errorMsg =
+        r.status === "fulfilled"
+          ? r.value.error?.message || "Error desconocido de Resend"
+          : r.reason?.message || String(r.reason);
+      return {
+        to: envio.to,
+        nombres: envio.nombres,
+        ok: false,
+        error: errorMsg,
+        contactoFallback: envio.contactoFallback || undefined,
+      };
+    });
+
+    if (!enviados.some((r) => r.ok))
+      return res.status(500).json({ error: "No se pudo enviar ningún email", enviados });
 
     return res.status(200).json({
       ok: true,
-      emailId: sendResult.data?.id,
-      to: Array.from(destinatariosDev),
-      destinatarios: destinatariosDev.size,
+      enviados,
       total: totalPts,
       jurados: puntajes.length,
     });
