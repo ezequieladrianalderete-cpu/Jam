@@ -4185,7 +4185,8 @@
         });
         // Selects
         var sede = document.getElementById("f-sede");
-        if (sede) STATE.sede_idx = sede.selectedIndex;
+        if (sede)
+          STATE.sede_idx = sede.value === "" ? null : parseInt(sede.value, 10);
         var pais = document.getElementById("f-pais");
         if (pais) STATE.pais_idx = pais.selectedIndex;
         var mod = document.getElementById("f-modalidad");
@@ -4236,9 +4237,7 @@
           if (el && STATE[id] !== undefined) el.value = STATE[id];
         });
         var sede = document.getElementById("f-sede");
-        if (sede && STATE.sede_idx != null) {
-          sede.selectedIndex = STATE.sede_idx;
-        }
+        if (sede) sede.value = STATE.sede_idx != null ? String(STATE.sede_idx) : "";
         var pais = document.getElementById("f-pais");
         if (pais && STATE.pais_idx != null) pais.selectedIndex = STATE.pais_idx;
         var mod = document.getElementById("f-modalidad");
@@ -4403,22 +4402,29 @@
 
       // ── OPCIONES HTML ─────────────────────────────────────────────────
       function sedesOpts() {
-        return SEDES.map(function (s, i) {
-          return (
-            '<option value="' +
-            i +
-            '"' +
-            (s.tipo === "v" ? ' style="color:#d97706"' : "") +
-            ">" +
-            s.n +
-            " — " +
-            s.fecha +
-            "</option>"
-          );
-        }).join("");
+        // Antes el primer <option> quedaba seleccionado por default (la
+        // primera sede de la lista), así que la mayoría dejaba pasar el
+        // campo sin elegir nada y quedaba mal cargado. Ahora arranca en un
+        // placeholder neutro que obliga a elegir de verdad.
+        return (
+          '<option value="" selected disabled>Seleccioná tu sede...</option>' +
+          SEDES.map(function (s, i) {
+            return (
+              '<option value="' +
+              i +
+              '"' +
+              (s.tipo === "v" ? ' style="color:#d97706"' : "") +
+              ">" +
+              s.n +
+              " — " +
+              s.fecha +
+              "</option>"
+            );
+          }).join("")
+        );
       }
       function onSedeChange(sel) {
-        STATE.sede_idx = sel.selectedIndex;
+        STATE.sede_idx = sel.value === "" ? null : parseInt(sel.value, 10);
       }
       function paisesOpts() {
         return PAISES.map(function (p, i) {
@@ -4548,6 +4554,14 @@
           if (!/^[+\d\s]+$/.test(cel.trim())) {
             toast("Celular inválido: solo +, espacios y números", "err");
             markErr("f-cel");
+            return;
+          }
+          if (
+            (INST === "reg" || INST === "rep" || INST === "nac") &&
+            STATE.sede_idx == null
+          ) {
+            toast("Seleccioná tu sede", "err");
+            markErr("f-sede");
             return;
           }
         }
@@ -6504,8 +6518,13 @@
         // de contacto. Queda a criterio del staff detectar y resolver
         // duplicados reales a mano desde /admin.
         var np = parseInt(STATE.cant) || 1;
+        // Antes solo se guardaba para "reg" — en rep/nac el formulario
+        // también pide "Sede de origen" (para saber de qué clasificatoria
+        // viene ese equipo) pero la elección se descartaba y quedaba
+        // guardada como null.
         var sedeData =
-          INST === "reg" && STATE.sede_idx != null
+          (INST === "reg" || INST === "rep" || INST === "nac") &&
+          STATE.sede_idx != null
             ? SEDES[STATE.sede_idx]
             : null;
         var paisData =
