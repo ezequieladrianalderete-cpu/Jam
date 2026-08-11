@@ -3715,6 +3715,16 @@
       async function acrBuscar() {
         const q = document.getElementById("acr-input").value.trim();
         if (!q) return;
+        // Código individual (JAM-REG-0161-2): mismo camino que el QR
+        // escaneado por cámara (acrProcesarIntegrante). Antes esta rama no
+        // existía acá, así que buscar a mano el código de un integrante
+        // puntual siempre daba "No se encontró el participante" aunque el
+        // escaneo por cámara del mismo QR sí funcionara.
+        const matchSub = q.match(/JAM-(?:INTER|INT|NAC|REG|REP)-\d+-\d+/i);
+        if (matchSub) {
+          await acrProcesarIntegrante(matchSub[0].toUpperCase());
+          return;
+        }
         const p = luData.find(
           (x) =>
             x.codigo_id?.toLowerCase() === q.toLowerCase() ||
