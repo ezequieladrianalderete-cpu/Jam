@@ -3765,10 +3765,61 @@
       <div class="row"><span class="muted text-xs">Estado</span><span>${LU_LBL[p.estado] || p.estado}</span></div>
       <div class="row" id="acr-contador-row" style="border-bottom:none"><span class="muted text-xs">Integrantes acreditados</span><span id="acr-contador">…</span></div>
     </div>
+    <div class="card sy2" id="acr-lista-integrantes"></div>
     <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${escJs(p.nombre_grupo || "")}')">✓ Confirmar presencia y acreditar</button>
     <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
-        // Cargar contador de integrantes acreditados (asíncrono, no bloquea)
+        // Cargar contador y detalle de integrantes acreditados (asíncrono, no bloquea)
         acrCargarContador(p.inscripcion_id);
+        acrCargarListaIntegrantes(p.inscripcion_id);
+      }
+
+      // Lista de integrantes del grupo con su estado, para saber exactamente
+      // quién falta acreditar (no solo el número). Se puede marcar presente
+      // a cada uno desde acá mismo, sin salir de la tarjeta del grupo.
+      async function acrCargarListaIntegrantes(inscripcionId) {
+        const cont = document.getElementById("acr-lista-integrantes");
+        if (!cont || !inscripcionId) return;
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .from("integrantes")
+            .select("id,orden,nombre,estado")
+            .eq("inscripcion_id", inscripcionId)
+            .order("orden");
+          if (error || !data || !data.length) {
+            cont.innerHTML = "";
+            return;
+          }
+          cont.innerHTML = data
+            .map((it) => {
+              const ok = it.estado === "acreditado";
+              return `<div class="row" style="align-items:center">
+        <span>${it.orden}. ${esc(it.nombre || "—")}</span>
+        ${
+          ok
+            ? '<span class="bdg bdg-green">✓ presente</span>'
+            : `<button class="btn bg bsm" onclick="acrAcreditarDesdeLista('${it.id}','${escJs(it.nombre || "")}','${inscripcionId}')">Marcar presente</button>`
+        }
+      </div>`;
+            })
+            .join("");
+        } catch (e) {
+          cont.innerHTML = "";
+        }
+      }
+
+      async function acrAcreditarDesdeLista(id, nombre, inscripcionId) {
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .rpc("acreditar_integrante", { p_id: id, p_acreditar: true });
+          if (error) throw error;
+          toast("✓ " + nombre + " presente", "ok");
+          acrCargarContador(inscripcionId);
+          acrCargarListaIntegrantes(inscripcionId);
+        } catch (e) {
+          toast("Error al acreditar: " + e.message, "err");
+        }
       }
 
       // Muestra "X de Y" integrantes acreditados en la tarjeta del grupo.
