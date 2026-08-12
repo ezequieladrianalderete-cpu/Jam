@@ -1266,6 +1266,15 @@
           ? '<span class="status-pill ok" title="Comprobante subido"><span class="ico">📎</span>Compr.</span>'
           : '<span class="status-pill empty" title="Sin comprobante"><span class="ico">○</span>Compr.</span>';
 
+        // Comprobante de clasificación (solo Nacional: certificado de haber
+        // aprobado en la sede, se pide al inscribirse a la Final Nacional).
+        const clasifPill =
+          ins.instancia === "nac"
+            ? ins.clasif_url
+              ? '<span class="status-pill ok" title="Comprobante de clasificación subido"><span class="ico">🏅</span>Clasif.</span>'
+              : '<span class="status-pill empty" title="Sin comprobante de clasificación"><span class="ico">○</span>Clasif.</span>'
+            : "";
+
         // Sede / país
         let sedeLabel = "";
         if (ins.sede_nombre) {
@@ -1308,6 +1317,11 @@
             esc(ins.id) +
             '\')" title="Ver comprobante de pago">📎 Comprobante</button>'
           : "";
+        const clasifBtn = ins.clasif_url
+          ? '<button class="btn-icon attn" onclick="verClasificacion(\'' +
+            esc(ins.id) +
+            '\')" title="Ver comprobante de clasificación">🏅 Clasificación</button>'
+          : "";
 
         return (
           '<div class="ins-row">' +
@@ -1320,6 +1334,7 @@
           recargoPill +
           pagoPill +
           compPill +
+          clasifPill +
           "</div>" +
           "</div>" +
           '<div class="ins-col-mid">' +
@@ -1353,6 +1368,7 @@
           esc(ins.id) +
           "')\">🎵 Música</button>" +
           compBtn +
+          clasifBtn +
           '<button class="btn-icon" onclick="confirmarSenia(\'' +
           esc(ins.id) +
           "')\">½ Seña</button>" +
@@ -1382,12 +1398,36 @@
           toast("err", "Sin comprobante");
           return;
         }
-        const url = ins.comprobante_url;
+        mostrarArchivoModal(
+          ins.comprobante_url,
+          "Comprobante · " +
+            getCodigo(ins) +
+            " — " +
+            (ins.nombre_grupo || ins.nombre || ""),
+        );
+      }
+      // Comprobante de clasificación (Final Nacional): el certificado que
+      // acredita haber aprobado en una sede regional. Reusa el mismo modal
+      // que el comprobante de pago, antes solo cableado para ese caso.
+      function verClasificacion(id) {
+        const ins = allInscriptos.find((x) => x.id === id);
+        if (!ins || !ins.clasif_url) {
+          toast("err", "Sin comprobante de clasificación");
+          return;
+        }
+        mostrarArchivoModal(
+          ins.clasif_url,
+          "Clasificación · " +
+            getCodigo(ins) +
+            " — " +
+            (ins.nombre_grupo || ins.nombre || ""),
+        );
+      }
+      function mostrarArchivoModal(url, titulo) {
         const ext = (url.split("?")[0].split(".").pop() || "").toLowerCase();
-        const cod = getCodigo(ins);
         let viewer = "";
         if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
-          viewer = '<img src="' + esc(url) + '" alt="Comprobante">';
+          viewer = '<img src="' + esc(url) + '" alt="Archivo">';
         } else if (ext === "pdf") {
           viewer = '<iframe src="' + esc(url) + '"></iframe>';
         } else {
@@ -1399,10 +1439,8 @@
         $("compModal").innerHTML =
           '<div class="modal-box" onclick="event.stopPropagation()">' +
           '<div class="modal-head">' +
-          "<h3>Comprobante · " +
-          esc(cod) +
-          " — " +
-          esc(ins.nombre_grupo || ins.nombre || "") +
+          "<h3>" +
+          esc(titulo) +
           "</h3>" +
           '<button class="modal-close" onclick="closeComp()">✕</button>' +
           "</div>" +
