@@ -4401,6 +4401,39 @@
         return { v: v, m: "ARS" };
       }
 
+      // Fechas de SEDES son texto libre tipo "9 Ago" (sin año, siempre del
+      // año del evento) — se parsean para poder bloquear una sede una vez
+      // que ya pasó su fecha.
+      var MESES_ABR = {
+        ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
+        jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+      };
+      var EVENTO_ANIO = 2026;
+      function fechaSedeADate(fechaStr) {
+        var m = String(fechaStr || "")
+          .trim()
+          .match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]{3})/);
+        if (!m) return null;
+        var dia = parseInt(m[1], 10);
+        var mes = MESES_ABR[m[2].toLowerCase()];
+        if (mes == null || isNaN(dia)) return null;
+        return new Date(EVENTO_ANIO, mes, dia);
+      }
+      function sedeVencida(s) {
+        var d = fechaSedeADate(s.fecha);
+        if (!d) return false;
+        var hoy = new Date();
+        var hoySoloFecha = new Date(
+          hoy.getFullYear(),
+          hoy.getMonth(),
+          hoy.getDate(),
+        );
+        // Se bloquea recién al día siguiente de la fecha de la sede, no ese
+        // mismo día (el 9 de agosto todavía se puede elegir "Zona Norte";
+        // el 10 ya no).
+        return hoySoloFecha > d;
+      }
+
       // ── OPCIONES HTML ─────────────────────────────────────────────────
       function sedesOpts() {
         // Antes el primer <option> quedaba seleccionado por default (la
@@ -4410,15 +4443,23 @@
         return (
           '<option value="" selected disabled>Seleccioná tu sede...</option>' +
           SEDES.map(function (s, i) {
+            var vencida = sedeVencida(s);
+            var color = vencida
+              ? "#999"
+              : s.tipo === "v"
+                ? "#d97706"
+                : "";
             return (
               '<option value="' +
               i +
               '"' +
-              (s.tipo === "v" ? ' style="color:#d97706"' : "") +
+              (vencida ? " disabled" : "") +
+              (color ? ' style="color:' + color + '"' : "") +
               ">" +
               s.n +
               " — " +
               s.fecha +
+              (vencida ? " (cerrada)" : "") +
               "</option>"
             );
           }).join("")
@@ -4557,13 +4598,26 @@
             markErr("f-cel");
             return;
           }
-          if (
-            (INST === "reg" || INST === "rep" || INST === "nac") &&
-            STATE.sede_idx == null
-          ) {
-            toast("Seleccioná tu sede", "err");
-            markErr("f-sede");
-            return;
+          if (INST === "reg" || INST === "rep" || INST === "nac") {
+            if (STATE.sede_idx == null) {
+              toast("Seleccioná tu sede", "err");
+              markErr("f-sede");
+              return;
+            }
+            // Cubre el caso de un formulario dejado a medio completar: la
+            // sede elegida en su momento pudo haber cerrado mientras tanto.
+            var sedeSel = SEDES[STATE.sede_idx];
+            if (sedeSel && sedeVencida(sedeSel)) {
+              toast(
+                "Esa sede ya cerró su inscripción, elegí otra",
+                "err",
+              );
+              STATE.sede_idx = null;
+              var selSede = document.getElementById("f-sede");
+              if (selSede) selSede.value = "";
+              markErr("f-sede");
+              return;
+            }
           }
         }
         // Validar nombre de grupo al ir de paso 2 → 3
