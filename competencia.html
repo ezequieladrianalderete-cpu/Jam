@@ -15,6 +15,8 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <style>
       html,
       body {
@@ -1473,14 +1475,14 @@
             <div class="fw7" style="font-size: 18px">
               Ranking en tiempo real
             </div>
-            <button
-              class="btn bgn bsm"
-              onclick="
-                toast('Ranking publicado en pantalla de proyección', 'ok')
-              "
-            >
-              📺 Publicar en pantalla
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button class="btn bgn bsm" onclick="dPublicarRanking()">
+                📺 Publicar en pantalla
+              </button>
+              <button class="btn bo bsm" onclick="exportRankingPDF()">
+                📄 Exportar PDF
+              </button>
+            </div>
           </div>
           <div
             id="d-rank-inst-filters"
@@ -4963,6 +4965,22 @@
             ? nivFiltered
             : deduped;
 
+        // Snapshot de exactamente lo que queda en pantalla (mismo array,
+        // mismo orden) para que "Exportar PDF" descargue lo mismo que se
+        // está viendo, sin tener que re-derivar los filtros por su cuenta.
+        window._rankLastRendered = {
+          rows: toRender,
+          mostrarPuntaje: cfg.mostrar_puntaje,
+          catDisplayActiva: !!(rankCatFilter || rankNivFilter),
+          instLabel:
+            cfg.instancias.find((x) => normInst(x.key) === inst)?.label ||
+            inst.toUpperCase(),
+          nivLabel: rankNivFilter
+            ? cfg.niv_labels[rankNivFilter] || rankNivFilter
+            : null,
+          catLabel: rankCatFilter,
+        };
+
         const scoreTh = document.getElementById("d-rank-score-th");
         if (scoreTh) scoreTh.style.display = cfg.mostrar_puntaje ? "" : "none";
 
@@ -4990,6 +5008,120 @@
             : "";
           tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${esc(r.nombre_grupo)}</td><td class="muted">${catDisplay}</td>${scoreCell}</tr>`;
         });
+      }
+
+      // "📺 Publicar en pantalla": antes solo mostraba un toast de éxito sin
+      // hacer nada — la pantalla de proyección ya tenía su propio ranking
+      // en vivo, independiente. Ahora sí hace algo real: empuja los
+      // filtros (instancia/nivel/categoría) que el director tiene
+      // seleccionados en este momento para que la pantalla de proyección
+      // (solo esa, no las vistas embebidas de staff/dj/presentador) los
+      // adopte. Ver checkAndApplyRankingPush() en evento.html.
+      async function dPublicarRanking() {
+        const cfg = getRankingCfg();
+        const normInst = (v) => (v === "int" || v === "inter" ? "inter" : v || "nac");
+        const inst = normInst(
+          rankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"),
+        );
+        try {
+          const { data, error } = await db.rpc("actualizar_config", {
+            p_clave: "proy_ranking_push",
+            p_valor_json: {
+              ts: Date.now(),
+              instancia: inst,
+              nivel: rankNivFilter,
+              categoria: rankCatFilter,
+            },
+          });
+          if (error || !data?.ok) {
+            throw new Error(data?.error || error?.message || "desconocido");
+          }
+          toast("📺 Ranking enviado a la pantalla de proyección", "ok");
+        } catch (e) {
+          toast("Error al publicar: " + e.message, "err");
+        }
+      }
+
+      // Exporta a PDF exactamente lo que se ve en la tabla de rankings en
+      // ese momento (mismos filtros de instancia/nivel/categoría) — usa el
+      // snapshot que buildRankings() deja en window._rankLastRendered, así
+      // no hay riesgo de que el PDF muestre algo distinto de lo que el
+      // director tiene en pantalla.
+      function exportRankingPDF() {
+        const snap = window._rankLastRendered;
+        if (!snap || !snap.rows || snap.rows.length === 0) {
+          toast("No hay datos en el ranking para exportar", "err");
+          return;
+        }
+        if (typeof window.jspdf === "undefined") {
+          toast("Librería PDF no cargada, recargá la página", "err");
+          return;
+        }
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "portrait", unit: "pt" });
+          const madre = window._nombreMadre || "CUP SYSTEM";
+          const edicion = window._edicion || "";
+          const titulo = (madre + " " + edicion).trim();
+          const subtitulo =
+            "Ranking · " +
+            snap.instLabel +
+            (snap.nivLabel ? " · " + snap.nivLabel : "") +
+            (snap.catLabel ? " · " + snap.catLabel : "");
+
+          doc.setFontSize(16);
+          doc.setTextColor(40, 40, 40);
+          doc.text(titulo, 40, 40);
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text(subtitulo, 40, 58);
+          doc.setFontSize(9);
+          doc.setTextColor(140, 140, 140);
+          doc.text("Generado: " + new Date().toLocaleString("es-AR"), 40, 74);
+
+          const head = snap.mostrarPuntaje
+            ? [["#", "Código", "Grupo", "Categoría", "Puntaje"]]
+            : [["#", "Código", "Grupo", "Categoría"]];
+          const body = snap.rows.map((r, i) => {
+            const catDisplay =
+              snap.catDisplayActiva && r._activeCat
+                ? r._activeCat.c + ": " + r._activeCat.n
+                : parseCat(r.categoria);
+            const row = [
+              String(i + 1),
+              r.codigo_id || "",
+              r.nombre_grupo || "",
+              catDisplay,
+            ];
+            if (snap.mostrarPuntaje) {
+              row.push(
+                r.subtotal_parcial != null ? String(r.subtotal_parcial) : "—",
+              );
+            }
+            return row;
+          });
+
+          doc.autoTable({
+            head,
+            body,
+            startY: 90,
+            styles: { fontSize: 9, cellPadding: 5 },
+            headStyles: { fillColor: [201, 168, 76], textColor: [20, 20, 20] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+          });
+
+          const fecha = new Date().toISOString().slice(0, 10);
+          const nombreArchivo =
+            "Ranking-" +
+            snap.instLabel.replace(/[^a-zA-Z0-9]+/g, "") +
+            "-" +
+            fecha +
+            ".pdf";
+          doc.save(nombreArchivo);
+          toast("✓ PDF descargado", "ok");
+        } catch (e) {
+          toast("Error al exportar PDF: " + e.message, "err");
+        }
       }
 
       function setRankFilter(inst) {
