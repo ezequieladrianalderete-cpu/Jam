@@ -4986,6 +4986,7 @@
           nivLabel: rankNivFilter
             ? cfg.niv_labels[rankNivFilter] || rankNivFilter
             : null,
+          nivKey: rankNivFilter,
           catLabel: rankCatFilter,
         };
 
@@ -5132,13 +5133,22 @@
           const madre = window._nombreMadre || "CUP SYSTEM";
           const edicion = window._edicion || "";
           const titulo = (madre + " " + edicion).trim();
-          const esTodos = !snap.nivLabel && !snap.catLabel;
+          // Se agrupa siempre que no haya una categoría puntual elegida —
+          // esto incluye tanto "Todos" (sin nivel ni categoría) como "un
+          // nivel específico, todas sus categorías": en ambos casos una
+          // sola lista ordenada por puntaje mezclaría categorías distintas
+          // entre sí, así que cada categoría va en su propia tabla.
+          const agrupar = !snap.catLabel;
           const subtitulo =
             "Ranking · " +
             snap.instLabel +
             (snap.nivLabel ? " · " + snap.nivLabel : "") +
             (snap.catLabel ? " · " + snap.catLabel : "") +
-            (esTodos ? " · Todos (agrupado por nivel y categoría)" : "");
+            (agrupar
+              ? snap.nivLabel
+                ? " (agrupado por categoría)"
+                : " · Todos (agrupado por nivel y categoría)"
+              : "");
 
           doc.setFontSize(16);
           doc.setTextColor(40, 40, 40);
@@ -5173,10 +5183,18 @@
             alternateRowStyles: { fillColor: [245, 245, 245] },
           };
 
-          if (esTodos) {
+          if (agrupar) {
+            // Si ya hay un nivel elegido, partimos de ese subconjunto (no
+            // tiene sentido volver a agrupar por nivel cuando ya está fijo
+            // a uno solo) y solo agrupamos por categoría dentro de él.
+            const base = snap.nivKey
+              ? (snap.allExpanded || []).filter(
+                  (r) => r._activeCat?.niv === snap.nivKey,
+                )
+              : snap.allExpanded || [];
             const grupos = agruparRankingParaExportar(
-              snap.allExpanded || [],
-              snap.mostrarNiv,
+              base,
+              snap.nivKey ? false : snap.mostrarNiv,
               snap.nivLabels || {},
             );
             let y = 90;
