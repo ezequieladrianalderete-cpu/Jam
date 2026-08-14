@@ -4434,8 +4434,54 @@
         return hoySoloFecha > d;
       }
 
+      // Override manual desde /admin (evento.config, clave "sedes_override"):
+      // { [sede_id]: true|false }. Si una sede no está en el objeto, se usa
+      // el criterio automático por fecha (sedeVencida). Se carga async al
+      // inicio — hasta que llegue, todo funciona igual que antes (solo por
+      // fecha).
+      var SEDES_OVERRIDE = {};
+      function sedeHabilitada(s) {
+        if (Object.prototype.hasOwnProperty.call(SEDES_OVERRIDE, s.id)) {
+          return !!SEDES_OVERRIDE[s.id];
+        }
+        return !sedeVencida(s);
+      }
+      async function cargarSedesOverride() {
+        try {
+          var r = await fetch(
+            SB_URL +
+              "/rest/v1/config?clave=eq.sedes_override&select=valor_json",
+            {
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Accept-Profile": "evento",
+              },
+            },
+          );
+          var d = await r.json();
+          SEDES_OVERRIDE = (d && d[0] && d[0].valor_json) || {};
+        } catch (e) {
+          return;
+        }
+        // Si el select de sede ya está en pantalla (instancia Sedes) cuando
+        // termina de cargar, refrescarlo sin perder lo ya elegido.
+        var sel = document.getElementById("f-sede");
+        if (sel && INST === "reg") {
+          var actual = sel.value;
+          sel.innerHTML = sedesOpts(true);
+          sel.value = actual;
+        }
+      }
+
       // ── OPCIONES HTML ─────────────────────────────────────────────────
-      function sedesOpts() {
+      // aplicarBloqueo: true solo en la instancia Sedes (pre-registro a una
+      // sede futura, tiene sentido bloquear las que ya pasaron o que el
+      // staff cerró a mano). En Repesca y Nacional la persona declara de
+      // qué sede viene (ya pasó, es historia) — ahí aparecen todas,
+      // habilitadas, y sin la fecha para no sugerir que hay que elegir
+      // "la próxima".
+      function sedesOpts(aplicarBloqueo) {
         // Antes el primer <option> quedaba seleccionado por default (la
         // primera sede de la lista), así que la mayoría dejaba pasar el
         // campo sin elegir nada y quedaba mal cargado. Ahora arranca en un
@@ -4443,23 +4489,22 @@
         return (
           '<option value="" selected disabled>Seleccioná tu sede...</option>' +
           SEDES.map(function (s, i) {
-            var vencida = sedeVencida(s);
-            var color = vencida
+            var bloqueada = !!aplicarBloqueo && !sedeHabilitada(s);
+            var color = bloqueada
               ? "#999"
               : s.tipo === "v"
                 ? "#d97706"
                 : "";
+            var etiqueta = aplicarBloqueo ? s.n + " — " + s.fecha : s.n;
             return (
               '<option value="' +
               i +
               '"' +
-              (vencida ? " disabled" : "") +
+              (bloqueada ? " disabled" : "") +
               (color ? ' style="color:' + color + '"' : "") +
               ">" +
-              s.n +
-              " — " +
-              s.fecha +
-              (vencida ? " (cerrada)" : "") +
+              etiqueta +
+              (bloqueada ? " (cerrada)" : "") +
               "</option>"
             );
           }).join("")
@@ -4604,19 +4649,23 @@
               markErr("f-sede");
               return;
             }
-            // Cubre el caso de un formulario dejado a medio completar: la
-            // sede elegida en su momento pudo haber cerrado mientras tanto.
-            var sedeSel = SEDES[STATE.sede_idx];
-            if (sedeSel && sedeVencida(sedeSel)) {
-              toast(
-                "Esa sede ya cerró su inscripción, elegí otra",
-                "err",
-              );
-              STATE.sede_idx = null;
-              var selSede = document.getElementById("f-sede");
-              if (selSede) selSede.value = "";
-              markErr("f-sede");
-              return;
+            // El bloqueo por fecha/override solo aplica al pre-registro a
+            // una sede (INST === "reg"). En Repesca y Nacional la sede es
+            // solo un dato histórico (de dónde viene ese equipo), así que
+            // ahí cualquier sede sigue siendo válida aunque ya haya pasado.
+            if (INST === "reg") {
+              var sedeSel = SEDES[STATE.sede_idx];
+              if (sedeSel && !sedeHabilitada(sedeSel)) {
+                toast(
+                  "Esa sede ya cerró su inscripción, elegí otra",
+                  "err",
+                );
+                STATE.sede_idx = null;
+                var selSede = document.getElementById("f-sede");
+                if (selSede) selSede.value = "";
+                markErr("f-sede");
+                return;
+              }
             }
           }
         }
@@ -5599,7 +5648,7 @@
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede regional *</label>' +
               '<select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(true) +
               "</select></div>" +
               '<div class="fld" style="margin-bottom:0"><label>Ciudad / Procedencia</label>' +
               '<input type="text" id="f-ciudad" placeholder="Ciudad de donde venís"></div>' +
@@ -5740,7 +5789,7 @@
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(false) +
               "</select></div>" +
               "</div>" +
               '<div class="cg mt3"><p style="font-size:14px;color:rgba(28,28,22,.60)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#d97706">$25.000 por participante</strong>.</p></div>' +
@@ -6129,7 +6178,7 @@
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(false) +
               "</select></div>" +
               "</div>" +
               '<div class="cw mt3"><p style="font-size:16px;color:rgba(28,28,22,.60)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
@@ -7046,6 +7095,9 @@
               .catch(function () {});
           } catch (e) {}
         })();
+        // Override manual de sedes (habilitar/deshabilitar desde /admin,
+        // independiente del bloqueo automático por fecha).
+        cargarSedesOverride();
       });
       document.body.className = "bg-nac";
     </script>
