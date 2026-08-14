@@ -2174,15 +2174,44 @@
       var SEDES_ADMIN = [];
       var SEDES_ADMIN_SEQ = 0;
       var MESES_ABR_SEDES = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
-      function sedeAdminVencida(fecha) {
+      var MESES_LARGOS_SEDES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      // El campo de fecha es texto libre ("13 Ago") — si no respeta el
+      // formato (número + espacio + primeras 3 letras del mes en español),
+      // no tira error: esa sede simplemente nunca se cierra sola por
+      // fecha, en silencio. sedeFechaHintTexto() existe para que eso se
+      // vea en el panel en vez de pasar desapercibido.
+      function parseFechaSedeAdmin(fecha) {
         var m = String(fecha || "").trim().match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]{3})/);
-        if (!m) return false;
+        if (!m) return null;
         var dia = parseInt(m[1], 10), mes = MESES_ABR_SEDES[m[2].toLowerCase()];
-        if (mes == null || isNaN(dia)) return false;
-        var d = new Date(2026, mes, dia);
+        if (mes == null || isNaN(dia)) return null;
+        return new Date(2026, mes, dia);
+      }
+      function sedeAdminVencida(fecha) {
+        var d = parseFechaSedeAdmin(fecha);
+        if (!d) return false;
         var hoy = new Date();
         var hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
         return hoySolo > d;
+      }
+      function sedeFechaHintTexto(fecha) {
+        if (!String(fecha || '').trim()) return '';
+        var d = parseFechaSedeAdmin(fecha);
+        if (!d) {
+          return '⚠ No reconozco ese formato (probá "13 Ago") — esta sede nunca se va a cerrar sola por fecha.';
+        }
+        var cierre = new Date(d.getTime());
+        cierre.setDate(cierre.getDate() + 1);
+        return '✓ Se cierra sola a partir del ' + cierre.getDate() + ' de ' + MESES_LARGOS_SEDES[cierre.getMonth()] + '.';
+      }
+      function sedeFechaHintUpdate(inputEl) {
+        var hint = inputEl.parentElement && inputEl.parentElement.querySelector('.sede-fecha-hint');
+        if (!hint) return;
+        var v = inputEl.value;
+        hint.style.color = !v.trim()
+          ? 'rgba(248,245,238,.4)'
+          : (parseFechaSedeAdmin(v) ? '#4CAF7D' : '#E0524C');
+        hint.textContent = sedeFechaHintTexto(v);
       }
       function slugifySede(n) {
         var s = (n || "").toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -2250,12 +2279,19 @@
         }
         rowsCont.innerHTML = SEDES_ADMIN.map(function (s) {
           var vencidaTxt = sedeAdminVencida(s.fecha) ? ' (cerrada por fecha)' : ' (abierta por fecha)';
+          var fechaHintColor = !String(s.fecha || '').trim()
+            ? 'rgba(248,245,238,.4)'
+            : (parseFechaSedeAdmin(s.fecha) ? '#4CAF7D' : '#E0524C');
           return (
             '<div data-key="' + s._key + '" style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;margin-bottom:10px">' +
-            '<div style="display:grid;grid-template-columns:1fr 130px;gap:8px;margin-bottom:8px">' +
+            '<div style="display:grid;grid-template-columns:1fr 130px;gap:8px;margin-bottom:2px">' +
             sedeInputHtml('n', 'Nombre de la sede', s.n) +
-            sedeInputHtml('fecha', 'Fecha (ej: 23 Ago)', s.fecha) +
+            '<div>' +
+            '<input data-field="fecha" placeholder="Fecha (ej: 23 Ago)" value="' + esc(s.fecha || '') + '" oninput="sedeFechaHintUpdate(this)" style="width:100%;padding:9px;background:#0e0e0e;border:1px solid #333;border-radius:6px;color:#F8F5EE;font-family:inherit;font-size:12px">' +
+            '<div class="sede-fecha-hint" style="font-size:10.5px;margin-top:4px;line-height:1.4;color:' + fechaHintColor + '">' + esc(sedeFechaHintTexto(s.fecha)) + '</div>' +
             '</div>' +
+            '</div>' +
+            '<div style="height:8px"></div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
             sedeInputHtml('org', 'Organizador', s.org) +
             sedeInputHtml('email', 'Email organizador', s.email) +
