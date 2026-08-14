@@ -2351,6 +2351,7 @@
             "block";
           await loadSesionActivaForProy();
           await buildPfRanking();
+          await checkAndApplyRankingPush();
           subscribeRealtimeSesion();
           // A diferencia de las demás pantallas, proyección nunca pasaba por
           // initEvento() y se quedaba sin ningún respaldo de polling — solo
@@ -2363,6 +2364,7 @@
             try {
               await loadSesionActivaForProy();
               await buildPfRanking();
+              await checkAndApplyRankingPush();
             } catch (e) {}
           }, 8000);
           return;
@@ -5294,6 +5296,35 @@
             : deduped;
         buildRankingRows("pf-rank-rows", toRender, true, cfg.mostrar_puntaje);
         buildRankingRows("pe-rank-rows", toRender, false, cfg.mostrar_puntaje);
+      }
+
+      // Comando remoto del director ("📺 Publicar en pantalla" en
+      // competencia.html): fuerza esta pantalla —solo si es rol=proyeccion—
+      // a mostrar el ranking con los filtros que el director tenía
+      // seleccionados en ese momento. Las vistas embebidas de ranking de
+      // staff/dj/presentador (pe-*) siguen totalmente locales, esto nunca
+      // las toca: solo se llama desde el bloque de init/poll de
+      // rol==="proyeccion".
+      let _proyLastRankingPushTs = 0;
+      async function checkAndApplyRankingPush() {
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .from("config")
+            .select("valor_json")
+            .eq("clave", "proy_ranking_push")
+            .maybeSingle();
+          if (error || !data?.valor_json) return;
+          const push = data.valor_json;
+          if (!push.ts || push.ts <= _proyLastRankingPushTs) return;
+          _proyLastRankingPushTs = push.ts;
+          pfRankFilter = push.instancia || null;
+          pfRankNivFilter = push.nivel || null;
+          pfRankCatFilter = push.categoria || null;
+          await buildPfRanking();
+          const btn = document.getElementById("pfc-ranking");
+          if (btn) pfMode("ranking", btn);
+        } catch (e) {}
       }
 
       function setPfRankFilter(inst) {
