@@ -2085,6 +2085,15 @@
           pane.appendChild(bancosDiv);
         }
         renderBancos();
+        // Inyectar sección de sedes justo después de bancos
+        var sedesDiv = document.createElement('div');
+        sedesDiv.id = 'sys-sedes-container';
+        if (bancosDiv.nextSibling) {
+          pane.insertBefore(sedesDiv, bancosDiv.nextSibling);
+        } else {
+          pane.appendChild(sedesDiv);
+        }
+        renderSedes();
       }
 
       function renderBancos() {
@@ -2151,6 +2160,108 @@
           });
           if (!r.ok) throw new Error('HTTP ' + r.status);
           if (msg) { msg.style.color = '#4CAF7D'; msg.textContent = '\u2713 Datos bancarios guardados. Ya impactan en la web y los emails.'; }
+        } catch (e) {
+          if (msg) { msg.style.color = '#E0524C'; msg.textContent = 'Error: ' + e.message; }
+        }
+      }
+
+      // === Sedes regionales (habilitar/deshabilitar manualmente) ===
+      // Copia liviana de la lista de sedes de index.html (id/nombre/fecha
+      // nomás, no hace falta org/email acá). Solo afecta la instancia
+      // Sedes: por defecto cada una se cierra sola al día siguiente de su
+      // fecha, pero desde acá Gastón puede forzarla abierta o cerrada sin
+      // depender de un cambio de código.
+      var SEDES_ADMIN = [
+        { id: "tucuman", n: "Tucumán", fecha: "23 Ago" },
+        { id: "la-plata", n: "La Plata", fecha: "22 Ago" },
+        { id: "cordoba", n: "Córdoba", fecha: "11 Jul" },
+        { id: "zona-norte", n: "Zona Norte", fecha: "9 Ago" },
+        { id: "zona-sur", n: "Zona Sur", fecha: "16 Ago" },
+        { id: "madryn", n: "Puerto Madryn", fecha: "5 Sep" },
+        { id: "caba-oeste", n: "CABA + Zona Oeste", fecha: "29 Ago" },
+        { id: "jujuy", n: "Jujuy y Salta — Virtual", fecha: "5 Ago" },
+        { id: "corrientes", n: "Corrientes / Chaco / Formosa — Virtual", fecha: "6 Ago" },
+        { id: "santa-fe", n: "Santa Fe — Virtual", fecha: "4 Ago" },
+        { id: "san-luis", n: "San Luis — Virtual", fecha: "3 Ago" },
+        { id: "entre-rios", n: "Entre Ríos — Virtual", fecha: "2 Ago" },
+        { id: "mdp", n: "Mar del Plata — Virtual", fecha: "5 Ago" },
+        { id: "bahia", n: "Bahía Blanca — Virtual", fecha: "1 Ago" },
+      ];
+      var MESES_ABR_SEDES = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
+      function sedeAdminVencida(s) {
+        var m = String(s.fecha || "").trim().match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]{3})/);
+        if (!m) return false;
+        var dia = parseInt(m[1], 10), mes = MESES_ABR_SEDES[m[2].toLowerCase()];
+        if (mes == null || isNaN(dia)) return false;
+        var d = new Date(2026, mes, dia);
+        var hoy = new Date();
+        var hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        return hoySolo > d;
+      }
+
+      function renderSedes() {
+        var cont = document.getElementById('sys-sedes-container');
+        if (!cont) return;
+        var rows = SEDES_ADMIN.map(function (s) {
+          var estadoAuto = sedeAdminVencida(s) ? 'Cerrada por fecha' : 'Abierta por fecha';
+          return (
+            '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)">' +
+            '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + esc(s.n) + '</div>' +
+            '<div style="font-size:11px;color:rgba(248,245,238,.5)">' + esc(s.fecha) + ' · ' + estadoAuto + '</div></div>' +
+            '<select data-sede="' + s.id + '" style="background:#0e0e0e;border:1px solid #333;border-radius:6px;color:#F8F5EE;padding:7px 9px;font-family:inherit;font-size:12px">' +
+            '<option value="auto">Automático (según fecha)</option>' +
+            '<option value="on">Forzar habilitada</option>' +
+            '<option value="off">Forzar deshabilitada</option>' +
+            '</select>' +
+            '</div>'
+          );
+        }).join('');
+        cont.innerHTML =
+          '<div class="det-block"><div class="det-title">📍 Sedes regionales</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:6px;line-height:1.5">Solo afecta la inscripción a <strong>Sedes</strong>. Cada una se cierra sola al día siguiente de su fecha — acá podés forzarla abierta o cerrada a mano. En Nacional y Repesca las sedes aparecen siempre todas (ahí solo se declara de dónde clasificaste).</div>' +
+          rows +
+          '<button onclick="sedesGuardar()" style="background:#4CAF7D;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-top:12px">💾 Guardar sedes</button>' +
+          '<div id="sedes-msg" style="font-size:12px;text-align:center;min-height:16px;margin-top:8px"></div>' +
+          '</div>';
+        sedesCargar();
+      }
+
+      async function sedesCargar() {
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/config?clave=eq.sedes_override&select=valor_json', {
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Accept-Profile': 'evento' }
+          });
+          var d = await r.json();
+          var ov = (d && d[0] && d[0].valor_json) || {};
+          SEDES_ADMIN.forEach(function (s) {
+            var sel = document.querySelector('select[data-sede="' + s.id + '"]');
+            if (!sel) return;
+            sel.value = Object.prototype.hasOwnProperty.call(ov, s.id)
+              ? (ov[s.id] ? 'on' : 'off')
+              : 'auto';
+          });
+        } catch (e) {}
+      }
+
+      async function sedesGuardar() {
+        var msg = document.getElementById('sedes-msg');
+        var payload = {};
+        SEDES_ADMIN.forEach(function (s) {
+          var sel = document.querySelector('select[data-sede="' + s.id + '"]');
+          if (!sel) return;
+          if (sel.value === 'on') payload[s.id] = true;
+          else if (sel.value === 'off') payload[s.id] = false;
+          // 'auto' no se guarda: cae al comportamiento por fecha
+        });
+        if (msg) { msg.style.color = '#888'; msg.textContent = 'Guardando…'; }
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/rpc/actualizar_config', {
+            method: 'POST',
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_clave: 'sedes_override', p_valor_json: payload })
+          });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (msg) { msg.style.color = '#4CAF7D'; msg.textContent = '✓ Sedes actualizadas. Ya impactan en la inscripción a Sedes.'; }
         } catch (e) {
           if (msg) { msg.style.color = '#E0524C'; msg.textContent = 'Error: ' + e.message; }
         }
