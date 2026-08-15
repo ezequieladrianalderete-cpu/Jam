@@ -322,13 +322,13 @@ module.exports = async function handler(req, res) {
           doc
             .font("Helvetica-Bold")
             .fontSize(13)
-            .text(String(dia), 267.5, 256.5, {
-              width: 55,
+            .text(String(dia), 250, 256.5, {
+              width: 57.5,
               align: "center",
               lineBreak: false,
             })
-            .text(String(mes), 335, 256.5, {
-              width: 55,
+            .text(String(mes), 317.5, 256.5, {
+              width: 56.5,
               align: "center",
               lineBreak: false,
             });
@@ -344,12 +344,12 @@ module.exports = async function handler(req, res) {
               lineBreak: false,
             });
 
-          const nombreSize = fitFontSize(nombre, "Times-Bold", 17, 9, 205);
+          const nombreSize = fitFontSize(nombre, "Times-Bold", 17, 9, 200);
           doc
             .font("Times-Bold")
             .fontSize(nombreSize)
-            .text(nombre, 197.5, 287.5 + (17 - nombreSize) / 2, {
-              width: 220,
+            .text(nombre, 207.5, 287.5 + (17 - nombreSize) / 2 + 2, {
+              width: 210,
               align: "center",
               lineBreak: false,
             });
