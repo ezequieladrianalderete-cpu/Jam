@@ -1985,9 +1985,17 @@
           filtered.length ? filtered : allInscriptos,
         );
         const rows = data.map((ins) => {
+          // Antes solo mostraba "#100/salsa" — sin el nombre no se
+          // distinguía de un vistazo qué categoría era cada número.
           const catsTxt = (ins.categorias || [])
-            .map((c) => "#" + c.c + (c.g ? "/" + c.g : ""))
-            .join(" ");
+            .map(
+              (c) =>
+                "#" +
+                c.c +
+                (c.n ? " " + c.n : "") +
+                (c.g ? " (" + c.g + ")" : ""),
+            )
+            .join(" · ");
           const integrantesArr = Array.isArray(ins.integrantes)
             ? ins.integrantes
             : [];
@@ -2026,7 +2034,7 @@
           ws["!cols"] = [
             { wch: 16 }, { wch: 12 }, { wch: 18 }, { wch: 14 },
             { wch: 25 }, { wch: 25 }, { wch: 28 }, { wch: 16 },
-            { wch: 12 }, { wch: 14 }, { wch: 40 }, { wch: 30 },
+            { wch: 12 }, { wch: 14 }, { wch: 40 }, { wch: 55 },
             { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 12 },
             { wch: 14 }, { wch: 14 }, { wch: 18 },
           ];
