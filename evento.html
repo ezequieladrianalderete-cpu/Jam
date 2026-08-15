@@ -3049,6 +3049,8 @@
               (eBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (estado === "pista") luCambiarEstado(id, "listo");
+                else if (estado === "pendiente")
+                  luCambiarEstado(id, "presente");
                 else luPonerEnPistaCategoria(id, catCode);
               }))(p.id, cat ? cat.c : null);
           }
