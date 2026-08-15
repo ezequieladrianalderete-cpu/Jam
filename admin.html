@@ -1934,6 +1934,41 @@
           toast("err", "Error: " + e.message);
         }
       }
+      // Mismo criterio de orden que usa competencia.html para los
+      // rankings: por instancia, después por nivel (Profesional primero,
+      // Kids al final) y categoría — así el Excel sale ya agrupado en vez
+      // de en el orden en que se cargaron a la base (que no dice nada).
+      const EXPORT_NIV_ORDER = [
+        "profesional", "semipro", "proam", "open",
+        "amateur", "master", "junior", "kids",
+      ];
+      function ordenarInscripcionesParaExportar(list) {
+        const instOrder = Object.keys(INSTANCIAS);
+        return list.slice().sort((a, b) => {
+          const ia = instOrder.indexOf(a.instancia);
+          const ib = instOrder.indexOf(b.instancia);
+          if (ia !== ib) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+
+          // Una inscripción normalmente tiene una sola categoría (el
+          // formulario dice "una inscripción = una categoría"); si por
+          // algún motivo hay varias, se ordena por la primera.
+          const catA = (a.categorias || [])[0] || {};
+          const catB = (b.categorias || [])[0] || {};
+          const nivA = EXPORT_NIV_ORDER.indexOf(catA.niv);
+          const nivB = EXPORT_NIV_ORDER.indexOf(catB.niv);
+          if (nivA !== nivB)
+            return (nivA === -1 ? 99 : nivA) - (nivB === -1 ? 99 : nivB);
+
+          const cA = Number(catA.c) || 0;
+          const cB = Number(catB.c) || 0;
+          if (cA !== cB) return cA - cB;
+
+          const nomA = (a.nombre_grupo || a.nombre || "").toLowerCase();
+          const nomB = (b.nombre_grupo || b.nombre || "").toLowerCase();
+          return nomA.localeCompare(nomB);
+        });
+      }
+
       // Antes esto exportaba un .csv de texto — al abrirlo con doble clic,
       // Excel en configuración regional Argentina (donde la coma es el
       // separador decimal) muchas veces no separa las columnas solo, y
@@ -1946,7 +1981,9 @@
           return;
         }
         const filtered = allInscriptos.filter(matchesFilters);
-        const data = filtered.length ? filtered : allInscriptos;
+        const data = ordenarInscripcionesParaExportar(
+          filtered.length ? filtered : allInscriptos,
+        );
         const rows = data.map((ins) => {
           const catsTxt = (ins.categorias || [])
             .map((c) => "#" + c.c + (c.g ? "/" + c.g : ""))
