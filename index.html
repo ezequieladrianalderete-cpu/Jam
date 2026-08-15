@@ -4140,10 +4140,21 @@
       function sv(k) {
         return STATE[k] || "";
       }
+      // La sede elegida se guarda por "id" estable (no por posici\u00f3n en el
+      // array): SEDES ahora se puede recargar/reordenar en caliente desde
+      // /admin (agregar, borrar, editar sedes), as\u00ed que un \u00edndice num\u00e9rico
+      // podr\u00eda terminar apuntando a otra sede distinta de la que la
+      // persona eligi\u00f3.
+      function findSede(id) {
+        if (id == null) return null;
+        for (var i = 0; i < SEDES.length; i++) {
+          if (SEDES[i].id === id) return SEDES[i];
+        }
+        return null;
+      }
       function stateSede() {
-        var idx = parseInt(STATE.sede_idx);
-        if (isNaN(idx) || !SEDES[idx]) return "\u2014";
-        var s = SEDES[idx];
+        var s = findSede(STATE.sede_id);
+        if (!s) return "\u2014";
         return s.n + " \u2014 " + s.fecha;
       }
       function statePais() {
@@ -4185,8 +4196,7 @@
         });
         // Selects
         var sede = document.getElementById("f-sede");
-        if (sede)
-          STATE.sede_idx = sede.value === "" ? null : parseInt(sede.value, 10);
+        if (sede) STATE.sede_id = sede.value === "" ? null : sede.value;
         var pais = document.getElementById("f-pais");
         if (pais) STATE.pais_idx = pais.selectedIndex;
         var mod = document.getElementById("f-modalidad");
@@ -4237,8 +4247,7 @@
           if (el && STATE[id] !== undefined) el.value = STATE[id];
         });
         var sede = document.getElementById("f-sede");
-        if (sede)
-          sede.value = STATE.sede_idx != null ? String(STATE.sede_idx) : "";
+        if (sede) sede.value = STATE.sede_id != null ? STATE.sede_id : "";
         var pais = document.getElementById("f-pais");
         if (pais && STATE.pais_idx != null) pais.selectedIndex = STATE.pais_idx;
         var mod = document.getElementById("f-modalidad");
@@ -4401,31 +4410,126 @@
         return { v: v, m: "ARS" };
       }
 
+      // Fechas de SEDES son texto libre tipo "9 Ago" (sin año, siempre del
+      // año del evento) — se parsean para poder bloquear una sede una vez
+      // que ya pasó su fecha.
+      var MESES_ABR = {
+        ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
+        jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+      };
+      var EVENTO_ANIO = 2026;
+      function fechaSedeADate(fechaStr) {
+        var m = String(fechaStr || "")
+          .trim()
+          .match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]{3})/);
+        if (!m) return null;
+        var dia = parseInt(m[1], 10);
+        var mes = MESES_ABR[m[2].toLowerCase()];
+        if (mes == null || isNaN(dia)) return null;
+        return new Date(EVENTO_ANIO, mes, dia);
+      }
+      function sedeVencida(s) {
+        var d = fechaSedeADate(s.fecha);
+        if (!d) return false;
+        var hoy = new Date();
+        var hoySoloFecha = new Date(
+          hoy.getFullYear(),
+          hoy.getMonth(),
+          hoy.getDate(),
+        );
+        // Se bloquea recién al día siguiente de la fecha de la sede, no ese
+        // mismo día (el 9 de agosto todavía se puede elegir "Zona Norte";
+        // el 10 ya no).
+        return hoySoloFecha > d;
+      }
+
+      // Estado de cada sede: "auto" (default, según fecha), "on" (forzada
+      // habilitada) u "off" (forzada deshabilitada) — editable desde
+      // /admin. Sedes sin el campo (o con "auto") caen al criterio de
+      // fecha.
+      function sedeHabilitada(s) {
+        if (s.estado === "on") return true;
+        if (s.estado === "off") return false;
+        return !sedeVencida(s);
+      }
+      // La lista completa de sedes (SEDES, más arriba) arranca con estos 14
+      // valores hardcodeados como respaldo — así el formulario nunca queda
+      // sin sedes si falla la carga de config — pero /admin puede agregar,
+      // editar o borrar sedes en evento.config (clave "sedes_lista"). Al
+      // cargar la página se pisa el contenido del array con lo que haya en
+      // la base, en el lugar (misma referencia) para que todo el código
+      // que ya usa SEDES vea la lista al día sin más cambios.
+      async function cargarSedesDesdeConfig() {
+        try {
+          var r = await fetch(
+            SB_URL + "/rest/v1/config?clave=eq.sedes_lista&select=valor_json",
+            {
+              headers: {
+                apikey: SB_ANON,
+                Authorization: "Bearer " + SB_ANON,
+                "Accept-Profile": "evento",
+              },
+            },
+          );
+          var d = await r.json();
+          var lista = d && d[0] && d[0].valor_json;
+          if (Array.isArray(lista) && lista.length) {
+            SEDES.length = 0;
+            lista.forEach(function (s) {
+              SEDES.push(s);
+            });
+          }
+        } catch (e) {
+          return;
+        }
+        // Si el select de sede ya está en pantalla cuando termina de
+        // cargar, refrescarlo sin perder lo ya elegido.
+        var sel = document.getElementById("f-sede");
+        if (sel) {
+          var actual = sel.value;
+          sel.innerHTML = sedesOpts(INST === "reg");
+          sel.value = actual;
+        }
+      }
+
       // ── OPCIONES HTML ─────────────────────────────────────────────────
-      function sedesOpts() {
+      // aplicarBloqueo: true solo en la instancia Sedes (pre-registro a una
+      // sede futura, tiene sentido bloquear las que ya pasaron o que el
+      // staff cerró a mano). En Repesca y Nacional la persona declara de
+      // qué sede viene (ya pasó, es historia) — ahí aparecen todas,
+      // habilitadas, y sin la fecha para no sugerir que hay que elegir
+      // "la próxima".
+      function sedesOpts(aplicarBloqueo) {
         // Antes el primer <option> quedaba seleccionado por default (la
         // primera sede de la lista), así que la mayoría dejaba pasar el
         // campo sin elegir nada y quedaba mal cargado. Ahora arranca en un
         // placeholder neutro que obliga a elegir de verdad.
         return (
           '<option value="" selected disabled>Seleccioná tu sede...</option>' +
-          SEDES.map(function (s, i) {
+          SEDES.map(function (s) {
+            var bloqueada = !!aplicarBloqueo && !sedeHabilitada(s);
+            var color = bloqueada
+              ? "#999"
+              : s.tipo === "v"
+                ? "#d97706"
+                : "";
+            var etiqueta = aplicarBloqueo ? s.n + " — " + s.fecha : s.n;
             return (
               '<option value="' +
-              i +
+              s.id +
               '"' +
-              (s.tipo === "v" ? ' style="color:#d97706"' : "") +
+              (bloqueada ? " disabled" : "") +
+              (color ? ' style="color:' + color + '"' : "") +
               ">" +
-              s.n +
-              " — " +
-              s.fecha +
+              etiqueta +
+              (bloqueada ? " (cerrada)" : "") +
               "</option>"
             );
           }).join("")
         );
       }
       function onSedeChange(sel) {
-        STATE.sede_idx = sel.value === "" ? null : parseInt(sel.value, 10);
+        STATE.sede_id = sel.value === "" ? null : sel.value;
       }
       function paisesOpts() {
         return PAISES.map(function (p, i) {
@@ -4557,13 +4661,30 @@
             markErr("f-cel");
             return;
           }
-          if (
-            (INST === "reg" || INST === "rep" || INST === "nac") &&
-            STATE.sede_idx == null
-          ) {
-            toast("Seleccioná tu sede", "err");
-            markErr("f-sede");
-            return;
+          if (INST === "reg" || INST === "rep" || INST === "nac") {
+            if (STATE.sede_id == null) {
+              toast("Seleccioná tu sede", "err");
+              markErr("f-sede");
+              return;
+            }
+            // El bloqueo por fecha/override solo aplica al pre-registro a
+            // una sede (INST === "reg"). En Repesca y Nacional la sede es
+            // solo un dato histórico (de dónde viene ese equipo), así que
+            // ahí cualquier sede sigue siendo válida aunque ya haya pasado.
+            if (INST === "reg") {
+              var sedeSel = findSede(STATE.sede_id);
+              if (sedeSel && !sedeHabilitada(sedeSel)) {
+                toast(
+                  "Esa sede ya cerró su inscripción, elegí otra",
+                  "err",
+                );
+                STATE.sede_id = null;
+                var selSede = document.getElementById("f-sede");
+                if (selSede) selSede.value = "";
+                markErr("f-sede");
+                return;
+              }
+            }
           }
         }
         // Validar nombre de grupo al ir de paso 2 → 3
@@ -5545,7 +5666,7 @@
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede regional *</label>' +
               '<select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(true) +
               "</select></div>" +
               '<div class="fld" style="margin-bottom:0"><label>Ciudad / Procedencia</label>' +
               '<input type="text" id="f-ciudad" placeholder="Ciudad de donde venís"></div>' +
@@ -5686,7 +5807,7 @@
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(false) +
               "</select></div>" +
               "</div>" +
               '<div class="cg mt3"><p style="font-size:14px;color:rgba(28,28,22,.60)">Modificar integrantes despu\u00e9s de confirmar: <strong style="color:#d97706">$25.000 por participante</strong>.</p></div>' +
@@ -6075,7 +6196,7 @@
               '<div class="fld"><label>Confirmar email *</label><input type="email" id="f-email2" placeholder="Repetir email"></div>' +
               '<div class="fld"><label>Celular / WhatsApp *</label><input type="tel" id="f-cel" placeholder="+54 11..." oninput="sanitizeCel(this)"></div>' +
               '<div class="fld"><label>Sede de origen *</label><select id="f-sede" onchange="onSedeChange(this)">' +
-              sedesOpts() +
+              sedesOpts(false) +
               "</select></div>" +
               "</div>" +
               '<div class="cw mt3"><p style="font-size:16px;color:rgba(28,28,22,.60)">Si clasific\u00e1s en la repesca, el sistema genera autom\u00e1ticamente tu inscripci\u00f3n al Nacional.</p></div>' +
@@ -6525,8 +6646,8 @@
         // guardada como null.
         var sedeData =
           (INST === "reg" || INST === "rep" || INST === "nac") &&
-          STATE.sede_idx != null
-            ? SEDES[STATE.sede_idx]
+          STATE.sede_id != null
+            ? findSede(STATE.sede_id)
             : null;
         var paisData =
           INST === "int" && STATE.pais_idx != null
@@ -6992,6 +7113,10 @@
               .catch(function () {});
           } catch (e) {}
         })();
+        // Lista de sedes editable desde /admin (agregar/editar/borrar,
+        // habilitar/deshabilitar). Arranca con el respaldo hardcodeado de
+        // SEDES y se actualiza con lo que haya en la base.
+        cargarSedesDesdeConfig();
       });
       document.body.className = "bg-nac";
     </script>
@@ -7472,12 +7597,8 @@
         }
 
         function esSedeVirtual() {
-          return (
-            INST === "reg" &&
-            STATE.sede_idx != null &&
-            SEDES[STATE.sede_idx] &&
-            SEDES[STATE.sede_idx].tipo === "v"
-          );
+          var s = INST === "reg" ? findSede(STATE.sede_id) : null;
+          return !!s && s.tipo === "v";
         }
 
         async function injectMusicaButton(email) {

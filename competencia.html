@@ -15,6 +15,8 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <style>
       html,
       body {
@@ -1473,14 +1475,14 @@
             <div class="fw7" style="font-size: 18px">
               Ranking en tiempo real
             </div>
-            <button
-              class="btn bgn bsm"
-              onclick="
-                toast('Ranking publicado en pantalla de proyección', 'ok')
-              "
-            >
-              📺 Publicar en pantalla
-            </button>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button class="btn bgn bsm" onclick="dPublicarRanking()">
+                📺 Publicar en pantalla
+              </button>
+              <button class="btn bo bsm" onclick="exportRankingPDF()">
+                📄 Exportar PDF
+              </button>
+            </div>
           </div>
           <div
             id="d-rank-inst-filters"
@@ -4963,6 +4965,31 @@
             ? nivFiltered
             : deduped;
 
+        // Snapshot de exactamente lo que queda en pantalla (mismo array,
+        // mismo orden) para que "Exportar PDF" descargue lo mismo que se
+        // está viendo, sin tener que re-derivar los filtros por su cuenta.
+        // allExpanded viaja aparte (ya trae _activeCat en cada fila, sin
+        // filtrar por nivel/categoría) para el caso "Todos": ahí el PDF no
+        // exporta la mezcla plana ordenada solo por puntaje (que mezcla
+        // categorías distintas entre sí, sin sentido como ranking), sino
+        // agrupada por nivel y categoría, cada una con su propio podio.
+        window._rankLastRendered = {
+          rows: toRender,
+          allExpanded,
+          mostrarPuntaje: cfg.mostrar_puntaje,
+          catDisplayActiva: !!(rankCatFilter || rankNivFilter),
+          mostrarNiv: cfg.mostrar_niv,
+          nivLabels: cfg.niv_labels,
+          instLabel:
+            cfg.instancias.find((x) => normInst(x.key) === inst)?.label ||
+            inst.toUpperCase(),
+          nivLabel: rankNivFilter
+            ? cfg.niv_labels[rankNivFilter] || rankNivFilter
+            : null,
+          nivKey: rankNivFilter,
+          catLabel: rankCatFilter,
+        };
+
         const scoreTh = document.getElementById("d-rank-score-th");
         if (scoreTh) scoreTh.style.display = cfg.mostrar_puntaje ? "" : "none";
 
@@ -4990,6 +5017,231 @@
             : "";
           tbody.innerHTML += `<tr><td><span style="width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;${posStyle}">${i + 1}</span></td><td class="mono gold text-xs">${r.codigo_id}</td><td class="fw6">${esc(r.nombre_grupo)}</td><td class="muted">${catDisplay}</td>${scoreCell}</tr>`;
         });
+      }
+
+      // "📺 Publicar en pantalla": antes solo mostraba un toast de éxito sin
+      // hacer nada — la pantalla de proyección ya tenía su propio ranking
+      // en vivo, independiente. Ahora sí hace algo real: empuja los
+      // filtros (instancia/nivel/categoría) que el director tiene
+      // seleccionados en este momento para que la pantalla de proyección
+      // (solo esa, no las vistas embebidas de staff/dj/presentador) los
+      // adopte. Ver checkAndApplyRankingPush() en evento.html.
+      async function dPublicarRanking() {
+        const cfg = getRankingCfg();
+        const normInst = (v) => (v === "int" || v === "inter" ? "inter" : v || "nac");
+        const inst = normInst(
+          rankFilter ?? sesionActiva?.instancia ?? (cfg.instancias[0]?.key || "nac"),
+        );
+        try {
+          const { data, error } = await db.rpc("actualizar_config", {
+            p_clave: "proy_ranking_push",
+            p_valor_json: {
+              ts: Date.now(),
+              instancia: inst,
+              nivel: rankNivFilter,
+              categoria: rankCatFilter,
+            },
+          });
+          if (error || !data?.ok) {
+            throw new Error(data?.error || error?.message || "desconocido");
+          }
+          toast("📺 Ranking enviado a la pantalla de proyección", "ok");
+        } catch (e) {
+          toast("Error al publicar: " + e.message, "err");
+        }
+      }
+
+      // Orden de niveles usado también por extractRankNivs() — se duplica
+      // acá porque esa función devuelve solo los niveles presentes en un
+      // set de filas, no el orden en sí.
+      const RANK_NIV_ORDER = [
+        "profesional", "semipro", "proam", "open",
+        "amateur", "master", "junior", "kids",
+      ];
+
+      // Agrupa por nivel (según RANK_NIV_ORDER) y dentro de cada nivel por
+      // categoría — cada grupo ordenado internamente por puntaje. Usado
+      // solo cuando se exporta "Todos" sin filtrar: evita mezclar
+      // categorías distintas en una sola lista ordenada por puntaje crudo,
+      // que no significa nada como ranking (compite cada quien dentro de
+      // su categoría, no contra las demás).
+      function agruparRankingParaExportar(rows, mostrarNiv, nivLabels) {
+        const porNiv = new Map();
+        rows.forEach((r) => {
+          const niv = mostrarNiv ? r._activeCat?.niv || "_sin_nivel" : "_todos";
+          const cat = catKey(r._activeCat) || "Sin categoría";
+          if (!porNiv.has(niv)) porNiv.set(niv, new Map());
+          const porCat = porNiv.get(niv);
+          if (!porCat.has(cat)) porCat.set(cat, []);
+          porCat.get(cat).push(r);
+        });
+        const nivKeys = [...porNiv.keys()].sort((a, b) => {
+          const ia = RANK_NIV_ORDER.indexOf(a);
+          const ib = RANK_NIV_ORDER.indexOf(b);
+          if (ia === -1 && ib === -1) return a.localeCompare(b);
+          if (ia === -1) return 1;
+          if (ib === -1) return -1;
+          return ia - ib;
+        });
+        const grupos = [];
+        nivKeys.forEach((niv) => {
+          const porCat = porNiv.get(niv);
+          [...porCat.keys()].sort().forEach((cat) => {
+            const filas = porCat
+              .get(cat)
+              .slice()
+              .sort(
+                (a, b) =>
+                  (b.subtotal_parcial ?? -Infinity) -
+                  (a.subtotal_parcial ?? -Infinity),
+              );
+            const nivTxt =
+              niv === "_todos"
+                ? null
+                : niv === "_sin_nivel"
+                  ? "Sin nivel"
+                  : nivLabels[niv] || niv;
+            grupos.push({
+              titulo: nivTxt ? nivTxt + " · " + cat : cat,
+              filas,
+            });
+          });
+        });
+        return grupos;
+      }
+
+      // Exporta a PDF el ranking que se ve en pantalla. Si hay un
+      // nivel/categoría filtrado, es un único listado (mismos filtros que
+      // el director tiene seleccionados — usa el snapshot que
+      // buildRankings() deja en window._rankLastRendered). Si está en
+      // "Todos", en vez de una lista plana mezclando categorías, arma una
+      // tabla por cada nivel + categoría, cada una con su propio podio.
+      function exportRankingPDF() {
+        const snap = window._rankLastRendered;
+        if (!snap || !snap.rows || snap.rows.length === 0) {
+          toast("No hay datos en el ranking para exportar", "err");
+          return;
+        }
+        if (typeof window.jspdf === "undefined") {
+          toast("Librería PDF no cargada, recargá la página", "err");
+          return;
+        }
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "portrait", unit: "pt" });
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const madre = window._nombreMadre || "CUP SYSTEM";
+          const edicion = window._edicion || "";
+          const titulo = (madre + " " + edicion).trim();
+          // Se agrupa siempre que no haya una categoría puntual elegida —
+          // esto incluye tanto "Todos" (sin nivel ni categoría) como "un
+          // nivel específico, todas sus categorías": en ambos casos una
+          // sola lista ordenada por puntaje mezclaría categorías distintas
+          // entre sí, así que cada categoría va en su propia tabla.
+          const agrupar = !snap.catLabel;
+          const subtitulo =
+            "Ranking · " +
+            snap.instLabel +
+            (snap.nivLabel ? " · " + snap.nivLabel : "") +
+            (snap.catLabel ? " · " + snap.catLabel : "") +
+            (agrupar
+              ? snap.nivLabel
+                ? " (agrupado por categoría)"
+                : " · Todos (agrupado por nivel y categoría)"
+              : "");
+
+          doc.setFontSize(16);
+          doc.setTextColor(40, 40, 40);
+          doc.text(titulo, 40, 40);
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text(subtitulo, 40, 58);
+          doc.setFontSize(9);
+          doc.setTextColor(140, 140, 140);
+          doc.text("Generado: " + new Date().toLocaleString("es-AR"), 40, 74);
+
+          const head = snap.mostrarPuntaje
+            ? [["#", "Código", "Grupo", "Categoría", "Puntaje"]]
+            : [["#", "Código", "Grupo", "Categoría"]];
+          const filaTabla = (r, i, catDisplay) => {
+            const row = [
+              String(i + 1),
+              r.codigo_id || "",
+              r.nombre_grupo || "",
+              catDisplay,
+            ];
+            if (snap.mostrarPuntaje) {
+              row.push(
+                r.subtotal_parcial != null ? String(r.subtotal_parcial) : "—",
+              );
+            }
+            return row;
+          };
+          const tableOpts = {
+            styles: { fontSize: 9, cellPadding: 5 },
+            headStyles: { fillColor: [201, 168, 76], textColor: [20, 20, 20] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+          };
+
+          if (agrupar) {
+            // Si ya hay un nivel elegido, partimos de ese subconjunto (no
+            // tiene sentido volver a agrupar por nivel cuando ya está fijo
+            // a uno solo) y solo agrupamos por categoría dentro de él.
+            const base = snap.nivKey
+              ? (snap.allExpanded || []).filter(
+                  (r) => r._activeCat?.niv === snap.nivKey,
+                )
+              : snap.allExpanded || [];
+            const grupos = agruparRankingParaExportar(
+              base,
+              snap.nivKey ? false : snap.mostrarNiv,
+              snap.nivLabels || {},
+            );
+            let y = 90;
+            grupos.forEach((g) => {
+              if (y > pageHeight - 100) {
+                doc.addPage();
+                y = 40;
+              }
+              doc.setFontSize(12);
+              doc.setTextColor(30, 30, 30);
+              doc.text(g.titulo, 40, y);
+              const body = g.filas.map((r, i) =>
+                filaTabla(r, i, r._activeCat ? r._activeCat.n : "—"),
+              );
+              doc.autoTable({
+                ...tableOpts,
+                head,
+                body,
+                startY: y + 10,
+              });
+              y = doc.lastAutoTable.finalY + 24;
+            });
+          } else {
+            const body = snap.rows.map((r, i) =>
+              filaTabla(
+                r,
+                i,
+                snap.catDisplayActiva && r._activeCat
+                  ? r._activeCat.c + ": " + r._activeCat.n
+                  : parseCat(r.categoria),
+              ),
+            );
+            doc.autoTable({ ...tableOpts, head, body, startY: 90 });
+          }
+
+          const fecha = new Date().toISOString().slice(0, 10);
+          const nombreArchivo =
+            "Ranking-" +
+            snap.instLabel.replace(/[^a-zA-Z0-9]+/g, "") +
+            "-" +
+            fecha +
+            ".pdf";
+          doc.save(nombreArchivo);
+          toast("✓ PDF descargado", "ok");
+        } catch (e) {
+          toast("Error al exportar PDF: " + e.message, "err");
+        }
       }
 
       function setRankFilter(inst) {

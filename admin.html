@@ -1266,6 +1266,15 @@
           ? '<span class="status-pill ok" title="Comprobante subido"><span class="ico">📎</span>Compr.</span>'
           : '<span class="status-pill empty" title="Sin comprobante"><span class="ico">○</span>Compr.</span>';
 
+        // Comprobante de clasificación (solo Nacional: certificado de haber
+        // aprobado en la sede, se pide al inscribirse a la Final Nacional).
+        const clasifPill =
+          ins.instancia === "nac"
+            ? ins.clasif_url
+              ? '<span class="status-pill ok" title="Comprobante de clasificación subido"><span class="ico">🏅</span>Clasif.</span>'
+              : '<span class="status-pill empty" title="Sin comprobante de clasificación"><span class="ico">○</span>Clasif.</span>'
+            : "";
+
         // Sede / país
         let sedeLabel = "";
         if (ins.sede_nombre) {
@@ -1308,6 +1317,11 @@
             esc(ins.id) +
             '\')" title="Ver comprobante de pago">📎 Comprobante</button>'
           : "";
+        const clasifBtn = ins.clasif_url
+          ? '<button class="btn-icon attn" onclick="verClasificacion(\'' +
+            esc(ins.id) +
+            '\')" title="Ver comprobante de clasificación">🏅 Clasificación</button>'
+          : "";
 
         return (
           '<div class="ins-row">' +
@@ -1320,6 +1334,7 @@
           recargoPill +
           pagoPill +
           compPill +
+          clasifPill +
           "</div>" +
           "</div>" +
           '<div class="ins-col-mid">' +
@@ -1353,6 +1368,7 @@
           esc(ins.id) +
           "')\">🎵 Música</button>" +
           compBtn +
+          clasifBtn +
           '<button class="btn-icon" onclick="confirmarSenia(\'' +
           esc(ins.id) +
           "')\">½ Seña</button>" +
@@ -1382,12 +1398,36 @@
           toast("err", "Sin comprobante");
           return;
         }
-        const url = ins.comprobante_url;
+        mostrarArchivoModal(
+          ins.comprobante_url,
+          "Comprobante · " +
+            getCodigo(ins) +
+            " — " +
+            (ins.nombre_grupo || ins.nombre || ""),
+        );
+      }
+      // Comprobante de clasificación (Final Nacional): el certificado que
+      // acredita haber aprobado en una sede regional. Reusa el mismo modal
+      // que el comprobante de pago, antes solo cableado para ese caso.
+      function verClasificacion(id) {
+        const ins = allInscriptos.find((x) => x.id === id);
+        if (!ins || !ins.clasif_url) {
+          toast("err", "Sin comprobante de clasificación");
+          return;
+        }
+        mostrarArchivoModal(
+          ins.clasif_url,
+          "Clasificación · " +
+            getCodigo(ins) +
+            " — " +
+            (ins.nombre_grupo || ins.nombre || ""),
+        );
+      }
+      function mostrarArchivoModal(url, titulo) {
         const ext = (url.split("?")[0].split(".").pop() || "").toLowerCase();
-        const cod = getCodigo(ins);
         let viewer = "";
         if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
-          viewer = '<img src="' + esc(url) + '" alt="Comprobante">';
+          viewer = '<img src="' + esc(url) + '" alt="Archivo">';
         } else if (ext === "pdf") {
           viewer = '<iframe src="' + esc(url) + '"></iframe>';
         } else {
@@ -1399,10 +1439,8 @@
         $("compModal").innerHTML =
           '<div class="modal-box" onclick="event.stopPropagation()">' +
           '<div class="modal-head">' +
-          "<h3>Comprobante · " +
-          esc(cod) +
-          " — " +
-          esc(ins.nombre_grupo || ins.nombre || "") +
+          "<h3>" +
+          esc(titulo) +
           "</h3>" +
           '<button class="modal-close" onclick="closeComp()">✕</button>' +
           "</div>" +
@@ -1896,6 +1934,41 @@
           toast("err", "Error: " + e.message);
         }
       }
+      // Mismo criterio de orden que usa competencia.html para los
+      // rankings: por instancia, después por nivel (Profesional primero,
+      // Kids al final) y categoría — así el Excel sale ya agrupado en vez
+      // de en el orden en que se cargaron a la base (que no dice nada).
+      const EXPORT_NIV_ORDER = [
+        "profesional", "semipro", "proam", "open",
+        "amateur", "master", "junior", "kids",
+      ];
+      function ordenarInscripcionesParaExportar(list) {
+        const instOrder = Object.keys(INSTANCIAS);
+        return list.slice().sort((a, b) => {
+          const ia = instOrder.indexOf(a.instancia);
+          const ib = instOrder.indexOf(b.instancia);
+          if (ia !== ib) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+
+          // Una inscripción normalmente tiene una sola categoría (el
+          // formulario dice "una inscripción = una categoría"); si por
+          // algún motivo hay varias, se ordena por la primera.
+          const catA = (a.categorias || [])[0] || {};
+          const catB = (b.categorias || [])[0] || {};
+          const nivA = EXPORT_NIV_ORDER.indexOf(catA.niv);
+          const nivB = EXPORT_NIV_ORDER.indexOf(catB.niv);
+          if (nivA !== nivB)
+            return (nivA === -1 ? 99 : nivA) - (nivB === -1 ? 99 : nivB);
+
+          const cA = Number(catA.c) || 0;
+          const cB = Number(catB.c) || 0;
+          if (cA !== cB) return cA - cB;
+
+          const nomA = (a.nombre_grupo || a.nombre || "").toLowerCase();
+          const nomB = (b.nombre_grupo || b.nombre || "").toLowerCase();
+          return nomA.localeCompare(nomB);
+        });
+      }
+
       // Antes esto exportaba un .csv de texto — al abrirlo con doble clic,
       // Excel en configuración regional Argentina (donde la coma es el
       // separador decimal) muchas veces no separa las columnas solo, y
@@ -1908,11 +1981,21 @@
           return;
         }
         const filtered = allInscriptos.filter(matchesFilters);
-        const data = filtered.length ? filtered : allInscriptos;
+        const data = ordenarInscripcionesParaExportar(
+          filtered.length ? filtered : allInscriptos,
+        );
         const rows = data.map((ins) => {
+          // Antes solo mostraba "#100/salsa" — sin el nombre no se
+          // distinguía de un vistazo qué categoría era cada número.
           const catsTxt = (ins.categorias || [])
-            .map((c) => "#" + c.c + (c.g ? "/" + c.g : ""))
-            .join(" ");
+            .map(
+              (c) =>
+                "#" +
+                c.c +
+                (c.n ? " " + c.n : "") +
+                (c.g ? " (" + c.g + ")" : ""),
+            )
+            .join(" · ");
           const integrantesArr = Array.isArray(ins.integrantes)
             ? ins.integrantes
             : [];
@@ -1951,7 +2034,7 @@
           ws["!cols"] = [
             { wch: 16 }, { wch: 12 }, { wch: 18 }, { wch: 14 },
             { wch: 25 }, { wch: 25 }, { wch: 28 }, { wch: 16 },
-            { wch: 12 }, { wch: 14 }, { wch: 40 }, { wch: 30 },
+            { wch: 12 }, { wch: 14 }, { wch: 40 }, { wch: 55 },
             { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 12 },
             { wch: 14 }, { wch: 14 }, { wch: 18 },
           ];
@@ -2047,6 +2130,15 @@
           pane.appendChild(bancosDiv);
         }
         renderBancos();
+        // Inyectar sección de sedes justo después de bancos
+        var sedesDiv = document.createElement('div');
+        sedesDiv.id = 'sys-sedes-container';
+        if (bancosDiv.nextSibling) {
+          pane.insertBefore(sedesDiv, bancosDiv.nextSibling);
+        } else {
+          pane.appendChild(sedesDiv);
+        }
+        renderSedes();
       }
 
       function renderBancos() {
@@ -2113,6 +2205,213 @@
           });
           if (!r.ok) throw new Error('HTTP ' + r.status);
           if (msg) { msg.style.color = '#4CAF7D'; msg.textContent = '\u2713 Datos bancarios guardados. Ya impactan en la web y los emails.'; }
+        } catch (e) {
+          if (msg) { msg.style.color = '#E0524C'; msg.textContent = 'Error: ' + e.message; }
+        }
+      }
+
+      // === Sedes regionales (agregar, editar, borrar, habilitar/deshabilitar) ===
+      // Fuente de verdad: evento.config, clave "sedes_lista" — index.html
+      // lee esta misma clave al cargar la página de inscripción y arma el
+      // <select> de sedes con eso. Antes esta lista estaba hardcodeada en
+      // el código (solo yo podía tocarla); ahora se administra entera
+      // desde acá.
+      var SEDES_ADMIN = [];
+      var SEDES_ADMIN_SEQ = 0;
+      var MESES_ABR_SEDES = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
+      var MESES_LARGOS_SEDES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      // El campo de fecha es texto libre ("13 Ago") — si no respeta el
+      // formato (número + espacio + primeras 3 letras del mes en español),
+      // no tira error: esa sede simplemente nunca se cierra sola por
+      // fecha, en silencio. sedeFechaHintTexto() existe para que eso se
+      // vea en el panel en vez de pasar desapercibido.
+      function parseFechaSedeAdmin(fecha) {
+        var m = String(fecha || "").trim().match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ]{3})/);
+        if (!m) return null;
+        var dia = parseInt(m[1], 10), mes = MESES_ABR_SEDES[m[2].toLowerCase()];
+        if (mes == null || isNaN(dia)) return null;
+        return new Date(2026, mes, dia);
+      }
+      function sedeAdminVencida(fecha) {
+        var d = parseFechaSedeAdmin(fecha);
+        if (!d) return false;
+        var hoy = new Date();
+        var hoySolo = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        return hoySolo > d;
+      }
+      function sedeFechaHintTexto(fecha) {
+        if (!String(fecha || '').trim()) return '';
+        var d = parseFechaSedeAdmin(fecha);
+        if (!d) {
+          return '⚠ No reconozco ese formato (probá "13 Ago") — esta sede nunca se va a cerrar sola por fecha.';
+        }
+        var cierre = new Date(d.getTime());
+        cierre.setDate(cierre.getDate() + 1);
+        return '✓ Se cierra sola a partir del ' + cierre.getDate() + ' de ' + MESES_LARGOS_SEDES[cierre.getMonth()] + '.';
+      }
+      function sedeFechaHintUpdate(inputEl) {
+        var hint = inputEl.parentElement && inputEl.parentElement.querySelector('.sede-fecha-hint');
+        if (!hint) return;
+        var v = inputEl.value;
+        hint.style.color = !v.trim()
+          ? 'rgba(248,245,238,.4)'
+          : (parseFechaSedeAdmin(v) ? '#4CAF7D' : '#E0524C');
+        hint.textContent = sedeFechaHintTexto(v);
+      }
+      function slugifySede(n) {
+        var s = (n || "").toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        return s || 'sede';
+      }
+      function idSedeUnico(base, existentes) {
+        var id = base, n = 2;
+        while (existentes.indexOf(id) !== -1) { id = base + '-' + n; n++; }
+        return id;
+      }
+      function sedeSelStyle() {
+        return 'background:#0e0e0e;border:1px solid #333;border-radius:6px;color:#F8F5EE;padding:7px 9px;font-family:inherit;font-size:12px';
+      }
+      function sedeInputHtml(field, placeholder, value) {
+        return '<input data-field="' + field + '" placeholder="' + esc(placeholder) + '" value="' + esc(value || '') + '" style="width:100%;padding:9px;background:#0e0e0e;border:1px solid #333;border-radius:6px;color:#F8F5EE;font-family:inherit;font-size:12px">';
+      }
+
+      function renderSedes() {
+        var cont = document.getElementById('sys-sedes-container');
+        if (!cont) return;
+        cont.innerHTML =
+          '<div class="det-block"><div class="det-title">📍 Sedes regionales</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:10px;line-height:1.5">Solo afecta la inscripción a <strong>Sedes</strong> (el selector que ve la gente). Cada sede se cierra sola al día siguiente de su fecha, salvo que la fuerces con "Estado". Borrar o editar una sede acá <strong>no</strong> toca las inscripciones que ya se hicieron (guardan el nombre de sede tal cual estaba en su momento) — solo cambia lo que aparece de acá en adelante. En Nacional y Repesca las sedes siempre aparecen todas (ahí solo se declara de dónde clasificaste).</div>' +
+          '<div id="sedes-rows"><div style="font-size:12px;color:rgba(248,245,238,.4);padding:8px 0">Cargando…</div></div>' +
+          '<button onclick="sedesAgregar()" style="background:transparent;color:#C9A84C;border:1px dashed #C9A84C;padding:10px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;width:100%;margin-top:8px">+ Agregar sede</button>' +
+          '<button onclick="sedesGuardar()" style="background:#4CAF7D;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;width:100%;margin-top:8px">💾 Guardar cambios</button>' +
+          '<div id="sedes-msg" style="font-size:12px;text-align:center;min-height:16px;margin-top:8px"></div>' +
+          '</div>';
+        sedesCargar();
+      }
+
+      async function sedesCargar() {
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/config?clave=eq.sedes_lista&select=valor_json', {
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Accept-Profile': 'evento' }
+          });
+          var d = await r.json();
+          var lista = (d && d[0] && d[0].valor_json) || [];
+          SEDES_ADMIN = lista.map(function (s) {
+            SEDES_ADMIN_SEQ++;
+            return {
+              _key: 'k' + SEDES_ADMIN_SEQ,
+              id: s.id || null,
+              n: s.n || '',
+              fecha: s.fecha || '',
+              tipo: s.tipo === 'v' ? 'v' : 'p',
+              org: s.org || '',
+              email: s.email || '',
+              estado: s.estado || 'auto',
+            };
+          });
+        } catch (e) {
+          SEDES_ADMIN = [];
+        }
+        sedesRenderRows();
+      }
+
+      function sedesRenderRows() {
+        var rowsCont = document.getElementById('sedes-rows');
+        if (!rowsCont) return;
+        if (!SEDES_ADMIN.length) {
+          rowsCont.innerHTML = '<div style="font-size:12px;color:rgba(248,245,238,.4);padding:8px 0">No hay sedes cargadas. Usá "+ Agregar sede".</div>';
+          return;
+        }
+        rowsCont.innerHTML = SEDES_ADMIN.map(function (s) {
+          var vencidaTxt = sedeAdminVencida(s.fecha) ? ' (cerrada por fecha)' : ' (abierta por fecha)';
+          var fechaHintColor = !String(s.fecha || '').trim()
+            ? 'rgba(248,245,238,.4)'
+            : (parseFechaSedeAdmin(s.fecha) ? '#4CAF7D' : '#E0524C');
+          return (
+            '<div data-key="' + s._key + '" style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;margin-bottom:10px">' +
+            '<div style="display:grid;grid-template-columns:1fr 130px;gap:8px;margin-bottom:2px">' +
+            sedeInputHtml('n', 'Nombre de la sede', s.n) +
+            '<div>' +
+            '<input data-field="fecha" placeholder="Fecha (ej: 23 Ago)" value="' + esc(s.fecha || '') + '" oninput="sedeFechaHintUpdate(this)" style="width:100%;padding:9px;background:#0e0e0e;border:1px solid #333;border-radius:6px;color:#F8F5EE;font-family:inherit;font-size:12px">' +
+            '<div class="sede-fecha-hint" style="font-size:10.5px;margin-top:4px;line-height:1.4;color:' + fechaHintColor + '">' + esc(sedeFechaHintTexto(s.fecha)) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div style="height:8px"></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+            sedeInputHtml('org', 'Organizador', s.org) +
+            sedeInputHtml('email', 'Email organizador', s.email) +
+            '</div>' +
+            '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+            '<select data-field="tipo" style="' + sedeSelStyle() + '">' +
+            '<option value="p"' + (s.tipo !== 'v' ? ' selected' : '') + '>Presencial</option>' +
+            '<option value="v"' + (s.tipo === 'v' ? ' selected' : '') + '>Virtual</option>' +
+            '</select>' +
+            '<select data-field="estado" style="' + sedeSelStyle() + '">' +
+            '<option value="auto"' + (s.estado !== 'on' && s.estado !== 'off' ? ' selected' : '') + '>Automático' + vencidaTxt + '</option>' +
+            '<option value="on"' + (s.estado === 'on' ? ' selected' : '') + '>Forzar habilitada</option>' +
+            '<option value="off"' + (s.estado === 'off' ? ' selected' : '') + '>Forzar deshabilitada</option>' +
+            '</select>' +
+            '<button onclick="sedesEliminar(\'' + s._key + '\')" style="margin-left:auto;background:transparent;color:#E0524C;border:1px solid rgba(224,82,82,.4);border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer;font-family:inherit">🗑 Borrar</button>' +
+            '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      function sedesAgregar() {
+        SEDES_ADMIN_SEQ++;
+        SEDES_ADMIN.push({ _key: 'k' + SEDES_ADMIN_SEQ, id: null, n: '', fecha: '', tipo: 'p', org: '', email: '', estado: 'auto' });
+        sedesRenderRows();
+        var rows = document.querySelectorAll('#sedes-rows [data-key]');
+        var last = rows[rows.length - 1];
+        var inp = last && last.querySelector('input[data-field="n"]');
+        if (inp) inp.focus();
+      }
+
+      function sedesEliminar(key) {
+        SEDES_ADMIN = SEDES_ADMIN.filter(function (s) { return s._key !== key; });
+        sedesRenderRows();
+      }
+
+      async function sedesGuardar() {
+        var msg = document.getElementById('sedes-msg');
+        var rowEls = document.querySelectorAll('#sedes-rows [data-key]');
+        var idsExistentes = SEDES_ADMIN.filter(function (s) { return s.id; }).map(function (s) { return s.id; });
+        var payload = [];
+        var error = null;
+        rowEls.forEach(function (rowEl) {
+          if (error) return;
+          var key = rowEl.getAttribute('data-key');
+          var original = SEDES_ADMIN.find(function (s) { return s._key === key; });
+          var n = (rowEl.querySelector('input[data-field="n"]').value || '').trim();
+          var fecha = (rowEl.querySelector('input[data-field="fecha"]').value || '').trim();
+          var org = (rowEl.querySelector('input[data-field="org"]').value || '').trim();
+          var email = (rowEl.querySelector('input[data-field="email"]').value || '').trim();
+          var tipo = rowEl.querySelector('select[data-field="tipo"]').value;
+          var estado = rowEl.querySelector('select[data-field="estado"]').value;
+          if (!n) { error = 'Falta el nombre de una sede'; return; }
+          if (!fecha) { error = 'Falta la fecha de "' + n + '"'; return; }
+          var id = original && original.id;
+          if (!id) {
+            id = idSedeUnico(slugifySede(n), idsExistentes);
+            idsExistentes.push(id);
+          }
+          payload.push({ id: id, n: n, fecha: fecha, tipo: tipo, org: org, email: email, estado: estado });
+        });
+        if (error) {
+          if (msg) { msg.style.color = '#E0524C'; msg.textContent = error; }
+          return;
+        }
+        if (msg) { msg.style.color = '#888'; msg.textContent = 'Guardando…'; }
+        try {
+          var r = await fetch(SB_URL + '/rest/v1/rpc/actualizar_config', {
+            method: 'POST',
+            headers: { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_clave: 'sedes_lista', p_valor_json: payload })
+          });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (msg) { msg.style.color = '#4CAF7D'; msg.textContent = '✓ Sedes guardadas. Ya impactan en la inscripción.'; }
+          sedesCargar();
         } catch (e) {
           if (msg) { msg.style.color = '#E0524C'; msg.textContent = 'Error: ' + e.message; }
         }
