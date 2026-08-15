@@ -81,13 +81,15 @@ module.exports = async function handler(req, res) {
     const inscId = lineup[0]?.inscripcion_id;
     let email = null;
     let nombreResp = null;
+    let sedeNombre = "";
     let integrantesDev = [];
     if (inscId) {
       const inscrip = await supaFetch(
-        `inscripciones?id=eq.${inscId}&select=email,nombre,integrantes`,
+        `inscripciones?id=eq.${inscId}&select=email,nombre,integrantes,sede_nombre`,
       );
       email = inscrip[0]?.email;
       nombreResp = inscrip[0]?.nombre;
+      sedeNombre = inscrip[0]?.sede_nombre || "";
       // Integrantes del grupo (para mandar la devolución a todos)
       try {
         const raw = inscrip[0]?.integrantes;
@@ -273,7 +275,7 @@ module.exports = async function handler(req, res) {
             : "certificado-inter.jpeg",
       );
       const imgW = esNac ? 1684 : esReg ? 1600 : 1536;
-      const imgH = esNac ? 1232 : esReg ? 1167 : 1024;
+      const imgH = esNac ? 1232 : esReg ? 1131 : 1024;
       const pageW = 800;
       const pageH = pageW * (imgH / imgW);
 
@@ -287,35 +289,96 @@ module.exports = async function handler(req, res) {
 
         const nombre = nombreCert || sesion.nombre_grupo || "—";
 
-        if (esNac || esReg) {
+        if (esReg) {
+          // La plantilla trae 5 renglones en blanco para completar (medidos
+          // en px sobre la imagen nativa 1600x1131, escalados x0.5 a este
+          // pageW/pageH de 800): día/mes, sede, nombre del participante,
+          // puntaje y categoría. Si se reemplaza la imagen de nuevo, hay
+          // que remedir estas coordenadas contra el nuevo archivo.
+          const fecha = new Date(sesion.finalizada_at || Date.now());
+          const dia = fecha.getDate();
+          const mes = fecha.getMonth() + 1;
+          const categoriaLimpia = formatCategoria(sesion.categoria);
+
+          // Los blancos de sede/nombre/categoría son angostos y su
+          // contenido es de largo variable (nombres completos, categorías
+          // compuestas) — en vez de un tamaño fijo que puede desbordar
+          // sobre el texto vecino, se mide el string y se achica la
+          // tipografía hasta que entre en el ancho disponible.
+          function fitFontSize(str, fontName, maxSize, minSize, maxWidth) {
+            doc.font(fontName);
+            let size = maxSize;
+            while (
+              size > minSize &&
+              doc.fontSize(size).widthOfString(str) > maxWidth
+            ) {
+              size -= 0.5;
+            }
+            return size;
+          }
+
+          doc.fillColor("#1a1a1a");
+
+          doc
+            .font("Helvetica-Bold")
+            .fontSize(13)
+            .text(String(dia), 267.5, 256.5, {
+              width: 55,
+              align: "center",
+              lineBreak: false,
+            })
+            .text(String(mes), 335, 256.5, {
+              width: 55,
+              align: "center",
+              lineBreak: false,
+            });
+
+          const sedeStr = sedeNombre || "—";
+          const sedeSize = fitFontSize(sedeStr, "Times-Bold", 15, 9, 195);
+          doc
+            .font("Times-Bold")
+            .fontSize(sedeSize)
+            .text(sedeStr, 505, 254.5 + (15 - sedeSize) / 2, {
+              width: 207.5,
+              align: "center",
+              lineBreak: false,
+            });
+
+          const nombreSize = fitFontSize(nombre, "Times-Bold", 17, 9, 205);
+          doc
+            .font("Times-Bold")
+            .fontSize(nombreSize)
+            .text(nombre, 197.5, 287.5 + (17 - nombreSize) / 2, {
+              width: 220,
+              align: "center",
+              lineBreak: false,
+            });
+
+          doc
+            .font("Helvetica-Bold")
+            .fontSize(15)
+            .text(String(totalPts), 670, 289.5, {
+              width: 42.5,
+              align: "center",
+              lineBreak: false,
+            });
+
+          const catStr = categoriaLimpia || "—";
+          const catSize = fitFontSize(catStr, "Times-Bold", 14, 9, 375);
+          doc
+            .font("Times-Bold")
+            .fontSize(catSize)
+            .text(catStr, 322.5, 328 + (14 - catSize) / 2, {
+              width: 390,
+              align: "center",
+              lineBreak: false,
+            });
+        } else if (esNac) {
           doc
             .font("Times-Bold")
             .fontSize(30)
             .fillColor("#1a1a1a")
             .text(nombre, 0, pageH * 0.555 - 5, { align: "center", width: pageW });
-
-          if (esReg) {
-            // La plantilla trae "29 de Agosto" impreso, pero cada sede
-            // regional corre en su propia fecha. Se tapa esa línea con un
-            // rectángulo blanco (el fondo de la plantilla ahí es blanco
-            // liso) y se dibuja encima la fecha real de la sesión.
-            const fecha = new Date(
-              sesion.finalizada_at || Date.now(),
-            ).toLocaleDateString("es-AR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            });
-            doc.rect(140, 381, 520, 26).fill("#ffffff");
-            doc
-              .font("Helvetica")
-              .fontSize(14)
-              .fillColor("#1a1a1a")
-              .text(`REALIZADA EL ${fecha.toUpperCase()}`, 0, 386, {
-                align: "center",
-                width: pageW,
-              });
-          }
         } else {
           doc
             .font("Times-Bold")
