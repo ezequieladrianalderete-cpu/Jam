@@ -6346,6 +6346,19 @@
         }
         det.style.display = "block";
         det.innerHTML = '<div class="muted text-xs">Cargando inscriptos…</div>';
+        await cronRenderInscriptosContenido(cronId, catKey);
+      }
+
+      // Repuebla el panel de inscriptos YA ABIERTO, sin colapsarlo y
+      // reabrirlo (eso hacía que la lista se fuera a 0px y volviera a
+      // aparecer, corriendo todo el contenido de abajo y haciendo perder
+      // el scroll — muy notorio con "mover al principio/final" porque la
+      // fila además salta lejos de donde estaba). Reordenar no cambia la
+      // cantidad de filas, así que actualizar el innerHTML in-place no
+      // debería mover el scroll para nada.
+      async function cronRenderInscriptosContenido(cronId, catKey) {
+        const det = document.getElementById("cron-detalle-" + cronId);
+        if (!det) return;
         try {
           const { data: items, error } = await db.rpc(
             "obtener_pasadas_categoria",
@@ -6388,6 +6401,17 @@
                 "</span>" +
                 '<div style="display:flex;gap:2px">' +
                 (i > 0
+                  ? '<button title="Mover al principio" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMoverExtremo(' +
+                    idEsc +
+                    "," +
+                    ckEsc +
+                    ",&quot;inicio&quot;," +
+                    cronId +
+                    "," +
+                    JSON.stringify(catKey).replace(/"/g, "&quot;") +
+                    ')">⇈</button>'
+                  : "") +
+                (i > 0
                   ? '<button title="Subir" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMover(' +
                     idEsc +
                     "," +
@@ -6408,6 +6432,17 @@
                     "," +
                     JSON.stringify(catKey).replace(/"/g, "&quot;") +
                     ')">↓</button>'
+                  : "") +
+                (i < list.length - 1
+                  ? '<button title="Mover al final" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrMoverExtremo(' +
+                    idEsc +
+                    "," +
+                    ckEsc +
+                    ",&quot;fin&quot;," +
+                    cronId +
+                    "," +
+                    JSON.stringify(catKey).replace(/"/g, "&quot;") +
+                    ')">⇊</button>'
                   : "") +
                 '<button title="Quitar" style="background:transparent;border:1px solid rgba(224,82,76,.4);color:#E0524C;padding:2px 6px;border-radius:3px;font-size:9px;cursor:pointer" onclick="cronInscrQuitar(' +
                 idEsc +
@@ -6483,15 +6518,29 @@
           });
           if (error) throw error;
           if (data?.ok) {
-            await cronVerInscriptos(cronId, catKeyOrig);
-            await cronVerInscriptos(
-              cronId,
-              catKeyOrig,
-            ); /* trick: cerrar+abrir refresca */
-            // Forzar abierto
-            const det = document.getElementById("cron-detalle-" + cronId);
-            if (det && det.style.display === "none")
-              await cronVerInscriptos(cronId, catKeyOrig);
+            await cronRenderInscriptosContenido(cronId, catKeyOrig);
+          } else toast(data?.error || "No se pudo mover", "warn");
+        } catch (e) {
+          toast("Error: " + e.message, "err");
+        }
+      }
+
+      async function cronInscrMoverExtremo(
+        lineupId,
+        catKey,
+        dir,
+        cronId,
+        catKeyOrig,
+      ) {
+        try {
+          const { data, error } = await db.rpc("mover_pasada_extremo", {
+            p_lineup_id: lineupId,
+            p_categoria_key: catKey,
+            p_direccion: dir,
+          });
+          if (error) throw error;
+          if (data?.ok) {
+            await cronRenderInscriptosContenido(cronId, catKeyOrig);
           } else toast(data?.error || "No se pudo mover", "warn");
         } catch (e) {
           toast("Error: " + e.message, "err");
@@ -7121,7 +7170,7 @@
               { wch: 12 },
             ];
             let sheetName = cat.categoria_label
-              .replace(/[\\\/\?\*\[\]]/g, "")
+              .replace(/[\\\/\?\*\[\]:]/g, "")
               .substring(0, 28);
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
           }
