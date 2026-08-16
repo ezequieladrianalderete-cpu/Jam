@@ -319,56 +319,74 @@ module.exports = async function handler(req, res) {
 
           doc.fillColor("#1a1a1a");
 
+          // Techo de tamaño de cada campo — el piso (10/9 más abajo en
+          // cada llamada a fitFontSize) sigue actuando de red de
+          // seguridad para strings largos, así que subir estos techos
+          // agranda la letra en el caso normal sin arriesgar que un
+          // nombre/sede/categoría larga se pise con el resto del
+          // certificado: fitFontSize la va a achicar hasta que entre.
+          const DIA_MES_MAX = 18;
+          const SEDE_MAX = 19;
+          const NOMBRE_MAX = 21;
+          const PUNTAJE_MAX = 19;
+          const CAT_MAX = 17;
+
+          const diaSize = fitFontSize(String(dia), "Helvetica-Bold", DIA_MES_MAX, 10, 50);
+          const mesSize = fitFontSize(String(mes), "Helvetica-Bold", DIA_MES_MAX, 10, 50);
           doc
             .font("Helvetica-Bold")
-            .fontSize(13)
-            .text(String(dia), 250, 256.5, {
+            .fontSize(diaSize)
+            .text(String(dia), 250, 256.5 + (DIA_MES_MAX - diaSize) / 2, {
               width: 57.5,
               align: "center",
               lineBreak: false,
-            })
-            .text(String(mes), 317.5, 256.5, {
+            });
+          doc
+            .font("Helvetica-Bold")
+            .fontSize(mesSize)
+            .text(String(mes), 317.5, 256.5 + (DIA_MES_MAX - mesSize) / 2, {
               width: 56.5,
               align: "center",
               lineBreak: false,
             });
 
           const sedeStr = sedeNombre || "—";
-          const sedeSize = fitFontSize(sedeStr, "Times-Bold", 15, 9, 195);
+          const sedeSize = fitFontSize(sedeStr, "Times-Bold", SEDE_MAX, 9, 195);
           doc
             .font("Times-Bold")
             .fontSize(sedeSize)
-            .text(sedeStr, 505, 254.5 + (15 - sedeSize) / 2, {
+            .text(sedeStr, 505, 254.5 + (SEDE_MAX - sedeSize) / 2, {
               width: 207.5,
               align: "center",
               lineBreak: false,
             });
 
-          const nombreSize = fitFontSize(nombre, "Times-Bold", 17, 9, 200);
+          const nombreSize = fitFontSize(nombre, "Times-Bold", NOMBRE_MAX, 9, 200);
           doc
             .font("Times-Bold")
             .fontSize(nombreSize)
-            .text(nombre, 207.5, 287.5 + (17 - nombreSize) / 2 + 2, {
+            .text(nombre, 207.5, 287.5 + (NOMBRE_MAX - nombreSize) / 2 + 2, {
               width: 210,
               align: "center",
               lineBreak: false,
             });
 
+          const puntajeSize = fitFontSize(String(totalPts), "Helvetica-Bold", PUNTAJE_MAX, 10, 40);
           doc
             .font("Helvetica-Bold")
-            .fontSize(15)
-            .text(String(totalPts), 670, 289.5, {
+            .fontSize(puntajeSize)
+            .text(String(totalPts), 670, 289.5 + (PUNTAJE_MAX - puntajeSize) / 2, {
               width: 42.5,
               align: "center",
               lineBreak: false,
             });
 
           const catStr = categoriaLimpia || "—";
-          const catSize = fitFontSize(catStr, "Times-Bold", 14, 9, 375);
+          const catSize = fitFontSize(catStr, "Times-Bold", CAT_MAX, 9, 375);
           doc
             .font("Times-Bold")
             .fontSize(catSize)
-            .text(catStr, 322.5, 328 + (14 - catSize) / 2, {
+            .text(catStr, 322.5, 328 + (CAT_MAX - catSize) / 2, {
               width: 390,
               align: "center",
               lineBreak: false,
