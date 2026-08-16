@@ -7142,6 +7142,10 @@
             esc(ins.pais || "") +
             '"></div>' +
             '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
+            '<div class="fw6 mb2" style="font-size:12px;color:#C9A84C">🏷 Categoría</div>' +
+            '<div id="edit-categorias-list" class="text-xs muted">Cargando categorías disponibles…</div>' +
+            "</div>" +
+            '<div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1)">' +
             '<div class="sf mb2"><div class="fw6" style="font-size:12px;color:#C9A84C">👥 Integrantes (' +
             integrantes.length +
             ")</div>" +
@@ -7156,10 +7160,111 @@
             "</div>";
           form.innerHTML = html;
           editRenderIntegrantes(integrantes);
+          editCargarCategorias(ins);
         } catch (e) {
           form.innerHTML =
             '<div style="color:#E0524C">Error: ' + e.message + "</div>";
         }
+      }
+
+      // Categorías que ya existen en el lineup de la MISMA instancia (y, si
+      // es reg, de la MISMA sede) — igual criterio que "+ Agregar
+      // categoría" del cronograma: solo ofrece mover a una categoría que
+      // ya está corriendo en este evento, no cualquiera del catálogo
+      // entero. Sirve para corregir un caso como "se anotó en la
+      // categoría equivocada por error" sin tener que re-inscribir a
+      // nadie.
+      async function editCategoriasOpciones(ins) {
+        let q = db
+          .schema("evento")
+          .from("lineup")
+          .select("categoria")
+          .eq("instancia", ins.instancia);
+        if (ins.instancia === "reg" && ins.sede_id) {
+          q = q.eq("sede_id", ins.sede_id);
+        }
+        const { data } = await q;
+        const map = new Map();
+        (data || []).forEach((row) => {
+          let arr;
+          try {
+            const parsed =
+              typeof row.categoria === "string"
+                ? JSON.parse(row.categoria)
+                : row.categoria;
+            arr = Array.isArray(parsed) ? parsed : [parsed];
+          } catch (e) {
+            arr = [];
+          }
+          arr.forEach((c) => {
+            if (c && c.c != null && !map.has(c.c)) {
+              map.set(c.c, { c: c.c, g: c.g, n: c.n, niv: c.niv });
+            }
+          });
+        });
+        return [...map.values()].sort((a, b) => a.c - b.c);
+      }
+
+      async function editCargarCategorias(ins) {
+        const cont = document.getElementById("edit-categorias-list");
+        if (!cont) return;
+        let categorias = [];
+        try {
+          categorias = Array.isArray(ins.categorias)
+            ? ins.categorias
+            : typeof ins.categorias === "string"
+              ? JSON.parse(ins.categorias)
+              : [];
+        } catch (e) {
+          categorias = [];
+        }
+        if (!categorias.length) {
+          cont.innerHTML =
+            '<div class="text-xs muted">Sin categoría cargada</div>';
+          return;
+        }
+        let opciones = [];
+        try {
+          opciones = await editCategoriasOpciones(ins);
+        } catch (e) {
+          cont.innerHTML =
+            '<div class="text-xs" style="color:#E0524C">No se pudieron cargar las categorías disponibles</div>';
+          return;
+        }
+        // Por si la categoría actual, por el motivo que sea, no está entre
+        // las que ya tienen alguien más en el lineup — igual tiene que
+        // aparecer seleccionada como opción para no perderla del <select>.
+        categorias.forEach((c) => {
+          if (c && c.c != null && !opciones.some((o) => o.c === c.c)) {
+            opciones.push({ c: c.c, g: c.g, n: c.n, niv: c.niv });
+          }
+        });
+        opciones.sort((a, b) => a.c - b.c);
+        window._editCategoriasOpciones = opciones;
+
+        cont.innerHTML = categorias
+          .map((c, idx) => {
+            const opts = opciones
+              .map(
+                (o) =>
+                  '<option value="' +
+                  o.c +
+                  '"' +
+                  (o.c === c.c ? " selected" : "") +
+                  ">" +
+                  esc(o.c + ": " + (o.n || "") + " (" + (o.g || "") + ")") +
+                  "</option>",
+              )
+              .join("");
+            return (
+              '<select data-cat-idx="' +
+              idx +
+              '" class="cfg-input" style="margin-bottom:6px">' +
+              opts +
+              "</select>"
+            );
+          })
+          .join("");
       }
 
       function editRenderIntegrantes(integrantes) {
@@ -7237,12 +7342,69 @@
         editRenderIntegrantes(actuales);
       }
 
+      // Arma el array de categorías a partir de los <select> del formulario.
+      // Si cambia el número de categoría, se resetea la música SOLO cuando
+      // también cambia el género (salsa/bachata/etc) — un cambio de nivel
+      // dentro del mismo género (ej: pasar de Semipro a Amateur) no
+      // invalida la pista ya subida, pero pasar de salsa a bachata sí.
+      function editRecogerCategorias(categoriasOriginales) {
+        const selects = document.querySelectorAll(
+          "#edit-categorias-list select[data-cat-idx]",
+        );
+        const opciones = window._editCategoriasOpciones || [];
+        let seReseteoMusica = false;
+        const categorias = [];
+        selects.forEach((sel) => {
+          const idx = parseInt(sel.dataset.catIdx);
+          const original = categoriasOriginales[idx] || {};
+          const nuevoC = parseInt(sel.value);
+          const opcion = opciones.find((o) => o.c === nuevoC);
+          if (!opcion) {
+            categorias.push(original);
+            return;
+          }
+          if (opcion.c === original.c) {
+            categorias.push(original);
+            return;
+          }
+          const cambioGenero = opcion.g !== original.g;
+          const nueva = {
+            ...original,
+            c: opcion.c,
+            n: opcion.n,
+            g: opcion.g,
+            niv: opcion.niv,
+          };
+          if (cambioGenero) {
+            nueva.musica_url = null;
+            nueva.musica_nombre = null;
+            nueva.musica_estado = "pendiente";
+            seReseteoMusica = true;
+          }
+          categorias.push(nueva);
+        });
+        return { categorias, seReseteoMusica };
+      }
+
       async function editGuardar() {
         const ins = window._editSeleccionada;
         if (!ins) return;
         if (!confirm("Guardar cambios en esta inscripción?")) return;
         try {
           const integrantes = editRecogerIntegrantes();
+          let categoriasOriginales = [];
+          try {
+            categoriasOriginales = Array.isArray(ins.categorias)
+              ? ins.categorias
+              : typeof ins.categorias === "string"
+                ? JSON.parse(ins.categorias)
+                : [];
+          } catch (e) {
+            categoriasOriginales = [];
+          }
+          const { categorias, seReseteoMusica } = editRecogerCategorias(
+            categoriasOriginales,
+          );
           const updates = {
             nombre_grupo:
               document.getElementById("edit-nombre_grupo")?.value || null,
@@ -7251,6 +7413,7 @@
             celular: document.getElementById("edit-cel")?.value || null,
             pais: document.getElementById("edit-pais")?.value || null,
             integrantes: integrantes,
+            categorias: categorias,
           };
           const { error } = await db
             .from("inscripciones")
@@ -7289,7 +7452,12 @@
           auditLog("editar_inscripcion", "inscripcion", ins.id, {
             cambios: Object.keys(updates),
           });
-          toast("✓ Cambios guardados", "ok");
+          toast(
+            seReseteoMusica
+              ? "✓ Cambios guardados — la música quedó pendiente de volver a subir (cambió el género de la categoría)"
+              : "✓ Cambios guardados",
+            "ok",
+          );
           window._editSeleccionada = { ...ins, ...updates };
         } catch (e) {
           toast("Error: " + e.message, "err");
