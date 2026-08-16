@@ -1691,6 +1691,13 @@
                 </button>
                 <button
                   class="btn bo bsm"
+                  onclick="exportCronogramaIntegrantesPDF()"
+                  style="border-color: #4caf7d; color: #4caf7d"
+                >
+                  👥 PDF con integrantes
+                </button>
+                <button
+                  class="btn bo bsm"
                   onclick="cronCargar()"
                   style="border-color: #4caf7d; color: #4caf7d"
                 >
@@ -6302,6 +6309,191 @@
           const fecha = new Date().toISOString().slice(0, 10);
           doc.save("Cronograma-" + fecha + ".pdf");
           toast("✓ PDF descargado", "ok");
+        } catch (e) {
+          toast("Error al exportar PDF: " + e.message, "err");
+        }
+      }
+
+      // Exporta el cronograma con el detalle de integrantes de cada
+      // inscripto — pensado para mandarle a un encargado de sede (u
+      // organizador de instancia) la planilla de quiénes vienen a cada
+      // categoría, no solo el orden de pasada. Trae a TODOS los inscriptos
+      // de cada categoría, estén o no acreditados todavía —
+      // obtener_pasadas_categoria no filtra por eso, la acreditación ahí
+      // es solo un dato informativo, no un filtro. Son llamadas puntuales
+      // disparadas solo al clickear el botón: no toca ni la vista en vivo
+      // del cronograma ni su polling.
+      async function exportCronogramaIntegrantesPDF() {
+        if (!window._cronCache || window._cronCache.length === 0) {
+          toast("El cronograma está vacío, no hay nada para exportar", "err");
+          return;
+        }
+        if (typeof window.jspdf === "undefined") {
+          toast("Librería PDF no cargada, recargá la página", "err");
+          return;
+        }
+        const filtro = window._cronFiltro || "";
+        const buckets = filtro ? [filtro] : CRON_INST_ORDEN;
+        const grupos = buckets
+          .map((b) => [
+            b,
+            window._cronCache.filter((c) => {
+              if (cronInstBucket(c.instancia) !== b) return false;
+              if (
+                b === "reg" &&
+                window._cronSedeFiltro &&
+                c.sede_id !== window._cronSedeFiltro
+              )
+                return false;
+              return true;
+            }),
+          ])
+          .filter(([, items]) => items.length);
+
+        if (!grupos.length) {
+          toast("No hay categorías para este filtro", "err");
+          return;
+        }
+
+        toast("Armando PDF con integrantes…", "ok");
+        try {
+          // 1. Traer los inscriptos de cada categoría en paralelo.
+          const todasLasCats = grupos.flatMap(([, items]) => items);
+          const pasadasPorCat = await Promise.all(
+            todasLasCats.map((cat) =>
+              db
+                .rpc("obtener_pasadas_categoria", {
+                  p_categoria_key: cat.categoria_key,
+                })
+                .then((r) => r.data || [])
+                .catch(() => []),
+            ),
+          );
+
+          // 2. Una sola consulta para los integrantes de todos los
+          // inscriptos involucrados, en vez de una por persona.
+          const idsUnicos = [
+            ...new Set(
+              pasadasPorCat
+                .flat()
+                .map((p) => p.inscripcion_id)
+                .filter(Boolean),
+            ),
+          ];
+          let integrantesPorInscripcion = {};
+          if (idsUnicos.length) {
+            const { data: inscrs } = await db
+              .from("inscripciones")
+              .select("id,integrantes,cant_personas,nombre")
+              .in("id", idsUnicos);
+            (inscrs || []).forEach((i) => {
+              integrantesPorInscripcion[i.id] = i;
+            });
+          }
+
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "portrait", unit: "pt" });
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const madre = window._nombreMadre || "CUP SYSTEM";
+          const edicion = window._edicion || "";
+          const titulo = (madre + " " + edicion).trim();
+          const PLAIN_INST_LABEL = {
+            nac: "Nacional",
+            reg: "Regional / Sedes",
+            rep: "Repesca",
+            int: "Internacional",
+          };
+          const sedeSel =
+            filtro === "reg" && window._cronSedeFiltro
+              ? cronSedesPresentes().find(
+                  (s) => s.id === window._cronSedeFiltro,
+                )
+              : null;
+          const subtitulo =
+            "Integrantes por categoría" +
+            (filtro ? " · " + PLAIN_INST_LABEL[filtro] : "") +
+            (sedeSel ? " · " + sedeSel.nombre : "");
+
+          doc.setFontSize(16);
+          doc.setTextColor(40, 40, 40);
+          doc.text(titulo, 40, 40);
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text(subtitulo, 40, 58);
+          doc.setFontSize(9);
+          doc.setTextColor(140, 140, 140);
+          doc.text("Generado: " + new Date().toLocaleString("es-AR"), 40, 74);
+
+          let y = 90;
+          let idx = 0;
+          for (const [tipo, items] of grupos) {
+            const tituloGrupo =
+              PLAIN_INST_LABEL[tipo] + (sedeSel ? " · " + sedeSel.nombre : "");
+            if (y > pageHeight - 100) {
+              doc.addPage();
+              y = 40;
+            }
+            doc.setFontSize(13);
+            doc.setTextColor(20, 20, 20);
+            doc.text(tituloGrupo, 40, y);
+            y += 18;
+
+            for (const cat of items) {
+              const pasadas = pasadasPorCat[idx++] || [];
+              if (y > pageHeight - 100) {
+                doc.addPage();
+                y = 40;
+              }
+              doc.setFontSize(11);
+              doc.setTextColor(60, 60, 60);
+              doc.text(cat.categoria_label + " (" + pasadas.length + ")", 40, y);
+
+              const body = pasadas.map((p) => {
+                const ins = integrantesPorInscripcion[p.inscripcion_id] || {};
+                const integrantesArr = Array.isArray(ins.integrantes)
+                  ? ins.integrantes
+                  : [];
+                const cant =
+                  Number(ins.cant_personas) || integrantesArr.length || 1;
+                const nombres =
+                  integrantesArr
+                    .map((i) => i.nombre || "")
+                    .filter(Boolean)
+                    .join(", ") ||
+                  ins.nombre ||
+                  p.responsable ||
+                  "—";
+                return [
+                  p.nombre_grupo || p.responsable || "—",
+                  String(cant),
+                  nombres,
+                ];
+              });
+
+              if (body.length) {
+                doc.autoTable({
+                  head: [["Grupo / Responsable", "Cant.", "Integrantes"]],
+                  body,
+                  startY: y + 8,
+                  styles: { fontSize: 9, cellPadding: 5, valign: "top" },
+                  headStyles: {
+                    fillColor: [201, 168, 76],
+                    textColor: [20, 20, 20],
+                  },
+                  alternateRowStyles: { fillColor: [245, 245, 245] },
+                  columnStyles: { 1: { cellWidth: 40 } },
+                });
+                y = doc.lastAutoTable.finalY + 16;
+              } else {
+                y += 20;
+              }
+            }
+            y += 8;
+          }
+
+          const fecha = new Date().toISOString().slice(0, 10);
+          doc.save("Cronograma-integrantes-" + fecha + ".pdf");
+          toast("✓ PDF con integrantes descargado", "ok");
         } catch (e) {
           toast("Error al exportar PDF: " + e.message, "err");
         }
