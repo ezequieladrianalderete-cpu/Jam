@@ -4062,20 +4062,32 @@
 
         try {
           // 1. Cargar lineup
+          // Un blip de red acá (WiFi de tablet, etc.) no debe tirar abajo
+          // toda la pantalla con un error rojo — mejor seguir con lo que
+          // ya había en memoria y que el próximo aviso en tiempo real (o
+          // el polling de respaldo) lo recupere solo.
           if (
             typeof loadLineup === "function" &&
             (!luData || luData.length === 0)
           ) {
-            await loadLineup();
+            try {
+              await loadLineup();
+            } catch (e) {}
           }
 
           // 2. Cargar categoría activa
           // Traer todas las sesiones para calcular el estado POR CATEGORIA de
           // cada participante. Clave del mapa: codigo_id + "|" + cat.c
-          const { data: _sesEstado } = await db
-            .schema("scoring")
-            .from("sesiones")
-            .select("codigo_id,categoria,activa,finalizada_at");
+          let _sesEstado = [];
+          try {
+            const r = await db
+              .schema("scoring")
+              .from("sesiones")
+              .select("codigo_id,categoria,activa,finalizada_at");
+            _sesEstado = r.data || [];
+          } catch (e) {
+            /* se sigue sin el estado por-categoría de esta vuelta */
+          }
           const estadoPorCat = new Map();
           (_sesEstado || []).forEach((s) => {
             let cats = [];
@@ -4103,7 +4115,13 @@
           });
           window._estadoPorCat = estadoPorCat;
 
-          const { data: catData } = await db.rpc("obtener_categoria_activa");
+          let catData = null;
+          try {
+            const r = await db.rpc("obtener_categoria_activa");
+            catData = r.data;
+          } catch (e) {
+            /* se sigue sin actualizar el banner "EN VIVO" de esta vuelta */
+          }
           window._catActiva = (catData && catData[0]) || null;
 
           if (window._catActiva && window._catActiva.categoria_key) {
