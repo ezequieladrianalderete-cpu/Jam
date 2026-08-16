@@ -1430,6 +1430,16 @@
             id="cat-filtro-wrap"
             style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap"
           ></div>
+          <div
+            id="cat-sede-filtro-wrap"
+            style="
+              display: none;
+              gap: 6px;
+              margin-bottom: 12px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          ></div>
 
           <!-- Banner de categoría EN VIVO -->
           <div
@@ -3905,6 +3915,78 @@
         catCargar();
       }
 
+      // Sub-filtro por sede, solo dentro de Regional/Sedes — mismo motivo
+      // que en el cronograma del director: ~14 sedes comparten el mismo
+      // catálogo de categorías (mismos números), así que verlas todas
+      // mezcladas en una sola lista no alcanza para saber cuáles son de la
+      // sede que se está corriendo en este momento.
+      window._catSedeFiltro = "";
+
+      function catSedesPresentes(catList) {
+        const map = new Map();
+        (catList || [])
+          .filter((c) => luInstBucket(c.instancia) === "reg" && c.sede_id)
+          .forEach((c) => {
+            if (!map.has(c.sede_id)) map.set(c.sede_id, c.sede_nombre || c.sede_id);
+          });
+        return [...map.entries()]
+          .map(([id, nombre]) => ({ id, nombre }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      }
+
+      function catRenderSedeFiltroBtns(catList) {
+        const wrap = document.getElementById("cat-sede-filtro-wrap");
+        if (!wrap) return;
+        const viendoReg = !window._catFiltro || window._catFiltro === "reg";
+        const sedes = viendoReg ? catSedesPresentes(catList) : [];
+        if (sedes.length < 2) {
+          wrap.style.display = "none";
+          wrap.innerHTML = "";
+          if (window._catSedeFiltro) window._catSedeFiltro = "";
+          return;
+        }
+        if (
+          window._catSedeFiltro &&
+          !sedes.some((s) => s.id === window._catSedeFiltro)
+        ) {
+          window._catSedeFiltro = "";
+        }
+        wrap.style.display = "flex";
+        let html =
+          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
+          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        sedes.forEach((s) => {
+          html +=
+            '<button class="btn bo bsm" data-s="' +
+            s.id +
+            '" style="font-size:11px">' +
+            s.nombre +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          btn.onclick = () => catSedeFiltrar(btn.getAttribute("data-s"));
+        });
+        catAplicarEstiloSedeFiltro();
+      }
+
+      function catAplicarEstiloSedeFiltro() {
+        const wrap = document.getElementById("cat-sede-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          const k = btn.getAttribute("data-s");
+          const activo = k === window._catSedeFiltro;
+          btn.style.background = activo ? "#B080E0" : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function catSedeFiltrar(sedeId) {
+        window._catSedeFiltro = sedeId;
+        catAplicarEstiloSedeFiltro();
+        catCargar();
+      }
+
       function catAplicarEstiloFiltro() {
         const wrap = document.getElementById("cat-filtro-wrap");
         if (!wrap) return;
@@ -4088,10 +4170,20 @@
           // ofrecen como filtro/grupo si existe al menos una categoría con
           // esa instancia.
           catRenderFiltroBtns(catList);
+          catRenderSedeFiltroBtns(catList);
           const catFiltro = window._catFiltro || "";
           const catBuckets = catFiltro ? [catFiltro] : LU_INST_ORDEN;
           categoriasAMostrar = catBuckets.flatMap((b) =>
-            categoriasAMostrar.filter((c) => luInstBucket(c.instancia) === b),
+            categoriasAMostrar.filter((c) => {
+              if (luInstBucket(c.instancia) !== b) return false;
+              if (
+                b === "reg" &&
+                window._catSedeFiltro &&
+                c.sede_id !== window._catSedeFiltro
+              )
+                return false;
+              return true;
+            }),
           );
 
           stats.textContent =
