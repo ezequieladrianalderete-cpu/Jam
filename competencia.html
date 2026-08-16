@@ -2096,6 +2096,57 @@
             </button>
           </div>
 
+          <!-- Buscar y borrar inscripciones (lista visual) -->
+          <div class="card mb3">
+            <div class="fw6 mb2">🔎 Buscar inscripciones para borrar</div>
+            <div class="muted text-xs mb3">
+              Antes solo se podía borrar tipeando el código exacto de
+              memoria — pensado para limpiar pruebas ya "finalizadas"
+              (por ejemplo) sin tener que saber cada código de antemano.
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap">
+              <input
+                id="sa-buscar-q"
+                placeholder="Código o nombre…"
+                oninput="saBuscarInscripciones()"
+                style="
+                  flex: 1;
+                  min-width: 140px;
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 10px;
+                  padding: 10px 12px;
+                  color: #f8f5ee;
+                  font-family: inherit;
+                  font-size: 13px;
+                "
+              />
+              <select
+                id="sa-buscar-estado"
+                onchange="saBuscarInscripciones()"
+                style="
+                  background: #1e1e1e;
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 10px;
+                  padding: 10px 12px;
+                  color: #f8f5ee;
+                  font-family: inherit;
+                  font-size: 13px;
+                "
+              >
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="presente">Presente</option>
+                <option value="pista">En pista</option>
+                <option value="listo">Finalizado (listo)</option>
+                <option value="ausente">Ausente</option>
+              </select>
+            </div>
+            <div id="sa-buscar-resultados" class="muted text-xs">
+              Escribí algo para buscar, o elegí un estado (ej: "Finalizado").
+            </div>
+          </div>
+
           <!-- Eliminar inscripción específica -->
           <div class="card mb3">
             <div class="fw6 mb2">🗑 Eliminar inscripción por código</div>
@@ -5627,12 +5678,12 @@
         }
       }
 
-      async function saDeleteInscripcion() {
-        const codigo = document.getElementById("sa-del-code").value.trim();
-        if (!codigo) {
-          toast("Ingresá un código", "err");
-          return;
-        }
+      // Lógica compartida entre el campo manual ("Eliminar inscripción por
+      // código") y la lista de búsqueda de más arriba — antes esto solo
+      // vivía adentro de saDeleteInscripcion(), obligando a saber/tipear el
+      // código exacto de memoria para poder borrar cualquier cosa.
+      async function saDeleteInscripcionPorCodigo(codigo) {
+        if (!codigo) return;
         if (
           !confirm(
             "Eliminar inscripción con código " +
@@ -5669,11 +5720,103 @@
             .eq("id", insId);
           if (error) throw error;
           toast("Inscripción " + codigo + " eliminada", "ok");
-          document.getElementById("sa-del-code").value = "";
           saRefreshStats();
           if (typeof loadLineup === "function") await loadLineup();
+          saBuscarInscripciones();
         } catch (e) {
           toast("Error: " + e.message, "err");
+        }
+      }
+
+      async function saDeleteInscripcion() {
+        const codigo = document.getElementById("sa-del-code").value.trim();
+        if (!codigo) {
+          toast("Ingresá un código", "err");
+          return;
+        }
+        await saDeleteInscripcionPorCodigo(codigo);
+        document.getElementById("sa-del-code").value = "";
+      }
+
+      // Buscar por código/nombre y/o filtrar por estado (pendiente,
+      // presente, en pista, finalizado/"listo", ausente) para poder ver
+      // de un vistazo cuáles son inscripciones de prueba ya "finalizadas"
+      // y borrarlas con un click, en vez de tener que saber cada código
+      // de memoria para escribirlo en el campo de abajo.
+      let _saBuscarSeq = 0;
+      async function saBuscarInscripciones() {
+        const seq = ++_saBuscarSeq;
+        const q = (document.getElementById("sa-buscar-q")?.value || "").trim();
+        const estado = document.getElementById("sa-buscar-estado")?.value || "";
+        const cont = document.getElementById("sa-buscar-resultados");
+        if (!cont) return;
+        if (!q && !estado) {
+          cont.innerHTML =
+            '<div class="muted text-xs">Escribí algo para buscar, o elegí un estado (ej: "Finalizado").</div>';
+          return;
+        }
+        cont.innerHTML = '<div class="muted text-xs">Buscando…</div>';
+        try {
+          let query = db
+            .schema("evento")
+            .from("lineup")
+            .select("codigo_id,nombre_grupo,responsable,instancia,estado")
+            .order("codigo_id")
+            .limit(60);
+          if (q) {
+            query = query.or(
+              "codigo_id.ilike.%" +
+                q +
+                "%,nombre_grupo.ilike.%" +
+                q +
+                "%,responsable.ilike.%" +
+                q +
+                "%",
+            );
+          }
+          if (estado) query = query.eq("estado", estado);
+          const { data, error } = await query;
+          if (seq !== _saBuscarSeq) return;
+          if (error) throw error;
+          if (!data || !data.length) {
+            cont.innerHTML = '<div class="muted text-xs">Sin resultados</div>';
+            return;
+          }
+          const ESTADO_LBL = {
+            pendiente: "Pendiente",
+            presente: "Presente",
+            pista: "En pista",
+            listo: "Finalizado",
+            ausente: "Ausente",
+          };
+          cont.innerHTML =
+            '<div class="text-xs muted mb2">' +
+            data.length +
+            (data.length === 60 ? "+ resultados (mostrando 60)" : " resultado" + (data.length === 1 ? "" : "s")) +
+            "</div>" +
+            data
+              .map(
+                (l) =>
+                  '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:4px;margin-bottom:4px;font-size:11px">' +
+                  '<span style="font-family:monospace;color:#C9A84C;min-width:110px">' +
+                  esc(l.codigo_id || "—") +
+                  "</span>" +
+                  '<span style="flex:1">' +
+                  esc(l.nombre_grupo || l.responsable || "—") +
+                  "</span>" +
+                  '<span class="muted" style="font-size:10px">' +
+                  (ESTADO_LBL[l.estado] || l.estado || "") +
+                  "</span>" +
+                  '<button class="btn bo bsm" style="font-size:10px;border-color:#E0524C;color:#E0524C" onclick="saDeleteInscripcionPorCodigo(\'' +
+                  escJs(l.codigo_id || "") +
+                  "')\">🗑</button>" +
+                  "</div>",
+              )
+              .join("");
+        } catch (e) {
+          if (seq !== _saBuscarSeq) return;
+          cont.innerHTML =
+            '<div style="color:#E0524C">Error: ' + e.message + "</div>";
         }
       }
 
