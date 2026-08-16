@@ -4130,6 +4130,8 @@
               presentes: c.presentes,
               estado_cron: c.estado,
               posicion_cron: c.posicion,
+              sede_id: c.sede_id,
+              sede_nombre: c.sede_nombre,
             }));
           } else {
             const { data, error } = await db.rpc("listar_categorias_lineup");
