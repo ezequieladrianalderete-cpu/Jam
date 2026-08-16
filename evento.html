@@ -4555,6 +4555,45 @@
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      // Varias tablas distintas (categoria_activa, cronograma_categorias,
+      // orden_pasadas, lineup, sesiones) pueden cambiar juntas por una sola
+      // acción real — ej: "poner en pista" toca sesiones + lineup y a veces
+      // cronograma_categorias — y cada una disparaba su propia recarga
+      // completa del listado casi al mismo tiempo. Individualmente cada
+      // recarga era correcta, pero en conjunto la pantalla se sentía como
+      // que "se recargaba todo el tiempo" y no dejaba scrollear ni clickear
+      // tranquilo (mismo síntoma que se dio en el cronograma del director).
+      // Estas dos funciones agrupan con un debounce corto en una sola
+      // recarga real, sin importar cuántos eventos lleguen en el medio.
+      let _catRealtimeDebounce = null;
+      function refrescarCategoriasYDjDebounced() {
+        clearTimeout(_catRealtimeDebounce);
+        _catRealtimeDebounce = setTimeout(async () => {
+          try {
+            const visible = document
+              .getElementById("tp-categorias")
+              ?.classList.contains("show");
+            if (visible) {
+              if (typeof loadLineup === "function") await loadLineup();
+              await catCargar();
+            }
+            await refrescarDjSiVisible();
+          } catch (e) {}
+        }, 400);
+      }
+
+      // Solo agrupa el RE-RENDER (el rebuild de DOM que se ve/interrumpe),
+      // no la lectura de datos: luData ya se mantiene al día en tiempo real
+      // fila por fila desde subscribeRealtimeEvento, así que no hace falta
+      // volver a pedir todo por red para simplemente redibujar.
+      let _luRenderDebounce = null;
+      function luRenderDebounced() {
+        clearTimeout(_luRenderDebounce);
+        _luRenderDebounce = setTimeout(() => {
+          if (typeof luRender === "function") luRender();
+        }, 400);
+      }
+
       // Realtime para categoria_activa y lineup → recargar tab si está visible
       function subscribeRealtimeCategorias() {
         if (window._catChannel) {
@@ -4567,51 +4606,25 @@
           .on(
             "postgres_changes",
             { event: "*", schema: "evento", table: "categoria_activa" },
-            async () => {
-              const visible = document
-                .getElementById("tp-categorias")
-                ?.classList.contains("show");
-              if (visible) await catCargar();
-            },
+            () => refrescarCategoriasYDjDebounced(),
           )
           .on(
             "postgres_changes",
             { event: "*", schema: "evento", table: "cronograma_categorias" },
-            async () => {
-              const visible = document
-                .getElementById("tp-categorias")
-                ?.classList.contains("show");
-              if (visible) await catCargar();
-              await refrescarDjSiVisible();
-            },
+            () => refrescarCategoriasYDjDebounced(),
           )
           .on(
             "postgres_changes",
             { event: "*", schema: "evento", table: "orden_pasadas" },
-            async () => {
-              // Reordenar participantes dentro de una categoría (mover_pasada,
-              // agregar/quitar de pasada) no tenía ningún canal realtime: el DJ
-              // y la vista de categorías sólo se enteraban vía el polling de 5s.
-              const visible = document
-                .getElementById("tp-categorias")
-                ?.classList.contains("show");
-              if (visible) await catCargar();
-              await refrescarDjSiVisible();
-            },
+            // Reordenar participantes dentro de una categoría (mover_pasada,
+            // agregar/quitar de pasada) no tenía ningún canal realtime: el DJ
+            // y la vista de categorías sólo se enteraban vía el polling de 5s.
+            () => refrescarCategoriasYDjDebounced(),
           )
           .on(
             "postgres_changes",
             { event: "*", schema: "evento", table: "lineup" },
-            async () => {
-              const visible = document
-                .getElementById("tp-categorias")
-                ?.classList.contains("show");
-              if (visible) {
-                if (typeof loadLineup === "function") await loadLineup();
-                await catCargar();
-              }
-              await refrescarDjSiVisible();
-            },
+            () => refrescarCategoriasYDjDebounced(),
           )
           .on(
             "postgres_changes",
@@ -5507,27 +5520,18 @@
             "postgres_changes",
             { event: "*", schema: "scoring", table: "sesiones" },
             async () => {
+              // Liviano, se deja instantáneo: solo toca el ranking de
+              // proyección, no el listado completo de ~150 categorías.
               await loadSesionActivaForProy();
               await buildPfRanking();
-              // Si el DJ está viendo su panel, refrescar para que la música
-              // del que está en pista se actualice en tiempo real.
-              const djPane = document.getElementById("tp-dj");
-              if (djPane && djPane.classList.contains("show")) {
-                buildDjLista(document.getElementById("dj-q")?.value || "");
-              }
-              // Si la vista de categorias esta visible (line up / ayudante),
-              // refrescarla: al cerrar el director una evaluacion, el estado
-              // "FIN" por categoria debe verse sin refresh manual.
-              const catPane = document.getElementById("tp-categorias");
-              if (catPane && catPane.classList.contains("show")) {
-                if (typeof loadLineup === "function") await loadLineup();
-                await catCargar();
-              }
-              // Si la lista lineup plana esta visible, refrescarla tambien.
+              // El resto (DJ, categorías, lineup plano) va agrupado con
+              // debounce — al cerrar el director una evaluación, el estado
+              // "FIN" por categoría debe verse sin refresh manual, pero sin
+              // que se apilen varias recargas completas por el mismo evento.
+              refrescarCategoriasYDjDebounced();
               const luPane = document.getElementById("tp-lineup");
               if (luPane && luPane.classList.contains("show")) {
-                if (typeof loadLineup === "function") await loadLineup();
-                if (typeof luRender === "function") luRender();
+                luRenderDebounced();
               }
             },
           )
@@ -5564,7 +5568,7 @@
             (payload) => {
               const idx = luData.findIndex((x) => x.id === payload.new.id);
               if (idx >= 0) luData[idx] = { ...luData[idx], ...payload.new };
-              luRender();
+              luRenderDebounced();
             },
           )
           .on(
@@ -5574,7 +5578,7 @@
               // Nueva inscripción acreditada → aparece en el lineup
               if (!luData.find((x) => x.id === payload.new.id)) {
                 luData.push(payload.new);
-                luRender();
+                luRenderDebounced();
                 if (typeof toast === "function")
                   toast(
                     "Nueva inscripción: " + (payload.new.nombre_grupo || ""),
@@ -5590,7 +5594,7 @@
               const idx = luData.findIndex((x) => x.id === payload.old.id);
               if (idx >= 0) {
                 luData.splice(idx, 1);
-                luRender();
+                luRenderDebounced();
               }
             },
           )
