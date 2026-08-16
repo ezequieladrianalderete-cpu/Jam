@@ -13,6 +13,8 @@
     <!-- Misma librería y versión que ya usa /competencia para sus
          exportaciones a Excel (Lineup, Categorías, Rankings, Auditoría) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <style>
       * {
         margin: 0;
@@ -1132,6 +1134,7 @@
           "</div>" +
           '<div class="toolbar">' +
           '<button class="btn-primary" onclick="exportExcel()">📥 Exportar Excel</button>' +
+          '<button class="btn-secondary" onclick="exportInscriptosPDF()">📄 Exportar PDF</button>' +
           '<button class="btn-secondary" onclick="loadInscriptos().then(renderActiveTab)">↻ Refrescar</button>' +
           "</div>" +
           '<div id="ins-list"></div>';
@@ -2047,6 +2050,150 @@
           toast("err", "Error: " + e.message);
         }
       }
+
+      // Agrupa inscripciones por nivel + categoría (mismo criterio de
+      // orden que ordenarInscripcionesParaExportar) para el PDF: cada
+      // categoría sale en su propia tabla, con sus grupos/responsables e
+      // integrantes debajo — pensado para mandarle a un encargado de sede
+      // la planilla de quiénes le llegan. Si una inscripción tiene más de
+      // una categoría (raro, pero pasa), aparece en cada una de las suyas.
+      function agruparInscriptosParaExportar(list) {
+        const porGrupo = new Map();
+        list.forEach((ins) => {
+          const cats =
+            ins.categorias && ins.categorias.length ? ins.categorias : [null];
+          cats.forEach((c) => {
+            const niv = c?.niv || "_sin_nivel";
+            const catLabel = c
+              ? "#" + c.c + " " + (c.n || "") + (c.g ? " (" + c.g + ")" : "")
+              : "Sin categoría";
+            const key = niv + "||" + catLabel;
+            if (!porGrupo.has(key)) {
+              porGrupo.set(key, { niv, catLabel, rows: [] });
+            }
+            porGrupo.get(key).rows.push(ins);
+          });
+        });
+        return [...porGrupo.values()].sort((a, b) => {
+          const ia = EXPORT_NIV_ORDER.indexOf(a.niv);
+          const ib = EXPORT_NIV_ORDER.indexOf(b.niv);
+          if (ia !== ib) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+          return a.catLabel.localeCompare(b.catLabel);
+        });
+      }
+
+      // Pensado sobre todo para mandarle a un encargado de sede la lista
+      // de sus categorías con quiénes vienen — filtrá por sede (o lo que
+      // haga falta) con los filtros de arriba antes de exportar, el PDF
+      // sale con exactamente esa selección.
+      function exportInscriptosPDF() {
+        if (typeof window.jspdf === "undefined") {
+          toast("err", "Librería PDF no cargada, recargá la página");
+          return;
+        }
+        const filtered = allInscriptos.filter(matchesFilters);
+        const data = ordenarInscripcionesParaExportar(
+          filtered.length ? filtered : allInscriptos,
+        );
+        if (!data.length) {
+          toast("err", "No hay inscripciones para exportar");
+          return;
+        }
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "portrait", unit: "pt" });
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const edicion =
+            document.getElementById("sys-edicion")?.value?.trim() || "";
+          const titulo = (SYS_NOMBRE_MADRE + " " + edicion).trim();
+
+          const partesFiltro = [];
+          if (currentFilters.instancia) {
+            partesFiltro.push(
+              INSTANCIAS[currentFilters.instancia]?.label ||
+                currentFilters.instancia,
+            );
+          }
+          if (currentFilters.sede) partesFiltro.push(currentFilters.sede);
+          if (currentFilters.cat) partesFiltro.push("Cat. " + currentFilters.cat);
+          if (currentFilters.genero) partesFiltro.push(currentFilters.genero);
+          if (currentFilters.q) partesFiltro.push('"' + currentFilters.q + '"');
+          const subtitulo =
+            "Inscriptos" +
+            (partesFiltro.length ? " · " + partesFiltro.join(" · ") : "");
+
+          doc.setFontSize(16);
+          doc.setTextColor(40, 40, 40);
+          doc.text(titulo, 40, 40);
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text(subtitulo, 40, 58);
+          doc.setFontSize(9);
+          doc.setTextColor(140, 140, 140);
+          doc.text(
+            "Generado: " +
+              new Date().toLocaleString("es-AR") +
+              " · " +
+              data.length +
+              " inscriptos",
+            40,
+            74,
+          );
+
+          const tableOpts = {
+            styles: { fontSize: 9, cellPadding: 5, valign: "top" },
+            headStyles: { fillColor: [201, 168, 76], textColor: [20, 20, 20] },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            columnStyles: { 1: { cellWidth: 40 } },
+          };
+
+          const grupos = agruparInscriptosParaExportar(data);
+          let y = 90;
+          grupos.forEach((g) => {
+            if (y > pageHeight - 100) {
+              doc.addPage();
+              y = 40;
+            }
+            doc.setFontSize(12);
+            doc.setTextColor(30, 30, 30);
+            doc.text(g.catLabel + " (" + g.rows.length + ")", 40, y);
+            const body = g.rows.map((ins) => {
+              const integrantesArr = Array.isArray(ins.integrantes)
+                ? ins.integrantes
+                : [];
+              const cant =
+                Number(ins.cant_personas) || integrantesArr.length || 1;
+              // Un solista no carga "integrantes" (esa lista es solo para
+              // parejas/grupos) — mostrar "sin integrantes" ahí se leería
+              // como un dato faltante cuando en realidad es la persona
+              // misma, así que cae en su propio nombre.
+              const nombres =
+                integrantesArr
+                  .map((i) => i.nombre || "")
+                  .filter(Boolean)
+                  .join(", ") ||
+                ins.nombre ||
+                ins.nombre_grupo ||
+                "—";
+              return [ins.nombre_grupo || ins.nombre || "—", String(cant), nombres];
+            });
+            doc.autoTable({
+              ...tableOpts,
+              head: [["Grupo / Responsable", "Cant.", "Integrantes"]],
+              body,
+              startY: y + 10,
+            });
+            y = doc.lastAutoTable.finalY + 24;
+          });
+
+          const fecha = new Date().toISOString().substring(0, 10);
+          doc.save("inscriptos-jam-" + fecha + ".pdf");
+          toast("ok", "PDF exportado (" + data.length + " inscriptos) ✓");
+        } catch (e) {
+          toast("err", "Error: " + e.message);
+        }
+      }
+
       function renderDJ() {
         // Cada categoría puede tener su propia canción: una fila por
         // categoría-con-música, no una fila por inscripción.
