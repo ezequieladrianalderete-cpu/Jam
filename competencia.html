@@ -1681,13 +1681,22 @@
                   Line Up en tiempo real.
                 </div>
               </div>
-              <button
-                class="btn bo bsm"
-                onclick="cronCargar()"
-                style="border-color: #4caf7d; color: #4caf7d"
-              >
-                ↻
-              </button>
+              <div style="display: flex; gap: 6px">
+                <button
+                  class="btn bo bsm"
+                  onclick="exportCronogramaPDF()"
+                  style="border-color: #4caf7d; color: #4caf7d"
+                >
+                  📄 PDF
+                </button>
+                <button
+                  class="btn bo bsm"
+                  onclick="cronCargar()"
+                  style="border-color: #4caf7d; color: #4caf7d"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
             <div
               id="cron-filtro-wrap"
@@ -6085,6 +6094,98 @@
         });
         html += "</div>";
         lista.innerHTML = html;
+      }
+
+      // Exporta el cronograma del día a PDF, agrupado y en el mismo orden
+      // de pasada que se ve en pantalla (nac → reg → rep → int, o solo el
+      // filtro activo si hay uno). Reusa jsPDF + autoTable, ya cargados
+      // por el export de rankings.
+      function exportCronogramaPDF() {
+        if (!window._cronCache || window._cronCache.length === 0) {
+          toast("El cronograma está vacío, no hay nada para exportar", "err");
+          return;
+        }
+        if (typeof window.jspdf === "undefined") {
+          toast("Librería PDF no cargada, recargá la página", "err");
+          return;
+        }
+        try {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "portrait", unit: "pt" });
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const madre = window._nombreMadre || "CUP SYSTEM";
+          const edicion = window._edicion || "";
+          const titulo = (madre + " " + edicion).trim();
+          const filtro = window._cronFiltro || "";
+          // Las fuentes base de jsPDF (Helvetica) no traen glifos de
+          // emoji — se usa texto plano solo dentro del PDF, los labels
+          // con emoji de CRON_INST_META se dejan para la pantalla.
+          const PLAIN_INST_LABEL = {
+            nac: "Nacional",
+            reg: "Regional / Sedes",
+            rep: "Repesca",
+            int: "Internacional",
+          };
+          const subtitulo =
+            "Cronograma del día" +
+            (filtro ? " · " + PLAIN_INST_LABEL[filtro] : "");
+
+          doc.setFontSize(16);
+          doc.setTextColor(40, 40, 40);
+          doc.text(titulo, 40, 40);
+          doc.setFontSize(11);
+          doc.setTextColor(100, 100, 100);
+          doc.text(subtitulo, 40, 58);
+          doc.setFontSize(9);
+          doc.setTextColor(140, 140, 140);
+          doc.text("Generado: " + new Date().toLocaleString("es-AR"), 40, 74);
+
+          const buckets = filtro ? [filtro] : CRON_INST_ORDEN;
+          const grupos = buckets
+            .map((b) => [
+              b,
+              window._cronCache.filter((c) => cronInstBucket(c.instancia) === b),
+            ])
+            .filter(([, items]) => items.length);
+
+          const ESTADO_TXT = {
+            en_vivo: "En vivo",
+            completada: "Completada",
+            pendiente: "Pendiente",
+          };
+
+          let y = 90;
+          grupos.forEach(([tipo, items]) => {
+            if (y > pageHeight - 100) {
+              doc.addPage();
+              y = 40;
+            }
+            doc.setFontSize(12);
+            doc.setTextColor(30, 30, 30);
+            doc.text(PLAIN_INST_LABEL[tipo] + " (" + items.length + ")", 40, y);
+            const body = items.map((c, i) => [
+              String(i + 1),
+              ESTADO_TXT[c.estado] || c.estado || "",
+              c.categoria_label || "",
+              (c.presentes ?? 0) + "/" + (c.cantidad ?? 0),
+            ]);
+            doc.autoTable({
+              head: [["#", "Estado", "Categoría", "Presentes"]],
+              body,
+              startY: y + 10,
+              styles: { fontSize: 9, cellPadding: 5 },
+              headStyles: { fillColor: [76, 175, 125], textColor: [255, 255, 255] },
+              alternateRowStyles: { fillColor: [245, 245, 245] },
+            });
+            y = doc.lastAutoTable.finalY + 24;
+          });
+
+          const fecha = new Date().toISOString().slice(0, 10);
+          doc.save("Cronograma-" + fecha + ".pdf");
+          toast("✓ PDF descargado", "ok");
+        } catch (e) {
+          toast("Error al exportar PDF: " + e.message, "err");
+        }
       }
 
       async function cronCargar() {
