@@ -3752,6 +3752,11 @@
       }
 
       function renderAcrResultado(p) {
+        // Guardado para que el listener de tiempo real sepa si un cambio de
+        // integrantes corresponde a la tarjeta que está abierta en ESTA
+        // pantalla ahora mismo (otro dispositivo pudo acreditar a alguien
+        // del mismo grupo en simultáneo).
+        window._acrInscripcionActual = p.inscripcion_id || null;
         document.getElementById("acr-scan").style.display = "none";
         document.getElementById("acr-ok").style.display = "none";
         const cont = document.getElementById("acr-res");
@@ -3897,6 +3902,7 @@
 
       function acrReset() {
         acrCerrarCamara();
+        window._acrInscripcionActual = null;
         document.getElementById("acr-scan").style.display = "block";
         document.getElementById("acr-res").style.display = "none";
         document.getElementById("acr-ok").style.display = "none";
@@ -4615,6 +4621,22 @@
               try {
                 await cargarConfigGlobal();
               } catch (e) {}
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "integrantes" },
+            async (payload) => {
+              // Si dos dispositivos acreditan integrantes del mismo grupo a
+              // la vez, esto refresca el contador "X de Y" y el checklist
+              // en la tarjeta que esté abierta en ESTA pantalla, sin que
+              // nadie tenga que volver a escanear para verlo actualizado.
+              const insId =
+                payload.new?.inscripcion_id || payload.old?.inscripcion_id;
+              if (insId && insId === window._acrInscripcionActual) {
+                await acrCargarContador(insId);
+                await acrCargarListaIntegrantes(insId);
+              }
             },
           )
           .subscribe((status) => {
