@@ -3622,6 +3622,13 @@
         if (window._dirPoll) clearInterval(window._dirPoll);
         window._dirPoll = setInterval(async () => {
           try {
+            // Red de seguridad para la pestaña Cronograma: si el realtime de
+            // arriba se cae en silencio, esto igual refresca el estado
+            // "EN VIVO" (disparado ahora por Line Up, no por un click acá).
+            const adminTab = document.getElementById("d-admin");
+            if (adminTab && adminTab.classList.contains("show")) {
+              if (typeof cronCargar === "function") await cronCargar();
+            }
             // Si la pestaña Repesca está visible, refrescar sus votos en vivo
             const repTab = document.getElementById("d-repesca");
             if (repTab && repTab.classList.contains("show")) {
@@ -5297,6 +5304,20 @@
             async () => {
               if (typeof loadDescalificaciones === "function")
                 await loadDescalificaciones();
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "evento", table: "cronograma_categorias" },
+            async () => {
+              // Desde que poner_en_pista marca "EN VIVO" solo (Line Up ya no
+              // necesita que el director apriete "Iniciar categoría"), el
+              // director tiene que enterarse sin tocar nada si tiene la
+              // pestaña de Cronograma abierta.
+              const adminTab = document.getElementById("d-admin");
+              if (adminTab && adminTab.classList.contains("show")) {
+                if (typeof cronCargar === "function") await cronCargar();
+              }
             },
           )
           .subscribe((status) => {
