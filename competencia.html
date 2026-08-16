@@ -3622,13 +3622,6 @@
         if (window._dirPoll) clearInterval(window._dirPoll);
         window._dirPoll = setInterval(async () => {
           try {
-            // Red de seguridad para la pestaña Cronograma: si el realtime de
-            // arriba se cae en silencio, esto igual refresca el estado
-            // "EN VIVO" (disparado ahora por Line Up, no por un click acá).
-            const adminTab = document.getElementById("d-admin");
-            if (adminTab && adminTab.classList.contains("show")) {
-              if (typeof cronCargar === "function") await cronCargar();
-            }
             // Si la pestaña Repesca está visible, refrescar sus votos en vivo
             const repTab = document.getElementById("d-repesca");
             if (repTab && repTab.classList.contains("show")) {
@@ -5309,15 +5302,21 @@
           .on(
             "postgres_changes",
             { event: "*", schema: "evento", table: "cronograma_categorias" },
-            async () => {
+            () => {
               // Desde que poner_en_pista marca "EN VIVO" solo (Line Up ya no
               // necesita que el director apriete "Iniciar categoría"), el
               // director tiene que enterarse sin tocar nada si tiene la
-              // pestaña de Cronograma abierta.
+              // pestaña de Cronograma abierta. Con debounce: un solo "mover"
+              // puede tocar 2 filas (swap de posiciones) y llegar como 2
+              // eventos seguidos — sin esto se disparaban 2 recargas del
+              // listado completo por un solo click, pisándose la pantalla
+              // en medio de una edición.
               const adminTab = document.getElementById("d-admin");
-              if (adminTab && adminTab.classList.contains("show")) {
-                if (typeof cronCargar === "function") await cronCargar();
-              }
+              if (!adminTab || !adminTab.classList.contains("show")) return;
+              clearTimeout(window._cronRealtimeDebounce);
+              window._cronRealtimeDebounce = setTimeout(() => {
+                if (typeof cronCargar === "function") cronCargar();
+              }, 400);
             },
           )
           .subscribe((status) => {
@@ -6361,14 +6360,23 @@
         }
       }
 
+      let _cronCargaSeq = 0;
       async function cronCargar() {
+        const seq = ++_cronCargaSeq;
         const lista = document.getElementById("cron-lista");
         const display = document.getElementById("cron-activa-display");
         if (!lista) return;
-        lista.innerHTML = "Cargando…";
+        // Solo se borra a "Cargando…" en la primera carga: hacerlo en cada
+        // recarga de fondo (realtime, tab-switch) tiraba abajo los botones
+        // justo cuando el director estaba por clickear uno, y con eso
+        // parecía que el cronograma "no dejaba modificar nada".
+        if (!window._cronCache || !window._cronCache.length) {
+          lista.innerHTML = "Cargando…";
+        }
         try {
           const { data, error } = await db.rpc("cronograma_listar");
           if (error) throw error;
+          if (seq !== _cronCargaSeq) return; // superada por una llamada más nueva
           window._cronCache = data || [];
 
           const enVivo = window._cronCache.find((c) => c.estado === "en_vivo");
@@ -6389,6 +6397,7 @@
 
           cronRenderLista();
         } catch (e) {
+          if (seq !== _cronCargaSeq) return; // superada por una llamada más nueva
           lista.innerHTML =
             '<span style="color:#E0524C">Error: ' + e.message + "</span>";
         }
