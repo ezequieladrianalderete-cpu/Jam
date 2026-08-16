@@ -1703,6 +1703,16 @@
               style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap"
             ></div>
             <div
+              id="cron-sede-filtro-wrap"
+              style="
+                display: none;
+                gap: 6px;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+                align-items: center;
+              "
+            ></div>
+            <div
               id="cron-activa-display"
               class="text-xs muted mt2 mb3"
               style="
@@ -5895,6 +5905,80 @@
         return CRON_INST_ORDEN.filter((b) => set.has(b));
       }
 
+      // Sub-filtro por sede, solo dentro de Regional/Sedes: hay ~14 sedes
+      // que comparten el mismo catálogo de categorías (mismos números),
+      // así que verlas todas mezcladas en una sola lista larga no alcanza
+      // — hace falta poder agruparlas y acomodar el orden de cada una por
+      // separado.
+      window._cronSedeFiltro = "";
+
+      function cronSedesPresentes() {
+        const map = new Map();
+        window._cronCache
+          .filter((c) => cronInstBucket(c.instancia) === "reg" && c.sede_id)
+          .forEach((c) => {
+            if (!map.has(c.sede_id)) map.set(c.sede_id, c.sede_nombre || c.sede_id);
+          });
+        return [...map.entries()]
+          .map(([id, nombre]) => ({ id, nombre }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      }
+
+      function cronRenderSedeFiltroBtns() {
+        const wrap = document.getElementById("cron-sede-filtro-wrap");
+        if (!wrap) return;
+        // Solo aplica cuando se está viendo Regional/Sedes (filtro "Todos"
+        // o "reg" explícito) y hay más de una sede presente.
+        const viendoReg = !window._cronFiltro || window._cronFiltro === "reg";
+        const sedes = viendoReg ? cronSedesPresentes() : [];
+        if (sedes.length < 2) {
+          wrap.style.display = "none";
+          wrap.innerHTML = "";
+          if (window._cronSedeFiltro) window._cronSedeFiltro = "";
+          return;
+        }
+        if (
+          window._cronSedeFiltro &&
+          !sedes.some((s) => s.id === window._cronSedeFiltro)
+        ) {
+          window._cronSedeFiltro = "";
+        }
+        wrap.style.display = "flex";
+        let html =
+          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
+          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        sedes.forEach((s) => {
+          html +=
+            '<button class="btn bo bsm" data-s="' +
+            s.id +
+            '" style="font-size:11px">' +
+            s.nombre +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          btn.onclick = () => cronSedeFiltrar(btn.getAttribute("data-s"));
+        });
+        cronAplicarEstiloSedeFiltro();
+      }
+
+      function cronAplicarEstiloSedeFiltro() {
+        const wrap = document.getElementById("cron-sede-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          const k = btn.getAttribute("data-s");
+          const activo = k === window._cronSedeFiltro;
+          btn.style.background = activo ? "#B080E0" : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function cronSedeFiltrar(sedeId) {
+        window._cronSedeFiltro = sedeId;
+        cronAplicarEstiloSedeFiltro();
+        cronRenderLista();
+      }
+
       function cronRenderFiltroBtns() {
         const wrap = document.getElementById("cron-filtro-wrap");
         if (!wrap) return;
@@ -6058,6 +6142,7 @@
         const lista = document.getElementById("cron-lista");
         if (!lista) return;
         cronRenderFiltroBtns();
+        cronRenderSedeFiltroBtns();
         if (window._cronCache.length === 0) {
           lista.innerHTML =
             '<div class="muted text-xs" style="text-align:center;padding:14px">Cronograma vacío. Click en "Generar desde lineup" para precargar todas las categorías.</div>';
@@ -6068,7 +6153,16 @@
         const grupos = buckets
           .map((b) => [
             b,
-            window._cronCache.filter((c) => cronInstBucket(c.instancia) === b),
+            window._cronCache.filter((c) => {
+              if (cronInstBucket(c.instancia) !== b) return false;
+              if (
+                b === "reg" &&
+                window._cronSedeFiltro &&
+                c.sede_id !== window._cronSedeFiltro
+              )
+                return false;
+              return true;
+            }),
           ])
           .filter(([, items]) => items.length);
 
@@ -6082,11 +6176,18 @@
           '<div style="display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow-y:auto">';
         grupos.forEach(([tipo, items]) => {
           const m = CRON_INST_META[tipo];
+          const sedeSel =
+            tipo === "reg" && window._cronSedeFiltro
+              ? cronSedesPresentes().find(
+                  (s) => s.id === window._cronSedeFiltro,
+                )
+              : null;
           html +=
             '<div style="font-size:11px;font-weight:700;color:' +
             m.color +
             ';text-transform:uppercase;letter-spacing:1px;padding:8px 2px 2px">' +
             m.label +
+            (sedeSel ? " · " + sedeSel.nombre : "") +
             " (" +
             items.length +
             ")</div>";
@@ -6126,9 +6227,16 @@
             rep: "Repesca",
             int: "Internacional",
           };
+          const sedeSel =
+            filtro === "reg" && window._cronSedeFiltro
+              ? cronSedesPresentes().find(
+                  (s) => s.id === window._cronSedeFiltro,
+                )
+              : null;
           const subtitulo =
             "Cronograma del día" +
-            (filtro ? " · " + PLAIN_INST_LABEL[filtro] : "");
+            (filtro ? " · " + PLAIN_INST_LABEL[filtro] : "") +
+            (sedeSel ? " · " + sedeSel.nombre : "");
 
           doc.setFontSize(16);
           doc.setTextColor(40, 40, 40);
@@ -6144,7 +6252,16 @@
           const grupos = buckets
             .map((b) => [
               b,
-              window._cronCache.filter((c) => cronInstBucket(c.instancia) === b),
+              window._cronCache.filter((c) => {
+                if (cronInstBucket(c.instancia) !== b) return false;
+                if (
+                  b === "reg" &&
+                  window._cronSedeFiltro &&
+                  c.sede_id !== window._cronSedeFiltro
+                )
+                  return false;
+                return true;
+              }),
             ])
             .filter(([, items]) => items.length);
 
@@ -6162,7 +6279,9 @@
             }
             doc.setFontSize(12);
             doc.setTextColor(30, 30, 30);
-            doc.text(PLAIN_INST_LABEL[tipo] + " (" + items.length + ")", 40, y);
+            const tituloGrupo =
+              PLAIN_INST_LABEL[tipo] + (sedeSel ? " · " + sedeSel.nombre : "");
+            doc.text(tituloGrupo + " (" + items.length + ")", 40, y);
             const body = items.map((c, i) => [
               String(i + 1),
               ESTADO_TXT[c.estado] || c.estado || "",
