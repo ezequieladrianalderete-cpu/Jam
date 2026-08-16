@@ -52,6 +52,12 @@ Layer 3 was missing for jurados until it was added to fix a real bug: iPad Safar
 
 Realtime publication membership (`ALTER PUBLICATION supabase_realtime ADD TABLE ...`) has to be set on the live Supabase project itself, not just declared in `schema-scoring-evento.sql` — check `pg_publication_tables` if a new live table isn't updating in real time.
 
+### `categoria_key` and sede separation (Sedes/`reg` only)
+
+Live-event category grouping (cronograma, lineup pasadas, `poner_en_pista`) is keyed by `evento.cat_combo(instancia, sede_id, genero, nombre)` — a Postgres helper, not duplicated JS/SQL per call site. For `nac`/`rep`/`int` the key is 3 parts (`genero|nombre|instancia`), same as always — those are single-location events, nothing changed there.
+
+For `reg` (Sedes) the key gets a 4th segment: `genero|nombre|reg|sede_id`. This exists because ~14 different regional sedes each run their own live event on a different date, all reusing the *same* category catalog (same numbers/names) — without the sede segment, "Categoría #213" silently pooled every sede's registrants into one group, and a local operator running one sede's event had no way to tell which registrants were actually there vs. from a completely different sede/date. `evento.lineup.sede_id`/`sede_nombre` (populated from `inscripciones.sede_id` via `trg_sync_inscripcion_to_lineup` → `lineup_insertar_auto`) is the source of truth; `scoring.sesiones.categoria` also gets `sede_id`/`sede_nombre` merged in by `poner_en_pista` so rankings/exports can tell sedes apart too. If you touch category-key logic, grep for `evento.cat_combo(` in the DB (RPCs: `cronograma_inicializar_desde_lineup`, `obtener_pasadas_categoria`, `poner_en_pista`, `cronograma_agregar`, `cronograma_listar`, `listar_categorias_lineup`) rather than reintroducing an inline 3-part combo — that's exactly the duplication that let this drift unnoticed.
+
 ## Registration side (mostly unchanged from the original JAM system)
 
 - `INST` (`reg`/`rep`/`nac`/`int`) still drives wizard steps, pricing, categories, and payment account throughout `index.html`, duplicated across `index.html`/`admin.html`/`check.html`/`musica.html`/`api/notify.js` — grep all of them when changing pricing or payment details, they're not shared code.
