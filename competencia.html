@@ -1563,56 +1563,6 @@
             🛡 Super Admin · Acciones globales
           </div>
 
-          <!-- MODO SIMULACIÓN -->
-          <div
-            class="card mb3"
-            style="
-              background: linear-gradient(135deg, #1a1500 0%, #251c00 100%);
-              border-color: #e8a838;
-            "
-          >
-            <div class="sf mb2">
-              <div>
-                <div class="fw6" style="color: #e8a838">🧪 Modo Simulación</div>
-                <div class="muted text-xs">
-                  Probar el sistema con datos ficticios sin afectar producción
-                </div>
-              </div>
-              <span
-                id="sim-badge"
-                class="bdg"
-                style="font-size: 13px; background: #444; color: #aaa"
-                >DESACTIVADO</span
-              >
-            </div>
-            <div
-              id="sim-info"
-              class="text-xs muted mb3"
-              style="line-height: 1.6"
-            >
-              Cuando activás el modo simulación, TODO el sistema (Lineup, Pista,
-              Jurados, Rankings, Configuración) trabaja con 15 participantes de
-              prueba. Las inscripciones y datos reales quedan intactos.
-            </div>
-            <div class="sf" style="gap: 8px; flex-wrap: wrap">
-              <button
-                id="sim-toggle-btn"
-                class="btn bo bfull"
-                style="border-color: #e8a838; color: #e8a838"
-                onclick="simToggle()"
-              >
-                ▶ Activar simulación
-              </button>
-              <button
-                class="btn bo bfull"
-                onclick="simResetSeed()"
-                style="border-color: rgba(232, 168, 56, 0.4)"
-              >
-                🔄 Resetear datos de simulación (15 participantes)
-              </button>
-            </div>
-          </div>
-
           <!-- Estadísticas del sistema -->
           <div class="g4 mb4">
             <div class="card" style="padding: 14px; text-align: center">
@@ -2893,52 +2843,7 @@
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhZXhwa3RtY3l0Y2NqcGhvcHB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDg3MzIsImV4cCI6MjA5NDg4NDczMn0.iKuJJm2-8KITTLwHOY1YrbzRgXcuAERXtHg7cQ_K3Yg"; // ← pegar desde Supabase > Settings > API
 
       const { createClient } = supabase;
-      const _dbReal = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-      // ═══════════════════════════════════════════════════════════
-      // PROXY DE DB: redirige evento/scoring → sim cuando modo simulación activo
-      // ═══════════════════════════════════════════════════════════
-      window.SIM_MODE = false;
-      const SIM_REDIRECT = { evento: "sim", scoring: "sim" };
-      const db = new Proxy(_dbReal, {
-        get(target, prop) {
-          if (prop === "schema") {
-            return (schemaName) => {
-              if (window.SIM_MODE && SIM_REDIRECT[schemaName]) {
-                return target.schema(SIM_REDIRECT[schemaName]);
-              }
-              return target.schema(schemaName);
-            };
-          }
-          if (prop === "from") {
-            return (tableName) => {
-              // Tabla pública 'inscripciones' → en sim usa schema sim
-              if (window.SIM_MODE && tableName === "inscripciones") {
-                return target.schema("sim").from("inscripciones");
-              }
-              return target.from(tableName);
-            };
-          }
-          if (prop === "channel") {
-            return (name) => {
-              const ch = target.channel(name);
-              const origOn = ch.on.bind(ch);
-              ch.on = (event, opts, cb) => {
-                if (
-                  window.SIM_MODE &&
-                  opts?.schema &&
-                  SIM_REDIRECT[opts.schema]
-                ) {
-                  opts = { ...opts, schema: SIM_REDIRECT[opts.schema] };
-                }
-                return origOn(event, opts, cb);
-              };
-              return ch;
-            };
-          }
-          return target[prop];
-        },
-      });
+      const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
       // ═══════════════════════════════════════════════════════════
       // ESTADO LOCAL
@@ -3149,27 +3054,6 @@
           currentUser.juez_num +
           " · Tablet " +
           currentUser.juez_num;
-        // Restaurar estado de modo simulación (igual que el director).
-        // Sin esto, el jurado leería scoring real y no vería las sesiones
-        // creadas en modo simulación → "sin sesión" aunque el director puso en pista.
-        try {
-          const { data: simData } = await db.rpc("sim_estado");
-          if (simData?.[0]?.activo) {
-            window.SIM_MODE = true;
-            if (!document.getElementById("sim-banner-global")) {
-              const banner = document.createElement("div");
-              banner.id = "sim-banner-global";
-              banner.style.cssText =
-                "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
-              banner.textContent =
-                "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
-              document.body.insertBefore(banner, document.body.firstChild);
-              document.body.style.paddingTop = "32px";
-            }
-          }
-        } catch (e) {
-          /* sim no instalada */
-        }
         await loadSesionJurado();
         aplicarNombreEventoUI();
         subscribeRealtimeJurado();
@@ -3722,24 +3606,6 @@
       // DIRECTOR
       // ═══════════════════════════════════════════════════════════
       async function initDirector() {
-        // Restaurar estado de modo simulación si quedó activo de antes
-        try {
-          const { data: simData } = await db.rpc("sim_estado");
-          if (simData?.[0]?.activo) {
-            window.SIM_MODE = true;
-            // Banner global persistente
-            const banner = document.createElement("div");
-            banner.id = "sim-banner-global";
-            banner.style.cssText =
-              "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
-            banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
-            document.body.insertBefore(banner, document.body.firstChild);
-            document.body.style.paddingTop = "32px";
-          }
-        } catch (e) {
-          /* sim no instalada */
-        }
-
         await dCargarJurados();
         await loadSesionDirector();
         await buildLineup();
@@ -5475,7 +5341,6 @@
           saCheckHealth();
           saLoadUsuarios();
           cronCargar();
-          simRefreshUI();
           auditCargar();
         }
         if (id === "config") {
@@ -5859,168 +5724,6 @@
       }
 
       // ═══════════════════════════════════════════════════════════
-      // MODO SIMULACIÓN
-      // ═══════════════════════════════════════════════════════════
-      async function simEstadoActual() {
-        try {
-          const { data } = await db.rpc("sim_estado");
-          return (data && data[0]) || { activo: false };
-        } catch (e) {
-          return { activo: false };
-        }
-      }
-
-      async function simRefreshUI() {
-        const estado = await simEstadoActual();
-        const badge = document.getElementById("sim-badge");
-        const btn = document.getElementById("sim-toggle-btn");
-        const info = document.getElementById("sim-info");
-        if (estado.activo) {
-          window.SIM_MODE = true;
-          if (badge) {
-            badge.textContent = "ACTIVO";
-            badge.style.background = "#E8A838";
-            badge.style.color = "#000";
-          }
-          if (btn) {
-            btn.innerHTML = "⏸ Desactivar simulación";
-            btn.style.background = "#E0524C";
-            btn.style.color = "#fff";
-            btn.style.borderColor = "#E0524C";
-          }
-          if (info)
-            info.innerHTML =
-              '<strong style="color:#E8A838">🧪 Simulación ACTIVA</strong> — Todas las acciones (lineup, scoring, rankings) trabajan con datos ficticios. Los datos reales están protegidos.';
-          // Banner global persistente
-          simMostrarBanner(true);
-        } else {
-          window.SIM_MODE = false;
-          if (badge) {
-            badge.textContent = "DESACTIVADO";
-            badge.style.background = "#444";
-            badge.style.color = "#aaa";
-          }
-          if (btn) {
-            btn.innerHTML = "▶ Activar simulación";
-            btn.style.background = "";
-            btn.style.color = "#E8A838";
-            btn.style.borderColor = "#E8A838";
-          }
-          if (info)
-            info.innerHTML =
-              "Cuando activás el modo simulación, TODO el sistema (Lineup, Pista, Jurados, Rankings, Configuración) trabaja con 15 participantes de prueba. Las inscripciones y datos reales quedan intactos.";
-          simMostrarBanner(false);
-        }
-      }
-
-      function simMostrarBanner(mostrar) {
-        let banner = document.getElementById("sim-banner-global");
-        if (mostrar) {
-          if (!banner) {
-            banner = document.createElement("div");
-            banner.id = "sim-banner-global";
-            banner.style.cssText =
-              "position:fixed;top:0;left:0;right:0;background:#E8A838;color:#000;text-align:center;padding:6px;font-weight:700;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4);letter-spacing:1px";
-            banner.textContent = "🧪 MODO SIMULACIÓN ACTIVO · DATOS DE PRUEBA";
-            document.body.insertBefore(banner, document.body.firstChild);
-            document.body.style.paddingTop = "32px";
-          }
-        } else {
-          if (banner) {
-            banner.remove();
-            document.body.style.paddingTop = "";
-          }
-        }
-      }
-
-      async function simToggle() {
-        try {
-          const estado = await simEstadoActual();
-          const nuevoEstado = !estado.activo;
-
-          if (nuevoEstado) {
-            // Activar — preguntar si quiere seed automático
-            const confirmar = confirm(
-              "¿Activar Modo Simulación?\n\n" +
-                "• El sistema cambiará a 15 participantes de prueba\n" +
-                "• Los datos reales NO se tocan\n" +
-                "• Podés volver a la vista real desactivándolo en cualquier momento\n\n" +
-                "¿Continuar?",
-            );
-            if (!confirmar) return;
-          } else {
-            if (
-              !confirm(
-                "¿Volver a vista normal? (Los datos de simulación quedan guardados por si querés reactivar)",
-              )
-            )
-              return;
-          }
-
-          const { data, error } = await db.rpc("sim_toggle", {
-            p_activo: nuevoEstado,
-            p_user: currentUser?.username || "director",
-          });
-          if (error) throw error;
-          if (data?.ok) {
-            toast(
-              nuevoEstado
-                ? "🧪 Modo simulación ACTIVADO"
-                : "✓ Modo normal restaurado",
-              "ok",
-            );
-            await simRefreshUI();
-            // Recargar datos para que la nueva fuente (sim o real) se aplique
-            if (typeof loadPuntajesDirector === "function")
-              await loadPuntajesDirector();
-            if (typeof buildRankings === "function") await buildRankings();
-            if (typeof buildLineup === "function") await buildLineup();
-            saRefreshStats();
-          } else {
-            toast("Error: " + (data?.error || "desconocido"), "err");
-          }
-        } catch (e) {
-          toast("Error: " + e.message, "err");
-        }
-      }
-
-      async function simResetSeed() {
-        if (
-          !confirm(
-            "¿Resetear datos de simulación?\n\n" +
-              "• Se borran todos los datos de simulación actuales\n" +
-              "• Se cargan 15 participantes de prueba frescos\n" +
-              "• Los datos REALES NO se tocan\n\n" +
-              "¿Continuar?",
-          )
-        )
-          return;
-        try {
-          toast("Generando 15 participantes de prueba...", "ok");
-          const { data, error } = await db.rpc("sim_reset_y_seed");
-          if (error) throw error;
-          if (data?.ok) {
-            toast(
-              "✓ Simulación reseteada con " +
-                data.participantes +
-                " participantes",
-              "ok",
-            );
-            // Si está activo el modo, recargar datos visibles
-            if (window.SIM_MODE) {
-              if (typeof loadPuntajesDirector === "function")
-                await loadPuntajesDirector();
-              if (typeof buildRankings === "function") await buildRankings();
-              if (typeof buildLineup === "function") await buildLineup();
-              saRefreshStats();
-            }
-          }
-        } catch (e) {
-          toast("Error: " + e.message, "err");
-        }
-      }
-
-      // ═══════════════════════════════════════════════════════════
       // CRONOGRAMA DEL DÍA (orden de pasada de categorías)
       // ═══════════════════════════════════════════════════════════
       window._cronCache = [];
@@ -6260,11 +5963,6 @@
               ? '<button title="Mover al final" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer" onclick="cronMoverExtremo(' +
                 c.id +
                 ',&quot;fin&quot;)">⇊</button>'
-              : "") +
-            (!isVivo
-              ? '<button title="Iniciar" style="background:#4CAF7D;border:none;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronIniciar(' +
-                c.id +
-                ')">▶</button>'
               : "") +
             (isVivo
               ? '<button title="Completar" style="background:#C9A84C;border:none;color:#000;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer" onclick="cronCompletar(' +
@@ -6704,35 +6402,6 @@
             });
             await cronCargar();
           } else toast(data?.error || "No se pudo mover", "warn");
-        } catch (e) {
-          toast("Error: " + e.message, "err");
-        }
-      }
-
-      async function cronIniciar(id) {
-        const c = window._cronCache.find((x) => x.id === id);
-        if (!c) return;
-        if (
-          !confirm(
-            "Iniciar categoría: " +
-              c.categoria_label +
-              "?\n\nLa categoría anterior (si había) se marcará como completada.",
-          )
-        )
-          return;
-        try {
-          const { data, error } = await db.rpc("cronograma_iniciar", {
-            p_id: id,
-            p_user: currentUser?.username || "director",
-          });
-          if (error) throw error;
-          if (data?.ok) {
-            toast("🔴 EN VIVO: " + c.categoria_label, "ok");
-            auditLog("cronograma_iniciar", "categoria", c.categoria_key, {
-              label: c.categoria_label,
-            });
-            await cronCargar();
-          }
         } catch (e) {
           toast("Error: " + e.message, "err");
         }
