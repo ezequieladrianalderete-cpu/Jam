@@ -8403,9 +8403,27 @@
           audioChunks = [];
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.onstop = () => {
-            audioBlob = new Blob(audioChunks, {
+            const blob = new Blob(audioChunks, {
               type: mediaRecorder.mimeType || "audio/mp4",
             });
+            stream.getTracks().forEach((t) => t.stop());
+            // A veces el micrófono falla en silencio (permiso a medio dar,
+            // dispositivo ocupado, etc.) y el resultado es un archivo
+            // vacío/casi vacío que antes se guardaba igual como si fuera
+            // válido — el jurado veía "✓ Audio grabado" con una grabación
+            // en blanco. Menos de 1000 bytes no puede ser audio real.
+            if (blob.size < 1000) {
+              audioBlob = null;
+              document.getElementById("j-audio-player").style.display =
+                "none";
+              document.getElementById("j-rec-status").textContent =
+                "⚠️ Falló la grabación (quedó vacía) — probá grabar de nuevo";
+              document.getElementById("j-rec-status").className =
+                "text-xs red mt2";
+              toast("La grabación quedó vacía, probá de nuevo", "err");
+              return;
+            }
+            audioBlob = blob;
             const url = URL.createObjectURL(audioBlob);
             document.getElementById("j-audio-player").src = url;
             document.getElementById("j-audio-player").style.display = "block";
@@ -8413,7 +8431,6 @@
               "✓ Audio grabado (" + Math.round(audioBlob.size / 1024) + "KB)";
             document.getElementById("j-rec-status").className =
               "text-xs green mt2";
-            stream.getTracks().forEach((t) => t.stop());
           };
           mediaRecorder.start();
           document.getElementById("j-rec-btn").textContent =
@@ -8440,7 +8457,10 @@
       }
 
       async function jSubirAudio() {
-        if (!audioBlob || !miPuntaje) return;
+        // Segunda capa: aunque onstop ya filtra grabaciones vacías, esto
+        // cubre cualquier otro camino que pudiera dejar pasar un blob
+        // chico/roto sin avisar.
+        if (!audioBlob || !miPuntaje || audioBlob.size < 1000) return;
         try {
           const b64 = await new Promise((resolve, reject) => {
             const reader = new FileReader();
