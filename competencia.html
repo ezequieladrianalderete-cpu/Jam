@@ -3048,6 +3048,8 @@
         sesionActiva = null;
         miPuntaje = null;
         jCerradoFlag = false;
+        audioBlob = null;
+        audioChunks = [];
         sessionStorage.removeItem("jam_user");
         if (realtimeSub) {
           db.removeChannel(realtimeSub);
@@ -3541,6 +3543,34 @@
                 if (esSesionNueva) {
                   jCerradoFlag = false;
                   miPuntaje = null;
+                  // Segunda red de seguridad (la principal es el reset en
+                  // jSubirAudio al terminar de usarla): una sesión REALMENTE
+                  // nueva nunca debe arrancar con una grabación vieja
+                  // colgada de memoria, pase lo que pase con el envío
+                  // anterior.
+                  audioBlob = null;
+                  audioChunks = [];
+                  if (mediaRecorder && mediaRecorder.state === "recording") {
+                    try {
+                      mediaRecorder.stop();
+                    } catch (e) {}
+                  }
+                  const audioPlayer = document.getElementById("j-audio-player");
+                  if (audioPlayer) {
+                    audioPlayer.style.display = "none";
+                    audioPlayer.removeAttribute("src");
+                  }
+                  const recBtn = document.getElementById("j-rec-btn");
+                  if (recBtn) {
+                    recBtn.textContent = "🎙 Grabar audio de evaluación";
+                    recBtn.onclick = jIniciarGrabacion;
+                    recBtn.className = "btn bo bfull";
+                  }
+                  const recStatus = document.getElementById("j-rec-status");
+                  if (recStatus) {
+                    recStatus.textContent = "";
+                    recStatus.className = "text-xs muted mt2";
+                  }
                   document.getElementById("j-cerrar-btn").style.display =
                     "flex";
                   document.getElementById("j-cerrado").style.display = "none";
@@ -8436,6 +8466,15 @@
         } catch (e) {
           console.error("jSubirAudio:", e);
           toast("Error al subir audio", "err");
+        } finally {
+          // Pase lo que pase (éxito, error, o timeout) esta grabación ya se
+          // usó para ESTA sesión. Sin este reset, la misma grabación vieja
+          // quedaba dando vueltas en memoria y se le volvía a mandar sin
+          // querer al siguiente participante — bug real detectado en vivo
+          // (Zona Sur 17/08: el audio del jurado 4 le llegó a 6 personas
+          // distintas seguidas).
+          audioBlob = null;
+          audioChunks = [];
         }
       }
 
