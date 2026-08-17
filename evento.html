@@ -3149,6 +3149,32 @@
         });
       }
 
+      // poner_en_pista frena si a quien está ahora en pista todavía le
+      // falta el voto de algún jurado activo (evita que un jurado lento
+      // termine votando "en el aire" al participante equivocado, como pasó
+      // en vivo con Silvana Suárez / Rosa Villagra en Zona Sur). Si frena,
+      // se avisa con claridad y se ofrece forzar el avance igual — nunca en
+      // silencio.
+      async function rpcPonerEnPista(args) {
+        let { data, error } = await db.rpc("poner_en_pista", args);
+        if (error) return { data, error };
+        if (data && data.bloqueado_por_jueces) {
+          const seguir = confirm(
+            (data.error || "Faltan votos de jurados") +
+              (data.nombre_anterior
+                ? '\n\n("' + data.nombre_anterior + '" es quien está en pista ahora)'
+                : "") +
+              "\n\n¿Pasar al siguiente igual? El voto que falta va a quedar vacío (se puede cargar a mano después).",
+          );
+          if (!seguir) return { data, error: null };
+          ({ data, error } = await db.rpc("poner_en_pista", {
+            ...args,
+            p_forzar: true,
+          }));
+        }
+        return { data, error };
+      }
+
       // Pone en pista una categoría puntual de un participante (la fila ya
       // sabe qué categoría es — ya no hace falta elegir con un modal).
       async function luPonerEnPistaCategoria(id, catCode) {
@@ -3188,13 +3214,14 @@
         const catKey =
           (categoria.g || "sin") + "|" + (categoria.n || "sin") + "|" + instNorm;
         try {
-          const { data, error } = await db.rpc("poner_en_pista", {
+          const { data, error } = await rpcPonerEnPista({
             p_lineup_id: id,
             p_categoria_key: catKey,
           });
           if (error) throw error;
           if (!data?.ok) {
-            toast(data?.error || "No se pudo poner en pista", "err");
+            if (!data?.bloqueado_por_jueces)
+              toast(data?.error || "No se pudo poner en pista", "err");
             return;
           }
         } catch (e) {
@@ -4549,7 +4576,7 @@
           if (!window._estadoAntesPista) window._estadoAntesPista = {};
           const prev = (luData || []).find((x) => x.id === lineupId);
           window._estadoAntesPista[lineupId] = prev ? prev.estado : "presente";
-          const { data, error } = await db.rpc("poner_en_pista", {
+          const { data, error } = await rpcPonerEnPista({
             p_lineup_id: lineupId,
             p_categoria_key: catKey,
           });
@@ -4561,7 +4588,7 @@
             );
             await loadLineup();
             await catCargar();
-          } else {
+          } else if (!data?.bloqueado_por_jueces) {
             toast(data?.error || "No se pudo poner en pista", "err");
           }
         } catch (e) {
