@@ -2075,6 +2075,10 @@
       let pfRankFilter = null;
       let pfRankCatFilter = null;
       let pfRankNivFilter = null;
+      // Solo se aplica cuando llega por "Publicar en pantalla" desde el
+      // director (competencia.html) con instancia reg + sede elegida — esta
+      // pantalla no tiene botones propios para elegirla.
+      let pfRankSedeFilter = null;
       let realtimeSub = null;
 
       const LU_DOT = {
@@ -5255,6 +5259,22 @@
         return x ? x.c + ": " + x.n : null;
       }
 
+      // Extrae sede_id directamente del JSON crudo de categoria de una fila
+      // de ranking (antes de expandByCategory), para poder filtrar por sede
+      // incluso en la vista "Todos" (plana, sin _activeCat).
+      function rowSedeId(r) {
+        try {
+          const v =
+            typeof r.categoria === "string"
+              ? JSON.parse(r.categoria)
+              : r.categoria;
+          const obj = Array.isArray(v) ? v[0] : v;
+          return obj?.sede_id || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
       function extractRankCats(rows) {
         const cats = new Set();
         (rows || []).forEach((r) => {
@@ -5392,7 +5412,18 @@
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
 
-        const allNivs = extractRankNivs(allExpanded);
+        // Sede (solo Regional/Sedes, solo si vino en el push del director):
+        // cada sede corre su propia competencia, así que sin esto "el
+        // ranking regional" mezclaba gente de sedes distintas.
+        const sedeActivo = inst === "reg" && pfRankSedeFilter;
+        const dedupedSede = sedeActivo
+          ? deduped.filter((r) => rowSedeId(r) === pfRankSedeFilter)
+          : deduped;
+        const allExpandedSede = sedeActivo
+          ? allExpanded.filter((r) => r._activeCat?.sede_id === pfRankSedeFilter)
+          : allExpanded;
+
+        const allNivs = extractRankNivs(allExpandedSede);
         ["pf-rank-niv-filters", "pe-rank-niv-filters"].forEach((cid) => {
           const cont = document.getElementById(cid);
           if (!cont) return;
@@ -5414,8 +5445,10 @@
 
         const nivFiltered =
           cfg.mostrar_niv && pfRankNivFilter
-            ? allExpanded.filter((r) => r._activeCat?.niv === pfRankNivFilter)
-            : allExpanded;
+            ? allExpandedSede.filter(
+                (r) => r._activeCat?.niv === pfRankNivFilter,
+              )
+            : allExpandedSede;
         const cats = extractRankCats(nivFiltered);
         ["pf-rank-cat-filters", "pe-rank-cat-filters"].forEach((cid) => {
           const cont = document.getElementById(cid);
@@ -5442,7 +5475,7 @@
           ? nivFiltered.filter((r) => catKey(r._activeCat) === pfRankCatFilter)
           : cfg.mostrar_niv && pfRankNivFilter
             ? nivFiltered
-            : deduped;
+            : dedupedSede;
         buildRankingRows("pf-rank-rows", toRender, true, cfg.mostrar_puntaje);
         buildRankingRows("pe-rank-rows", toRender, false, cfg.mostrar_puntaje);
       }
@@ -5470,6 +5503,7 @@
           pfRankFilter = push.instancia || null;
           pfRankNivFilter = push.nivel || null;
           pfRankCatFilter = push.categoria || null;
+          pfRankSedeFilter = push.sede || null;
           await buildPfRanking();
           const btn = document.getElementById("pfc-ranking");
           if (btn) pfMode("ranking", btn);
@@ -5480,6 +5514,10 @@
         pfRankFilter = inst;
         pfRankCatFilter = null;
         pfRankNivFilter = null;
+        // Sin botón propio para elegir sede acá: si alguien toca el filtro
+        // localmente, se limpia la sede que hubiera quedado de un push
+        // anterior del director, para no mostrar un recorte silencioso.
+        pfRankSedeFilter = null;
         buildPfRanking();
       }
 

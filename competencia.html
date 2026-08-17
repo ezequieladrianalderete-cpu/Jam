@@ -1494,6 +1494,16 @@
             "
           ></div>
           <div
+            id="d-rank-sede-filtro-wrap"
+            style="
+              display: none;
+              gap: 6px;
+              margin-bottom: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          ></div>
+          <div
             id="d-rank-niv-filters"
             style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap"
           ></div>
@@ -2854,6 +2864,11 @@
       let rankFilter = null;
       let rankCatFilter = null;
       let rankNivFilter = null;
+      // Sub-filtro por sede, solo dentro de Regional/Sedes: cada sede corre
+      // su propia competencia (fecha y participantes propios) aunque
+      // compartan el mismo catálogo de categorías — sin esto, "el ranking
+      // regional" mezclaba gente que nunca compitió entre sí.
+      window._rankSedeFiltro = "";
       let miPuntaje = null;
       let jCerradoFlag = false;
       let realtimeSub = null;
@@ -4790,6 +4805,86 @@
         }
       }
 
+      // Extrae sede_id directamente del JSON crudo de categoria de una fila
+      // de ranking (antes de pasar por expandByCategory), para poder filtrar
+      // por sede incluso en la vista "Todos" (plana, sin _activeCat).
+      function rowSedeId(r) {
+        try {
+          const v =
+            typeof r.categoria === "string"
+              ? JSON.parse(r.categoria)
+              : r.categoria;
+          const obj = Array.isArray(v) ? v[0] : v;
+          return obj?.sede_id || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function rankSedesPresentes(rowsExpandidas) {
+        const map = new Map();
+        (rowsExpandidas || []).forEach((r) => {
+          const id = r._activeCat?.sede_id;
+          if (id && !map.has(id))
+            map.set(id, r._activeCat.sede_nombre || id);
+        });
+        return [...map.entries()]
+          .map(([id, nombre]) => ({ id, nombre }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      }
+
+      function rankRenderSedeFiltroBtns(inst, rowsExpandidas) {
+        const wrap = document.getElementById("d-rank-sede-filtro-wrap");
+        if (!wrap) return;
+        const sedes = inst === "reg" ? rankSedesPresentes(rowsExpandidas) : [];
+        if (sedes.length < 2) {
+          wrap.style.display = "none";
+          wrap.innerHTML = "";
+          if (window._rankSedeFiltro) window._rankSedeFiltro = "";
+          return;
+        }
+        if (
+          window._rankSedeFiltro &&
+          !sedes.some((s) => s.id === window._rankSedeFiltro)
+        ) {
+          window._rankSedeFiltro = "";
+        }
+        wrap.style.display = "flex";
+        let html =
+          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
+          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        sedes.forEach((s) => {
+          html +=
+            '<button class="btn bo bsm" data-s="' +
+            s.id +
+            '" style="font-size:11px">' +
+            s.nombre +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          btn.onclick = () => rankSedeFiltrar(btn.getAttribute("data-s"));
+        });
+        rankAplicarEstiloSedeFiltro();
+      }
+
+      function rankAplicarEstiloSedeFiltro() {
+        const wrap = document.getElementById("d-rank-sede-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          const k = btn.getAttribute("data-s");
+          const activo = k === window._rankSedeFiltro;
+          btn.style.background = activo ? "#B080E0" : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function rankSedeFiltrar(sedeId) {
+        window._rankSedeFiltro = sedeId;
+        rankAplicarEstiloSedeFiltro();
+        buildRankings();
+      }
+
       async function buildRankings() {
         const cfg = getRankingCfg();
         const [{ data }, { data: lineupCats }] = await Promise.all([
@@ -4845,12 +4940,27 @@
         const deduped = dedupeScores(instFiltered);
         const allExpanded = expandByCategory(deduped);
 
+        // Sub-filtro por sede (solo Regional/Sedes): aplica sobre ambas
+        // representaciones — la plana (deduped, usada en "Todos" sin
+        // drill-down de nivel) y la expandida (allExpanded, usada para
+        // nivel/categoría y para el PDF agrupado).
+        rankRenderSedeFiltroBtns(inst, allExpanded);
+        const sedeActivo = inst === "reg" && window._rankSedeFiltro;
+        const dedupedSede = sedeActivo
+          ? deduped.filter((r) => rowSedeId(r) === window._rankSedeFiltro)
+          : deduped;
+        const allExpandedSede = sedeActivo
+          ? allExpanded.filter(
+              (r) => r._activeCat?.sede_id === window._rankSedeFiltro,
+            )
+          : allExpanded;
+
         const nivCont = document.getElementById("d-rank-niv-filters");
         if (nivCont) {
           nivCont.innerHTML = "";
           nivCont.style.display = cfg.mostrar_niv ? "" : "none";
           if (cfg.mostrar_niv) {
-            const allNivs = extractRankNivs(allExpanded);
+            const allNivs = extractRankNivs(allExpandedSede);
             if (allNivs.length > 0) {
               [
                 { label: "Todos", val: null },
@@ -4875,8 +4985,10 @@
 
         const nivFiltered =
           cfg.mostrar_niv && rankNivFilter
-            ? allExpanded.filter((r) => r._activeCat?.niv === rankNivFilter)
-            : allExpanded;
+            ? allExpandedSede.filter(
+                (r) => r._activeCat?.niv === rankNivFilter,
+              )
+            : allExpandedSede;
         const cats = extractRankCats(nivFiltered);
         const catCont = document.getElementById("d-rank-cat-filters");
         if (catCont) {
@@ -4906,7 +5018,7 @@
           ? nivFiltered.filter((r) => catKey(r._activeCat) === rankCatFilter)
           : cfg.mostrar_niv && rankNivFilter
             ? nivFiltered
-            : deduped;
+            : dedupedSede;
 
         // Snapshot de exactamente lo que queda en pantalla (mismo array,
         // mismo orden) para que "Exportar PDF" descargue lo mismo que se
@@ -4918,7 +5030,7 @@
         // agrupada por nivel y categoría, cada una con su propio podio.
         window._rankLastRendered = {
           rows: toRender,
-          allExpanded,
+          allExpanded: allExpandedSede,
           mostrarPuntaje: cfg.mostrar_puntaje,
           catDisplayActiva: !!(rankCatFilter || rankNivFilter),
           mostrarNiv: cfg.mostrar_niv,
@@ -4983,6 +5095,7 @@
               instancia: inst,
               nivel: rankNivFilter,
               categoria: rankCatFilter,
+              sede: inst === "reg" ? window._rankSedeFiltro || null : null,
             },
           });
           if (error || !data?.ok) {
