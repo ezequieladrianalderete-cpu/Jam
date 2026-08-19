@@ -3223,14 +3223,20 @@
         // leer/escribir, lo que se lee siempre coincide con lo que está
         // en pantalla, sin importar qué cambie currentUser.items después.
         window._itemsRenderizados = items.slice();
+        // Ningún ítem cuenta como "votado" hasta que el jurado lo toque de
+        // verdad — el valor por defecto (0) es indistinguible de un 0
+        // real elegido a propósito, así que se rastrea aparte quién tocó
+        // qué. Se resetea acá porque esto solo se llama al armar una
+        // planilla nueva (sesión nueva), nunca en un re-render de la misma.
+        window._itemsTocados = new Set();
         const maxVal = 10;
         const cont = document.getElementById("j-items-container");
         cont.innerHTML = "";
         items.forEach((nombre, i) => {
           const n = i + 1;
           cont.innerHTML += `
-    <div class="item-wrap" id="item${n}-wrap">
-      <div class="item-nombre" id="item${n}-nombre">${n}. ${nombre}</div>
+    <div class="item-wrap" id="item${n}-wrap" style="border:2px solid rgba(224,82,76,.5);border-radius:10px;transition:border-color .2s,background .2s">
+      <div class="item-nombre" id="item${n}-nombre">${n}. ${nombre} <span style="color:#E0524C;font-size:11px;font-weight:700" id="item${n}-sinvotar">· sin votar</span></div>
       <div class="score-row">
         <div class="score-num"><input type="number" class="score-input" id="v${n}" value="0.00" min="0" max="${maxVal}" step="0.01" oninput="syncSlider(${n});calcSub()"></div>
         <input type="range" class="score-slider" id="r${n}" min="0" max="${maxVal}" step="0.5" value="0" oninput="syncInput(${n});calcSub()">
@@ -3252,6 +3258,9 @@
           if (rEl) {
             rEl.value = items[k];
           }
+          // Un borrador ya guardado significa que el jurado ya había
+          // elegido ese valor antes (aunque sea 0) — cuenta como tocado.
+          marcarItemTocado(parseInt(idx, 10));
         });
         calcSub();
       }
@@ -3396,11 +3405,43 @@
         const r = document.getElementById("r" + n),
           v = document.getElementById("v" + n);
         if (r && v) r.value = v.value;
+        marcarItemTocado(n);
       }
       function syncInput(n) {
         const r = document.getElementById("r" + n),
           v = document.getElementById("v" + n);
         if (r && v) v.value = parseFloat(r.value).toFixed(2);
+        marcarItemTocado(n);
+      }
+
+      // Un ítem cuenta como "votado" apenas el jurado lo toca (mueve el
+      // slider o escribe un número), sin importar en qué valor termine —
+      // incluso 0 es válido si fue una elección real. Solo se avisa/bloquea
+      // el cierre si un ítem quedó exactamente como arrancó, sin tocar.
+      function marcarItemTocado(n) {
+        if (!window._itemsTocados) window._itemsTocados = new Set();
+        window._itemsTocados.add(n);
+        const wrap = document.getElementById("item" + n + "-wrap");
+        if (wrap) {
+          wrap.style.borderColor = "rgba(255,255,255,.1)";
+          wrap.style.background = "";
+        }
+        const aviso = document.getElementById("item" + n + "-sinvotar");
+        if (aviso) aviso.style.display = "none";
+      }
+
+      // Repinta en rojo los ítems que jCerrar() detectó sin tocar, para que
+      // el jurado vea de un vistazo cuáles le faltan sin tener que adivinar.
+      function resaltarItemsSinVotar(faltantes) {
+        faltantes.forEach((n) => {
+          const wrap = document.getElementById("item" + n + "-wrap");
+          if (wrap) {
+            wrap.style.borderColor = "#E0524C";
+            wrap.style.background = "rgba(224,82,76,.08)";
+          }
+          const aviso = document.getElementById("item" + n + "-sinvotar");
+          if (aviso) aviso.style.display = "inline";
+        });
       }
 
       function getItemsValues() {
@@ -3458,16 +3499,27 @@
           return;
         }
         const { items, total } = getItemsValues();
-        // Antes esto bloqueaba SIEMPRE con total 0, asumiendo que el
-        // jurado se olvidó de puntuar. Pero un puntaje 0 en todos los
-        // ítems puede ser una evaluación real y válida — ahora se pide
-        // una confirmación extra en vez de impedirlo directamente.
-        if (
-          total === 0 &&
-          !confirm(
-            "Vas a cerrar con puntaje 0 en todos los ítems. ¿Es intencional?",
-          )
-        ) {
+        // Antes esto solo bloqueaba (con confirmación, no un freno real) si
+        // el TOTAL daba 0 — un jurado que se olvidaba de tocar un solo
+        // ítem (y dejaba los demás bien puntuados) no se enteraba nunca,
+        // porque el total ya no daba 0. Ahora se exige que cada ítem haya
+        // sido tocado de verdad, sin importar en qué valor haya quedado.
+        const userItemsCerrar =
+          window._itemsRenderizados || currentUser?.items || [];
+        const faltantes = [];
+        for (let i = 1; i <= userItemsCerrar.length; i++) {
+          if (!window._itemsTocados || !window._itemsTocados.has(i)) {
+            faltantes.push(i);
+          }
+        }
+        if (faltantes.length > 0) {
+          resaltarItemsSinVotar(faltantes);
+          toast(
+            "Te falta puntuar el ítem " +
+              faltantes.join(", ") +
+              " — no puede quedar en 0 por defecto sin elegirlo",
+            "err",
+          );
           return;
         }
         const payload = {
