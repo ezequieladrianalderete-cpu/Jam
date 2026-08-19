@@ -1652,16 +1652,8 @@
 
       <!-- PRESENTADOR -->
       <div class="tp" id="tp-presentador">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100vh - 90px);
-            padding: 32px 20px;
-          "
-        >
-          <div style="width: 100%; max-width: 640px">
+        <div class="con">
+          <div style="max-width: 640px; margin: 24px auto 0">
             <div class="tarjeta" style="padding: 32px" id="pres-tarjeta">
               <div class="ep-label" style="justify-content: space-between">
                 <div style="display: flex; align-items: center; gap: 7px">
@@ -1715,6 +1707,18 @@
               Se actualiza cuando el director cambia el participante en pista
             </p>
           </div>
+
+          <!-- Lista completa, tipo programa impreso, con check propio -->
+          <div class="sf mb3 mt4">
+            <div class="fw7" style="font-size: 18px">
+              📋 Lista completa · orden del cronograma
+            </div>
+            <button class="btn bo bsm" onclick="presCargarLista()">
+              ↻ Refrescar
+            </button>
+          </div>
+          <div class="muted text-xs mb3" id="pres-stats">Cargando…</div>
+          <div id="pres-lista"></div>
         </div>
       </div>
 
@@ -2508,6 +2512,7 @@
         if (id === "lineup") luRender();
         if (id === "dj") buildDjLista();
         if (id === "categorias") catCargar();
+        if (id === "presentador") presCargarLista();
       }
 
       // ═══════════════════════════════════════════════════════════
@@ -5313,6 +5318,231 @@
           const el = document.getElementById(id);
           if (el) el.style.display = hasSesion ? "none" : "flex";
         });
+        refrescarPresListaSiVisible();
+      }
+
+      // Lista completa del Presentador — "como un PDF del programa": todas
+      // las categorías en el orden del cronograma de Gastón, con un check
+      // propio por participante (para su control personal de quién ya
+      // pasó — se guarda en evento.presentador_check, así que sobrevive a
+      // cambiar de dispositivo, no es un cache local) y un indicador de
+      // cuántos jurados ya cerraron su voto (doble control pedido: saber
+      // si una pasada quedó con votos pendientes).
+      let _presCargaSeq = 0;
+      async function presCargarLista() {
+        const seq = ++_presCargaSeq;
+        const stats = document.getElementById("pres-stats");
+        const lista = document.getElementById("pres-lista");
+        if (!lista) return;
+        if (!window._presCache) lista.innerHTML = "Cargando…";
+        try {
+          const [{ data: cronRaw }, { data: totalesRaw }, { data: checksRaw }] =
+            await Promise.all([
+              db.rpc("cronograma_listar"),
+              db
+                .schema("scoring")
+                .from("v_totales")
+                .select("codigo_id,categoria,jueces_cerrados,jueces_total"),
+              db
+                .schema("evento")
+                .from("presentador_check")
+                .select("categoria_key,codigo_id"),
+            ]);
+          if (seq !== _presCargaSeq) return;
+          const cronograma = cronRaw || [];
+          window._presCache = cronograma;
+
+          const checkSet = new Set(
+            (checksRaw || []).map((c) => c.categoria_key + "||" + c.codigo_id),
+          );
+
+          // Mapa "codigo_id||numero_de_categoria" -> {cerrados,total}
+          const juecesMap = new Map();
+          (totalesRaw || []).forEach((t) => {
+            let cat;
+            try {
+              const v =
+                typeof t.categoria === "string"
+                  ? JSON.parse(t.categoria)
+                  : t.categoria;
+              cat = Array.isArray(v) ? v[0] : v;
+            } catch (e) {
+              cat = null;
+            }
+            if (!cat || cat.c == null) return;
+            juecesMap.set(t.codigo_id + "||" + cat.c, {
+              cerrados: t.jueces_cerrados,
+              total: t.jueces_total,
+            });
+          });
+
+          if (!cronograma.length) {
+            lista.innerHTML =
+              '<div class="card" style="text-align:center;padding:24px"><div class="muted">No hay cronograma armado todavía.</div></div>';
+            stats.textContent = "";
+            return;
+          }
+
+          const pasadasAll = await Promise.all(
+            cronograma.map((c) =>
+              db
+                .rpc("obtener_pasadas_categoria", {
+                  p_categoria_key: c.categoria_key,
+                })
+                .then((r) => r.data || [])
+                .catch(() => []),
+            ),
+          );
+          if (seq !== _presCargaSeq) return;
+
+          let totalPart = 0;
+          let totalMarcados = 0;
+          let html = "";
+          let grupoAnterior = null;
+          for (let i = 0; i < cronograma.length; i++) {
+            const cat = cronograma[i];
+            const items = pasadasAll[i] || [];
+            if (!items.length) continue;
+            const bucket = luInstBucket(cat.instancia);
+            if (bucket !== grupoAnterior) {
+              grupoAnterior = bucket;
+              html +=
+                '<div style="font-size:11px;font-weight:700;color:' +
+                LU_INST_META[bucket].color +
+                ';text-transform:uppercase;letter-spacing:1px;padding:10px 2px 4px">' +
+                LU_INST_META[bucket].label +
+                "</div>";
+            }
+            const catNumMatch = (cat.categoria_label || "").match(/^(\d+)/);
+            const catNum = catNumMatch ? catNumMatch[1] : null;
+
+            html +=
+              '<div class="card mb3"><div class="fw7 mb2" style="font-size:14px">' +
+              esc(cat.categoria_label) +
+              "</div>";
+            html +=
+              '<div style="display:flex;flex-direction:column;gap:6px">';
+            items.forEach((p) => {
+              totalPart++;
+              const key = cat.categoria_key + "||" + p.codigo_id;
+              const marcado = checkSet.has(key);
+              if (marcado) totalMarcados++;
+              const jz = catNum
+                ? juecesMap.get(p.codigo_id + "||" + catNum)
+                : null;
+              const jzHtml = jz
+                ? jz.cerrados >= jz.total && jz.total > 0
+                  ? '<span class="bdg bdg-green" style="font-size:9px">✓ ' +
+                    jz.cerrados +
+                    "/" +
+                    jz.total +
+                    "</span>"
+                  : '<span class="bdg bdg-amber" style="font-size:9px">⚠ ' +
+                    jz.cerrados +
+                    "/" +
+                    jz.total +
+                    "</span>"
+                : "";
+              html +=
+                '<label style="display:flex;align-items:center;gap:10px;padding:6px 4px;cursor:pointer' +
+                (marcado ? ";opacity:.45" : "") +
+                '">' +
+                '<input type="checkbox"' +
+                (marcado ? " checked" : "") +
+                ' onchange="presToggleCheck(\'' +
+                escJs(cat.categoria_key) +
+                "','" +
+                escJs(p.codigo_id) +
+                "', this)\" style=\"width:18px;height:18px;flex-shrink:0;accent-color:#C9A84C\">" +
+                '<span class="mono gold text-xs" style="min-width:100px">' +
+                esc(p.codigo_id) +
+                "</span>" +
+                '<span style="flex:1;font-weight:600;font-size:13px' +
+                (marcado ? ";text-decoration:line-through" : "") +
+                '">' +
+                esc(p.nombre_grupo || p.responsable || "") +
+                "</span>" +
+                '<span class="muted text-xs">' +
+                esc(p.pais || "") +
+                "</span>" +
+                jzHtml +
+                "</label>";
+            });
+            html += "</div></div>";
+          }
+          lista.innerHTML =
+            html ||
+            '<div class="card" style="text-align:center;padding:24px"><div class="muted">Sin participantes cargados.</div></div>';
+          stats.textContent =
+            totalMarcados + " de " + totalPart + " participantes marcados";
+        } catch (e) {
+          if (seq !== _presCargaSeq) return;
+          lista.innerHTML =
+            '<div style="color:#E0524C">Error: ' + e.message + "</div>";
+        }
+      }
+
+      async function presToggleCheck(categoriaKey, codigoId, checkboxEl) {
+        const marcar = checkboxEl.checked;
+        // Optimista: la fila se tacha al toque, sin esperar la red.
+        const label = checkboxEl.closest("label");
+        if (label) {
+          label.style.opacity = marcar ? ".45" : "";
+          const nombreEl = label.querySelector("span[style*='flex:1']");
+          if (nombreEl)
+            nombreEl.style.textDecoration = marcar ? "line-through" : "";
+        }
+        try {
+          if (marcar) {
+            const { error } = await db
+              .schema("evento")
+              .from("presentador_check")
+              .upsert(
+                { categoria_key: categoriaKey, codigo_id: codigoId },
+                { onConflict: "categoria_key,codigo_id" },
+              );
+            if (error) throw error;
+          } else {
+            const { error } = await db
+              .schema("evento")
+              .from("presentador_check")
+              .delete()
+              .eq("categoria_key", categoriaKey)
+              .eq("codigo_id", codigoId);
+            if (error) throw error;
+          }
+          const stats = document.getElementById("pres-stats");
+          if (stats) {
+            const total = document
+              .querySelectorAll("#pres-lista input[type=checkbox]")
+              .length;
+            const marcados = document.querySelectorAll(
+              "#pres-lista input[type=checkbox]:checked",
+            ).length;
+            stats.textContent = marcados + " de " + total + " participantes marcados";
+          }
+        } catch (e) {
+          // Revertir si falló el guardado, para no mentir sobre el estado real.
+          checkboxEl.checked = !marcar;
+          if (label) {
+            label.style.opacity = !marcar ? ".45" : "";
+            const nombreEl = label.querySelector("span[style*='flex:1']");
+            if (nombreEl)
+              nombreEl.style.textDecoration = !marcar ? "line-through" : "";
+          }
+          toast("No se pudo guardar el check: " + e.message, "err");
+        }
+      }
+
+      // Refresca la lista del presentador solo si esa pestaña está visible
+      // (misma economía que refrescarDjSiVisible) — se llama cada vez que
+      // cambia la sesión activa, así el indicador de jurados se mantiene al
+      // día sin que el presentador tenga que tocar nada.
+      function refrescarPresListaSiVisible() {
+        const pane = document.getElementById("tp-presentador");
+        if (pane && pane.classList.contains("show") && window._presCache) {
+          presCargarLista();
+        }
       }
 
       // Clave de categoría de UNA sesión (para no mezclar sesiones de categorías distintas
