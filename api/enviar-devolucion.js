@@ -157,7 +157,15 @@ module.exports = async function handler(req, res) {
         })
         .join(" · ");
       const hasAudio = p.audio_url && p.audio_url.length > 50;
-      const nombreJurado = juradoNombres[p.juez_num] || `Jurado ${p.juez_num}`;
+      // Preferir el nombre guardado en el momento en que el jurado cerró su
+      // planilla (columna juez_nombre, cargada por un trigger en la base) —
+      // antes esto buscaba SIEMPRE el nombre actual de personal.usuarios
+      // por juez_num, así que un reenvío después de que ese número de
+      // jurado pasara a otra persona (nueva sede) mostraba el nombre
+      // equivocado. El lookup en vivo queda solo como respaldo para filas
+      // viejas anteriores a este cambio.
+      const nombreJurado =
+        p.juez_nombre || juradoNombres[p.juez_num] || `Jurado ${p.juez_num}`;
       tablaRows += `<tr>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#C9A84C;font-weight:700">${esc(nombreJurado)}${hasAudio ? " 🎙" : ""}</td>
         <td style="padding:10px 14px;border-bottom:1px solid #222;color:#eee;font-size:13px">${itemsStr}</td>
