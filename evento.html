@@ -5318,7 +5318,6 @@
           const el = document.getElementById(id);
           if (el) el.style.display = hasSesion ? "none" : "flex";
         });
-        refrescarPresListaSiVisible();
       }
 
       // Lista completa del Presentador — "como un PDF del programa": todas
@@ -5534,15 +5533,20 @@
         }
       }
 
-      // Refresca la lista del presentador solo si esa pestaña está visible
-      // (misma economía que refrescarDjSiVisible) — se llama cada vez que
-      // cambia la sesión activa, así el indicador de jurados se mantiene al
-      // día sin que el presentador tenga que tocar nada.
-      function refrescarPresListaSiVisible() {
-        const pane = document.getElementById("tp-presentador");
-        if (pane && pane.classList.contains("show") && window._presCache) {
-          presCargarLista();
-        }
+      // Refresca la lista del presentador solo si esa pestaña está visible,
+      // agrupado con debounce (mismo motivo que refrescarCategoriasYDjDebounced:
+      // una sola acción real puede tocar sesiones Y puntajes casi al mismo
+      // tiempo, y sin agrupar cada evento disparaba su propia recarga
+      // pesada de las ~150 categorías por separado).
+      let _presRealtimeDebounce = null;
+      function refrescarPresListaSiVisibleDebounced() {
+        clearTimeout(_presRealtimeDebounce);
+        _presRealtimeDebounce = setTimeout(() => {
+          const pane = document.getElementById("tp-presentador");
+          if (pane && pane.classList.contains("show") && window._presCache) {
+            presCargarLista();
+          }
+        }, 400);
       }
 
       // Clave de categoría de UNA sesión (para no mezclar sesiones de categorías distintas
@@ -5935,6 +5939,7 @@
               if (luPane && luPane.classList.contains("show")) {
                 luRenderDebounced();
               }
+              refrescarPresListaSiVisibleDebounced();
             },
           )
           .on(
@@ -5942,6 +5947,10 @@
             { event: "*", schema: "scoring", table: "puntajes" },
             async () => {
               await buildPfRanking();
+              // Para que el cartel de jurados (✓ 3/3) del Presentador se
+              // actualice en el momento en que un jurado cierra su voto,
+              // no recién cuando cambia quién está en pista.
+              refrescarPresListaSiVisibleDebounced();
             },
           )
           .subscribe((status) => {
