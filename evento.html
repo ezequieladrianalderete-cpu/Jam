@@ -1632,6 +1632,16 @@
             id="dj-filtro-wrap"
             style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap"
           ></div>
+          <div
+            id="dj-sede-filtro-wrap"
+            style="
+              display: none;
+              gap: 6px;
+              margin-bottom: 12px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          ></div>
           <div class="sy2" id="dj-lista"></div>
           <div class="cr mt4" id="dj-sin-musica" style="display: none">
             <div class="fw6 red mb3 text-sm">⚠️ Sin música cargada</div>
@@ -4869,6 +4879,7 @@
           /* sin cronograma: se cae al modo simple más abajo */
         }
         if (_seq !== _djListaSeq) return; // superada por una llamada más nueva
+        djRenderSedeFiltroBtns(djFiltroInstAct, cronograma);
 
         // Helper: arma una fila de tema del DJ (misma UI que antes)
         const armarFila = (t, r) => {
@@ -4943,7 +4954,11 @@
         // categorías que van a quedar ocultas de todos modos.
         const cronogramaFiltrado = djFiltroInstAct
           ? cronograma.filter(
-              (c) => luInstBucket(c.instancia) === djFiltroInstAct,
+              (c) =>
+                luInstBucket(c.instancia) === djFiltroInstAct &&
+                (djFiltroInstAct !== "reg" ||
+                  !window._djSedeFiltro ||
+                  c.sede_id === window._djSedeFiltro),
             )
           : cronograma;
 
@@ -5082,6 +5097,76 @@
       // patrón que catRenderFiltroBtns/catFiltrar en la vista de Categorías.
       // Sólo se ofrecen los botones de las competencias que realmente tengan
       // participantes cargados.
+      // Sub-filtro por sede, solo dentro de Regional/Sedes — mismo motivo y
+      // mismo patrón que en Cronograma/Categorías/Ranking: cada sede corre
+      // su propia competencia, así que "Regional" sin elegir sede mezclaba
+      // todas juntas.
+      window._djSedeFiltro = "";
+
+      function djSedesPresentes(cronograma) {
+        const map = new Map();
+        (cronograma || [])
+          .filter((c) => luInstBucket(c.instancia) === "reg" && c.sede_id)
+          .forEach((c) => {
+            if (!map.has(c.sede_id)) map.set(c.sede_id, c.sede_nombre || c.sede_id);
+          });
+        return [...map.entries()]
+          .map(([id, nombre]) => ({ id, nombre }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      }
+
+      function djRenderSedeFiltroBtns(djFiltroInstAct, cronograma) {
+        const wrap = document.getElementById("dj-sede-filtro-wrap");
+        if (!wrap) return;
+        const sedes = djFiltroInstAct === "reg" ? djSedesPresentes(cronograma) : [];
+        if (sedes.length < 2) {
+          wrap.style.display = "none";
+          wrap.innerHTML = "";
+          if (window._djSedeFiltro) window._djSedeFiltro = "";
+          return;
+        }
+        if (
+          window._djSedeFiltro &&
+          !sedes.some((s) => s.id === window._djSedeFiltro)
+        ) {
+          window._djSedeFiltro = "";
+        }
+        wrap.style.display = "flex";
+        let html =
+          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
+          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        sedes.forEach((s) => {
+          html +=
+            '<button class="btn bo bsm" data-s="' +
+            s.id +
+            '" style="font-size:11px">' +
+            s.nombre +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          btn.onclick = () => djSedeFiltrar(btn.getAttribute("data-s"));
+        });
+        djAplicarEstiloSedeFiltro();
+      }
+
+      function djAplicarEstiloSedeFiltro() {
+        const wrap = document.getElementById("dj-sede-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          const k = btn.getAttribute("data-s");
+          const activo = k === window._djSedeFiltro;
+          btn.style.background = activo ? "#B080E0" : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function djSedeFiltrar(sedeId) {
+        window._djSedeFiltro = sedeId;
+        djAplicarEstiloSedeFiltro();
+        buildDjLista(document.getElementById("dj-q")?.value || "");
+      }
+
       function djRenderFiltroBtns() {
         const wrap = document.getElementById("dj-filtro-wrap");
         if (!wrap) return;
