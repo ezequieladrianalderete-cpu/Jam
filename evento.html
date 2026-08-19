@@ -4824,7 +4824,14 @@
         djRenderFiltroBtns();
         const djFiltroInstAct = window._djFiltro || "";
 
-        // Mostrar sesión activa en DJ
+        // Mostrar sesión activa en DJ — SOLO información (quién está en
+        // pista ahora), nunca dispara música sola. Antes esto reconstruía
+        // el reproductor automáticamente cada vez que alguien pisaba (vía
+        // tiempo real), y le pisaba al DJ la canción que había elegido a
+        // mano un instante antes — el DJ perdía el control de su propio
+        // rol. Ahora el reproductor (#dj-musica-activa) lo maneja
+        // exclusivamente djPreview(), desde los botones ▶ de la lista de
+        // abajo, y nunca se toca solo.
         if (sesionActiva) {
           document.getElementById("dj-codigo").textContent =
             sesionActiva.codigo_id;
@@ -4836,36 +4843,13 @@
             (sesionActiva.categoria ? parseCat(sesionActiva.categoria) : "") +
             " · " +
             (sesionActiva.instancia || "").toUpperCase();
-          const m = djData.find((x) => x.codigo_id === sesionActiva.codigo_id);
-          const cancion = resolveCancionSesion(m, sesionActiva);
-          if (cancion) {
-            document.getElementById("dj-musica-activa").innerHTML = `
-        <div style="background:#0d0d0d;border-radius:14px;padding:16px;margin-bottom:12px">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <button onclick="djTogglePlay()" id="dj-play-btn" style="width:48px;height:48px;border-radius:50%;background:#C9A84C;border:none;cursor:pointer;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>
-            <div style="flex:1">
-              <div class="fw6">${esc(cancion.nombre)}</div>
-              <div class="muted text-xs">${m.codigo_id} · ${esc(m.nombre_grupo)}</div>
-            </div>
-            <button onclick="djStop()" style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:16px;color:#E05252;display:flex;align-items:center;justify-content:center">⏹</button>
-          </div>
-          <audio id="dj-audio" src="${cancion.url}" preload="auto" ontimeupdate="djUpdateProgress()" onended="djOnEnded()"></audio>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span class="mono text-xs muted" id="dj-time-current">0:00</span>
-            <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;cursor:pointer;position:relative" onclick="djSeek(event)">
-              <div id="dj-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#C9A84C,#E8C97A);border-radius:3px;transition:width .1s"></div>
-            </div>
-            <span class="mono text-xs muted" id="dj-time-total">0:00</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-            <span class="muted text-xs">Vol</span>
-            <input type="range" min="0" max="1" step="0.05" value="1" style="flex:1;accent-color:#C9A84C" oninput="document.getElementById('dj-audio').volume=this.value">
-          </div>
-        </div>`;
-          } else if (m) {
-            document.getElementById("dj-musica-activa").innerHTML =
-              `<div style="background:#1a0000;border:1px solid rgba(224,82,82,.2);border-radius:12px;padding:14px;text-align:center;color:#E05252;font-size:13px">⚠️ ${esc(m.nombre_grupo)} no tiene música cargada</div>`;
-          }
+        }
+        // Placeholder inicial (solo si el DJ todavía no eligió nada) para
+        // que la primera vez no quede en blanco.
+        const djMusicaCont = document.getElementById("dj-musica-activa");
+        if (djMusicaCont && !djMusicaCont.innerHTML.trim()) {
+          djMusicaCont.innerHTML =
+            '<div class="muted text-xs" style="text-align:center;padding:14px">🎵 Elegí un tema de la lista de abajo para reproducirlo</div>';
         }
 
         // ═══════════════════════════════════════════════════════════
