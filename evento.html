@@ -1717,6 +1717,20 @@
               ↻ Refrescar
             </button>
           </div>
+          <div
+            id="pres-filtro-wrap"
+            style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap"
+          ></div>
+          <div
+            id="pres-sede-filtro-wrap"
+            style="
+              display: none;
+              gap: 6px;
+              margin-bottom: 10px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          ></div>
           <div class="muted text-xs mb3" id="pres-stats">Cargando…</div>
           <div id="pres-lista"></div>
         </div>
@@ -5320,6 +5334,131 @@
         });
       }
 
+      // Filtro por instancia (Nacional/Regional/Repesca/Internacional),
+      // mismo patrón que djRenderFiltroBtns/djFiltroInst en el DJ — para
+      // que el Presentador ordene su lista igual que el resto de los roles
+      // que ven categorías.
+      window._presFiltro = "";
+
+      function presRenderFiltroBtns(cronograma) {
+        const wrap = document.getElementById("pres-filtro-wrap");
+        if (!wrap) return;
+        const presentes = new Set(
+          (cronograma || []).map((c) => luInstBucket(c.instancia)),
+        );
+        if (window._presFiltro && !presentes.has(window._presFiltro)) {
+          window._presFiltro = "";
+        }
+        let html =
+          '<button class="btn bo bsm" data-f="" style="font-size:11px">Todos</button>';
+        LU_INST_ORDEN.forEach((b) => {
+          if (!presentes.has(b)) return;
+          const m = LU_INST_META[b];
+          html +=
+            '<button class="btn bo bsm" data-f="' +
+            b +
+            '" style="font-size:11px;border-color:' +
+            m.color +
+            ";color:" +
+            m.color +
+            '">' +
+            m.label +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          btn.onclick = () => presFiltroInst(btn.getAttribute("data-f"));
+        });
+        presAplicarEstiloFiltro();
+      }
+
+      function presFiltroInst(f) {
+        window._presFiltro = f;
+        presAplicarEstiloFiltro();
+        presCargarLista();
+      }
+
+      function presAplicarEstiloFiltro() {
+        const wrap = document.getElementById("pres-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-f]").forEach((btn) => {
+          const k = btn.getAttribute("data-f");
+          const activo = k === (window._presFiltro || "");
+          const color = k ? LU_INST_META[k].color : "#888";
+          btn.style.background = activo ? color : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      // Sub-filtro por sede, solo dentro de Regional/Sedes — mismo patrón
+      // que djSedesPresentes/djRenderSedeFiltroBtns.
+      window._presSedeFiltro = "";
+
+      function presSedesPresentes(cronograma) {
+        const map = new Map();
+        (cronograma || [])
+          .filter((c) => luInstBucket(c.instancia) === "reg" && c.sede_id)
+          .forEach((c) => {
+            if (!map.has(c.sede_id)) map.set(c.sede_id, c.sede_nombre || c.sede_id);
+          });
+        return [...map.entries()]
+          .map(([id, nombre]) => ({ id, nombre }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      }
+
+      function presRenderSedeFiltroBtns(cronograma) {
+        const wrap = document.getElementById("pres-sede-filtro-wrap");
+        if (!wrap) return;
+        const sedes =
+          window._presFiltro === "reg" ? presSedesPresentes(cronograma) : [];
+        if (sedes.length < 2) {
+          wrap.style.display = "none";
+          wrap.innerHTML = "";
+          if (window._presSedeFiltro) window._presSedeFiltro = "";
+          return;
+        }
+        if (
+          window._presSedeFiltro &&
+          !sedes.some((s) => s.id === window._presSedeFiltro)
+        ) {
+          window._presSedeFiltro = "";
+        }
+        wrap.style.display = "flex";
+        let html =
+          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
+          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        sedes.forEach((s) => {
+          html +=
+            '<button class="btn bo bsm" data-s="' +
+            s.id +
+            '" style="font-size:11px">' +
+            s.nombre +
+            "</button>";
+        });
+        wrap.innerHTML = html;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          btn.onclick = () => presSedeFiltrar(btn.getAttribute("data-s"));
+        });
+        presAplicarEstiloSedeFiltro();
+      }
+
+      function presAplicarEstiloSedeFiltro() {
+        const wrap = document.getElementById("pres-sede-filtro-wrap");
+        if (!wrap) return;
+        wrap.querySelectorAll("button[data-s]").forEach((btn) => {
+          const k = btn.getAttribute("data-s");
+          const activo = k === window._presSedeFiltro;
+          btn.style.background = activo ? "#B080E0" : "transparent";
+          btn.style.color = activo ? "#000" : "";
+        });
+      }
+
+      function presSedeFiltrar(sedeId) {
+        window._presSedeFiltro = sedeId;
+        presAplicarEstiloSedeFiltro();
+        presCargarLista();
+      }
+
       // Lista completa del Presentador — "como un PDF del programa": todas
       // las categorías en el orden del cronograma de Gastón, con un check
       // propio por participante (para su control personal de quién ya
@@ -5350,6 +5489,18 @@
           if (seq !== _presCargaSeq) return;
           const cronograma = cronRaw || [];
           window._presCache = cronograma;
+          presRenderFiltroBtns(cronograma);
+          presRenderSedeFiltroBtns(cronograma);
+          const presFiltroAct = window._presFiltro || "";
+          const cronogramaFiltrado = presFiltroAct
+            ? cronograma.filter(
+                (c) =>
+                  luInstBucket(c.instancia) === presFiltroAct &&
+                  (presFiltroAct !== "reg" ||
+                    !window._presSedeFiltro ||
+                    c.sede_id === window._presSedeFiltro),
+              )
+            : cronograma;
 
           const checkSet = new Set(
             (checksRaw || []).map((c) => c.categoria_key + "||" + c.codigo_id),
@@ -5381,9 +5532,15 @@
             stats.textContent = "";
             return;
           }
+          if (!cronogramaFiltrado.length) {
+            lista.innerHTML =
+              '<div class="card" style="text-align:center;padding:24px"><div class="muted">Sin categorías para este filtro.</div></div>';
+            stats.textContent = "";
+            return;
+          }
 
           const pasadasAll = await Promise.all(
-            cronograma.map((c) =>
+            cronogramaFiltrado.map((c) =>
               db
                 .rpc("obtener_pasadas_categoria", {
                   p_categoria_key: c.categoria_key,
@@ -5398,8 +5555,8 @@
           let totalMarcados = 0;
           let html = "";
           let grupoAnterior = null;
-          for (let i = 0; i < cronograma.length; i++) {
-            const cat = cronograma[i];
+          for (let i = 0; i < cronogramaFiltrado.length; i++) {
+            const cat = cronogramaFiltrado[i];
             const items = pasadasAll[i] || [];
             if (!items.length) continue;
             const bucket = luInstBucket(cat.instancia);
