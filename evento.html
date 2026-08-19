@@ -5613,7 +5613,7 @@
                 '<span class="mono gold text-xs" style="min-width:100px">' +
                 esc(p.codigo_id) +
                 "</span>" +
-                '<span style="flex:1;font-weight:600;font-size:13px' +
+                '<span class="pres-nombre" style="flex:1;font-weight:600;font-size:13px' +
                 (marcado ? ";text-decoration:line-through" : "") +
                 '">' +
                 esc(p.nombre_grupo || p.responsable || "") +
@@ -5644,7 +5644,7 @@
         const label = checkboxEl.closest("label");
         if (label) {
           label.style.opacity = marcar ? ".45" : "";
-          const nombreEl = label.querySelector("span[style*='flex:1']");
+          const nombreEl = label.querySelector(".pres-nombre");
           if (nombreEl)
             nombreEl.style.textDecoration = marcar ? "line-through" : "";
         }
@@ -5682,7 +5682,7 @@
           checkboxEl.checked = !marcar;
           if (label) {
             label.style.opacity = !marcar ? ".45" : "";
-            const nombreEl = label.querySelector("span[style*='flex:1']");
+            const nombreEl = label.querySelector(".pres-nombre");
             if (nombreEl)
               nombreEl.style.textDecoration = !marcar ? "line-through" : "";
           }
