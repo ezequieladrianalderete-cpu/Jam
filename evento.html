@@ -2319,6 +2319,25 @@
                 if (allowedTabs[0] === "categorias") await catCargar();
               }
               initEvento();
+              // El dispositivo puede quedar en segundo plano (cambiar de
+              // pestaña/app) y el navegador, sobre todo en equipos con poca
+              // RAM (netbooks, tablets), descarta la pestaña para liberar
+              // memoria y la recarga sola al volver — la sesión se
+              // restaura sola (por eso no hay que loguearse de nuevo), pero
+              // cualquier canción que el DJ tuviera sonando se pierde sin
+              // aviso porque es estado de memoria que ningún reload puede
+              // recuperar. Este cartel es para que quede claro qué pasó,
+              // en vez de una música cortada sin explicación.
+              if (currentRol === "dj" && typeof toast === "function") {
+                setTimeout(
+                  () =>
+                    toast(
+                      "🔄 La pantalla se refrescó sola — elegí de nuevo el tema si estabas reproduciendo algo",
+                      "warn",
+                    ),
+                  600,
+                );
+              }
             }
             return;
           }
