@@ -59,13 +59,23 @@ async function sendMail({ from, to, subject, html, text, idempotencyKey }) {
   return res.json();
 }
 
+import { setCors, isUuid, checkRateLimit } from "./_lib/security.js";
+
 export default async function handler(req, res) {
+  setCors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { id } = req.body || {};
-    if (!id) return res.status(400).json({ error: "id required" });
+    if (!id || !isUuid(id))
+      return res.status(400).json({ error: "id inválido" });
+
+    // Más margen que notify (15/min): staff puede reenviar QR a varios
+    // integrantes seguidos durante la acreditación en vivo.
+    if (!(await checkRateLimit(req, "reenviar-qr", { max: 15, ventanaSeg: 60 }))) {
+      return res.status(429).json({ error: "Demasiados pedidos, esperá un momento" });
+    }
 
     const cfg = await cargarConfig();
     const nombreEvento = cfg.nombre_evento || "JAM 2026";

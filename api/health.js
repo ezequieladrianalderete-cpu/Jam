@@ -12,7 +12,14 @@ async function supaFetch(path, profile) {
   return res.json();
 }
 
+const { setCors, checkRateLimit } = require("./_lib/security");
+
 module.exports = async function handler(req, res) {
+  setCors(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (!(await checkRateLimit(req, "health", { max: 30, ventanaSeg: 60 }))) {
+    return res.status(429).json({ error: "Demasiados pedidos, esperá un momento" });
+  }
   const t0 = Date.now();
   const checks = {};
   let errors = 0, warnings = 0;

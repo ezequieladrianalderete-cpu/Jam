@@ -1827,36 +1827,26 @@
           return;
         }
         try {
-          // scoring.sesiones/puntajes se unen a la inscripción solo por
-          // codigo_id (texto, sin foreign key) — sin borrarlas acá quedan
-          // huérfanas, y si ese código se reutiliza más adelante sus
-          // puntajes viejos pueden resurgir mezclados con el participante
-          // nuevo (mismo tipo de problema que fix-codigo-id-atomico.sql
-          // documentó para códigos duplicados).
-          if (codigo && codigo !== "JAM-???") {
-            try {
-              await fetch(
-                SB_URL +
-                  "/rest/v1/sesiones?codigo_id=eq." +
-                  encodeURIComponent(codigo),
-                {
-                  method: "DELETE",
-                  headers: {
-                    apikey: SB_ANON,
-                    Authorization: "Bearer " + SB_ANON,
-                    "Content-Profile": "scoring",
-                  },
-                },
-              );
-            } catch (e) {
-              console.warn("No se pudieron borrar sesiones de scoring:", e);
-            }
-          }
-          const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
-            method: "DELETE",
-            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+          // El borrado (inscripción + sesiones de scoring ligadas por
+          // codigo_id) ahora lo hace la función eliminar_inscripcion en la
+          // base -- antes eran dos DELETE sueltos por REST con la clave
+          // anon, que cualquiera con esa clave (pública, va en el HTML)
+          // podía disparar directo sin pasar por ningún prompt de
+          // confirmación. La RPC hace lo mismo de forma atómica y
+          // controlada.
+          const r = await fetch(SB_URL + "/rest/v1/rpc/eliminar_inscripcion", {
+            method: "POST",
+            headers: {
+              apikey: SB_ANON,
+              Authorization: "Bearer " + SB_ANON,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ p_id: id, p_codigo: codigo || null }),
           });
           if (!r.ok) throw new Error("HTTP " + r.status);
+          const resultado = await r.json();
+          if (!resultado?.ok)
+            throw new Error(resultado?.error || "No se pudo eliminar");
           allInscriptos = allInscriptos.filter((x) => x.id !== id);
           await computeAllCodes();
           updateStats();
@@ -1876,19 +1866,30 @@
         }
         if (!confirm("ÚLTIMA CONFIRMACIÓN: ¿Borrar todo?")) return;
         try {
+          // Antes esto era un DELETE directo con un filtro siempre-verdadero
+          // (created_at < 2099), protegido solo por los dos prompt()/
+          // confirm() de arriba -- cualquiera con la clave anon podía
+          // saltarse la pantalla entera y borrar TODAS las inscripciones
+          // sin escribir nada. La función eliminar_todas_inscripciones
+          // valida la frase de confirmación del lado del servidor, no solo
+          // en el navegador.
           const r = await fetch(
-            SB_URL + "/rest/v1/inscripciones?created_at=lt.2099-01-01",
+            SB_URL + "/rest/v1/rpc/eliminar_todas_inscripciones",
             {
-              method: "DELETE",
+              method: "POST",
               headers: {
                 apikey: SB_ANON,
                 Authorization: "Bearer " + SB_ANON,
-                Prefer: "return=representation",
+                "Content-Type": "application/json",
               },
+              body: JSON.stringify({ p_confirmacion: c1 }),
             },
           );
-          const del = await r.json();
-          const n = Array.isArray(del) ? del.length : 0;
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const resultado = await r.json();
+          if (!resultado?.ok)
+            throw new Error(resultado?.error || "No se pudo borrar");
+          const n = resultado.borradas || 0;
           async function clean(b) {
             const rl = await fetch(SB_URL + "/storage/v1/object/list/" + b, {
               method: "POST",
