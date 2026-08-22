@@ -227,7 +227,7 @@ module.exports = async function handler(req, res) {
     // 7. Generar certificado de participación PDF
     const PDFDocument = require("pdfkit");
     const path = require("path");
-    const tangerineFontPath = path.join(__dirname, "..", "fonts", "Tangerine-Regular.ttf");
+    const tangerineFontPath = path.join(__dirname, "..", "fonts", "Tangerine-Bold.ttf");
 
     // Nacional, Regional/Sedes e Inter América usan una plantilla con imagen
     // de fondo, donde solo varía el nombre del participante (y, en Inter
