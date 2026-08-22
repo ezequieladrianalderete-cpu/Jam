@@ -150,14 +150,26 @@ async function sendMail({ from, to, subject, html, text, idempotencyKey }) {
   return { ok: true, id: data.id };
 }
 
+import { setCors, isUuid, checkRateLimit } from "./_lib/security.js";
+
 export default async function handler(req, res) {
+  setCors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { id } = req.body || {};
-    if (!id) return res.status(400).json({ error: "id required" });
+    if (!id || !isUuid(id))
+      return res.status(400).json({ error: "id inválido" });
+
+    // Cada inscripción real dispara esto una o dos veces (ver comentario
+    // de ventanaEnvio arriba) -- 6 por minuto por IP deja margen de sobra
+    // para eso más algún reintento manual, sin abrir la puerta a mandar
+    // miles de mails con un script.
+    if (!(await checkRateLimit(req, "notify", { max: 6, ventanaSeg: 60 }))) {
+      return res.status(429).json({ error: "Demasiados pedidos, esperá un momento" });
+    }
 
     // 0) Cargar config dinámica (nombres, textos email, etc.) - no crítica, sigue si falla
     const eventoCfg = await cargarConfig();

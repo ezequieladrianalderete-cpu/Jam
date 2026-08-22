@@ -3540,6 +3540,24 @@
         }
         jCerradoFlag = true;
         miPuntaje = { ...payload };
+        // Si el jurado cierra sin apretar antes "Detener grabación", la
+        // grabación queda técnicamente a medio terminar (mediaRecorder
+        // sigue "recording" y audioBlob todavía es null porque recién se
+        // arma en el evento onstop) -- antes esto se perdia en silencio,
+        // sin ningun aviso, porque el chequeo de mas abajo solo miraba
+        // audioBlob. Ahora se frena la grabacion aca y se espera a que
+        // termine de armarse el archivo antes de decidir si hay algo para
+        // subir.
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          await new Promise((resolve) => {
+            const prevOnStop = mediaRecorder.onstop;
+            mediaRecorder.onstop = (ev) => {
+              if (prevOnStop) prevOnStop(ev);
+              resolve();
+            };
+            mediaRecorder.stop();
+          });
+        }
         if (audioBlob) await jSubirAudio();
         mostrarCerrado();
         toast(
@@ -4273,30 +4291,13 @@
         });
       }
 
-      // poner_en_pista frena si a quien está ahora en pista todavía le
-      // falta el voto de algún jurado activo (evita que un jurado lento
-      // termine votando "en el aire" al participante equivocado, como pasó
-      // en vivo con Silvana Suárez / Rosa Villagra en Zona Sur). Si frena,
-      // se avisa con claridad y se ofrece forzar el avance igual — nunca en
-      // silencio.
+      // El show (line up / DJ / proyección) avanza siempre al toque, sin
+      // esperar al jurado (pedido de Gastón, 22/08 — antes esto frenaba y
+      // pedía forzar). Si el jurado todavía no cerró al participante
+      // anterior, este queda encolado (data.en_cola) y la base lo activa
+      // sola para el jurado apenas terminen — ver scoring.trg_promover_cola.
       async function rpcPonerEnPista(args) {
-        let { data, error } = await db.rpc("poner_en_pista", args);
-        if (error) return { data, error };
-        if (data && data.bloqueado_por_jueces) {
-          const seguir = confirm(
-            (data.error || "Faltan votos de jurados") +
-              (data.nombre_anterior
-                ? '\n\n("' + data.nombre_anterior + '" es quien está en pista ahora)'
-                : "") +
-              "\n\n¿Pasar al siguiente igual? El voto que falta va a quedar vacío (se puede cargar a mano después).",
-          );
-          if (!seguir) return { data, error: null };
-          ({ data, error } = await db.rpc("poner_en_pista", {
-            ...args,
-            p_forzar: true,
-          }));
-        }
-        return { data, error };
+        return await db.rpc("poner_en_pista", args);
       }
 
       async function dPonerEnPista(
@@ -4337,12 +4338,28 @@
           p_categoria_key: catKey,
         });
         if (error || !rpcData?.ok) {
-          if (!rpcData?.bloqueado_por_jueces) {
-            toast(
-              rpcData?.error || error?.message || "No se pudo poner en pista",
-              "err",
-            );
-          }
+          toast(
+            rpcData?.error || error?.message || "No se pudo poner en pista",
+            "err",
+          );
+          return;
+        }
+        if (rpcData.en_cola) {
+          // El jurado sigue con el participante anterior -- no tocar
+          // sesionActiva (la planilla del jurado se mantiene como está).
+          // Éste queda en cola y se activa solo apenas cierren (ver
+          // scoring.trg_promover_cola) -- pero el line up/DJ/proyección ya
+          // lo tienen como "en pista", así que igual refrescamos eso.
+          await dRefreshCatsHechas();
+          buildLineup();
+          toast(
+            nombre +
+              (categoria ? " — " + categoria.n : "") +
+              ' en pista · 🕐 el jurado sigue con "' +
+              rpcData.nombre_anterior +
+              '", se activa la planilla solo cuando terminen',
+            "warn",
+          );
           return;
         }
         const { data: sesRows } = await db

@@ -1827,42 +1827,81 @@
           return;
         }
         try {
-          // scoring.sesiones/puntajes se unen a la inscripción solo por
-          // codigo_id (texto, sin foreign key) — sin borrarlas acá quedan
-          // huérfanas, y si ese código se reutiliza más adelante sus
-          // puntajes viejos pueden resurgir mezclados con el participante
-          // nuevo (mismo tipo de problema que fix-codigo-id-atomico.sql
-          // documentó para códigos duplicados).
-          if (codigo && codigo !== "JAM-???") {
-            try {
-              await fetch(
-                SB_URL +
-                  "/rest/v1/sesiones?codigo_id=eq." +
-                  encodeURIComponent(codigo),
-                {
-                  method: "DELETE",
-                  headers: {
-                    apikey: SB_ANON,
-                    Authorization: "Bearer " + SB_ANON,
-                    "Content-Profile": "scoring",
-                  },
-                },
-              );
-            } catch (e) {
-              console.warn("No se pudieron borrar sesiones de scoring:", e);
-            }
-          }
-          const r = await fetch(SB_URL + "/rest/v1/inscripciones?id=eq." + id, {
-            method: "DELETE",
-            headers: { apikey: SB_ANON, Authorization: "Bearer " + SB_ANON },
+          // El borrado (inscripción + sesiones de scoring ligadas por
+          // codigo_id) ahora lo hace la función eliminar_inscripcion en la
+          // base -- antes eran dos DELETE sueltos por REST con la clave
+          // anon, que cualquiera con esa clave (pública, va en el HTML)
+          // podía disparar directo sin pasar por ningún prompt de
+          // confirmación. La RPC hace lo mismo de forma atómica y
+          // controlada.
+          const r = await fetch(SB_URL + "/rest/v1/rpc/eliminar_inscripcion", {
+            method: "POST",
+            headers: {
+              apikey: SB_ANON,
+              Authorization: "Bearer " + SB_ANON,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ p_id: id, p_codigo: codigo || null }),
           });
           if (!r.ok) throw new Error("HTTP " + r.status);
+          const resultado = await r.json();
+          if (!resultado?.ok)
+            throw new Error(resultado?.error || "No se pudo eliminar");
           allInscriptos = allInscriptos.filter((x) => x.id !== id);
           await computeAllCodes();
           updateStats();
           renderActiveTab();
           toast("ok", "Inscripción " + codigo + " eliminada ✓");
         } catch (e) {
+          toast("err", "Error: " + e.message);
+        }
+      }
+      async function enviarCredencialesMasivo() {
+        var checks = document.querySelectorAll(".masivo-inst:checked");
+        var instancias = Array.from(checks).map(function (c) {
+          return c.value;
+        });
+        if (!instancias.length) {
+          toast("err", "Elegí al menos una instancia (Sedes/Repechaje/Nacional/Inter)");
+          return;
+        }
+        var excluirRaw = (document.getElementById("masivo-excluir-sedes").value || "").trim();
+        var excluir_sede_ids = excluirRaw
+          ? excluirRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean)
+          : [];
+        var msg = document.getElementById("masivo-msg");
+        if (
+          !confirm(
+            "Vas a mandar la credencial individual a TODOS los integrantes de " +
+              instancias.join(", ") +
+              (excluir_sede_ids.length ? " (excluyendo sedes: " + excluir_sede_ids.join(", ") + ")" : "") +
+              ".\n\nEsto manda mails reales a gente real. ¿Confirmar?",
+          )
+        )
+          return;
+        msg.textContent = "Enviando… puede tardar unos minutos si son muchas inscripciones, no cierres esta pestaña.";
+        msg.style.color = "#C9A84C";
+        try {
+          const r = await fetch("/api/enviar-credenciales-masivo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ instancias: instancias, excluir_sede_ids: excluir_sede_ids }),
+          });
+          const d = await r.json();
+          if (!r.ok || !d.ok) throw new Error(d.error || "HTTP " + r.status);
+          msg.style.color = "#4CAF7D";
+          msg.textContent =
+            "✓ Procesadas " +
+            d.inscripciones_procesadas +
+            " inscripciones — " +
+            d.mails_enviados +
+            " de " +
+            d.mails_intentados +
+            " mails enviados correctamente.";
+          toast("ok", "Envío masivo terminado ✓");
+        } catch (e) {
+          msg.style.color = "#E0524C";
+          msg.textContent = "Error: " + e.message;
           toast("err", "Error: " + e.message);
         }
       }
@@ -1876,19 +1915,30 @@
         }
         if (!confirm("ÚLTIMA CONFIRMACIÓN: ¿Borrar todo?")) return;
         try {
+          // Antes esto era un DELETE directo con un filtro siempre-verdadero
+          // (created_at < 2099), protegido solo por los dos prompt()/
+          // confirm() de arriba -- cualquiera con la clave anon podía
+          // saltarse la pantalla entera y borrar TODAS las inscripciones
+          // sin escribir nada. La función eliminar_todas_inscripciones
+          // valida la frase de confirmación del lado del servidor, no solo
+          // en el navegador.
           const r = await fetch(
-            SB_URL + "/rest/v1/inscripciones?created_at=lt.2099-01-01",
+            SB_URL + "/rest/v1/rpc/eliminar_todas_inscripciones",
             {
-              method: "DELETE",
+              method: "POST",
               headers: {
                 apikey: SB_ANON,
                 Authorization: "Bearer " + SB_ANON,
-                Prefer: "return=representation",
+                "Content-Type": "application/json",
               },
+              body: JSON.stringify({ p_confirmacion: c1 }),
             },
           );
-          const del = await r.json();
-          const n = Array.isArray(del) ? del.length : 0;
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const resultado = await r.json();
+          if (!resultado?.ok)
+            throw new Error(resultado?.error || "No se pudo borrar");
+          const n = resultado.borradas || 0;
           async function clean(b) {
             const rl = await fetch(SB_URL + "/storage/v1/object/list/" + b, {
               method: "POST",
@@ -2263,6 +2313,19 @@
           '<button onclick="sysGuardarIdentidad()" style="background:#4CAF7D;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px">\ud83d\udcbe Guardar identidad del evento</button>' +
           '<div id="sys-msg" style="font-size:12px;text-align:center;min-height:16px"></div>' +
           '</div></div>' +
+          '<div class="det-block"><div class="det-title">📨 Reenviar credenciales individuales (masivo)</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:14px;line-height:1.5">Le manda a CADA integrante de las inscripciones elegidas su credencial personal (QR con sub-código) por mail, todas de una — sin tener que apretar "Reenviar QR" inscripción por inscripción. Tarda unos minutos si son muchas.</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px">' +
+          ['reg','rep','nac','int'].map(function(i){
+            var labels = {reg:'Sedes',rep:'Repechaje',nac:'Nacional',int:'Inter América'};
+            return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="masivo-inst" value="'+i+'"> '+labels[i]+'</label>';
+          }).join('') +
+          '</div>' +
+          '<div><label style="display:block;font-size:11px;color:#C9A84C;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Excluir estas sedes (id separados por coma, ej: zona-sur, zona-norte)</label>' +
+          '<input id="masivo-excluir-sedes" placeholder="zona-sur, zona-norte" style="width:100%;padding:11px;background:#0e0e0e;border:1px solid #333;border-radius:8px;color:#F8F5EE;font-family:inherit;font-size:14px"></div>' +
+          '<button onclick="enviarCredencialesMasivo()" style="background:#C9A84C;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:12px">📨 Enviar credenciales a todos</button>' +
+          '<div id="masivo-msg" style="font-size:12px;margin-top:10px;line-height:1.5"></div>' +
+          '</div>' +
           '<div class="det-block"><div class="det-title">URLs del sistema</div><div style="font-family:monospace;font-size:12px;color:#F8F5EE;line-height:1.9">Portal: <a href="/" target="_blank" style="color:#C9A84C">/</a><br>Check QR: <a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a><br>Música: <a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a><br>Términos Nacional (PDF): <a href="/terminos-nacional.pdf" target="_blank" style="color:#C9A84C">/terminos-nacional.pdf</a><br>Términos Inter (PDF): <a href="/terminos-internacional.pdf" target="_blank" style="color:#C9A84C">/terminos-internacional.pdf</a></div></div><div class="det-block" style="border-color:rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones y archivos. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>';
         sysCargarIdentidad();
         // Inyectar sección de bancos después de la identidad

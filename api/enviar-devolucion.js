@@ -44,14 +44,26 @@ async function supaFetch(path, opts = {}) {
   return res.json();
 }
 
+const { setCors, isPositiveInt, checkRateLimit } = require("./_lib/security");
+
 module.exports = async function handler(req, res) {
+  setCors(req, res);
+  if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST")
     return res.status(405).json({ error: "POST only" });
 
   try {
     const { sesion_id } = req.body;
-    if (!sesion_id)
-      return res.status(400).json({ error: "sesion_id requerido" });
+    if (!sesion_id || !isPositiveInt(sesion_id))
+      return res.status(400).json({ error: "sesion_id inválido" });
+
+    // Lo dispara el panel del director para cada participante que termina
+    // de puntuarse -- durante la final nacional puede ser bastante
+    // seguido, así que el límite es más alto que el de mails de
+    // inscripción.
+    if (!(await checkRateLimit(req, "enviar-devolucion", { max: 30, ventanaSeg: 60 }))) {
+      return res.status(429).json({ error: "Demasiados pedidos, esperá un momento" });
+    }
 
     // 0. Cargar plantillas de email personalizables (con fallback si falla)
     let mailT = {};
@@ -617,8 +629,15 @@ module.exports = async function handler(req, res) {
           } else if (p.audio_url.startsWith("http")) {
             const audioRes = await fetch(p.audio_url);
             if (audioRes.ok) {
+              // La extension real depende de que formato grabo el
+              // navegador del jurado (jSubirAudio guarda .ogg/.webm/.m4a
+              // segun corresponda) -- no siempre es m4a, y adjuntarlo con
+              // la extension incorrecta puede trabar la reproduccion en
+              // algunos clientes de mail.
+              const extMatch = p.audio_url.match(/\.(ogg|webm|m4a)(?:\?|$)/i);
+              const ext = extMatch ? extMatch[1].toLowerCase() : "m4a";
               audioAttachments.push({
-                filename: `evaluacion-jurado-${p.juez_num}.m4a`,
+                filename: `evaluacion-jurado-${p.juez_num}.${ext}`,
                 content: Buffer.from(await audioRes.arrayBuffer()),
               });
             }
