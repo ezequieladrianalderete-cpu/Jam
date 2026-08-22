@@ -8514,19 +8514,52 @@
         // chico/roto sin avisar.
         if (!audioBlob || !miPuntaje || audioBlob.size < 1000) return;
         try {
-          const b64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(",")[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(audioBlob);
+          // Antes esto guardaba el audio como texto base64 DIRECTO en la
+          // fila de scoring.puntajes (2-3MB por grabación, adentro de la
+          // base de datos) — cada vez que se leía esa fila (mandar una
+          // devolución, un reenvío, etc.) se volvía a transferir ese
+          // archivo entero. Eso infló tanto el tamaño de la base como el
+          // consumo de transferencia y ayudó a agotar la cuota del
+          // proyecto. Ahora se sube el archivo real al mismo storage
+          // ("musica") que ya usan las pistas de los participantes, y en
+          // la fila solo se guarda el link — mucho más liviano, y
+          // enviar-devolucion.js ya sabía leer un link (rama "http") además
+          // del formato viejo en base64, así que no hace falta tocar nada
+          // del lado del envío de mails.
+          const mimeType = audioBlob.type || "audio/mp4";
+          const ext = mimeType.includes("ogg")
+            ? "ogg"
+            : mimeType.includes("webm")
+              ? "webm"
+              : "m4a";
+          const path =
+            "jurado" +
+            miPuntaje.juez_num +
+            "-sesion" +
+            miPuntaje.sesion_id +
+            "-" +
+            Date.now() +
+            "." +
+            ext;
+          const uploadUrl =
+            SUPABASE_URL + "/storage/v1/object/musica/" + path;
+          const publicUrl =
+            SUPABASE_URL + "/storage/v1/object/public/musica/" + path;
+          const up = await fetch(uploadUrl, {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + SUPABASE_ANON,
+              apikey: SUPABASE_ANON,
+              "x-upsert": "true",
+              "Content-Type": mimeType,
+            },
+            body: audioBlob,
           });
+          if (!up.ok) throw new Error("HTTP " + up.status);
           const { error } = await db
             .schema("scoring")
             .from("puntajes")
-            .update({
-              audio_url:
-                "data:" + (audioBlob?.type || "audio/mp4") + ";base64," + b64,
-            })
+            .update({ audio_url: publicUrl })
             .eq("sesion_id", miPuntaje.sesion_id)
             .eq("juez_num", miPuntaje.juez_num);
           if (error) {
