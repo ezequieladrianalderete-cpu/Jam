@@ -222,6 +222,7 @@ module.exports = async function handler(req, res) {
     // 7. Generar certificado de participación PDF
     const PDFDocument = require("pdfkit");
     const path = require("path");
+    const tangerineFontPath = path.join(__dirname, "..", "fonts", "Tangerine-Regular.ttf");
 
     // Nacional, Regional/Sedes e Inter América usan una plantilla con imagen
     // de fondo, donde solo varía el nombre del participante (y, en Inter
@@ -294,8 +295,26 @@ module.exports = async function handler(req, res) {
         doc.on("end", () => resolve(Buffer.concat(chunks)));
 
         doc.image(templatePath, 0, 0, { width: pageW, height: pageH });
+        doc.registerFont("Tangerine", tangerineFontPath);
 
         const nombre = nombreCert || sesion.nombre_grupo || "—";
+
+        // Compartida por las 3 plantillas: mide el string y achica la
+        // tipografía hasta que entre en el ancho disponible, en vez de un
+        // tamaño fijo que puede desbordar sobre el resto del certificado
+        // (¡Tangerine, siendo un font script, no pesa/mide igual que
+        // Times-Bold — importa especialmente acá!).
+        function fitFontSize(str, fontName, maxSize, minSize, maxWidth) {
+          doc.font(fontName);
+          let size = maxSize;
+          while (
+            size > minSize &&
+            doc.fontSize(size).widthOfString(str) > maxWidth
+          ) {
+            size -= 0.5;
+          }
+          return size;
+        }
 
         if (esReg) {
           // La plantilla trae 5 renglones en blanco para completar (medidos
@@ -308,23 +327,6 @@ module.exports = async function handler(req, res) {
           const mes = fecha.getMonth() + 1;
           const categoriaLimpia = formatCategoria(sesion.categoria);
 
-          // Los blancos de sede/nombre/categoría son angostos y su
-          // contenido es de largo variable (nombres completos, categorías
-          // compuestas) — en vez de un tamaño fijo que puede desbordar
-          // sobre el texto vecino, se mide el string y se achica la
-          // tipografía hasta que entre en el ancho disponible.
-          function fitFontSize(str, fontName, maxSize, minSize, maxWidth) {
-            doc.font(fontName);
-            let size = maxSize;
-            while (
-              size > minSize &&
-              doc.fontSize(size).widthOfString(str) > maxWidth
-            ) {
-              size -= 0.5;
-            }
-            return size;
-          }
-
           doc.fillColor("#1a1a1a");
 
           // Techo de tamaño de cada campo — el piso (10/9 más abajo en
@@ -335,7 +337,7 @@ module.exports = async function handler(req, res) {
           // certificado: fitFontSize la va a achicar hasta que entre.
           const DIA_MES_MAX = 18;
           const SEDE_MAX = 19;
-          const NOMBRE_MAX = 21;
+          const NOMBRE_MAX = 30; // Tangerine (script) necesita más pt que Times-Bold para el mismo peso visual
           const PUNTAJE_MAX = 19;
           const CAT_MAX = 17;
 
@@ -369,9 +371,9 @@ module.exports = async function handler(req, res) {
               lineBreak: false,
             });
 
-          const nombreSize = fitFontSize(nombre, "Times-Bold", NOMBRE_MAX, 9, 200);
+          const nombreSize = fitFontSize(nombre, "Tangerine", NOMBRE_MAX, 12, 200);
           doc
-            .font("Times-Bold")
+            .font("Tangerine")
             .fontSize(nombreSize)
             .text(nombre, 207.5, 287.5 + (NOMBRE_MAX - nombreSize) / 2 + 2, {
               width: 210,
@@ -400,19 +402,26 @@ module.exports = async function handler(req, res) {
               lineBreak: false,
             });
         } else if (esNac) {
+          const nacSize = fitFontSize(nombre, "Tangerine", 44, 16, pageW * 0.8);
           doc
-            .font("Times-Bold")
-            .fontSize(30)
+            .font("Tangerine")
+            .fontSize(nacSize)
             .fillColor("#1a1a1a")
-            .text(nombre, 0, pageH * 0.555 - 5, { align: "center", width: pageW });
+            .text(nombre, 0, pageH * 0.555 - 5 + (44 - nacSize) / 2, {
+              align: "center",
+              width: pageW,
+              lineBreak: false,
+            });
         } else {
+          const intSize = fitFontSize(nombre, "Tangerine", 26, 12, pageW * 0.4);
           doc
-            .font("Times-Bold")
-            .fontSize(17)
+            .font("Tangerine")
+            .fontSize(intSize)
             .fillColor("#1a1a1a")
-            .text(nombre, pageW * 0.3, pageH * 0.655, {
+            .text(nombre, pageW * 0.3, pageH * 0.655 + (26 - intSize) / 2, {
               align: "center",
               width: pageW * 0.44,
+              lineBreak: false,
             });
 
           const fecha = new Date(

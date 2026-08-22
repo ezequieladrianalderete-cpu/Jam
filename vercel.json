@@ -10,7 +10,7 @@
     {
       "src": "api/*.js",
       "use": "@vercel/node",
-      "config": { "includeFiles": "imgs/**" }
+      "config": { "includeFiles": ["imgs/**", "fonts/**"] }
     }
   ],
   "rewrites": [
