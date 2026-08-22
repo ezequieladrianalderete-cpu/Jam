@@ -4325,8 +4325,13 @@
             : instancia === "rep"
               ? "rep"
               : "nac";
+        // Para "reg" (Sedes), evento.cat_combo() en la base exige un 4to
+        // segmento con sede_id (mismo bug que se corrigió en evento.html) —
+        // sin esto, poner_en_pista no encuentra el elemento original con el
+        // código "c" y cae a un fallback que lo pierde.
         const catKey =
-          (categoria?.g || "sin") + "|" + (categoria?.n || "sin") + "|" + instNorm;
+          (categoria?.g || "sin") + "|" + (categoria?.n || "sin") + "|" + instNorm +
+          (instNorm === "reg" ? "|" + (participant?.sede_id || "sin-sede") : "");
         const { data: rpcData, error } = await rpcPonerEnPista({
           p_lineup_id: lineupId,
           p_categoria_key: catKey,

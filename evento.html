@@ -3259,8 +3259,14 @@
             : p.instancia === "rep"
               ? "rep"
               : "nac";
+        // Para "reg" (Sedes), evento.cat_combo() en la base exige un 4to
+        // segmento con sede_id — sin esto, poner_en_pista nunca encuentra
+        // el elemento original de la categoría (con el código "c") y cae
+        // a un fallback que lo pierde, dejando "undefined:" en certificados
+        // y descolocando el estado "en pista" en el Line Up para Sedes.
         const catKey =
-          (categoria.g || "sin") + "|" + (categoria.n || "sin") + "|" + instNorm;
+          (categoria.g || "sin") + "|" + (categoria.n || "sin") + "|" + instNorm +
+          (instNorm === "reg" ? "|" + (p.sede_id || "sin-sede") : "");
         try {
           const { data, error } = await rpcPonerEnPista({
             p_lineup_id: id,

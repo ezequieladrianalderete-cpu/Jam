@@ -17,9 +17,14 @@ function formatCategoria(raw) {
   if (!raw) return "";
   try {
     const v = JSON.parse(raw);
-    if (Array.isArray(v))
-      return v.map((item) => `${item.c}: ${item.n}`).join(" - ");
-    if (v && typeof v === "object") return `${v.c}: ${v.n}`;
+    // poner_en_pista a veces no encuentra el elemento original (con el
+    // código "c") y reconstruye la categoría solo con género+nombre —
+    // en ese caso no hay código que mostrar, mejor omitir el prefijo
+    // que mostrar literalmente "undefined: ".
+    const one = (item) =>
+      item?.c != null ? `${item.c}: ${item.n}` : `${item.n}`;
+    if (Array.isArray(v)) return v.map(one).join(" - ");
+    if (v && typeof v === "object") return one(v);
     return "";
   } catch (e) {
     return "";
@@ -299,6 +304,11 @@ module.exports = async function handler(req, res) {
 
         const nombre = nombreCert || sesion.nombre_grupo || "—";
 
+        // Ratio ascender/em de Tangerine (medido con doc._font.ascender=750
+        // sobre 1000 unidades/em) — para anclar el nombre por su línea de
+        // base real en vez de por una caja centrada en la fuente.
+        const TANGERINE_ASCENT = 0.75;
+
         // Compartida por las 3 plantillas: mide el string y achica la
         // tipografía hasta que entre en el ancho disponible, en vez de un
         // tamaño fijo que puede desbordar sobre el resto del certificado
@@ -371,11 +381,17 @@ module.exports = async function handler(req, res) {
               lineBreak: false,
             });
 
+          // El nombre se ancla por BASELINE (no por una caja centrada como
+          // el resto de los campos): Tangerine tiene un ascender bien más
+          // alto que Times-Bold (0.75 vs 0.683 del em), así que la vieja
+          // fórmula "centrada en una caja" dejaba la línea de base por
+          // debajo del renglón impreso en vez de asentada arriba de él.
+          // Renglón de "CERTIFICA QUE" medido en la imagen: y=307.5pt.
           const nombreSize = fitFontSize(nombre, "Tangerine", NOMBRE_MAX, 12, 200);
           doc
             .font("Tangerine")
             .fontSize(nombreSize)
-            .text(nombre, 207.5, 287.5 + (NOMBRE_MAX - nombreSize) / 2 + 2, {
+            .text(nombre, 207.5, 303.5 - nombreSize * TANGERINE_ASCENT, {
               width: 210,
               align: "center",
               lineBreak: false,
@@ -402,23 +418,28 @@ module.exports = async function handler(req, res) {
               lineBreak: false,
             });
         } else if (esNac) {
-          const nacSize = fitFontSize(nombre, "Tangerine", 44, 16, pageW * 0.8);
+          // Renglón dorado bajo "RECONOCIMIENTO" medido en la imagen: y=344.4pt.
+          // Techo 38 (no 44): a 44pt los ascendentes de Tangerine en
+          // mayúsculas con floritura (M, J) llegan a tocar "RECONOCIMIENTO"
+          // arriba — el ancho casi nunca es el límite real acá.
+          const nacSize = fitFontSize(nombre, "Tangerine", 38, 16, pageW * 0.8);
           doc
             .font("Tangerine")
             .fontSize(nacSize)
             .fillColor("#1a1a1a")
-            .text(nombre, 0, pageH * 0.555 - 5 + (44 - nacSize) / 2, {
+            .text(nombre, 0, 339.4 - nacSize * TANGERINE_ASCENT, {
               align: "center",
               width: pageW,
               lineBreak: false,
             });
         } else {
+          // Renglón de "A: ____" medido en la imagen: y=359.4pt.
           const intSize = fitFontSize(nombre, "Tangerine", 26, 12, pageW * 0.4);
           doc
             .font("Tangerine")
             .fontSize(intSize)
             .fillColor("#1a1a1a")
-            .text(nombre, pageW * 0.3, pageH * 0.655 + (26 - intSize) / 2, {
+            .text(nombre, pageW * 0.3, 355.4 - intSize * TANGERINE_ASCENT, {
               align: "center",
               width: pageW * 0.44,
               lineBreak: false,
