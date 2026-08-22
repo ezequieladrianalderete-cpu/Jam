@@ -617,8 +617,15 @@ module.exports = async function handler(req, res) {
           } else if (p.audio_url.startsWith("http")) {
             const audioRes = await fetch(p.audio_url);
             if (audioRes.ok) {
+              // La extension real depende de que formato grabo el
+              // navegador del jurado (jSubirAudio guarda .ogg/.webm/.m4a
+              // segun corresponda) -- no siempre es m4a, y adjuntarlo con
+              // la extension incorrecta puede trabar la reproduccion en
+              // algunos clientes de mail.
+              const extMatch = p.audio_url.match(/\.(ogg|webm|m4a)(?:\?|$)/i);
+              const ext = extMatch ? extMatch[1].toLowerCase() : "m4a";
               audioAttachments.push({
-                filename: `evaluacion-jurado-${p.juez_num}.m4a`,
+                filename: `evaluacion-jurado-${p.juez_num}.${ext}`,
                 content: Buffer.from(await audioRes.arrayBuffer()),
               });
             }

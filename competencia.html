@@ -3540,6 +3540,24 @@
         }
         jCerradoFlag = true;
         miPuntaje = { ...payload };
+        // Si el jurado cierra sin apretar antes "Detener grabación", la
+        // grabación queda técnicamente a medio terminar (mediaRecorder
+        // sigue "recording" y audioBlob todavía es null porque recién se
+        // arma en el evento onstop) -- antes esto se perdia en silencio,
+        // sin ningun aviso, porque el chequeo de mas abajo solo miraba
+        // audioBlob. Ahora se frena la grabacion aca y se espera a que
+        // termine de armarse el archivo antes de decidir si hay algo para
+        // subir.
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          await new Promise((resolve) => {
+            const prevOnStop = mediaRecorder.onstop;
+            mediaRecorder.onstop = (ev) => {
+              if (prevOnStop) prevOnStop(ev);
+              resolve();
+            };
+            mediaRecorder.stop();
+          });
+        }
         if (audioBlob) await jSubirAudio();
         mostrarCerrado();
         toast(
