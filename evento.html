@@ -3865,6 +3865,11 @@
     </div>
     <div class="card sy2" id="acr-lista-integrantes"></div>
     <button class="btn bgn bfull" style="padding:14px;font-size:15px" onclick="acrConfirmar('${p.id}','${escJs(p.nombre_grupo || "")}')">✓ Confirmar presencia y acreditar</button>
+    ${
+      p.acreditado_at
+        ? `<button class="btn bo bfull" onclick="acrCancelarPresencia('${p.id}','${escJs(p.nombre_grupo || "")}')">↩ Deshacer presencia (toque de más)</button>`
+        : ""
+    }
     <button class="btn bo bfull" onclick="acrReset()">↩ Escanear otro participante</button>`;
         // Cargar contador y detalle de integrantes acreditados (asíncrono, no bloquea)
         acrCargarContador(p.inscripcion_id);
@@ -3895,7 +3900,7 @@
         <span>${it.orden}. ${esc(it.nombre || "—")}</span>
         ${
           ok
-            ? '<span class="bdg bdg-green">✓ presente</span>'
+            ? `<span style="display:flex;align-items:center;gap:6px"><span class="bdg bdg-green">✓ presente</span><button class="btn bo bsm" onclick="acrDesacreditarDesdeLista('${it.id}','${escJs(it.nombre || "")}','${inscripcionId}')">↩ Deshacer</button></span>`
             : `<button class="btn bg bsm" onclick="acrAcreditarDesdeLista('${it.id}','${escJs(it.nombre || "")}','${inscripcionId}')">Marcar presente</button>`
         }
       </div>`;
@@ -3917,6 +3922,25 @@
           acrCargarListaIntegrantes(inscripcionId);
         } catch (e) {
           toast("Error al acreditar: " + e.message, "err");
+        }
+      }
+
+      // Deshace un toque de más -- el RPC ya soportaba p_acreditar:false
+      // desde siempre (vuelve el integrante a "pendiente"), solo faltaba
+      // un botón que lo llame. Pide confirmación porque es fácil tocar el
+      // de al lado en una lista larga con el dedo en una tablet.
+      async function acrDesacreditarDesdeLista(id, nombre, inscripcionId) {
+        if (!confirm('¿Deshacer la acreditación de "' + nombre + '"?')) return;
+        try {
+          const { data, error } = await db
+            .schema("evento")
+            .rpc("acreditar_integrante", { p_id: id, p_acreditar: false });
+          if (error) throw error;
+          toast("↩ Acreditación de " + nombre + " deshecha", "warn");
+          acrCargarContador(inscripcionId);
+          acrCargarListaIntegrantes(inscripcionId);
+        } catch (e) {
+          toast("Error al deshacer: " + e.message, "err");
         }
       }
 
@@ -3977,6 +4001,40 @@
         document.getElementById("acr-res").style.display = "none";
         document.getElementById("acr-ok").style.display = "block";
         toast("Presencia confirmada", "ok");
+      }
+
+      // Deshace un "presente" tocado de más -- pasa fácil escaneando
+      // rápido en la fila del evento. Solo devuelve el estado general a
+      // "pendiente" si todavía no avanzó más allá de presente (si ya
+      // entró a pista o terminó, deshacer la acreditación no debería
+      // borrarle el progreso real que hizo en el show).
+      async function acrCancelarPresencia(id, nombre) {
+        const p = luData.find((x) => x.id === id);
+        if (!p) return;
+        if (
+          !confirm(
+            '¿Deshacer la presencia de "' +
+              nombre +
+              '"? Vuelve a quedar como no acreditado.',
+          )
+        )
+          return;
+        const updates = { acreditado_at: null };
+        if (p.estado === "presente") updates.estado = "pendiente";
+        try {
+          const { error } = await db
+            .schema("evento")
+            .from("lineup")
+            .update(updates)
+            .eq("id", id);
+          if (error) throw error;
+          p.acreditado_at = null;
+          if (updates.estado) p.estado = updates.estado;
+          toast("↩ Presencia de " + nombre + " deshecha", "warn");
+          renderAcrResultado(p);
+        } catch (e) {
+          toast("Error al deshacer: " + e.message, "err");
+        }
       }
 
       function acrReset() {
@@ -6265,15 +6323,20 @@
           btn.style.background = "#C9A84C";
         }
       }
+      // Antes esto solo pausaba y rebobinaba -- el nombre del tema elegido
+      // se quedaba pegado en el reproductor para siempre, sin forma de
+      // volver al estado "esperando" real. Ahora limpia del todo: lo
+      // mismo que si el DJ nunca hubiera tocado ▶ en nadie.
       function djStop() {
         const audio = document.getElementById("dj-audio");
-        const btn = document.getElementById("dj-play-btn");
-        if (!audio) return;
-        audio.pause();
-        audio.currentTime = 0;
-        if (btn) {
-          btn.textContent = "▶";
-          btn.style.background = "#C9A84C";
+        if (audio) {
+          audio.pause();
+          audio.src = "";
+        }
+        const cont = document.getElementById("dj-musica-activa");
+        if (cont) {
+          cont.innerHTML =
+            '<div class="muted text-xs" style="text-align:center;padding:14px">🎵 Elegí un tema de la lista de abajo para reproducirlo</div>';
         }
       }
       function djUpdateProgress() {
