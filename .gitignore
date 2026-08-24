@@ -1,1 +1,11 @@
 node_modules/
+
+# Copia local para probar sin internet (Docker/Supabase local) -- lleva
+# datos reales de participantes (nombre, DNI, email), nunca al repo
+# público.
+supabase/dumps/
+supabase/seed.sql
+supabase/.temp/
+.env
+.env.*
+!.env.example
