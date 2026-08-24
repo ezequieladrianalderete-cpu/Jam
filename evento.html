@@ -4799,13 +4799,22 @@
         // Buscar música de cada inscripción (musica_url/nombre = espejo de la
         // primera categoría con canción; categorias trae la canción propia de
         // cada categoría para poder tocar la correcta según la sesión activa)
+        // Se pide en tandas de 100 ids: con ~230+ inscripciones el filtro
+        // .in(id, ids) arma una URL de más de 8000 caracteres, que el
+        // servidor rechaza entero con "414 URI too long" -- eso tira abajo
+        // TODA la consulta (no solo las de más), así que el DJ terminaba
+        // viendo "sin música" en absolutamente todos, aunque la tuvieran.
         const ids = lineup.map((l) => l.inscripcion_id).filter(Boolean);
-        const { data: inscrip } = await db
-          .from("inscripciones")
-          .select("id, musica_url, musica_nombre, categorias")
-          .in("id", ids);
+        let inscrip = [];
+        for (let i = 0; i < ids.length; i += 100) {
+          const { data } = await db
+            .from("inscripciones")
+            .select("id, musica_url, musica_nombre, categorias")
+            .in("id", ids.slice(i, i + 100));
+          if (data) inscrip = inscrip.concat(data);
+        }
         const musicMap = {};
-        (inscrip || []).forEach((i) => {
+        inscrip.forEach((i) => {
           musicMap[i.id] = i;
         });
         djData = lineup.map((l) => {

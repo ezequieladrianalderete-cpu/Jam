@@ -6488,13 +6488,17 @@
             ),
           ];
           let integrantesPorInscripcion = {};
-          if (idsUnicos.length) {
+          // En tandas de 100: con todo el evento en un solo PDF, idsUnicos
+          // puede pasar los ~230 ids y armar una URL de más de 8000
+          // caracteres, que el servidor corta entera con "414 URI too
+          // long" (mismo problema real que tenía la lista del DJ).
+          for (let i = 0; i < idsUnicos.length; i += 100) {
             const { data: inscrs } = await db
               .from("inscripciones")
               .select("id,integrantes,cant_personas,nombre")
-              .in("id", idsUnicos);
-            (inscrs || []).forEach((i) => {
-              integrantesPorInscripcion[i.id] = i;
+              .in("id", idsUnicos.slice(i, i + 100));
+            (inscrs || []).forEach((ins) => {
+              integrantesPorInscripcion[ins.id] = ins;
             });
           }
 
