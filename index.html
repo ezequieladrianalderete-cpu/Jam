@@ -6607,12 +6607,18 @@
           );
           if (res.error) {
             console.error("Upload err:", res.error);
-            return "UPLOAD_FAILED";
+            // Antes esto se perdía en un "UPLOAD_FAILED" genérico -- el
+            // motivo real (archivo muy grande, tipo no permitido, etc.)
+            // quedaba solo en la consola, que nadie mira mientras prueba
+            // desde el celu, así que el mensaje en pantalla siempre decía
+            // "revisá tu conexión" aunque la conexión no tuviera nada que
+            // ver.
+            return "UPLOAD_FAILED:" + (res.error.message || "error desconocido");
           }
           return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
         } catch (e) {
           console.error("Upload exception:", e.message);
-          return "UPLOAD_FAILED";
+          return "UPLOAD_FAILED:" + (e.message || "error desconocido");
         }
       }
 
@@ -6696,9 +6702,10 @@
             );
           } catch (e) {
             console.error("clasif upload:", e);
-            clasifUrl = "UPLOAD_FAILED";
+            clasifUrl = "UPLOAD_FAILED:" + (e.message || "error desconocido");
           }
-          if (clasifUrl === "UPLOAD_FAILED") return "UPLOAD_FAILED_CLASIF";
+          if (clasifUrl && clasifUrl.indexOf("UPLOAD_FAILED") === 0)
+            return "UPLOAD_FAILED_CLASIF:" + clasifUrl.slice("UPLOAD_FAILED:".length);
         }
 
         // Upload comprobante de pago
@@ -6712,9 +6719,10 @@
             );
           } catch (e) {
             console.error("comp upload:", e);
-            compUrl = "UPLOAD_FAILED";
+            compUrl = "UPLOAD_FAILED:" + (e.message || "error desconocido");
           }
-          if (compUrl === "UPLOAD_FAILED") return "UPLOAD_FAILED_COMPROBANTE";
+          if (compUrl && compUrl.indexOf("UPLOAD_FAILED") === 0)
+            return "UPLOAD_FAILED_COMPROBANTE:" + compUrl.slice("UPLOAD_FAILED:".length);
         }
 
         // Música a nivel de inscripción: espejo de la primera categoría con canción,
@@ -6892,16 +6900,26 @@
         }
         showSaving(false);
         _submitting = false;
-        if (dbRecord === "UPLOAD_FAILED_COMPROBANTE") {
+        if (
+          typeof dbRecord === "string" &&
+          dbRecord.indexOf("UPLOAD_FAILED_COMPROBANTE") === 0
+        ) {
+          var motivoComp = dbRecord.slice("UPLOAD_FAILED_COMPROBANTE:".length);
           toast(
-            "No pudimos subir tu comprobante de pago. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
+            "No pudimos subir tu comprobante de pago" +
+              (motivoComp ? ": " + motivoComp : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
             "err",
           );
           return;
         }
-        if (dbRecord === "UPLOAD_FAILED_CLASIF") {
+        if (
+          typeof dbRecord === "string" &&
+          dbRecord.indexOf("UPLOAD_FAILED_CLASIF") === 0
+        ) {
+          var motivoClasif = dbRecord.slice("UPLOAD_FAILED_CLASIF:".length);
           toast(
-            "No pudimos subir tu comprobante de clasificaci\u00f3n. Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar.",
+            "No pudimos subir tu comprobante de clasificaci\u00f3n" +
+              (motivoClasif ? ": " + motivoClasif : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
             "err",
           );
           return;
