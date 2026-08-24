@@ -23,6 +23,7 @@
     { "source": "/api/enviar-devolucion", "destination": "/api/enviar-devolucion.js" },
     { "source": "/api/health", "destination": "/api/health.js" },
     { "source": "/api/reenviar-qr", "destination": "/api/reenviar-qr.js" },
-    { "source": "/api/enviar-credenciales-masivo", "destination": "/api/enviar-credenciales-masivo.js" }
+    { "source": "/api/enviar-credenciales-masivo", "destination": "/api/enviar-credenciales-masivo.js" },
+    { "source": "/api/enviar-devoluciones-pendientes", "destination": "/api/enviar-devoluciones-pendientes.js" }
   ]
 }

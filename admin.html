@@ -1905,6 +1905,40 @@
           toast("err", "Error: " + e.message);
         }
       }
+      async function enviarDevolucionesPendientes() {
+        var msg = document.getElementById("devol-msg");
+        if (
+          !confirm(
+            "Vas a mandar TODAS las devoluciones pendientes (certificado + audio del jurado) que todavía no salieron.\n\nPuede tardar varios minutos si hay muchas acumuladas. ¿Confirmar?",
+          )
+        )
+          return;
+        msg.textContent = "Enviando… puede tardar varios minutos, no cierres esta pestaña.";
+        msg.style.color = "#C9A84C";
+        try {
+          const r = await fetch("/api/enviar-devoluciones-pendientes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          });
+          const d = await r.json();
+          if (!r.ok || !d.ok) throw new Error(d.error || "HTTP " + r.status);
+          msg.style.color = "#4CAF7D";
+          msg.textContent =
+            "✓ " +
+            d.pendientes_encontradas +
+            " pendientes encontradas — " +
+            d.enviadas +
+            " enviadas, " +
+            d.fallidas +
+            " fallaron (quedan pendientes para el próximo intento).";
+          toast("ok", "Devoluciones pendientes procesadas ✓");
+        } catch (e) {
+          msg.style.color = "#E0524C";
+          msg.textContent = "Error: " + e.message;
+          toast("err", "Error: " + e.message);
+        }
+      }
       async function resetAll() {
         const c1 = prompt(
           "⚠️ Elimina TODAS las inscripciones + archivos. Confirmar escribiendo: BORRAR TODO",
@@ -2325,6 +2359,11 @@
           '<input id="masivo-excluir-sedes" placeholder="zona-sur, zona-norte" style="width:100%;padding:11px;background:#0e0e0e;border:1px solid #333;border-radius:8px;color:#F8F5EE;font-family:inherit;font-size:14px"></div>' +
           '<button onclick="enviarCredencialesMasivo()" style="background:#C9A84C;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:12px">📨 Enviar credenciales a todos</button>' +
           '<div id="masivo-msg" style="font-size:12px;margin-top:10px;line-height:1.5"></div>' +
+          '</div>' +
+          '<div class="det-block"><div class="det-title">Devoluciones pendientes</div>' +
+          '<div style="font-size:12px;color:rgba(248,245,238,.55);margin-bottom:14px;line-height:1.5">Manda las devoluciones (certificado + puntajes + audio del jurado) de TODAS las sesiones ya cerradas que todavía no se enviaron -- pensado para cuando el evento corrió sin internet y se fueron acumulando. Las que ya se mandaron no se repiten; las que fallan quedan pendientes para el próximo intento, no se pierden.</div>' +
+          '<button onclick="enviarDevolucionesPendientes()" style="background:#C9A84C;color:#0a0a0a;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">Enviar devoluciones pendientes</button>' +
+          '<div id="devol-msg" style="font-size:12px;margin-top:10px;line-height:1.5"></div>' +
           '</div>' +
           '<div class="det-block"><div class="det-title">URLs del sistema</div><div style="font-family:monospace;font-size:12px;color:#F8F5EE;line-height:1.9">Portal: <a href="/" target="_blank" style="color:#C9A84C">/</a><br>Check QR: <a href="/check" target="_blank" style="color:#C9A84C">/check?id=...</a><br>Música: <a href="/musica" target="_blank" style="color:#C9A84C">/musica?token=...</a><br>Términos Nacional (PDF): <a href="/terminos-nacional.pdf" target="_blank" style="color:#C9A84C">/terminos-nacional.pdf</a><br>Términos Inter (PDF): <a href="/terminos-internacional.pdf" target="_blank" style="color:#C9A84C">/terminos-internacional.pdf</a></div></div><div class="det-block" style="border-color:rgba(224,82,82,.3);background:#1a0000"><div class="det-title" style="color:#E0524C">⚠️ Zona Peligrosa</div><div style="font-size:12px;color:rgba(248,245,238,.6);margin:10px 0;line-height:1.5">Eliminar TODAS las inscripciones y archivos. <strong style="color:#E0524C">Acción irreversible.</strong></div><button style="background:#E0524C;color:#fff;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:1px" onclick="resetAll()">🗑️ RESET TOTAL DEL SISTEMA</button></div>';
         sysCargarIdentidad();
