@@ -4110,7 +4110,7 @@
           body: JSON.stringify({ sesion_id: sesId }),
         })
           .then((r) => r.json())
-          .then((r) => {
+          .then(async (r) => {
             if (r.ok) {
               const okCount = r.enviados.filter((e) => e.ok).length;
               const failCount = r.enviados.length - okCount;
@@ -4130,6 +4130,11 @@
                   "Envíos fallidos:",
                   r.enviados.filter((e) => !e.ok),
                 );
+                // Falló al menos un destinatario: se deja sin marcar a
+                // propósito, así "Devoluciones pendientes" la vuelve a
+                // intentar sola más tarde (mismo criterio que ese botón:
+                // mejor un reenvío de más a quien sí le llegó, que perder
+                // de vista a quien no).
               } else {
                 toast(
                   "Devolución enviada a " +
@@ -4137,10 +4142,31 @@
                     (okCount === 1 ? " destinatario" : " destinatarios"),
                   "ok",
                 );
+                // Todos los destinatarios recibieron el mail bien: recién
+                // acá se marca como enviada. Antes esto nunca se
+                // registraba en la base, así que un envío que fallaba en
+                // silencio (corte de señal, error de Resend) quedaba
+                // indistinguible de uno exitoso -- nadie se enteraba salvo
+                // que el participante avisara directamente.
+                try {
+                  await db
+                    .schema("scoring")
+                    .from("sesiones")
+                    .update({ devolucion_enviada_at: new Date().toISOString() })
+                    .eq("id", sesId);
+                } catch (e) {
+                  console.warn("No se pudo marcar devolucion_enviada_at:", e);
+                }
               }
-            } else console.warn("Email no enviado:", r.error);
+            } else {
+              console.warn("Email no enviado:", r.error);
+              toast("No se pudo enviar la devolución — se reintentará luego", "warn");
+            }
           })
-          .catch((e) => console.warn("Error email:", e));
+          .catch((e) => {
+            console.warn("Error email:", e);
+            toast("Error de red al enviar devolución — se reintentará luego", "warn");
+          });
 
         sesionActiva = null;
         document.getElementById("d-nombre").textContent =
