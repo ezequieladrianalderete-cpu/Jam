@@ -370,10 +370,10 @@ module.exports = async function handler(req, res) {
           // porque Tangerine (script) necesita más pt para el mismo peso
           // visual — fitFontSize los achica igual si hace falta.
           const DIA_MES_MAX = 22;
-          const SEDE_MAX = 23;
+          const SEDE_MAX = 28; // subido para quedar a la par del nombre
           const NOMBRE_MAX = 30;
           const PUNTAJE_MAX = 22;
-          const CAT_MAX = 20;
+          const CAT_MAX = 28; // el que más se notaba chico — mismo techo que sede/nombre
 
           const diaSize = fitFontSize(String(dia), "Tangerine", DIA_MES_MAX, 10, 50);
           doc
