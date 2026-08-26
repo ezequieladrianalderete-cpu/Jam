@@ -4414,8 +4414,18 @@
       // año del evento) — se parsean para poder bloquear una sede una vez
       // que ya pasó su fecha.
       var MESES_ABR = {
-        ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
-        jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+        ene: 0,
+        feb: 1,
+        mar: 2,
+        abr: 3,
+        may: 4,
+        jun: 5,
+        jul: 6,
+        ago: 7,
+        sep: 8,
+        oct: 9,
+        nov: 10,
+        dic: 11,
       };
       var EVENTO_ANIO = 2026;
       function fechaSedeADate(fechaStr) {
@@ -4508,11 +4518,7 @@
           '<option value="" selected disabled>Seleccioná tu sede...</option>' +
           SEDES.map(function (s) {
             var bloqueada = !!aplicarBloqueo && !sedeHabilitada(s);
-            var color = bloqueada
-              ? "#999"
-              : s.tipo === "v"
-                ? "#d97706"
-                : "";
+            var color = bloqueada ? "#999" : s.tipo === "v" ? "#d97706" : "";
             var etiqueta = aplicarBloqueo ? s.n + " — " + s.fecha : s.n;
             return (
               '<option value="' +
@@ -4674,10 +4680,7 @@
             if (INST === "reg") {
               var sedeSel = findSede(STATE.sede_id);
               if (sedeSel && !sedeHabilitada(sedeSel)) {
-                toast(
-                  "Esa sede ya cerró su inscripción, elegí otra",
-                  "err",
-                );
+                toast("Esa sede ya cerró su inscripción, elegí otra", "err");
                 STATE.sede_id = null;
                 var selSede = document.getElementById("f-sede");
                 if (selSede) selSede.value = "";
@@ -5049,10 +5052,10 @@
         }
         // Nacional
         var rows2 = [
-          { l: "1ª categoría", v: 80000 },
-          { l: "2ª categoría", v: Math.round(80000 * 0.9), badge: "10% OFF" },
+          { l: "1ª coreografía", v: 80000 },
+          { l: "2ª coreografía", v: Math.round(80000 * 0.9), badge: "10% OFF" },
           {
-            l: "3ª categoría o más (c/u)",
+            l: "3ª coreografía o más (c/u)",
             v: Math.round(80000 * 0.8),
             badge: "20% OFF",
           },
@@ -5079,7 +5082,7 @@
           '<table style="width:100%;border-collapse:collapse">' +
           rows2 +
           "</table>" +
-          '<div style="margin-bottom:3px;font-size:14px;color:rgba(28,28,22,.75);margin-top:7px">ACLARACIÓN: Precio por persona y por categoría. La 1ª categoría no tiene descuento; la 2ª tiene un 10%, desde la 3ª en adelante un 20%.</div>';
+          '<div style="margin-bottom:3px;font-size:14px;color:rgba(28,28,22,.75);margin-top:7px">ACLARACIÓN: Precio por persona y por coreografía. La 1ª coreografía no tiene descuento; la 2ª tiene un 10%, desde la 3ª en adelante un 20%.</div>';
       }
 
       // ── INTEGRANTES ──────────────────────────────────────────────────
@@ -6613,7 +6616,9 @@
             // desde el celu, así que el mensaje en pantalla siempre decía
             // "revisá tu conexión" aunque la conexión no tuviera nada que
             // ver.
-            return "UPLOAD_FAILED:" + (res.error.message || "error desconocido");
+            return (
+              "UPLOAD_FAILED:" + (res.error.message || "error desconocido")
+            );
           }
           return sb.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
         } catch (e) {
@@ -6705,7 +6710,9 @@
             clasifUrl = "UPLOAD_FAILED:" + (e.message || "error desconocido");
           }
           if (clasifUrl && clasifUrl.indexOf("UPLOAD_FAILED") === 0)
-            return "UPLOAD_FAILED_CLASIF:" + clasifUrl.slice("UPLOAD_FAILED:".length);
+            return (
+              "UPLOAD_FAILED_CLASIF:" + clasifUrl.slice("UPLOAD_FAILED:".length)
+            );
         }
 
         // Upload comprobante de pago
@@ -6722,7 +6729,10 @@
             compUrl = "UPLOAD_FAILED:" + (e.message || "error desconocido");
           }
           if (compUrl && compUrl.indexOf("UPLOAD_FAILED") === 0)
-            return "UPLOAD_FAILED_COMPROBANTE:" + compUrl.slice("UPLOAD_FAILED:".length);
+            return (
+              "UPLOAD_FAILED_COMPROBANTE:" +
+              compUrl.slice("UPLOAD_FAILED:".length)
+            );
         }
 
         // Música a nivel de inscripción: espejo de la primera categoría con canción,
@@ -6907,7 +6917,9 @@
           var motivoComp = dbRecord.slice("UPLOAD_FAILED_COMPROBANTE:".length);
           toast(
             "No pudimos subir tu comprobante de pago" +
-              (motivoComp ? ": " + motivoComp : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
+              (motivoComp
+                ? ": " + motivoComp
+                : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
             "err",
           );
           return;
@@ -6919,7 +6931,9 @@
           var motivoClasif = dbRecord.slice("UPLOAD_FAILED_CLASIF:".length);
           toast(
             "No pudimos subir tu comprobante de clasificaci\u00f3n" +
-              (motivoClasif ? ": " + motivoClasif : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
+              (motivoClasif
+                ? ": " + motivoClasif
+                : ". Revis\u00e1 tu conexi\u00f3n y volv\u00e9 a intentar."),
             "err",
           );
           return;

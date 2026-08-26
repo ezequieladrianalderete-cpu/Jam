@@ -351,80 +351,86 @@ module.exports = async function handler(req, res) {
 
           doc.fillColor("#1a1a1a");
 
-          // Techo de tamaño de cada campo — el piso (10/9 más abajo en
-          // cada llamada a fitFontSize) sigue actuando de red de
-          // seguridad para strings largos, así que subir estos techos
-          // agranda la letra en el caso normal sin arriesgar que un
-          // nombre/sede/categoría larga se pise con el resto del
-          // certificado: fitFontSize la va a achicar hasta que entre.
-          const DIA_MES_MAX = 18;
-          const SEDE_MAX = 19;
-          const NOMBRE_MAX = 30; // Tangerine (script) necesita más pt que Times-Bold para el mismo peso visual
-          const PUNTAJE_MAX = 19;
-          const CAT_MAX = 17;
+          // Todos los campos del certificado Regional/Sedes usan Tangerine
+          // (a pedido del cliente, reemplaza Times-Bold/Helvetica-Bold por
+          // completo acá — NO en nac/int, que siguen igual). Cada campo se
+          // ancla por su BASELINE real (no por una caja centrada): el
+          // ascender de Tangerine es más alto que el de las fuentes
+          // anteriores (0.75 del em vs. ~0.68), así que centrar en una caja
+          // dejaba el texto asentado por debajo del renglón impreso en vez
+          // de arriba. target_baseline = y del renglón (medido en la
+          // imagen) menos ~4pt de aire.
+          const ROW1_BASELINE = 268.5; // renglón "...LA SEDE___" en y=272.5
+          const ROW2_BASELINE = 303.5; // renglón "CERTIFICA QUE___" en y=307.5
+          const ROW3_BASELINE = 341; // renglón "...CATEGORÍA___" en y=345
 
-          const diaSize = fitFontSize(String(dia), "Helvetica-Bold", DIA_MES_MAX, 10, 50);
-          const mesSize = fitFontSize(String(mes), "Helvetica-Bold", DIA_MES_MAX, 10, 50);
+          // Techo de tamaño de cada campo — el piso (9/10/12 en cada llamada
+          // a fitFontSize) sigue actuando de red de seguridad para strings
+          // largos. Todos subidos frente a los de Times-Bold/Helvetica-Bold
+          // porque Tangerine (script) necesita más pt para el mismo peso
+          // visual — fitFontSize los achica igual si hace falta.
+          const DIA_MES_MAX = 22;
+          const SEDE_MAX = 23;
+          const NOMBRE_MAX = 30;
+          const PUNTAJE_MAX = 22;
+          const CAT_MAX = 20;
+
+          const diaSize = fitFontSize(String(dia), "Tangerine", DIA_MES_MAX, 10, 50);
           doc
-            .font("Helvetica-Bold")
+            .font("Tangerine")
             .fontSize(diaSize)
-            .text(String(dia), 250, 256.5 + (DIA_MES_MAX - diaSize) / 2, {
+            .text(String(dia), 250, ROW1_BASELINE - diaSize * TANGERINE_ASCENT, {
               width: 57.5,
               align: "center",
               lineBreak: false,
             });
+          const mesSize = fitFontSize(String(mes), "Tangerine", DIA_MES_MAX, 10, 50);
           doc
-            .font("Helvetica-Bold")
+            .font("Tangerine")
             .fontSize(mesSize)
-            .text(String(mes), 317.5, 256.5 + (DIA_MES_MAX - mesSize) / 2, {
+            .text(String(mes), 317.5, ROW1_BASELINE - mesSize * TANGERINE_ASCENT, {
               width: 56.5,
               align: "center",
               lineBreak: false,
             });
 
           const sedeStr = sedeNombre || "—";
-          const sedeSize = fitFontSize(sedeStr, "Times-Bold", SEDE_MAX, 9, 195);
+          const sedeSize = fitFontSize(sedeStr, "Tangerine", SEDE_MAX, 9, 195);
           doc
-            .font("Times-Bold")
+            .font("Tangerine")
             .fontSize(sedeSize)
-            .text(sedeStr, 505, 254.5 + (SEDE_MAX - sedeSize) / 2, {
+            .text(sedeStr, 505, ROW1_BASELINE - sedeSize * TANGERINE_ASCENT, {
               width: 207.5,
               align: "center",
               lineBreak: false,
             });
 
-          // El nombre se ancla por BASELINE (no por una caja centrada como
-          // el resto de los campos): Tangerine tiene un ascender bien más
-          // alto que Times-Bold (0.75 vs 0.683 del em), así que la vieja
-          // fórmula "centrada en una caja" dejaba la línea de base por
-          // debajo del renglón impreso en vez de asentada arriba de él.
-          // Renglón de "CERTIFICA QUE" medido en la imagen: y=307.5pt.
           const nombreSize = fitFontSize(nombre, "Tangerine", NOMBRE_MAX, 12, 200);
           doc
             .font("Tangerine")
             .fontSize(nombreSize)
-            .text(nombre, 207.5, 303.5 - nombreSize * TANGERINE_ASCENT, {
+            .text(nombre, 207.5, ROW2_BASELINE - nombreSize * TANGERINE_ASCENT, {
               width: 210,
               align: "center",
               lineBreak: false,
             });
 
-          const puntajeSize = fitFontSize(String(totalPts), "Helvetica-Bold", PUNTAJE_MAX, 10, 40);
+          const puntajeSize = fitFontSize(String(totalPts), "Tangerine", PUNTAJE_MAX, 10, 40);
           doc
-            .font("Helvetica-Bold")
+            .font("Tangerine")
             .fontSize(puntajeSize)
-            .text(String(totalPts), 670, 289.5 + (PUNTAJE_MAX - puntajeSize) / 2, {
+            .text(String(totalPts), 670, ROW2_BASELINE - puntajeSize * TANGERINE_ASCENT, {
               width: 42.5,
               align: "center",
               lineBreak: false,
             });
 
           const catStr = categoriaLimpia || "—";
-          const catSize = fitFontSize(catStr, "Times-Bold", CAT_MAX, 9, 375);
+          const catSize = fitFontSize(catStr, "Tangerine", CAT_MAX, 9, 375);
           doc
-            .font("Times-Bold")
+            .font("Tangerine")
             .fontSize(catSize)
-            .text(catStr, 322.5, 328 + (CAT_MAX - catSize) / 2, {
+            .text(catStr, 322.5, ROW3_BASELINE - catSize * TANGERINE_ASCENT, {
               width: 390,
               align: "center",
               lineBreak: false,
