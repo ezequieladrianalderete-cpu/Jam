@@ -5007,22 +5007,22 @@
         const wrap = document.getElementById("d-rank-sede-filtro-wrap");
         if (!wrap) return;
         const sedes = inst === "reg" ? rankSedesPresentes(rowsExpandidas) : [];
-        if (sedes.length < 2) {
+        if (sedes.length === 0) {
           wrap.style.display = "none";
           wrap.innerHTML = "";
           if (window._rankSedeFiltro) window._rankSedeFiltro = "";
           return;
         }
-        if (
-          window._rankSedeFiltro &&
-          !sedes.some((s) => s.id === window._rankSedeFiltro)
-        ) {
-          window._rankSedeFiltro = "";
+        // En Sedes no hay "ranking general" que tenga sentido -- cada sede
+        // compite en su propia fecha con su propio jurado. Por eso no se
+        // ofrece "Todas": siempre queda una sede puntual elegida (la que
+        // ya estaba activa si sigue existiendo, si no la primera de la
+        // lista -- nunca una mezcla).
+        if (!sedes.some((s) => s.id === window._rankSedeFiltro)) {
+          window._rankSedeFiltro = sedes[0].id;
         }
         wrap.style.display = "flex";
-        let html =
-          '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>' +
-          '<button class="btn bo bsm" data-s="" style="font-size:11px">Todas</button>';
+        let html = '<span class="text-xs muted" style="margin-right:2px">📍 Sede:</span>';
         sedes.forEach((s) => {
           html +=
             '<button class="btn bo bsm" data-s="' +
