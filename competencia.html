@@ -4462,8 +4462,19 @@
         return rows;
       }
 
+      // Sedes/reg reutilizan el mismo catálogo de categorías (mismo número
+      // "c" y nombre "n") en las ~14 sedes distintas -- sin el segmento de
+      // sede acá, "213: Solista Femenino Amateur" de Zona Sur y de CABA +
+      // Zona Oeste se agrupaban en UN solo botón/podio/ranking, mezclando
+      // participantes que en realidad compitieron en fechas y lugares
+      // distintos (mismo bug de fondo que evento.cat_combo ya resuelve del
+      // lado de la base para el cronograma -- acá faltaba el equivalente
+      // para el armado de rankings).
       function catKey(x) {
-        return x ? x.c + ": " + x.n : null;
+        if (!x) return null;
+        return x.sede_id
+          ? x.c + ": " + x.n + " · " + (x.sede_nombre || x.sede_id)
+          : x.c + ": " + x.n;
       }
 
       function extractRankCats(rows) {
