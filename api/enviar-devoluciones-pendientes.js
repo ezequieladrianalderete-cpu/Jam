@@ -78,9 +78,19 @@ export default async function handler(req, res) {
 
     const resumen = [];
     let enviadas = 0;
+    // Cuántas veces recibió mail cada dirección en ESTA tanda -- un envío
+    // masivo manda muchos mails seguidos, así que si algo hace que un mismo
+    // destinatario reciba de más (matching raro, un email reusado, lo que
+    // sea) es en este momento donde se nota, no días después cuando alguien
+    // avisa. Antes esto no se veía en ningún lado.
+    const destinatariosEnEstaTanda = new Map();
 
     for (const s of pendientes) {
-      const fakeReq = { method: "POST", headers: {}, body: { sesion_id: s.id } };
+      const fakeReq = {
+        method: "POST",
+        headers: {},
+        body: { sesion_id: s.id, origen: "masivo" },
+      };
       const fakeRes = mockRes();
       try {
         await enviarDevolucionHandler(fakeReq, fakeRes);
@@ -104,6 +114,14 @@ export default async function handler(req, res) {
         }
       }
 
+      (fakeRes.body?.enviados || []).forEach((e) => {
+        if (!e.to) return;
+        const dest = e.to.toLowerCase();
+        const prev = destinatariosEnEstaTanda.get(dest) || [];
+        prev.push(s.codigo_id);
+        destinatariosEnEstaTanda.set(dest, prev);
+      });
+
       resumen.push({
         sesion_id: s.id,
         codigo_id: s.codigo_id,
@@ -117,12 +135,21 @@ export default async function handler(req, res) {
       await sleep(2500);
     }
 
+    // Un destinatario que aparece en 3 o más códigos DISTINTOS de esta
+    // misma tanda es una señal real de alerta (una familia/academia puede
+    // compartir mail para 2 inscripciones sin que sea nada raro, pero 3+
+    // códigos distintos en un solo envío masivo amerita mirarlo a mano).
+    const posiblesDuplicados = [...destinatariosEnEstaTanda.entries()]
+      .filter(([, codigos]) => new Set(codigos).size >= 3)
+      .map(([destinatario, codigos]) => ({ destinatario, codigos }));
+
     return res.status(200).json({
       ok: true,
       pendientes_encontradas: pendientes.length,
       enviadas,
       fallidas: pendientes.length - enviadas,
       resumen,
+      posibles_duplicados: posiblesDuplicados,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });

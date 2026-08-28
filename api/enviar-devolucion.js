@@ -772,6 +772,31 @@ module.exports = async function handler(req, res) {
       };
     });
 
+    // Auditoría: antes ningún lugar registraba "quién recibió qué certificado
+    // y cuándo" -- si alguna vez alguien recibe de más (o de menos), no
+    // había forma de investigarlo después de que pasó. Es un insert aparte,
+    // sin bloquear el envío real si llegara a fallar.
+    const origen = req.body?.origen === "masivo" ? "masivo" : "individual";
+    try {
+      await supaFetch("log_envios_devolucion", {
+        method: "POST",
+        headers: { "Accept-Profile": "scoring", "Content-Profile": "scoring" },
+        body: JSON.stringify(
+          enviados.map((r) => ({
+            sesion_id,
+            codigo_id: sesion.codigo_id,
+            nombre_grupo: sesion.nombre_grupo,
+            destinatario: r.to,
+            ok: r.ok,
+            error: r.error || null,
+            origen,
+          })),
+        ),
+      });
+    } catch (e) {
+      console.warn("No se pudo registrar log_envios_devolucion:", e);
+    }
+
     if (!enviados.some((r) => r.ok))
       return res.status(500).json({ error: "No se pudo enviar ningún email", enviados });
 
