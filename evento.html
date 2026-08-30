@@ -15,6 +15,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
       html,
       body {
@@ -1617,6 +1618,90 @@
             <div class="muted text-sm mb3" id="dj-info"></div>
             <div id="dj-musica-activa"></div>
           </div>
+          <div
+            id="dj-mini-player"
+            style="
+              display: none;
+              position: fixed;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              z-index: 500;
+              background: #0d0d0d;
+              border-top: 1px solid rgba(201, 168, 76, 0.3);
+              padding: 10px 16px;
+              box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+              align-items: center;
+              gap: 12px;
+            "
+          >
+            <button
+              onclick="djTogglePlay()"
+              id="dj-mini-play-btn"
+              style="
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #c9a84c;
+                border: none;
+                cursor: pointer;
+                font-size: 16px;
+                color: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              "
+            >
+              ▶
+            </button>
+            <div style="flex: 1; min-width: 0">
+              <div
+                class="fw6 text-xs"
+                id="dj-mini-name"
+                style="
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                "
+              >
+                —
+              </div>
+              <div
+                class="text-xs"
+                id="dj-mini-estado"
+                style="color: rgba(255, 255, 255, 0.5)"
+              >
+                —
+              </div>
+              <div
+                style="
+                  height: 3px;
+                  background: rgba(255, 255, 255, 0.08);
+                  border-radius: 2px;
+                  margin-top: 5px;
+                "
+              >
+                <div
+                  id="dj-mini-progress-bar"
+                  style="
+                    width: 0%;
+                    height: 100%;
+                    background: #c9a84c;
+                    border-radius: 2px;
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+          <button
+            class="btn bo bfull mb3"
+            onclick="descargarCancionesCronograma()"
+            id="dj-btn-descargar-todo"
+          >
+            📥 Descargar canciones del cronograma del día
+          </button>
+          <div id="dj-descarga-status" class="text-xs muted mb3"></div>
           <div class="sf mb4">
             <div class="fw7" style="font-size: 17px">Lineup</div>
             <input
@@ -1642,7 +1727,7 @@
               align-items: center;
             "
           ></div>
-          <div class="sy2" id="dj-lista"></div>
+          <div class="sy2" id="dj-lista" style="padding-bottom: 70px"></div>
           <div class="cr mt4" id="dj-sin-musica" style="display: none">
             <div class="fw6 red mb3 text-sm">⚠️ Sin música cargada</div>
             <div id="dj-faltante-list"></div>
@@ -5212,6 +5297,165 @@
         }
       }
 
+      // Descarga TODAS las canciones del cronograma del día en un único
+      // .zip, organizado en carpetas (categoría → participante → tema) y
+      // numerado en el mismo orden de salida del cronograma, no
+      // alfabético -- así el DJ puede reproducir todo desde afuera del
+      // sistema (ej. si el sistema se cae) simplemente yendo carpeta por
+      // carpeta en orden. El navegador no permite bajar una carpeta real
+      // directo a disco, así que un .zip (que al descomprimirse reproduce
+      // exactamente esa estructura) es la única forma real de lograrlo.
+      function djSafeName(s) {
+        return String(s || "")
+          .replace(/[\\/:*?"<>|]/g, "-")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 80);
+      }
+      // Misma lógica de matcheo de canción por categoría que usa
+      // buildDjLista (filasDeCategoria), pero como función aparte porque
+      // acá vive fuera de ese closure.
+      function djCancionesDeCategoria(t, catKey) {
+        const cats = t.categorias || [];
+        const catKey2 = catKey ? catKey.split("|").slice(0, 2).join("|") : catKey;
+        const catMatch = cats.filter((c) => {
+          if (!catKey2) return false;
+          const keyPart = (c.g || "") + "|" + (c.n || "");
+          return (
+            keyPart === catKey2 ||
+            (c.n && catKey2 === c.n) ||
+            (c.n && catKey2.endsWith("|" + c.n))
+          );
+        });
+        const conMusica = catMatch.filter((c) => c.musica_url);
+        if (conMusica.length)
+          return conMusica.map((c) => ({
+            filename: c.musica_nombre || "cancion",
+            url: c.musica_url,
+          }));
+        if (t.musica_url)
+          return [{ filename: t.filename || "cancion", url: t.musica_url }];
+        return [];
+      }
+      async function djDescargarPool(tareas, concurrencia, onProgreso) {
+        let i = 0;
+        let hechas = 0;
+        async function siguiente() {
+          const idx = i++;
+          if (idx >= tareas.length) return;
+          await tareas[idx]();
+          hechas++;
+          onProgreso(hechas, tareas.length);
+          await siguiente();
+        }
+        await Promise.all(
+          Array.from({ length: Math.min(concurrencia, tareas.length) }, siguiente),
+        );
+      }
+      async function descargarCancionesCronograma() {
+        const btn = document.getElementById("dj-btn-descargar-todo");
+        const status = document.getElementById("dj-descarga-status");
+        if (btn) btn.disabled = true;
+        const setStatus = (t) => {
+          if (status) status.textContent = t;
+        };
+        try {
+          setStatus("Armando lista del cronograma…");
+          const { data: cron } = await db.rpc("cronograma_listar");
+          const cronograma = cron || [];
+          if (!cronograma.length) {
+            toast("No hay cronograma cargado", "err");
+            return;
+          }
+          if (!djData || !djData.length) await loadDjData();
+
+          const zip = new JSZip();
+          const tareas = [];
+          let catIdx = 0;
+          for (const cat of cronograma) {
+            catIdx++;
+            let pasadas = [];
+            try {
+              const { data } = await db.rpc("obtener_pasadas_categoria", {
+                p_categoria_key: cat.categoria_key,
+              });
+              pasadas = data || [];
+            } catch (e) {
+              continue;
+            }
+            const carpetaCat =
+              String(catIdx).padStart(3, "0") +
+              " - " +
+              djSafeName(cat.categoria_label || cat.categoria_key);
+            let posIdx = 0;
+            pasadas.forEach((pas) => {
+              const t = djData.find((x) => x.codigo_id === pas.codigo_id);
+              if (!t) return;
+              const canciones = djCancionesDeCategoria(t, cat.categoria_key);
+              if (!canciones.length) return;
+              posIdx++;
+              const carpetaPart =
+                String(posIdx).padStart(2, "0") +
+                " - " +
+                djSafeName(t.codigo_id) +
+                " - " +
+                djSafeName(t.nombre_grupo);
+              canciones.forEach((c) => {
+                tareas.push(async () => {
+                  try {
+                    const res = await fetch(c.url);
+                    if (!res.ok) return;
+                    const blob = await res.blob();
+                    const ext = (c.filename.match(/\.[a-zA-Z0-9]+$/) || [
+                      ".mp3",
+                    ])[0];
+                    zip.file(
+                      carpetaCat +
+                        "/" +
+                        carpetaPart +
+                        "/" +
+                        djSafeName(c.filename.replace(/\.[a-zA-Z0-9]+$/, "")) +
+                        ext,
+                      blob,
+                    );
+                  } catch (e) {
+                    /* un archivo que falla no aborta el resto */
+                  }
+                });
+              });
+            });
+          }
+
+          if (!tareas.length) {
+            toast("No se encontró música para descargar", "err");
+            return;
+          }
+
+          await djDescargarPool(tareas, 4, (hechas, total) =>
+            setStatus(`Descargando canciones… ${hechas}/${total}`),
+          );
+
+          setStatus("Comprimiendo…");
+          const blob = await zip.generateAsync({ type: "blob" }, (meta) =>
+            setStatus("Comprimiendo… " + Math.round(meta.percent) + "%"),
+          );
+          const fecha = new Date().toISOString().slice(0, 10);
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "JAM-2026-Musica-" + fecha + ".zip";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setStatus("✓ Descarga lista (" + tareas.length + " canciones)");
+          toast("Descarga lista", "ok");
+        } catch (e) {
+          toast("Error al armar la descarga: " + e.message, "err");
+          setStatus("Error: " + e.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
       function djFiltrar(q) {
         buildDjLista(q);
       }
@@ -5875,6 +6119,12 @@
       }
 
       function extractRankNivs(rows) {
+        // ORDER es solo una preferencia de orden, no una lista cerrada de
+        // niveles válidos -- antes filtraba SOLO por estos valores, así que
+        // cualquier nivel real que no estuviera acá (ej. "grupo", "especial")
+        // no generaba botón de filtro y quedaba invisible en cualquier
+        // filtro salvo "Todos", aunque el participante sí existiera en los
+        // datos. Ahora cualquier nivel encontrado aparece, conocido o no.
         const ORDER = [
           "profesional",
           "semipro",
@@ -5884,12 +6134,16 @@
           "master",
           "junior",
           "kids",
+          "grupo",
+          "especial",
         ];
         const found = new Set();
         (rows || []).forEach((r) => {
           if (r._activeCat?.niv) found.add(r._activeCat.niv);
         });
-        return ORDER.filter((n) => found.has(n));
+        const ordenados = ORDER.filter((n) => found.has(n));
+        const extras = [...found].filter((n) => !ORDER.includes(n)).sort();
+        return [...ordenados, ...extras];
       }
 
       const DEFAULT_RANKING_CFG = {
@@ -6323,18 +6577,72 @@
       // TOAST
       // ═══════════════════════════════════════════════════════════
       // DJ Audio Controls
+      //
+      // El ícono de play/pausa ANTES se ponía en "⏸ sonando" apenas se
+      // tocaba play, sin esperar a que el audio realmente empezara a
+      // sonar -- el archivo puede tardar 1-2 segundos en cargar (más en
+      // wifi cargado de gente), así que el operador tocaba una vez, no
+      // escuchaba nada todavía, y volvía a tocar creyendo que no había
+      // funcionado -- lo que en realidad hacía era PAUSARLO justo cuando
+      // arrancaba. Ahora el ícono/estado sale siempre de eventos reales
+      // del <audio> (waiting/playing/pause), nunca de una suposición.
+      const DJ_ESTADOS = {
+        cargando: {
+          icon: "⏳",
+          label: "Cargando…",
+          color: "#E8A838",
+          playBtn: "⏸",
+        },
+        sonando: {
+          icon: "▶",
+          label: "Sonando",
+          color: "#4CAF7D",
+          playBtn: "⏸",
+        },
+        pausado: {
+          icon: "⏸",
+          label: "Pausado",
+          color: "#C9A84C",
+          playBtn: "▶",
+        },
+        error: {
+          icon: "⚠️",
+          label: "No se pudo reproducir",
+          color: "#E05252",
+          playBtn: "▶",
+        },
+      };
+      function djEstadoAudio(estado, nombre) {
+        const cfg = DJ_ESTADOS[estado];
+        if (!cfg) return;
+        const btn = document.getElementById("dj-play-btn");
+        if (btn) {
+          btn.textContent = cfg.playBtn;
+          btn.style.background = cfg.color;
+        }
+        const miniBtn = document.getElementById("dj-mini-play-btn");
+        if (miniBtn) {
+          miniBtn.textContent = cfg.playBtn;
+          miniBtn.style.background = cfg.color;
+        }
+        const miniEstado = document.getElementById("dj-mini-estado");
+        if (miniEstado) {
+          miniEstado.textContent = cfg.icon + " " + cfg.label;
+          miniEstado.style.color = cfg.color;
+        }
+        if (nombre != null) {
+          const miniName = document.getElementById("dj-mini-name");
+          if (miniName) miniName.textContent = nombre;
+        }
+      }
       function djTogglePlay() {
         const audio = document.getElementById("dj-audio");
-        const btn = document.getElementById("dj-play-btn");
         if (!audio) return;
         if (audio.paused) {
-          audio.play();
-          btn.textContent = "⏸";
-          btn.style.background = "#E8A838";
+          djEstadoAudio("cargando");
+          audio.play().catch(() => djEstadoAudio("error"));
         } else {
           audio.pause();
-          btn.textContent = "▶";
-          btn.style.background = "#C9A84C";
         }
       }
       // Antes esto solo pausaba y rebobinaba -- el nombre del tema elegido
@@ -6352,6 +6660,8 @@
           cont.innerHTML =
             '<div class="muted text-xs" style="text-align:center;padding:14px">🎵 Elegí un tema de la lista de abajo para reproducirlo</div>';
         }
+        const mini = document.getElementById("dj-mini-player");
+        if (mini) mini.style.display = "none";
       }
       function djUpdateProgress() {
         const audio = document.getElementById("dj-audio");
@@ -6359,6 +6669,8 @@
         const pct = (audio.currentTime / audio.duration) * 100;
         const bar = document.getElementById("dj-progress-bar");
         if (bar) bar.style.width = pct + "%";
+        const miniBar = document.getElementById("dj-mini-progress-bar");
+        if (miniBar) miniBar.style.width = pct + "%";
         const fmt = (s) =>
           Math.floor(s / 60) +
           ":" +
@@ -6376,11 +6688,32 @@
         audio.currentTime = pct * audio.duration;
       }
       function djOnEnded() {
-        const btn = document.getElementById("dj-play-btn");
-        if (btn) {
-          btn.textContent = "▶";
-          btn.style.background = "#C9A84C";
-        }
+        djEstadoAudio("pausado");
+      }
+      // Mini-reproductor fijo abajo de la pantalla (estilo Spotify): el
+      // reproductor grande vive arriba de todo en la tarjeta "TOCANDO
+      // AHORA", así que al scrollear la lista de canciones (que puede
+      // tener cientos de temas) desaparecía de la vista -- el operador no
+      // tenía forma de confirmar que el tema seguía sonando sin volver a
+      // scrollear hasta arriba. El IntersectionObserver muestra este mini
+      // reproductor SOLO cuando el grande no está visible y hay un tema
+      // cargado, y comparte el mismo <audio> (no es un reproductor aparte).
+      let _djMiniObserverInit = false;
+      function djInitMiniPlayerObserver() {
+        if (_djMiniObserverInit) return;
+        const target = document.getElementById("dj-tarjeta");
+        if (!target || typeof IntersectionObserver === "undefined") return;
+        _djMiniObserverInit = true;
+        new IntersectionObserver(
+          (entries) => {
+            const visible = entries[0]?.isIntersecting;
+            const mini = document.getElementById("dj-mini-player");
+            const audio = document.getElementById("dj-audio");
+            if (!mini) return;
+            mini.style.display = !visible && audio?.src ? "flex" : "none";
+          },
+          { threshold: 0 },
+        ).observe(target);
       }
       function djPreview(url, nombre) {
         let audio = document.getElementById("dj-audio");
@@ -6397,16 +6730,21 @@
         <div style="display:flex;align-items:center;gap:10px;margin-top:10px"><span class="muted text-xs">Vol</span><input type="range" min="0" max="1" step="0.05" value="1" style="flex:1;accent-color:#C9A84C" oninput="document.getElementById('dj-audio').volume=this.value"></div>
       </div>`;
           audio = document.getElementById("dj-audio");
+          audio.addEventListener("waiting", () => djEstadoAudio("cargando"));
+          audio.addEventListener("playing", () => djEstadoAudio("sonando"));
+          audio.addEventListener("pause", () => {
+            if (!audio.ended) djEstadoAudio("pausado");
+          });
+          audio.addEventListener("error", () => djEstadoAudio("error"));
         }
         const nameEl = document.getElementById("dj-preview-name");
         if (nameEl) nameEl.textContent = nombre;
+        djInitMiniPlayerObserver();
+        const mini = document.getElementById("dj-mini-player");
+        if (mini) mini.style.display = "flex";
+        djEstadoAudio("cargando", nombre);
         audio.src = url;
-        audio.play();
-        const btn = document.getElementById("dj-play-btn");
-        if (btn) {
-          btn.textContent = "⏸";
-          btn.style.background = "#E8A838";
-        }
+        audio.play().catch(() => djEstadoAudio("error"));
         toast("Reproduciendo: " + nombre, "ok");
       }
 

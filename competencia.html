@@ -4486,6 +4486,12 @@
       }
 
       function extractRankNivs(rows) {
+        // ORDER es solo una preferencia de orden, no una lista cerrada de
+        // niveles válidos -- antes filtraba SOLO por estos valores, así que
+        // cualquier nivel real que no estuviera acá (ej. "grupo", "especial")
+        // no generaba botón de filtro y quedaba invisible en cualquier
+        // filtro salvo "Todos", aunque el participante sí existiera en los
+        // datos. Ahora cualquier nivel encontrado aparece, conocido o no.
         const ORDER = [
           "profesional",
           "semipro",
@@ -4495,12 +4501,16 @@
           "master",
           "junior",
           "kids",
+          "grupo",
+          "especial",
         ];
         const found = new Set();
         (rows || []).forEach((r) => {
           if (r._activeCat?.niv) found.add(r._activeCat.niv);
         });
-        return ORDER.filter((n) => found.has(n));
+        const ordenados = ORDER.filter((n) => found.has(n));
+        const extras = [...found].filter((n) => !ORDER.includes(n)).sort();
+        return [...ordenados, ...extras];
       }
 
       // ═══════════════════════════════════════════════════════════
