@@ -5369,61 +5369,109 @@
           }
           if (!djData || !djData.length) await loadDjData();
 
+          // Mismo filtro + mismo orden que se ve en pantalla (buildDjLista):
+          // en vivo primero, después pendientes, últimas las completadas.
+          // Además, Nacional / Internacional / Regional-Sedes / Repesca van
+          // SIEMPRE en carpetas separadas, nunca mezcladas entre sí -- son
+          // competencias distintas, aunque compartan el mismo cronograma.
+          // Si el operador tiene un filtro de competencia puesto en pantalla,
+          // se respeta y se baja solo esa; si no hay filtro, se bajan las
+          // 4 pero cada una en su propia carpeta de primer nivel.
+          const djFiltroInstAct = window._djFiltro || "";
+          const DJ_BUCKET_LABEL = {
+            nac: "Nacional",
+            reg: "Regional-Sedes",
+            rep: "Repesca",
+            int: "Internacional",
+          };
+          const bucketsAIncluir = djFiltroInstAct
+            ? [djFiltroInstAct]
+            : LU_INST_ORDEN;
+
           const zip = new JSZip();
           const tareas = [];
-          let catIdx = 0;
-          for (const cat of cronograma) {
-            catIdx++;
-            let pasadas = [];
-            try {
-              const { data } = await db.rpc("obtener_pasadas_categoria", {
-                p_categoria_key: cat.categoria_key,
-              });
-              pasadas = data || [];
-            } catch (e) {
-              continue;
-            }
-            const carpetaCat =
-              String(catIdx).padStart(3, "0") +
+          let bucketIdx = 0;
+          for (const bucket of bucketsAIncluir) {
+            const cronogramaBucket = cronograma.filter((c) => {
+              if (luInstBucket(c.instancia) !== bucket) return false;
+              if (
+                bucket === "reg" &&
+                djFiltroInstAct === "reg" &&
+                window._djSedeFiltro
+              ) {
+                return c.sede_id === window._djSedeFiltro;
+              }
+              return true;
+            });
+            if (!cronogramaBucket.length) continue;
+            bucketIdx++;
+            const enVivo = cronogramaBucket.filter((c) => c.estado === "en_vivo");
+            const pend = cronogramaBucket.filter((c) => c.estado === "pendiente");
+            const comp = cronogramaBucket.filter((c) => c.estado === "completada");
+            const cronogramaOrdenado = [...enVivo, ...pend, ...comp];
+            const carpetaBucket =
+              String(bucketIdx).padStart(2, "0") +
               " - " +
-              djSafeName(cat.categoria_label || cat.categoria_key);
-            let posIdx = 0;
-            pasadas.forEach((pas) => {
-              const t = djData.find((x) => x.codigo_id === pas.codigo_id);
-              if (!t) return;
-              const canciones = djCancionesDeCategoria(t, cat.categoria_key);
-              if (!canciones.length) return;
-              posIdx++;
-              const carpetaPart =
-                String(posIdx).padStart(2, "0") +
+              (DJ_BUCKET_LABEL[bucket] || bucket);
+
+            let catIdx = 0;
+            for (const cat of cronogramaOrdenado) {
+              catIdx++;
+              let pasadas = [];
+              try {
+                const { data } = await db.rpc("obtener_pasadas_categoria", {
+                  p_categoria_key: cat.categoria_key,
+                });
+                pasadas = data || [];
+              } catch (e) {
+                continue;
+              }
+              const carpetaCat =
+                String(catIdx).padStart(3, "0") +
                 " - " +
-                djSafeName(t.codigo_id) +
-                " - " +
-                djSafeName(t.nombre_grupo);
-              canciones.forEach((c) => {
-                tareas.push(async () => {
-                  try {
-                    const res = await fetch(c.url);
-                    if (!res.ok) return;
-                    const blob = await res.blob();
-                    const ext = (c.filename.match(/\.[a-zA-Z0-9]+$/) || [
-                      ".mp3",
-                    ])[0];
-                    zip.file(
-                      carpetaCat +
-                        "/" +
-                        carpetaPart +
-                        "/" +
-                        djSafeName(c.filename.replace(/\.[a-zA-Z0-9]+$/, "")) +
-                        ext,
-                      blob,
-                    );
-                  } catch (e) {
-                    /* un archivo que falla no aborta el resto */
-                  }
+                djSafeName(cat.categoria_label || cat.categoria_key);
+              let posIdx = 0;
+              pasadas.forEach((pas) => {
+                const t = djData.find((x) => x.codigo_id === pas.codigo_id);
+                if (!t) return;
+                const canciones = djCancionesDeCategoria(t, cat.categoria_key);
+                if (!canciones.length) return;
+                posIdx++;
+                const carpetaPart =
+                  String(posIdx).padStart(2, "0") +
+                  " - " +
+                  djSafeName(t.codigo_id) +
+                  " - " +
+                  djSafeName(t.nombre_grupo);
+                canciones.forEach((c) => {
+                  tareas.push(async () => {
+                    try {
+                      const res = await fetch(c.url);
+                      if (!res.ok) return;
+                      const blob = await res.blob();
+                      const ext = (c.filename.match(/\.[a-zA-Z0-9]+$/) || [
+                        ".mp3",
+                      ])[0];
+                      zip.file(
+                        carpetaBucket +
+                          "/" +
+                          carpetaCat +
+                          "/" +
+                          carpetaPart +
+                          "/" +
+                          djSafeName(
+                            c.filename.replace(/\.[a-zA-Z0-9]+$/, ""),
+                          ) +
+                          ext,
+                        blob,
+                      );
+                    } catch (e) {
+                      /* un archivo que falla no aborta el resto */
+                    }
+                  });
                 });
               });
-            });
+            }
           }
 
           if (!tareas.length) {
