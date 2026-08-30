@@ -4939,7 +4939,15 @@
             )
           : djData;
         const cont = document.getElementById("dj-lista");
-        cont.innerHTML = "";
+        // No se limpia cont todavía: arma todo en un fragmento aparte y
+        // recién al final lo vuelca de una sola vez. Antes borraba la
+        // lista al toque (línea de arriba) y la reconstruía con ~150
+        // llamadas de red seguidas (una por categoría) — cualquier evento
+        // de scoring en CUALQUIER parte del sistema disparaba esto y la
+        // lista del DJ quedaba en blanco varios segundos en pleno evento.
+        // El reproductor de arriba no se toca acá, sigue protegido igual
+        // que antes.
+        const frag = document.createDocumentFragment();
         djRenderFiltroBtns();
         const djFiltroInstAct = window._djFiltro || "";
 
@@ -5146,8 +5154,8 @@
               (estadoTxt
                 ? '<span style="font-size:10px">' + estadoTxt + "</span>"
                 : "");
-            cont.appendChild(hdr);
-            filasCat.forEach(({ t, r }) => cont.appendChild(armarFila(t, r)));
+            frag.appendChild(hdr);
+            filasCat.forEach(({ t, r }) => frag.appendChild(armarFila(t, r)));
             algoRenderizado = true;
           }
         }
@@ -5175,9 +5183,15 @@
                     catLabel: "",
                   },
                 ];
-            rows.forEach((r) => cont.appendChild(armarFila(t, r)));
+            rows.forEach((r) => frag.appendChild(armarFila(t, r)));
           });
         }
+
+        // Recién acá se reemplaza el contenido real, todo de una vez —
+        // la lista vieja queda visible hasta el último instante posible.
+        if (_seq !== _djListaSeq) return; // superada por una llamada más nueva
+        cont.innerHTML = "";
+        cont.appendChild(frag);
 
         // Sin música (igual que antes, respetando el filtro de competencia)
         const sinMusica = luData.filter(
