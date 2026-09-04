@@ -5453,11 +5453,23 @@
           });
           if (error) throw error;
           const row = Array.isArray(data) ? data[0] : data;
+          // El link de música usa el musica_token de NIVEL DE FILA de la
+          // inscripción (columna aparte), no el que viaja adentro del
+          // array `categorias` -- musica.html busca por ese, no por el
+          // otro (ese solo importa si hay ?cat= por multi-categoría).
           let linkMusica = "";
           try {
-            const cat = JSON.parse(row.categoria)[0];
-            linkMusica =
-              window.location.origin + "/musica.html?token=" + cat.musica_token;
+            const { data: insc } = await db
+              .from("inscripciones")
+              .select("musica_token")
+              .eq("id", row.inscripcion_id)
+              .single();
+            if (insc?.musica_token) {
+              linkMusica =
+                window.location.origin +
+                "/musica.html?token=" +
+                insc.musica_token;
+            }
           } catch (e) {}
           toast("✓ Pasó al Inter: " + row.codigo_id, "ok");
           alert(
