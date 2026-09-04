@@ -1530,6 +1530,30 @@
               <tbody id="d-rank-tbody"></tbody>
             </table>
           </div>
+
+          <!-- Podio Nacional -> Inter: solo para la Final Nacional, aparte
+          del ranking general de arriba porque acá el podio se agrupa por
+          categoría con medalla por puntaje propio (no por posición) y
+          lleva el botón para clasificar a cada uno al Inter. -->
+          <div class="sf mb3 mt4">
+            <div class="fw7" style="font-size: 18px">
+              🏆 Podio Nacional → Inter
+            </div>
+            <button class="btn bo bsm" onclick="buildPodioNacional()">
+              🔄 Calcular podio
+            </button>
+          </div>
+          <div
+            id="d-podio-integridad"
+            class="cr"
+            style="display: none; margin-bottom: 14px"
+          ></div>
+          <div id="d-podio-nacional">
+            <div class="muted text-xs">
+              Tocá "Calcular podio" cuando la Final Nacional tenga sesiones
+              cerradas.
+            </div>
+          </div>
         </div>
 
         <!-- MAILS -->
@@ -5284,6 +5308,168 @@
           toast("📺 Ranking enviado a la pantalla de proyección", "ok");
         } catch (e) {
           toast("Error al publicar: " + e.message, "err");
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // PODIO NACIONAL → INTER
+      // ═══════════════════════════════════════════════════════════
+      // Separado del ranking general de arriba a propósito: acá el podio
+      // se agrupa por categoría con medalla por PUNTAJE PROPIO (no por
+      // posición -- un 3er puesto sin llegar a 70 puntos igual es bronce),
+      // y bloquea el pase a Inter si hay un empate sin resolver o si el
+      // chequeo de integridad de Nacional encontró algo pendiente (sesión
+      // incompleta, sin nivel, duplicada, o alguien que nunca pasó por
+      // jueces) -- así nadie "se pierde" antes de armar la grilla de Inter.
+      async function buildPodioNacional() {
+        const banner = document.getElementById("d-podio-integridad");
+        const cont = document.getElementById("d-podio-nacional");
+        if (!cont) return;
+        cont.innerHTML = '<div class="muted text-xs">Calculando…</div>';
+        try {
+          const [{ data: chequeo, error: e1 }, { data: podio, error: e2 }, { data: yaClasif, error: e3 }] =
+            await Promise.all([
+              db.schema("scoring").rpc("chequeo_integridad_nacional"),
+              db.schema("scoring").rpc("podio_nacional"),
+              db
+                .from("inscripciones")
+                .select("notas")
+                .eq("instancia", "int")
+                .like("notas", "Clasificado desde %"),
+            ]);
+          if (e1) throw e1;
+          if (e2) throw e2;
+          if (e3) throw e3;
+
+          const yaClasifSet = new Set();
+          (yaClasif || []).forEach((r) => {
+            const m = /Clasificado desde (\S+)/.exec(r.notas || "");
+            if (m) yaClasifSet.add(m[1]);
+          });
+
+          const bloqueado = !!(chequeo && chequeo.length);
+          if (bloqueado) {
+            banner.style.display = "block";
+            banner.innerHTML =
+              '<div class="fw6 red mb2 text-sm">⚠️ ' +
+              chequeo.length +
+              " problema(s) en Nacional -- resolvé esto antes de pasar a nadie al Inter:</div>" +
+              "<ul style='margin:0;padding-left:18px;font-size:12px'>" +
+              chequeo
+                .slice(0, 15)
+                .map(
+                  (c) =>
+                    `<li><b>${esc(c.tipo)}</b> — ${esc(c.codigo_id)} (${esc(c.nombre_grupo)}): ${esc(c.detalle)}</li>`,
+                )
+                .join("") +
+              (chequeo.length > 15
+                ? `<li>…y ${chequeo.length - 15} más</li>`
+                : "") +
+              "</ul>";
+          } else {
+            banner.style.display = "none";
+          }
+
+          const grupos = new Map();
+          (podio || []).forEach((r) => {
+            if (!grupos.has(r.categoria_key)) grupos.set(r.categoria_key, []);
+            grupos.get(r.categoria_key).push(r);
+          });
+
+          const medallaIcon = { oro: "🥇", plata: "🥈", bronce: "🥉" };
+          if (!grupos.size) {
+            cont.innerHTML =
+              '<div class="muted text-xs">Sin podio calculado todavía -- necesita sesiones de Nacional cerradas.</div>';
+            return;
+          }
+
+          let html = "";
+          [...grupos.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .forEach(([, filas]) => {
+              filas.sort((a, b) => a.posicion - b.posicion);
+              html +=
+                '<div class="card mb3"><div class="fw6 mb2">' +
+                esc(filas[0].categoria_label) +
+                ' <span class="muted text-xs">(' +
+                esc(filas[0].niv) +
+                " → Inter: " +
+                esc(filas[0].niv_inter) +
+                ")</span></div>";
+              filas.forEach((f) => {
+                const yaPaso = yaClasifSet.has(f.codigo_id);
+                html +=
+                  '<div class="row" style="align-items:center;padding:6px 0;gap:8px">' +
+                  '<span style="flex:1">' +
+                  (medallaIcon[f.medalla] || "") +
+                  ' <span class="mono gold text-xs">' +
+                  esc(f.codigo_id) +
+                  "</span> " +
+                  esc(f.nombre_grupo) +
+                  " — <b>" +
+                  f.subtotal_parcial +
+                  "</b> pts</span>";
+                if (f.empate) {
+                  html +=
+                    '<span class="bdg" style="background:#E05252;color:#fff;font-size:11px;padding:4px 8px;border-radius:20px">⚠️ Empate — definir con jueces</span>';
+                } else if (yaPaso) {
+                  html +=
+                    '<span class="bdg bdg-gold" style="font-size:11px">✓ Ya en Inter</span>';
+                } else {
+                  html +=
+                    '<button class="btn bgn bsm" ' +
+                    (bloqueado
+                      ? 'disabled title="Resolvé el chequeo de integridad primero"'
+                      : "") +
+                    ' onclick="dPasarAInter(\'' +
+                    escJs(f.codigo_id) +
+                    "')\">Pasar al Inter →</button>";
+                }
+                html += "</div>";
+              });
+              html += "</div>";
+            });
+          cont.innerHTML = html;
+        } catch (e) {
+          cont.innerHTML =
+            '<div class="red text-xs">Error al calcular el podio: ' +
+            esc(e.message || String(e)) +
+            "</div>";
+        }
+      }
+
+      async function dPasarAInter(codigoNac) {
+        if (
+          !confirm(
+            "¿Pasar " +
+              codigoNac +
+              " al Inter? Se crea una inscripción y un código nuevo (JAM-INTER-...), con la música pendiente de subir.",
+          )
+        )
+          return;
+        try {
+          const { data, error } = await db.rpc("pasar_a_inter", {
+            p_codigo_id_nac: codigoNac,
+          });
+          if (error) throw error;
+          const row = Array.isArray(data) ? data[0] : data;
+          let linkMusica = "";
+          try {
+            const cat = JSON.parse(row.categoria)[0];
+            linkMusica =
+              window.location.origin + "/musica.html?token=" + cat.musica_token;
+          } catch (e) {}
+          toast("✓ Pasó al Inter: " + row.codigo_id, "ok");
+          alert(
+            "Nuevo código: " +
+              row.codigo_id +
+              (linkMusica
+                ? "\n\nLink para subir la música del Inter:\n" + linkMusica
+                : ""),
+          );
+          buildPodioNacional();
+        } catch (e) {
+          toast("Error al pasar al Inter: " + (e.message || e), "err");
         }
       }
 
